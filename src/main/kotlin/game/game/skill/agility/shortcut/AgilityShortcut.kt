@@ -6,17 +6,21 @@ import game.skill.agility.Agility
 import game.skill.agility.AgilityAction
 import game.skill.agility.AgilityApproach
 import game.skill.agility.shortcut.ShortcutMoves.ready
+import io.luna.game.model.Entity
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
+import kotlin.math.abs
 
 /**
- * The open-world Agility shortcuts that cross from one end to the other: walls, tunnels, a fence, logs, rocks, a
- * crevice, a pipe, rope swings, monkey bars and the Watchtower climb. Each is clicked on any of its objects, from
- * within [AgilityApproach.RADIUS] tiles of an end, and starts from the nearer end; a one-way shortcut starts only from
- * its first end. The stepping stones, which are crossed a stone at a time, are in [SteppingStones], and the Slayer
- * Tower's chains, climbed from any side, in [SpikyChains].
+ * The open-world Agility shortcuts that cross from one end to the other: walls, tunnels, fences, railings, logs,
+ * rocks, a crevice, a pipe, single stepping stones, rope swings, monkey bars and wall climbs. Each is clicked on any of
+ * its objects, from within [AgilityApproach.RADIUS] tiles of an end, and starts from the nearer end; a one-way shortcut
+ * starts only from its first end. A shortcut with [rope] set is used by using a rope on it, which it uses up. The
+ * stepping stone rows, which are crossed a stone at a time, are in [SteppingStones], and the Slayer Tower's chains,
+ * climbed from any side, in [SpikyChains].
  *
  * A shortcut of several parts checks the level only where it is entered: leaving the stretch between two parts needs
  * none, so a player whose boost ran out there is not stuck.
@@ -30,6 +34,8 @@ enum class AgilityShortcut(val level: Int,
                            val oneWay: Boolean = false,
                            private val levelMessage: String? = null,
                            private val freeFrom: Set<Position> = emptySet(),
+                           private val rope: Boolean = false,
+                           private val reach: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
                            private val crossing: (Player, Position, Position, GameObject) -> AgilityAction) {
 
     FALADOR_WALL(5, 0.5, listOf(11844 to Position(2935, 3355)),
@@ -196,7 +202,50 @@ enum class AgilityShortcut(val level: Int,
     PATERDOMUS_BRIDGE_RAILING(65, 0.0, listOf(9334 to Position(3424, 3476)),
                               listOf(Position(3424, 3476), Position(3423, 3476)),
                               freeFrom = setOf(Position(3424, 3476)),
-                              crossing = { plr, _, to, _ -> ShortcutMoves.squeezeThroughFence(plr, to) });
+                              crossing = { plr, _, to, _ -> ShortcutMoves.squeezeThroughFence(plr, to) }),
+
+    VARROCK_FENCE(13, 0.0, listOf(9300 to Position(3240, 3335)),
+                  listOf(Position(3240, 3335), Position(3240, 3334)),
+                  crossing = { plr, _, to, _ -> ShortcutMoves.jumpFence(plr, to) }),
+
+    YANILLE_CLIMBING_ROCKS(5, 25.0, listOf(2298 to Position(2561, 3108)),
+                           listOf(Position(2561, 3108), Position(2561, 3111)), oneWay = true,
+                           crossing = { plr, from, to, _ -> ShortcutMoves.climbRocksOverWall(plr, from, to) }),
+
+    MCGRUBORS_WOOD_RAILING(0, 0.0, listOf(51 to Position(2662, 3500)),
+                           listOf(Position(2661, 3500), Position(2662, 3500)),
+                           crossing = { plr, _, to, _ ->
+                               ShortcutMoves.squeezeThroughFence(plr, to, ShortcutMoves.LOOSE_RAILING)
+                           }),
+
+    GNOME_VILLAGE_RAILING(0, 0.0, listOf(2186 to Position(2515, 3161)),
+                          listOf(Position(2515, 3160), Position(2515, 3161)),
+                          crossing = { plr, _, to, _ ->
+                              ShortcutMoves.squeezeThroughFence(plr, to, ShortcutMoves.LOOSE_RAILING)
+                          }),
+
+    SWAMP_CAVES_STONE(1, 3.0, listOf(5948 to Position(3206, 9572)),
+                      listOf(Position(3204, 9572), Position(3208, 9572)), reach = ShortcutMoves.ACROSS_WATER,
+                      crossing = { plr, _, to, stone -> ShortcutMoves.leapAcrossStone(plr, to, stone.position) }),
+
+    SWAMP_CAVES_FROG_STONE(1, 3.0, listOf(5949 to Position(3221, 9554)),
+                           listOf(Position(3221, 9556), Position(3221, 9552)), reach = ShortcutMoves.ACROSS_WATER,
+                           crossing = { plr, _, to, stone -> ShortcutMoves.leapAcrossStone(plr, to, stone.position) }),
+
+    OGRE_ISLAND_BRANCH(10, 0.0, listOf(2326 to Position(2499, 3087)),
+                       listOf(Position(2501, 3087), Position(2505, 3087)), oneWay = true, rope = true,
+                       crossing = { plr, _, to, branch -> ShortcutMoves.swingFromBranch(plr, to, branch) }),
+
+    // The swing off the island checks no level, so nobody is shut on the island.
+    OGRE_ISLAND_ROPE(0, 3.0, listOf(2324 to Position(2511, 3090)),
+                     listOf(Position(2511, 3092), Position(2511, 3096)), oneWay = true,
+                     crossing = { plr, _, to, rope -> ShortcutMoves.swing(plr, to, rope, ShortcutMoves.SKILLFULLY) }),
+
+    // TODO Once In Aid of the Myreque is added, only players who have entered Burgh de Rott through its gate can jump
+    //  the low fence.
+    BURGH_DE_ROTT_FENCE(25, 0.0, listOf(12776 to Position(3474, 3221)),
+                        listOf(Position(3473, 3221), Position(3474, 3221)),
+                        crossing = { plr, _, to, _ -> ShortcutMoves.jumpFence(plr, to) });
 
     companion object {
 
@@ -208,7 +257,23 @@ enum class AgilityShortcut(val level: Int,
         /**
          * Every object id clicked to use a shortcut.
          */
-        val IDS = values().flatMap { shortcut -> shortcut.objects.map { it.first } }.toSet()
+        val IDS = values().filterNot { it.rope }.flatMap { shortcut -> shortcut.objects.map { it.first } }.toSet()
+
+        /**
+         * Every object id a rope is used on to use a shortcut.
+         */
+        val ROPE_IDS = values().filter { it.rope }.flatMap { shortcut -> shortcut.objects.map { it.first } }.toSet()
+
+        /**
+         * The rope item.
+         */
+        const val ROPE = 954
+
+        /**
+         * How near the object [target] a player must come before a click on it starts its shortcut.
+         */
+        fun reach(target: Entity): InteractionPolicy =
+            (target as? GameObject)?.let { byObject[it.id to it.position]?.reach } ?: InteractionPolicy.STANDARD_SIZE
 
         /**
          * Starts the shortcut [obj] belongs to, from the end [plr] stands nearer, after walking them onto it.
@@ -221,6 +286,7 @@ enum class AgilityShortcut(val level: Int,
             val end = shortcut.inColumn(plr, shortcut.ends[1 - first])
             val begin = begin@ {
                 if (!ready(plr) || plr.position != start || obj.state != EntityState.ACTIVE) return@begin
+                if (shortcut.rope && !plr.inventory.contains(ROPE)) return@begin
                 if (shortcut.level > 0 && start !in shortcut.freeFrom && plr.agility.level < shortcut.level) {
                     if (shortcut.levelMessage == null) Agility.checkLevel(plr, shortcut.level)
                     else plr.sendMessage(shortcut.levelMessage)
@@ -242,12 +308,14 @@ enum class AgilityShortcut(val level: Int,
 
     /**
      * The index of the end [plr] starts from: the nearer end within [AgilityApproach.RADIUS] tiles on their floor, or
-     * only the first end of a one-way shortcut.
+     * only the first end of a one-way shortcut. Ends as near as each other go by steps, so a player standing diagonally
+     * beside a fence starts from their own side of it.
      */
     private fun startEnd(plr: Player): Int? {
         val candidates = if (oneWay) listOf(0) else ends.indices.toList()
-        val near = candidates.filter { ends[it].z == plr.z }
-            .minByOrNull { plr.position.computeLongestDistance(inColumn(plr, ends[it])) } ?: return null
+        val near = candidates.filter { ends[it].z == plr.z }.minWithOrNull(compareBy(
+            { plr.position.computeLongestDistance(inColumn(plr, ends[it])) },
+            { abs(plr.x - inColumn(plr, ends[it]).x) + abs(plr.y - inColumn(plr, ends[it]).y) })) ?: return null
         return if (plr.position.computeLongestDistance(inColumn(plr, ends[near])) <= AgilityApproach.RADIUS) near
         else null
     }
