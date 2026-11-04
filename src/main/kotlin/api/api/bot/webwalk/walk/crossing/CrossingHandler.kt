@@ -69,7 +69,8 @@ object CrossingHandlers {
                                                                KaramjaLogCrossing.ID to KaramjaLogCrossing,
                                                                TrollSlopeCrossing.ID to TrollSlopeCrossing,
                                                                HangarExitCrossing.ID to HangarExitCrossing,
-                                                               ApeGateCrossing.ID to ApeGateCrossing)
+                                                               ApeGateCrossing.ID to ApeGateCrossing,
+                                                               YanilleDungeonCrossing.ID to YanilleDungeonCrossing)
 
     /**
      * The names of every handler.

@@ -6,11 +6,13 @@ import api.predef.*
 import game.bot.scripts.skills.PickpocketBotScript
 import game.bot.scripts.skills.SearchBotScript
 import game.bot.scripts.skills.StealBotScript
+import game.bot.scripts.skills.RoguesDenBotScript
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import game.skill.thieving.pickpocketNpc.ThievingNpcType.*
 import game.skill.thieving.searchForTraps.ThievingChest
 import game.skill.thieving.stealFromStall.ThievingStallType
 import io.luna.game.model.mob.bot.Bot
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Describes pickpocket, stall, and chest methods with matching locations. Personality retains the
@@ -20,6 +22,7 @@ import io.luna.game.model.mob.bot.Bot
  * higher-level profit targets describe gathering choices rather than guaranteeing a market return.
  * Confident bots can pickpocket the two outdoor Wilderness rogues, subject to their normal death-loss budget.
  * Native crafting, magic and scimitar stalls join the same level/personality selection as other stalls.
+ * Eligible bots also attempt Rogues' Den with its independent Agility and Thieving point budgets.
  *
  * @author lare96
  */
@@ -34,6 +37,11 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
      * Retains the existing rolls between pickpocketing, stalls, and chests.
      */
     private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
+        if (RoguesDenBotScript.eligible(bot) && rand(0.15)) {
+            zones.clear()
+            zones += SubZone.ROGUES_DEN_MAZE
+            return RoguesDenBotScript(bot, getDuration(bot).coerceAtLeast(20.minutes))
+        }
         val shouldPickpocket = if (training) {
             bot.personality.isDextrous || rand(bot.personality.dexterity) ||
                 rand(bot.personality.intelligence) || level < ThievingStallType.VEGETABLE.level

@@ -46,6 +46,10 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         getIbanRechargeScript(bot)?.let { return it }
+        if (rand(0.15)) CombatCoordinator.salarinScript(bot, getDuration(bot))?.let {
+            zones += SubZone.YANILLE_DUNGEON_SALARIN
+            return it
+        }
         if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, true, getDuration(bot))?.let { return it }
         if (rand(0.25)) getTeleportScript(bot, level)?.let { return it }
         if (rand(0.1)) {
@@ -69,6 +73,10 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         getIbanRechargeScript(bot)?.let { return it }
+        if (rand(0.15)) CombatCoordinator.salarinScript(bot, getDuration(bot))?.let {
+            zones += SubZone.YANILLE_DUNGEON_SALARIN
+            return it
+        }
         if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, false, getDuration(bot))?.let { return it }
         val telegrab = TelegrabBotScript(bot, TelegrabBotScript.WINE, true, getDuration(bot), TelegrabBotScript.wineZones(bot, profit = true))
         if (telegrab.isEligible()) return telegrab

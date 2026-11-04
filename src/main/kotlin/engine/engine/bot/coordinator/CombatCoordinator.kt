@@ -14,6 +14,7 @@ import game.bot.scripts.GiantMoleTrip
 import game.bot.scripts.BarrowsBotScript
 import game.bot.scripts.DagannothKingsBotScript
 import game.bot.scripts.DagannothKingsTrip
+import game.bot.scripts.SalarinBotScript
 import game.bot.scripts.combat.RockCrabBotScript
 import game.skill.slayer.SlayerTaskType
 import io.luna.game.model.mob.bot.Bot
@@ -184,6 +185,14 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             ancientMagicLoadout(bot)?.let { createScript(bot, training, BotGearPurpose.MAGIC, it, duration) }
 
         /**
+         * Keeps Salarin's Strike-only loadout separate from general combat camps and tactical spell upgrades.
+         */
+        internal fun salarinScript(bot: Bot, duration: Duration): SalarinBotScript? =
+            if (SalarinBotScript.ready(bot)) SalarinBotScript.selectStrike(bot)?.let {
+                SalarinBotScript(bot, duration, it)
+            } else null
+
+        /**
          * Builds the appropriate combat session from an already supplied discipline and its eligible camps.
          */
         private fun createScript(bot: Bot, training: Boolean, purpose: BotGearPurpose,
@@ -217,6 +226,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         }
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
             bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
+        if (rand(0.15)) {
+            salarinScript(bot, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
+        }
         if (!training && rand(0.95)) {
             ancientMagicScript(bot, false, duration)?.let {
                 bot.scriptStack.push(it)
