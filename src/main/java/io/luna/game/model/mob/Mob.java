@@ -568,6 +568,9 @@ public abstract class Mob extends Entity {
      * @param type The hit type to use.
      */
     public final void damage(int amount, HitType type) {
+        if (this instanceof Player player && player.getControllers().getPrimary().isSpectator()) {
+            return;
+        }
         if (amount < 0) {
             amount = 0;
         }

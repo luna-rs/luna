@@ -323,7 +323,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public boolean isAttackable() {
-        return player.isAlive() && player.getContextMenu().contains(PlayerContextMenuOption.ATTACK);
+        return !player.getControllers().getPrimary().isSpectator() && player.isAlive() &&
+                player.getContextMenu().contains(PlayerContextMenuOption.ATTACK);
     }
 
     @Override

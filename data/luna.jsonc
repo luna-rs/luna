@@ -1,7 +1,7 @@
 {
   "game": {
     // Controls whether the server runs in development, testing, or production-style mode.
-    "runtime_mode": "PRODUCTION",
+    "runtime_mode": "DEVELOPMENT",
     // Account names that always receive developer rights at login (case-insensitive).
     "developer_usernames": ["lare96", "hydrozoa", "the lining"],
     // The default position new players are placed at when no saved position exists.
@@ -13,6 +13,8 @@
     "experience_multiplier": 5.0,
     // The serializer implementation used for loading and saving game data.
     "serializer": "JsonGameSerializer",
+    // The local interface used by the desktop game listener. Use 0.0.0.0 for a public server.
+    "bind_address": "127.0.0.1",
     // The network port the game server listens on.
     "port": 43594,
     // Optional native browser transport in the same server/world. Restart after changing these settings.

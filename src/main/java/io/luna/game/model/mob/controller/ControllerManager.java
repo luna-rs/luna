@@ -3,6 +3,7 @@ package io.luna.game.model.mob.controller;
 import engine.controllers.Controllers;
 import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.event.impl.ControllableEvent;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 
@@ -52,6 +53,9 @@ public final class ControllerManager {
      */
     public void process() {
         primary.process();
+        if (primary.isSpectator()) {
+            return;
+        }
         for (PlayerAreaListener controller : areaListeners) {
             controller.process(player);
         }
@@ -66,20 +70,25 @@ public final class ControllerManager {
      * @param controller The controller to register as primary.
      */
     public void register(PlayerController controller) {
+        boolean wasSpectator = primary != null && primary.isSpectator();
+        if (!wasSpectator && controller.isSpectator() && player.getState() == EntityState.ACTIVE) {
+            player.getWorld().getCollisionManager().updateEntity(player, true);
+        }
         if (primary != null) {
             primary.unregister();
         }
         primary = controller;
         primary.register();
+        if (wasSpectator && !primary.isSpectator() && player.getState() == EntityState.ACTIVE) {
+            player.getWorld().getCollisionManager().updateEntity(player, false);
+        }
     }
 
     /**
      * Unregisters the current primary controller and restores the default {@link PlayerController}.
      */
     public void unregister() {
-        primary.unregister();
-        primary = new PlayerController(player);
-        primary.register();
+        register(new PlayerController(player));
     }
 
     /**
@@ -90,6 +99,10 @@ public final class ControllerManager {
      * invoked.
      */
     public void checkPosition() {
+        if (primary.isSpectator()) {
+            primary.move();
+            return;
+        }
         for (PlayerAreaListener listener : Controllers.INSTANCE.getGLOBAL_LOCATABLE_CONTROLLERS()) {
             boolean inside = listener.inside(player.getPosition());
             boolean registered = areaListeners.contains(listener);

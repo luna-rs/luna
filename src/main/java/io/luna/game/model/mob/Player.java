@@ -106,6 +106,11 @@ public class Player extends Mob {
     private PlayerModelAnimation model = PlayerModelAnimation.DEFAULT;
 
     /**
+     * Whether this session renders an empty player model without changing equipment or transformations.
+     */
+    private transient boolean modelHidden;
+
+    /**
      * Credentials backing this account (username, password, hash, username hash).
      */
     private final PlayerCredentials credentials;
@@ -1278,6 +1283,30 @@ public class Player extends Mob {
         if (!Objects.equals(model, newModel)) {
             model = newModel;
             flags.flag(UpdateFlag.APPEARANCE);
+        }
+    }
+
+    /**
+     * Returns whether the player's character model is hidden for this session.
+     *
+     * @return {@code true} when an empty model is sent to clients.
+     */
+    public boolean isModelHidden() {
+        return modelHidden;
+    }
+
+    /**
+     * Hides or restores the character model while retaining the player's ordinary world state.
+     *
+     * @param hidden Whether clients should render an empty character model.
+     */
+    public void setModelHidden(boolean hidden) {
+        if (modelHidden != hidden) {
+            modelHidden = hidden;
+            flags.flag(UpdateFlag.APPEARANCE);
+            if (hidden) {
+                pendingBlockData.resetModelAnimation();
+            }
         }
     }
 

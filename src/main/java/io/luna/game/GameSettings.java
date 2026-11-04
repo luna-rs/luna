@@ -90,6 +90,11 @@ public final class GameSettings {
     private final List<String> developerUsernames;
 
     /**
+     * Local network interface for the desktop TCP listener.
+     */
+    private final String bindAddress;
+
+    /**
      * TCP port the server binds to.
      */
     private final int port;
@@ -139,6 +144,13 @@ public final class GameSettings {
      */
     public List<String> developerUsernames() {
         return developerUsernames == null ? List.of() : developerUsernames;
+    }
+
+    /**
+     * Returns the desktop listener's local address, retaining all-interface binding for older configurations.
+     */
+    public String bindAddress() {
+        return bindAddress == null ? "0.0.0.0" : bindAddress;
     }
 
     /**
@@ -266,6 +278,7 @@ public final class GameSettings {
         // Will never be called directly.
         this.runtimeMode = runtimeMode;
         this.developerUsernames = developerUsernames;
+        this.bindAddress = null;
         this.port = port;
         this.websocket = null;
         this.connectionLimit = connectionLimit;

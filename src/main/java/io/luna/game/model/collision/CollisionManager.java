@@ -21,6 +21,7 @@ import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
@@ -189,6 +190,9 @@ public final class CollisionManager {
      * @param removal {@code true} to remove collision, {@code false} to add it.
      */
     public void updateEntity(Entity entity, boolean removal) {
+        if (entity instanceof Player player && player.getControllers().getPrimary().isSpectator()) {
+            return;
+        }
         EntityType type = entity.getType();
         if (type == EntityType.OBJECT) {
             CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
@@ -209,6 +213,9 @@ public final class CollisionManager {
      * @param from The position it moved from.
      */
     public void moveEntity(Entity entity, Position from) {
+        if (entity instanceof Player player && player.getControllers().getPrimary().isSpectator()) {
+            return;
+        }
         EntityType type = entity.getType();
         if (type == EntityType.NPC || type == EntityType.PLAYER) {
             int size = entity.size();

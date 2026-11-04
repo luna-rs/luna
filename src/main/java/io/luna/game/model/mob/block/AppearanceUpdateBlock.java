@@ -41,8 +41,12 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
             buf.put(data.skull.getId());
             buf.put(data.prayer.getId());
 
-            // Either encode an NPC transform or full equipment/body models.
-            if (data.transform > -1) {
+            // Empty slots take precedence while retaining the normal appearance and transform in server state.
+            if (data.modelHidden) {
+                for (int slot = 0; slot < 12; slot++) {
+                    buf.put(0);
+                }
+            } else if (data.transform > -1) {
                 buf.put(255);
                 buf.put(255);
                 buf.putShort(data.transform);

@@ -188,7 +188,8 @@ public final class LunaServer {
             bootstrap.group(loopGroup);
             bootstrap.channel(NioServerSocketChannel.class);
             bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
-            listeners.add(bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly().channel());
+            listeners.add(bootstrap.bind(Luna.settings().game().bindAddress(),
+                    Luna.settings().game().port()).syncUninterruptibly().channel());
             if (webSocket.enabled()) {
                 ServerBootstrap browser = bootstrap.clone().childHandler(
                         new WebSocketChannelInitializer(context, channelFilter, messageRepository, webSocket));

@@ -3,6 +3,7 @@ package io.luna.game.model.mob.controller;
 import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.LogoutService;
 import io.luna.game.event.impl.ControllableEvent;
+import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 
@@ -69,6 +70,31 @@ public class PlayerController {
      */
     public void move() {
 
+    }
+
+    /**
+     * Returns whether this controller observes the world without participating in collision, combat, or area events.
+     *
+     * @return {@code true} for a spectator controller, otherwise {@code false}.
+     */
+    public boolean isSpectator() {
+        return false;
+    }
+
+    /**
+     * Prepares this player for a final logout, including forced disconnects and logout timeouts.
+     */
+    public void beforeLogout() {
+
+    }
+
+    /**
+     * Returns the position to persist while this controller is active.
+     *
+     * @return The player's ordinary world position.
+     */
+    public Position getPersistencePosition() {
+        return player.getPosition();
     }
 
     /**

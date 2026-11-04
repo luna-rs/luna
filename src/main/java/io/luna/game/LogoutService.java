@@ -146,6 +146,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
 
     @Override
     void finishRequest(String username, LogoutRequest request) {
+        request.player.getControllers().getPrimary().beforeLogout();
         // Close windows before the save, so items held in them (trade offers) are back in the inventory.
         request.player.getOverlays().closeWindows();
         // Never persist a coordinate in recyclable instance space, including forced logout timeouts.

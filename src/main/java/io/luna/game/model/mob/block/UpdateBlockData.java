@@ -45,6 +45,7 @@ public final class UpdateBlockData {
         /* Default builder properties matching UpdateBlockData. */
         private final Mob mob;
         private Animation animation;
+        private boolean modelAnimationReset;
         private Position face;
         private String speak;
         private Graphic graphic;
@@ -71,6 +72,17 @@ public final class UpdateBlockData {
          */
         public Builder animation(Animation value) {
             animation = value;
+            mob.getFlags().flag(UpdateFlag.ANIMATION);
+            return this;
+        }
+
+        /**
+         * Clears client animation equipment overrides when hiding a player model without changing animation priority.
+         *
+         * @return This builder instance for chaining.
+         */
+        public Builder resetModelAnimation() {
+            modelAnimationReset = true;
             mob.getFlags().flag(UpdateFlag.ANIMATION);
             return this;
         }
@@ -184,13 +196,15 @@ public final class UpdateBlockData {
         public UpdateBlockData build() {
             if (mob instanceof Player) {
                 Player player = mob.asPlr();
-                return new UpdateBlockData( animation, face, speak, graphic, interact, hit1,
-                        hit2, mob.getTransformId(), chat, move, player.getPrayerIcon(), player.getSkullIcon(),
+                boolean modelHidden = player.isModelHidden();
+                Animation clientAnimation = modelHidden || modelAnimationReset ? Animation.CANCEL : animation;
+                return new UpdateBlockData(clientAnimation, face, speak, graphic, interact, hit1,
+                        hit2, mob.getTransformId(), modelHidden, chat, move, player.getPrayerIcon(), player.getSkullIcon(),
                         player.getAppearance().toArray(), player.getModel(), player.getEquipment().toArray(),
                         player.getUsernameHash(), player.getSkills().getCombatLevel(), player.getSkills().getSkillLevel());
             } else {
                 return new UpdateBlockData(animation, face, speak, graphic, interact, hit1,
-                        hit2, mob.getTransformId(), null, null, null, null, null, null, null, 0L, 0, 0);
+                        hit2, mob.getTransformId(), false, null, null, null, null, null, null, null, 0L, 0, 0);
             }
         }
 
@@ -303,6 +317,11 @@ public final class UpdateBlockData {
     final int transform;
 
     /**
+     * Whether the player appearance should contain no equipment or body-part models.
+     */
+    final boolean modelHidden;
+
+    /**
      * The normal chat block, or {@code null} if no chat this tick.
      */
     final Chat chat;
@@ -368,6 +387,7 @@ public final class UpdateBlockData {
                             Hit hit1,
                             Hit hit2,
                             int transform,
+                            boolean modelHidden,
                             Chat chat,
                             ExactMovement move,
                             PrayerIcon prayer,
@@ -386,6 +406,7 @@ public final class UpdateBlockData {
         this.hit1 = hit1;
         this.hit2 = hit2;
         this.transform = transform;
+        this.modelHidden = modelHidden;
         this.chat = chat;
         this.move = move;
         this.prayer = prayer;
