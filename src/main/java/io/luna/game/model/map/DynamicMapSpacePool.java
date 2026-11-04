@@ -37,6 +37,11 @@ public class DynamicMapSpacePool {
     private static final Logger logger = LogManager.getLogger();
 
     /**
+     * Pooled space starts at this {@code x} coordinate, east of every real map square.
+     */
+    public static final int MIN_X = 6400;
+
+    /**
      * The context.
      */
     private final LunaContext context;
@@ -77,7 +82,7 @@ public class DynamicMapSpacePool {
             for (int regionId = lowerRegionBound; regionId < upperRegionBound; regionId++) {
                 Region region = new Region(regionId);
                 Position base = region.getAbsPosition();
-                if (base.getX() >= 6400 && base.getY() >= 100 && base.getY() <= 5248) { // Must be within valid instance coordinates.
+                if (base.getX() >= MIN_X && base.getY() >= 100 && base.getY() <= 5248) { // Must be within valid instance coordinates.
                     emptyRegions.add(region);
                 }
             }
@@ -153,6 +158,21 @@ public class DynamicMapSpacePool {
             emptySpacePool.add(assignedSpace);
             map.setAssignedSpace(null);
         }
+    }
+
+    /**
+     * Maps a tile of any active instance back to the real tile it was copied from.
+     *
+     * @param position The position to look up.
+     * @return The real tile, or {@code null} when no active instance maps {@code position}.
+     */
+    public Position getRealPosition(Position position) {
+        if (position.getX() < MIN_X) return null;
+        for (DynamicMap map : instances) {
+            Position real = map.getRealPosition(position);
+            if (real != null) return real;
+        }
+        return null;
     }
 
     /**

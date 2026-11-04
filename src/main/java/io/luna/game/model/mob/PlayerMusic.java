@@ -4,6 +4,7 @@ import game.player.Jingles;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.MusicDefinition;
 import io.luna.game.model.def.MusicLibrary;
+import io.luna.game.model.map.DynamicMap;
 import io.luna.game.model.mob.varp.Varp;
 import io.luna.net.msg.out.JingleMessageWriter;
 import io.luna.net.msg.out.MusicMessageWriter;
@@ -66,7 +67,10 @@ public final class PlayerMusic {
             return;
         }
         lastArea = area;
-        library.getMusic(position).ifPresent(track -> {
+        // An instance plays the music of the area it was copied from.
+        DynamicMap map = player.getDynamicMap();
+        Position real = map != null ? map.getRealPosition(position) : null;
+        library.getMusic(real != null ? real : position).ifPresent(track -> {
             unlock(track.id());
             if (automatic) {
                 send(track);

@@ -1,9 +1,11 @@
 package engine.controllers
 
+import api.predef.*
 import com.google.common.collect.ImmutableSet
 import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
+import io.luna.game.model.map.DynamicMapSpacePool
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerAreaListener
 import io.luna.net.msg.out.MultiCombatMessageWriter
@@ -257,8 +259,29 @@ object MultiCombatAreaListener : PlayerAreaListener() {
         Area.of(2752, 9152, 2815, 9215).onPlanes(0),
 
         // Crash Island Dungeon snake pit
-        Area.of(3016, 5480, 3031, 5495).onPlanes(0)
+        Area.of(3016, 5480, 3031, 5495).onPlanes(0),
+
+        // Instances of the areas above
+        InstanceArea
     )
+}
+
+/**
+ * Covers every instance tile copied from a multi-combat area.
+ *
+ * @author TheLining
+ */
+private object InstanceArea : Locatable {
+
+    // The x check comes first so real tiles never touch the world predef, which unit tests don't bind.
+    override fun contains(position: Position) = position.x >= DynamicMapSpacePool.MIN_X &&
+        world.dynamicMapSpacePool.getRealPosition(position)?.let { MultiCombatAreaListener.inside(it) } == true
+
+    override fun abs(): Position = Position(x, y)
+
+    override fun getX() = DynamicMapSpacePool.MIN_X
+
+    override fun getY() = 0
 }
 
 /**

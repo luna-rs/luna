@@ -368,6 +368,34 @@ public final class DynamicMap {
     }
 
     /**
+     * Maps an instance coordinate back to the real tile it was copied from, the reverse of
+     * {@link #getInstancePositions(Position)}.
+     *
+     * @param position The instance coordinate.
+     * @return The real tile and source plane, or {@code null} when this palette doesn't map the tile.
+     */
+    public Position getRealPosition(Position position) {
+        if (!contains(position)) return null;
+        Position base = assignedSpace.abs();
+        int x = position.getX() - base.getX(), y = position.getY() - base.getY();
+        DynamicMapChunk source = palette.getChunk(x / 8, y / 8, position.getZ());
+        int localX = x & 7, localY = y & 7;
+        int realX = switch (source.getRotation()) {
+            case 1 -> 7 - localY;
+            case 2 -> 7 - localX;
+            case 3 -> localY;
+            default -> localX;
+        };
+        int realY = switch (source.getRotation()) {
+            case 1 -> localX;
+            case 2 -> 7 - localY;
+            case 3 -> 7 - localX;
+            default -> localY;
+        };
+        return source.getChunk().getAbsPosition().translate(realX, realY).setZ(source.getPlane());
+    }
+
+    /**
      * Locates the absolute origin of one destination palette slot.
      */
     private Position slotPosition(int x, int y, int z) {
