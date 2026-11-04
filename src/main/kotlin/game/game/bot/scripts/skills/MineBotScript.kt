@@ -29,6 +29,7 @@ import game.content.randomEvents.MiningRandomEvents
 import game.bot.scripts.RandomEventReflexScript
 import game.skill.mining.mineOre.MineOreAction
 import game.content.miningGuild.MiningGuild
+import game.content.coalTrucks.CoalTrucks
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.GroundItem
@@ -93,6 +94,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     private var dropFailures = 0
     private var attemptedRock: GameObject? = null
     private var attemptExperience = 0.0
+    private val coalTrucks = CoalTruckMining(bot, handler) { !isTerminated() && !isPaused() }
 
     /**
      * A visible transformation receives one shared intelligence/dexterity decision. Noticing it interrupts the
@@ -125,6 +127,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
             var ores = emptySet<Ore>()
             var preferredOres = emptySet<Ore>()
             var powerMining = false
+            var coalTruckHaulPending = false
+            var coalTruckRetryAt = 0L
 
             override fun load(data: JsonObject) {
                 super.load(data)
@@ -134,6 +138,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
                     loadEnumSet("preferredOres", data) { Ore.valueOf(it) }.intersect(ores).ifEmpty { ores }
                 else ores
                 powerMining = data.get("powerMining")?.asBoolean ?: false
+                coalTruckHaulPending = data.get("coalTruckHaulPending")?.asBoolean ?: false
+                coalTruckRetryAt = data.get("coalTruckRetryAt")?.asLong ?: 0L
             }
 
             override fun save(data: JsonObject) {
@@ -141,6 +147,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
                 saveEnumSet("ores", data, ores)
                 saveEnumSet("preferredOres", data, preferredOres)
                 data.addProperty("powerMining", powerMining)
+                data.addProperty("coalTruckHaulPending", coalTruckHaulPending)
+                data.addProperty("coalTruckRetryAt", coalTruckRetryAt)
             }
         }
     }
@@ -151,7 +159,10 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
      * @param bot The bot running this script.
      * @param data The saved Mining script data to restore from.
      */
-    constructor(bot: Bot, data: MineData) : this(bot, data.ores, data.duration, data.zones, data.preferredOres, data.powerMining)
+    constructor(bot: Bot, data: MineData) : this(bot, data.ores, data.duration, data.zones, data.preferredOres, data.powerMining) {
+        coalTrucks.haulPending = data.coalTruckHaulPending
+        coalTrucks.retryAt = data.coalTruckRetryAt
+    }
 
     /**
      * The rock object ids that match the configured [ores].
@@ -207,6 +218,12 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     override fun allowsLoot(item: GroundItem): Boolean = !powerMining || item.id != Ore.IRON.item
 
     override suspend fun handleFullInventory(): Boolean {
+        if (!powerMining && activeZone == SubZone.COAL_TRUCKS_MINE && Ore.COAL in ores) {
+            BotConversations.cancel(bot)
+            val handled = coalTrucks.handleFullInventory()
+            if (!SubZone.COAL_TRUCKS_MINE.area.contains(bot.position)) resetSearch()
+            return handled
+        }
         if (!powerMining || dropFailures >= 3) return false
         if (!isActionSafe() || bot.actions.first(MineOreAction::class.java) != null) return true
         // Use normal inventory clicks, one ore at a time. Keep the pickaxe, gems, and every other item.
@@ -310,6 +327,16 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         BotConversations.tick(bot)
         if (bot.actions.first(MineOreAction::class.java) != null) return true
         finishMiningAttempt()
+        val coalMine = activeZone == SubZone.COAL_TRUCKS_MINE ||
+                activeZone == null && originalZones.firstOrNull() == SubZone.COAL_TRUCKS_MINE
+        if (!powerMining && Ore.COAL in ores && coalMine && CoalTrucks.storedCoal(bot) >= CoalTrucks.CAPACITY)
+            coalTrucks.haulPending = true
+        if (coalTrucks.haulPending && coalTrucks.ready()) {
+            BotConversations.cancel(bot)
+            coalTrucks.haul()
+            resetSearch()
+            return true
+        }
         if (powerMining && bot.inventory.isFull && !forceBanking) return handleFullInventory()
         return false
     }
@@ -322,11 +349,16 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
             bot.lastFullMine = FullMine(zone)
             bot.log("Leaving $zone without a free rock; skipping it for ${FullMine.SKIP_FOR}.")
         }
+        if (!powerMining && Ore.COAL in ores && (zone == SubZone.COAL_TRUCKS_MINE || coalTrucks.haulPending) &&
+            (CoalTrucks.storedCoal(bot) > 0 || coalTrucks.haulPending) && coalTrucks.ready()) {
+            coalTrucks.haul()
+        }
         return super.beforeLeavingZone()
     }
 
     override suspend fun finish() {
         BotConversations.cancel(bot)
+        if (coalTrucks.haulPending) output.sendCloseInterface()
         super.finish()
     }
 
@@ -461,6 +493,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         data.ores = ores
         data.preferredOres = preferredOres
         data.powerMining = powerMining
+        data.coalTruckHaulPending = coalTrucks.haulPending
+        data.coalTruckRetryAt = coalTrucks.retryAt
         data.duration = duration
         data.zones = originalZones.toMutableList()
         return data

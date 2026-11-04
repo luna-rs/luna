@@ -202,6 +202,7 @@ public final class RouteFinder {
      */
     private boolean search(CollisionView view, int level, int baseX, int baseY, int destX, int destY, int size,
                            int extraFlag, RouteStrategy strategy) {
+        StepValidator.Walker walker = new StepValidator.Walker(view, level, extraFlag, strategy);
         // A large mob must fit inside the search area, so it stops short of the far edges by its size.
         int last = SEARCH_SIZE - size;
         while (writer != reader) {
@@ -225,7 +226,7 @@ public final class RouteFinder {
                 int nextX = x + stepX;
                 int nextY = y + stepY;
                 if (nextX >= 0 && nextX <= last && nextY >= 0 && nextY <= last && unreached(nextX, nextY) &&
-                        StepValidator.canTravel(view, level, absX, absY, stepX, stepY, size, extraFlag, strategy)) {
+                        StepValidator.canTravel(walker, absX, absY, stepX, stepY, size)) {
                     add(nextX, nextY, CAME_FROM[direction], next);
                 }
             }

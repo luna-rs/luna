@@ -1768,8 +1768,8 @@ enum class SubZone(
         parent = { VARROCK }),
 
     /**
-     * The Coal Trucks seam west of Seers Village has eighteen native coal rocks. Ordinary miners use the
-     * existing town bank without a cart workflow.
+     * The Coal Trucks seam west of Seers Village has eighteen native coal rocks. Miners use the personal
+     * coal trucks and bank their saved loads through the depot by Seers Village.
      */
     COAL_TRUCKS_MINE(
         inside = Position(2582, 3480),
