@@ -440,13 +440,18 @@ public class WalkingNavigator {
         Position start = mob.getPosition();
         NavigationRequest request = active;
         int generation = pathGeneration.incrementAndGet();
-        CompletableFuture<Void> result = findPath(start, destination.abs(), pathfinder, async)
-                .thenAcceptAsync(path -> {
+        CompletableFuture<Deque<Position>> search = findPath(start, destination.abs(), pathfinder, async);
+        CompletableFuture<Void> result = search.thenAcceptAsync(path -> {
                     if (isStale(start, request, generation)) {
                         return;
                     }
                     mob.getWalking().replacePath(path);
                 }, mob.getService().getGameExecutor());
+        result.whenComplete((value, error) -> {
+            if (result.isCancelled()) {
+                search.cancel(false);
+            }
+        });
         return handleExceptions(destination, result);
     }
 
