@@ -61,6 +61,8 @@ import game.bot.scripts.UseLampBotScript.Companion.LampData
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
 import game.bot.scripts.skills.BuryBoneBotScript
 import game.bot.scripts.skills.BuryBoneBotScript.Companion.BoneData
+import game.bot.scripts.skills.EctofuntusBotScript
+import game.bot.scripts.skills.EctofuntusBotScript.EctofuntusData
 import game.bot.scripts.skills.SuperheatItemBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript.Companion.SuperheatItemData
 import game.bot.scripts.skills.EnchantJewelleryBotScript
@@ -256,6 +258,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<AmmunitionData>(FletchAmmunitionBotScript::class) { bot, data -> FletchAmmunitionBotScript(bot, data) }
     scriptManager.addScript<OgreFletchingData>(OgreFletchingBotScript::class) { bot, data -> OgreFletchingBotScript(bot, data) }
     scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
+    scriptManager.addScript<EctofuntusData>(EctofuntusBotScript::class) { bot, data -> EctofuntusBotScript(bot, data) }
     scriptManager.addScript<FarmingData>(FarmingBotScript::class) { bot, data -> FarmingBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
