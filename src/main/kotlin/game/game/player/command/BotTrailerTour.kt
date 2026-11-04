@@ -3,6 +3,7 @@ package game.player.command
 import api.bot.isRealBot
 import api.bot.zone.SubZone
 import game.skill.magic.teleportSpells.TeleportAction
+import io.luna.game.action.ActionType
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.event.impl.ControllableEvent
@@ -47,7 +48,7 @@ object BotTrailerTour {
         }
         if (plr.state != EntityState.ACTIVE || !plr.isAlive || plr.client.isPendingLogout || plr.isLocked ||
             plr.walking.isLocked || plr.dynamicMap != null || plr.combat.inCombat() || plr.combat.target != null ||
-            plr.controllers.primary.javaClass != PlayerController::class.java || plr.actions.size() > 0 ||
+            plr.controllers.primary.javaClass != PlayerController::class.java ||
             (plr is Bot && plr.isAutomationActive)) {
             plr.sendMessage("Finish your current activity or combat before starting a bot tour.")
             return
@@ -64,6 +65,7 @@ object BotTrailerTour {
         sessions[plr] = tour
         try {
             plr.navigator.cancel()
+            plr.actions.interruptAll()
             plr.walking.clear()
             plr.interact(null)
             plr.overlays.closeWindows()
