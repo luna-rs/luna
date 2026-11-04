@@ -711,6 +711,32 @@ enum class SubZone(
         parent = { YANILLE }),
 
     /**
+     * Native dungeon obstacles have separate training footprints and admission levels.
+     */
+    YANILLE_AGILITY_LEDGE(
+        inside = Position(2580, 9520), area = SimpleBoxArea.of(2578, 9510, 2582, 9522),
+        parent = { YANILLE }),
+    YANILLE_AGILITY_PIPE(
+        inside = Position(2578, 9506), area = SimpleBoxArea.of(2570, 9504, 2580, 9508),
+        parent = { YANILLE }),
+    YANILLE_AGILITY_BARS(
+        inside = Position(2598, 9488), area = SimpleBoxArea.of(2596, 9486, 2601, 9497),
+        parent = { YANILLE }),
+    YANILLE_AGILITY_RUBBLE(
+        inside = Position(2616, 9571), area = SimpleBoxArea.of(2614, 9569, 2619, 9574),
+        parent = { YANILLE }),
+
+    /**
+     * The chest room west of the pipe and Salarin's corridor above the eastern rubble.
+     */
+    YANILLE_DUNGEON_SINISTER_CHEST(
+        inside = Position(2562, 9507), area = SimpleBoxArea.of(2558, 9502, 2573, 9514),
+        parent = { YANILLE }),
+    YANILLE_DUNGEON_SALARIN(
+        inside = Position(2613, 9520), area = SimpleBoxArea.of(2608, 9504, 2620, 9530),
+        parent = { YANILLE }),
+
+    /**
      * Chaos druids in the Wilderness section of Edgeville Dungeon.
      */
     EDGEVILLE_DUNGEON_CHAOS_DRUIDS(
@@ -846,6 +872,15 @@ enum class SubZone(
         inside = Position(3045, 4972, 1),
         entrance = { Position(2906, 3537) },
         area = SimpleBoxArea.of(3036, 4961, 3067, 4988, 1),
+        parent = { BURTHORPE }),
+
+    /**
+     * The maze north of Brian's lobby; entry and rewards remain controlled by the native minigame.
+     */
+    ROGUES_DEN_MAZE(
+        inside = Position(3056, 4990, 1),
+        entrance = { Position(2906, 3537) },
+        area = SimpleBoxArea.of(2944, 4990, 3071, 5119, 1),
         parent = { BURTHORPE }),
 
     /**

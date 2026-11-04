@@ -26,6 +26,7 @@ import api.bot.webwalk.walk.crossing.TrollClimbingCrossing
 import api.bot.webwalk.walk.crossing.NativeAccessCrossing
 import api.bot.webwalk.walk.crossing.PyramidRockSlideCrossing
 import api.bot.webwalk.walk.crossing.ApeGateCrossing
+import api.bot.webwalk.walk.crossing.YanilleDungeonCrossing
 import game.item.greegree.Greegree
 import game.skill.agility.GnomeStrongholdRocks
 import game.obj.entrances.BrimhavenDungeonAccess
@@ -119,6 +120,9 @@ object BotConditions {
                               bot.inventory.contains(1523) }) +
                 BrimhavenDungeonAccess.passages.filter { it.needsAbility }.associate { passage ->
                     BrimhavenCrossing.flag(passage) to { bot: Bot -> BrimhavenDungeonAccess.canTraverse(bot, passage) }
+                } +
+                YanilleDungeonCrossing.LEVELS.associate { level ->
+                    YanilleDungeonCrossing.flag(level) to { bot: Bot -> YanilleDungeonCrossing.ready(bot, level) }
                 } +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->

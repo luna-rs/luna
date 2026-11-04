@@ -15,7 +15,11 @@ import io.luna.game.model.`object`.GameObject
  * The open-world Agility shortcuts that cross from one end to the other: walls, tunnels, a fence, logs, rocks, a
  * crevice, a pipe, rope swings, monkey bars and the Watchtower climb. Each is clicked on any of its objects, from
  * within [AgilityApproach.RADIUS] tiles of an end, and starts from the nearer end; a one-way shortcut starts only from
- * its first end. The stepping stones, which are crossed a stone at a time, are in [SteppingStones].
+ * its first end. The stepping stones, which are crossed a stone at a time, are in [SteppingStones], and the Slayer
+ * Tower's chains, climbed from any side, in [SpikyChains].
+ *
+ * A shortcut of several parts checks the level only where it is entered: leaving the stretch between two parts needs
+ * none, so a player whose boost ran out there is not stuck.
  *
  * @author TheLining
  */
@@ -24,6 +28,8 @@ enum class AgilityShortcut(val level: Int,
                            val objects: List<Pair<Int, Position>>,
                            val ends: List<Position>,
                            val oneWay: Boolean = false,
+                           private val levelMessage: String? = null,
+                           private val freeFrom: Set<Position> = emptySet(),
                            private val crossing: (Player, Position, Position, GameObject) -> AgilityAction) {
 
     FALADOR_WALL(5, 0.5, listOf(11844 to Position(2935, 3355)),
@@ -93,7 +99,104 @@ enum class AgilityShortcut(val level: Int,
 
     WATCHTOWER_WALL(18, 31.0, listOf(2299 to Position(2548, 3119)),
                     listOf(Position(2548, 3119), Position(2548, 3118, 1)), oneWay = true,
-                    crossing = { plr, from, to, _ -> ShortcutMoves.climbWall(plr, from, to) });
+                    crossing = { plr, from, to, _ -> ShortcutMoves.climbWall(plr, from, to) }),
+
+    TROLLHEIM_EASY(41, 8.0, listOf(9303 to Position(2870, 3671), 9303 to Position(2871, 3671)),
+                   listOf(Position(2869, 3671), Position(2872, 3671)),
+                   crossing = { plr, from, to, _ -> ShortcutMoves.scramble(plr, from, to, 4) }),
+
+    TROLLHEIM_MEDIUM(43, 8.0, listOf(9304 to Position(2878, 3666), 9304 to Position(2878, 3667)),
+                     listOf(Position(2878, 3665), Position(2878, 3668)),
+                     crossing = { plr, from, to, _ -> ShortcutMoves.scramble(plr, from, to, 4) }),
+
+    TROLLHEIM_ADVANCED(44, 8.0, listOf(9305 to Position(2908, 3682), 9305 to Position(2909, 3683)),
+                       listOf(Position(2907, 3682), Position(2909, 3684)),
+                       crossing = { plr, from, to, _ -> ShortcutMoves.scramble(plr, from, to, 4) }),
+
+    TROLLHEIM_HARD(47, 8.0, listOf(9306 to Position(2901, 3680), 9306 to Position(2902, 3680)),
+                   listOf(Position(2900, 3680), Position(2903, 3680)),
+                   crossing = { plr, from, to, _ -> ShortcutMoves.scramble(plr, from, to, 3) }),
+
+    TROLLHEIM_WILDERNESS_FIRST(64, 0.0, listOf(9327 to Position(2916, 3672), 9327 to Position(2917, 3672)),
+                               listOf(Position(2915, 3672), Position(2918, 3672)),
+                               freeFrom = setOf(Position(2918, 3672)),
+                               crossing = { plr, from, to, _ -> ShortcutMoves.climbRocks(plr, from, to) }),
+
+    TROLLHEIM_WILDERNESS_SECOND(64, 0.0, listOf(9327 to Position(2922, 3672), 9327 to Position(2923, 3673)),
+                                listOf(Position(2921, 3672), Position(2924, 3673)),
+                                freeFrom = setOf(Position(2921, 3672), Position(2924, 3673)),
+                                crossing = { plr, from, to, _ -> ShortcutMoves.climbRocks(plr, from, to) }),
+
+    // The last step only goes down into the Wilderness.
+    TROLLHEIM_WILDERNESS_LAST(64, 0.0, listOf(9327 to Position(2947, 3678), 9327 to Position(2948, 3679),
+                                              9327 to Position(2949, 3680)),
+                              listOf(Position(2946, 3678), Position(2950, 3681)), oneWay = true,
+                              freeFrom = setOf(Position(2946, 3678)),
+                              crossing = { plr, from, to, _ -> ShortcutMoves.climbRocks(plr, from, to) }),
+
+    COSMIC_WALL_MEDIUM(46, 9.9, listOf(12127 to Position(2400, 4403)),
+                       listOf(Position(2400, 4402), Position(2400, 4404)),
+                       crossing = { plr, from, to, _ -> ShortcutMoves.squeezePastWall(plr, from, to) }),
+
+    COSMIC_WALL_ADVANCED_SOUTH(66, 9.9, listOf(12127 to Position(2408, 4395)),
+                               listOf(Position(2408, 4394), Position(2408, 4396)),
+                               freeFrom = setOf(Position(2408, 4396)),
+                               crossing = { plr, from, to, _ -> ShortcutMoves.squeezePastWall(plr, from, to) }),
+
+    COSMIC_WALL_ADVANCED_NORTH(66, 9.9, listOf(12127 to Position(2415, 4402)),
+                               listOf(Position(2415, 4401), Position(2415, 4403)),
+                               freeFrom = setOf(Position(2415, 4401)),
+                               crossing = { plr, from, to, _ -> ShortcutMoves.squeezePastWall(plr, from, to) }),
+
+    ECTOPOOL_WALL_UP(58, 0.0, listOf(9307 to Position(3670, 9888, 2)),
+                     listOf(Position(3671, 9888, 2), Position(3670, 9888, 3)), oneWay = true,
+                     levelMessage = "You need an agility level of at least 58 to climb up this wall.",
+                     crossing = { plr, from, to, _ -> ShortcutMoves.jumpUpWall(plr, from, to) }),
+
+    ECTOPOOL_WALL_DOWN(58, 0.0, listOf(9308 to Position(3670, 9888, 3)),
+                       listOf(Position(3670, 9888, 3), Position(3671, 9888, 2)), oneWay = true,
+                       levelMessage = "You need an agility level of at least 58 to climb down this wall.",
+                       crossing = { plr, from, to, _ -> ShortcutMoves.jumpDownWall(plr, from, to) }),
+
+    ARANDAR_EASY(59, 0.0, listOf(9296 to Position(2346, 3299), 9297 to Position(2344, 3295)),
+                 listOf(Position(2346, 3300), Position(2344, 3294)),
+                 crossing = { plr, from, to, _ -> ShortcutMoves.climbRocks(plr, from, to) }),
+
+    ARANDAR_MEDIUM(68, 0.0, listOf(9296 to Position(2338, 3282), 9297 to Position(2338, 3285)),
+                   listOf(Position(2338, 3281), Position(2338, 3286)),
+                   crossing = { plr, from, to, _ -> ShortcutMoves.climbRocks(plr, from, to) }),
+
+    ARANDAR_ADVANCED(85, 0.0, listOf(9296 to Position(2333, 3252), 9297 to Position(2337, 3253)),
+                     listOf(Position(2332, 3252), Position(2338, 3253)),
+                     crossing = { plr, from, to, _ -> ShortcutMoves.climbRocks(plr, from, to) }),
+
+    FREMENNIK_CREVICE(62, 0.0, listOf(9321 to Position(2731, 10008), 9321 to Position(2734, 10008)),
+                      listOf(Position(2730, 10008), Position(2735, 10008)),
+                      crossing = { plr, from, to, _ -> ShortcutMoves.squeezeThroughCrevice(plr, from, to) }),
+
+    FREMENNIK_BLADES_WEST(81, 5.0, listOf(9326 to Position(2769, 10002)),
+                          listOf(Position(2768, 10002), Position(2770, 10002)), freeFrom = setOf(Position(2770, 10002)),
+                          crossing = { plr, _, to, _ -> ShortcutMoves.jumpSpikedBlades(plr, to) }),
+
+    FREMENNIK_BLADES_EAST(81, 5.0, listOf(9326 to Position(2774, 10003)),
+                          listOf(Position(2773, 10003), Position(2775, 10003)), freeFrom = setOf(Position(2773, 10003)),
+                          crossing = { plr, _, to, _ -> ShortcutMoves.jumpSpikedBlades(plr, to) }),
+
+    // TODO Once Priest in Peril is added, only players who have finished it can use the Paterdomus shortcut's three
+    //  parts.
+    PATERDOMUS_CLIFF_RAILING(65, 0.0, listOf(9337 to Position(3425, 3484)),
+                             listOf(Position(3425, 3484), Position(3425, 3483)), freeFrom = setOf(Position(3425, 3483)),
+                             crossing = { plr, _, to, _ -> ShortcutMoves.squeezeThroughFence(plr, to) }),
+
+    PATERDOMUS_CLIFF(65, 0.0, listOf(9336 to Position(3426, 3477), 9335 to Position(3425, 3476)),
+                     listOf(Position(3426, 3478), Position(3424, 3476)),
+                     freeFrom = setOf(Position(3426, 3478), Position(3424, 3476)),
+                     crossing = { plr, from, to, _ -> ShortcutMoves.climbRocks(plr, from, to) }),
+
+    PATERDOMUS_BRIDGE_RAILING(65, 0.0, listOf(9334 to Position(3424, 3476)),
+                              listOf(Position(3424, 3476), Position(3423, 3476)),
+                              freeFrom = setOf(Position(3424, 3476)),
+                              crossing = { plr, _, to, _ -> ShortcutMoves.squeezeThroughFence(plr, to) });
 
     companion object {
 
@@ -118,7 +221,11 @@ enum class AgilityShortcut(val level: Int,
             val end = shortcut.inColumn(plr, shortcut.ends[1 - first])
             val begin = begin@ {
                 if (!ready(plr) || plr.position != start || obj.state != EntityState.ACTIVE) return@begin
-                if (shortcut.level > 0 && !Agility.checkLevel(plr, shortcut.level)) return@begin
+                if (shortcut.level > 0 && start !in shortcut.freeFrom && plr.agility.level < shortcut.level) {
+                    if (shortcut.levelMessage == null) Agility.checkLevel(plr, shortcut.level)
+                    else plr.sendMessage(shortcut.levelMessage)
+                    return@begin
+                }
                 val action = shortcut.crossing(plr, start, end, obj)
                 if (action !is ShortcutFall && shortcut.xp > 0) {
                     val then = action.onSuccess

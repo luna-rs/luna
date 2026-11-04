@@ -1,6 +1,7 @@
 package game.skill.agility
 
 import game.skill.agility.pyramid.AgilityPyramid
+import game.skill.agility.yanille.YanilleDungeon
 import io.luna.game.model.Position
 
 /**
@@ -70,5 +71,14 @@ enum class AgilityObstacle(val xp: Double,
     PYRAMID_PLANK(56.4, { AgilityPyramid.startsFrom(PYRAMID_PLANK, this) }, level = 30),
     PYRAMID_CROSS_GAP(56.4, { AgilityPyramid.startsFrom(PYRAMID_CROSS_GAP, this) }, level = 30),
     PYRAMID_JUMP_GAP(22.0, { AgilityPyramid.startsFrom(PYRAMID_JUMP_GAP, this) }, level = 30),
-    PYRAMID_TOP_ROCKS(0.0, { x == 3043 && y in 4697..4698 && z == 3 }, level = 30)
+    PYRAMID_TOP_ROCKS(0.0, { x == 3043 && y in 4697..4698 && z == 3 }, level = 30),
+
+    // The Yanille Agility Dungeon's obstacles link its rooms and work both ways, so each checks its own level each
+    // way. Climbing the rubble back down needs no level, so nobody is shut in Salarin's corridor.
+    YANILLE_LEDGE(22.5, { this == YanilleDungeon.LEDGE_NORTH || this == YanilleDungeon.LEDGE_SOUTH }, level = 40),
+    YANILLE_PIPE(7.5, { this == YanilleDungeon.PIPE_EAST || this == YanilleDungeon.PIPE_WEST }, level = 49),
+    YANILLE_MONKEY_BARS(20.0, { x in 2598..2599 && y in setOf(YanilleDungeon.BARS_NORTH, YanilleDungeon.BARS_SOUTH) &&
+        z == 0 }, level = 57),
+    YANILLE_RUBBLE_UP(5.5, { x in 2616..2617 && y == 9571 && z == 0 }, level = 67),
+    YANILLE_RUBBLE_DOWN(0.0, { YanilleDungeon.besideRubbleDown(this) })
 }

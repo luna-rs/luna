@@ -16,6 +16,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 /**
  * A global singleton that handles all player punishments such as bans, mutes, and IP blacklisting.
@@ -64,34 +65,36 @@ object PunishmentHandler {
      *
      * @param punisher The staff member applying the ban.
      * @param username The username to IP ban.
-     * @return A [ListenableFuture] representing completion of the async write operation.
+     * @return A future that completes after the file write and the game-thread logout, message and log entry.
      */
     fun ipBan(punisher: Player, username: String): CompletableFuture<Void> {
-        val dataFuture = world.persistenceService.load(username)
-        return gameService.submit {
-            val data = dataFuture.get() ?: throw IllegalStateException("Player data not found for $username.")
+        val game = gameService
+        val playerWorld = world
+        val filter = server.channelFilter
+        return playerWorld.persistenceService.load(username).thenCompose { loaded ->
+            game.submit(Supplier<CompletableFuture<Void>> {
+                val data = loaded ?: throw IllegalStateException("Player data not found for $username.")
+                val ip = data.lastIp ?: throw IllegalStateException("No IP address recorded for $username.")
 
-            val ip = data.lastIp ?: throw IllegalStateException("No IP address recorded for $username.")
-
-            if (server.channelFilter.addToBlacklist(ip)) {
-                Files.writeString(
-                    IP_BANS,
-                    "$ip\n",
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND,
-                    StandardOpenOption.WRITE,
-                    StandardOpenOption.SYNC
-                )
-            } else {
-                throw IllegalStateException("Player $username has already been IP banned.")
-            }
-
-            gameService.sync {
-                world.getPlayer(username).ifPresent { it.forceLogout() }
-                punisher.sendMessage("You have IP banned $username.")
-                logger.log(PUNISHMENT, "Staff member {} has IP banned {}.", punisher.username, username)
-            }.join()
-        }
+                if (filter.addToBlacklist(ip)) {
+                    Files.writeString(
+                        IP_BANS,
+                        "$ip\n",
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.SYNC
+                    )
+                } else {
+                    throw IllegalStateException("Player $username has already been IP banned.")
+                }
+                game.sync(Runnable {
+                    playerWorld.getPlayer(username).ifPresent { it.forceLogout() }
+                    punisher.sendMessage("You have IP banned $username.")
+                    logger.log(PUNISHMENT, "Staff member {} has IP banned {}.", punisher.username, username)
+                })
+            })
+        }.thenCompose { callback -> callback }
     }
 
     /**

@@ -34,9 +34,9 @@ class BotPrayerRestoration(private val bot: Bot, private val handler: BotActionH
         private var Bot.lastAltarVisit by Attr.long()
 
         /**
-         * Mirrors restorePrayer.kts, including the separate Ancient altar exclusion.
+         * Mirrors restorePrayer.kts, including the separate Ancient altar and Yanille trapped altar exclusions.
          */
-        internal fun isRechargeAltar(altar: GameObject): Boolean = altar.id != 6552 &&
+        internal fun isRechargeAltar(altar: GameObject): Boolean = altar.id != 6552 && altar.id != 412 &&
             altar.def().name?.contains("altar", ignoreCase = true) == true && "Pray-at" in altar.def().actions
 
         /**

@@ -9,3 +9,7 @@ for (id in AgilityShortcut.IDS) {
 for (id in SteppingStones.IDS) {
     object1(id) { SteppingStones.jump(plr, gameObject) }
 }
+
+for (id in SpikyChains.IDS) {
+    object1(id) { SpikyChains.climb(plr, gameObject) }
+}

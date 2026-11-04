@@ -26,8 +26,8 @@ fun restore(plr: Player) {
 /* Match all altar objects.  */
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
-        if (def.id() == 6552) {
-            // Ancient altar.
+        if (def.id() == 6552 || def.id() == 412) {
+            // Ancient altar, and the Yanille Agility Dungeon's trapped altar.
             continue
         }
         if (def.actions.contains("Pray-at") && def.name!!.contains("altar", true)) {

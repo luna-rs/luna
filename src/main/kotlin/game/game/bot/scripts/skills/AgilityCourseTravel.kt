@@ -17,6 +17,13 @@ import kotlin.time.Duration.Companion.seconds
  */
 object AgilityCourseTravel {
     /**
+     * Leaves a failed Yanille obstacle through the native spider-cave stairs, which remain underground.
+     */
+    suspend fun yanilleSpiderExit(bot: Bot): Boolean = traverse(bot, Position(2578, 9583), setOf(2316), fallback = false) {
+        bot.position == Position(2567, 9524)
+    }
+
+    /**
      * Uses the course entrance pipe in either direction.
      */
     suspend fun barbarianPipe(bot: Bot, entering: Boolean): Boolean = traverse(bot,
@@ -47,9 +54,10 @@ object AgilityCourseTravel {
     /**
      * Approaches an entrance on the required side and confirms its native landing.
      */
-    private suspend fun traverse(bot: Bot, entry: Position, ids: Set<Int>, arrived: () -> Boolean): Boolean =
+    private suspend fun traverse(bot: Bot, entry: Position, ids: Set<Int>, fallback: Boolean = true,
+                                 arrived: () -> Boolean): Boolean =
         withTimeoutOrNull(45.seconds) {
-            if (!bot.actionHandler.webWalkTo(entry, bank = BankAccess.NONE) || bot.position != entry) {
+            if (!bot.actionHandler.webWalkTo(entry, bank = BankAccess.NONE, fallback = fallback) || bot.position != entry) {
                 return@withTimeoutOrNull false
             }
             val obj = world.locator.findObjects(entry, 5) {

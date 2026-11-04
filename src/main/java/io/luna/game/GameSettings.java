@@ -4,6 +4,7 @@ import io.luna.LunaRuntime;
 import io.luna.game.model.Position;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.item.GroundItem;
+import io.luna.net.websocket.WebSocketSettings;
 import io.netty.util.ResourceLeakDetector.Level;
 
 import java.util.List;
@@ -94,6 +95,11 @@ public final class GameSettings {
     private final int port;
 
     /**
+     * Optional WebSocket listener settings; older configurations leave it disabled.
+     */
+    private final WebSocketSettings websocket;
+
+    /**
      * Max simultaneous connections per IP/channel.
      */
     private final int connectionLimit;
@@ -140,6 +146,13 @@ public final class GameSettings {
      */
     public int port() {
         return port;
+    }
+
+    /**
+     * Returns the optional browser transport configuration.
+     */
+    public WebSocketSettings webSocket() {
+        return websocket == null ? new WebSocketSettings() : websocket;
     }
 
     /**
@@ -254,6 +267,7 @@ public final class GameSettings {
         this.runtimeMode = runtimeMode;
         this.developerUsernames = developerUsernames;
         this.port = port;
+        this.websocket = null;
         this.connectionLimit = connectionLimit;
         this.startingPosition = startingPosition;
         this.experienceMultiplier = experienceMultiplier;

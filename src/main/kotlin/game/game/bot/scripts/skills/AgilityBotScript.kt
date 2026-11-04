@@ -15,6 +15,8 @@ import com.google.gson.JsonObject
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.agility.Agility.courseProgress
 import game.skill.agility.pyramid.AgilityPyramid
+import game.skill.agility.yanille.YanilleDungeon
+import game.player.item.consume.potion.Potion
 import game.skill.agility.skullball.Skullball
 import game.skill.agility.pyramid.AgilityPyramid.pyramidTopTaken
 import game.item.greegree.Greegree
@@ -60,6 +62,8 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     ZonedBotScript(bot, duration, mutableListOf(course.zone)) {
 
     override val potionSkillId: Int get() = SKILL_AGILITY
+    override val actionSafety: ActionSafety get() = if (course.isYanille) ActionSafety.COMBAT else ActionSafety.NON_COMBAT
+    override val allowsCombatResponse: Boolean get() = !course.isYanille
 
     companion object {
         /**
@@ -74,6 +78,12 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         private const val STICK_TRAINER = 1664
 
         /**
+         * Real carried cures protect the optional fall recovery through the poison-spider cave.
+         */
+        internal val YANILLE_ANTIPOISONS = listOf(Potion.ANTIDOTE_PLUS_PLUS, Potion.ANTIDOTE_PLUS,
+            Potion.SUPER_ANTIPOISON, Potion.ANTIPOISON_POTION).flatMap { it.doses.reversed() }
+
+        /**
          * Checks owned admission equipment and whether a fully healed bot can survive the course's largest fall.
          * The native handlers retain their level, quest and individual obstacle checks.
          */
@@ -81,7 +91,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             AgilityBotCourse.APE_ATOLL -> NINJA_GREEGREES.any { bot.itemTracker.count(it) > 0 }
             AgilityBotCourse.WEREWOLF -> bot.hitpoints.staticLevel > 45
             AgilityBotCourse.AGILITY_PYRAMID -> bot.hitpoints.staticLevel > 10
-            else -> true
+            else -> !course.isYanille || YANILLE_ANTIPOISONS.any { bot.itemTracker.count(it) > 0 }
         }
 
         /**
@@ -185,10 +195,13 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
-        if (step !in course.steps.indices || failures !in 0..2 || bot.skill(SKILL_AGILITY).level < course.course.level ||
-            !canTrain(bot, course)) {
+        val escaping = course.isYanille && YanilleAgilityTraining.inSpiderCave(bot.position)
+        if (step !in course.steps.indices || failures !in 0..2 || !escaping &&
+            (bot.skill(SKILL_AGILITY).level < course.minimumLevel || !canTrain(bot, course))) {
             return false
         }
+        if (escaping && (!handler.inventory.hasAnyFood() || YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) }))
+            forceBanking = true
         val recoveredStep = if (landing == null && !rewardPending) course.recoveryStep(bot.position) else null
         if (recoveredStep != null) {
             step = recoveredStep
@@ -211,7 +224,15 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
 
     override suspend fun equipment() = null
 
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =
+        handler.webWalkTo(zone = zone, attempts = if (course.isYanille) 4 else 1,
+            bank = bank, fallback = !course.isYanille)
+
     override suspend fun onBankRequested(initial: Boolean): Boolean {
+        if (course.isYanille) {
+            return !recovering && landing == null && (!handler.inventory.hasAnyFood() ||
+                YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) })
+        }
         if (!initial || recovering || landing != null || rewardPending || bot.position.z != 0) return false
         val requested = when (course) {
             AgilityBotCourse.GNOME_STRONGHOLD -> false
@@ -230,6 +251,15 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     }
 
     override suspend fun onBankOpen(initial: Boolean) {
+        if (course.isYanille && YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) }) {
+            val cure = YANILLE_ANTIPOISONS.firstOrNull { bot.bank.contains(it) }
+            if (cure == null || !handler.banking.withdraw(Item(cure)) || !bot.inventory.contains(cure)) {
+                val wanted = Potion.SUPER_ANTIPOISON.fourDose
+                if (bot.preferences.getWantedItem(wanted) == null) bot.preferences.addWantedItem(wanted, 3)
+                stop()
+                return
+            }
+        }
         if (course == AgilityBotCourse.APE_ATOLL && bot.equipment.weapon?.id !in NINJA_GREEGREES) {
             val greegree = NINJA_GREEGREES.firstOrNull { bot.inventory.contains(it) || bot.bank.contains(it) }
             // Holding a greegree outside Ape Atoll or the zoo is rejected by the native equipment handler.
@@ -243,7 +273,10 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             return
         }
         if (!handler.banking.withdrawAnyFood(8)) {
-            bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 24) }
+            bot.preferences.allSuitableFood().forEach {
+                if (!course.isYanille || bot.preferences.getWantedItem(it.id) == null)
+                    bot.preferences.addWantedItem(it.id, 24)
+            }
             stop()
         }
     }
@@ -258,10 +291,31 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             if (!handInReward() && !failedAttempt()) stop()
             return true
         }
+        if (course.isYanille && bot.status.isPoisoned() && !bot.status.isAntiPoison()) {
+            val cure = YANILLE_ANTIPOISONS.firstOrNull { bot.inventory.contains(it) }
+            if (cure != null) {
+                if (!handler.inventory.clickItem(1, cure) ||
+                    !waitFor(5.seconds) { !bot.status.isPoisoned() || bot.status.isAntiPoison() }) {
+                    if (!failedAttempt()) stop()
+                }
+                return true
+            }
+            forceBanking = true
+        }
         if (recovering) {
+            if (course.isYanille && bot.healthPercent <= 50 && handler.inventory.hasAnyFood()) {
+                val health = bot.health
+                if (handler.inventory.eatAnyFood() && bot.health > health) return true
+                forceBanking = true
+            }
             if (!recover()) {
                 if (!failedAttempt()) stop()
             }
+            return true
+        }
+        // The upper rubble landing is a separate cave copy, outside this variant's lower work zone.
+        if (course == AgilityBotCourse.YANILLE_RUBBLE && !forceBanking && insideCourse()) {
+            if (!executeInZone()) stop()
             return true
         }
         // The two upper Pyramid floors are on a separate native map copy. Finish those local steps before the
@@ -274,7 +328,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     }
 
     override suspend fun executeInZone(): Boolean {
-        if (failures >= 3 || bot.skill(SKILL_AGILITY).level < course.course.level) return false
+        if (failures >= 3 || bot.skill(SKILL_AGILITY).level < course.minimumLevel) return false
         // Native Agility actions own the player lock and strong queue until traversal finishes.
         if (!isSettled()) return true
         if (landing != null) return reconcileLanding()
@@ -283,12 +337,17 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         val maximumHit = when {
             course == AgilityBotCourse.WEREWOLF && next.obstacle == WEREWOLF_ZIP_LINE -> 45
             course == AgilityBotCourse.AGILITY_PYRAMID -> 10
+            course.isYanille -> YanilleDungeon.fallDamage(bot)
             else -> 5
         }
         if (course != AgilityBotCourse.GNOME_STRONGHOLD &&
             (bot.healthPercent <= 50 || bot.health <= maximumHit)) {
             val health = bot.health
             if (!handler.inventory.eatAnyFood() || bot.health <= health) {
+                if (course.isYanille) {
+                    forceBanking = true
+                    return true
+                }
                 bot.log("Agility supplies exhausted; ending the session before another damaging obstacle.")
                 return false
             }
@@ -318,7 +377,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         if (entry != null && !walkTo(entry)) return reconcileDisplacement()
         // Walking can suspend; never interrupt a native action which began while approaching.
         if (!isSettled()) return true
-        if (bot.skill(SKILL_AGILITY).level < course.course.level) return false
+        if (bot.skill(SKILL_AGILITY).level < course.minimumLevel) return false
         if (obj.state != EntityState.ACTIVE || bot.position.z != next.plane ||
             (entry != null && bot.position != entry)) return failedAttempt()
         landing = next.destination(obj, bot.position) ?: return failedAttempt()
@@ -350,7 +409,8 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
      * Recognizes both parts of the Pyramid when a saved session already stands on an upper floor.
      */
     private fun insideCourse() = bot.position in course.zone.area ||
-        course == AgilityBotCourse.AGILITY_PYRAMID && bot.position in SubZone.AGILITY_PYRAMID_UPPER.area
+        course == AgilityBotCourse.AGILITY_PYRAMID && bot.position in SubZone.AGILITY_PYRAMID_UPPER.area ||
+        course == AgilityBotCourse.YANILLE_RUBBLE && YanilleDungeon.besideRubbleDown(bot.position)
 
     /**
      * A long obstacle can have clickable parts at both ends. Prefer the part reachable from the declared forward
@@ -358,9 +418,10 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
      */
     private fun findObstacle(next: AgilityStep): GameObject? {
         val area = workingArea()
-        return world.locator.findObjects(area.centerPosition.setZ(next.plane), area.tileRadius) {
+        val searchCenter = next.searchCenter ?: area.centerPosition.setZ(next.plane)
+        return world.locator.findObjects(searchCenter, if (next.searchCenter == null) area.tileRadius else 5) {
             it.state == EntityState.ACTIVE && it.id in next.objectIds && it.position.z == next.plane &&
-                it.position in area && next.matches(it)
+                (next.searchCenter != null || it.position in area) && next.matches(it)
         }.minWithOrNull(compareBy<GameObject> {
             if (world.collisionManager.reached(next.approach(it) ?: bot.position, it,
                     next.policy ?: InteractionPolicy.STANDARD_SIZE)) 0 else 1
@@ -480,13 +541,14 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     override suspend fun beforeLeavingZone(): Boolean {
         if (!isSettled()) return false
         if (landing != null) return !reconcileLanding()
+        if (course.isYanille && forceBanking && !recovering) return true
         if (rewardPending) {
             if (!handInReward()) return !failedAttempt()
             return false
         }
         // Expiry finishes the current lap through native actions. A fresh future session must not inherit an
         // upper-floor position with a ground-floor step zero. Missing supplies or the common failure budget still end it.
-        if (insideCourse() && (recovering || step != 0)) {
+        if ((insideCourse() || course.isYanille && recovering) && (recovering || step != 0)) {
             if (recovering) {
                 if (!recover()) return !failedAttempt()
             } else if (!executeInZone()) return true
@@ -511,7 +573,8 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     private suspend fun walkTo(tile: Position): Boolean {
         if (bot.position == tile && bot.walking.isEmpty) return true
         return withTimeoutOrNull(30.seconds) {
-            handler.webWalkTo(tile, bank = BankAccess.NONE) && bot.position == tile && bot.walking.isEmpty
+            handler.webWalkTo(tile, bank = BankAccess.NONE, fallback = !course.isYanille) &&
+                bot.position == tile && bot.walking.isEmpty
         } == true
     }
 
@@ -521,6 +584,16 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
      */
     private suspend fun recover(): Boolean {
         course.recoveryStep(bot.position)?.let { step = it }
+        if (course.isYanille && YanilleAgilityTraining.inSpiderCave(bot.position)) {
+            if (!handler.inventory.hasAnyFood() || YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) })
+                forceBanking = true
+            if (!AgilityCourseTravel.yanilleSpiderExit(bot)) return false
+            if (forceBanking) {
+                recovering = false
+                failures = 0
+                return true
+            }
+        }
         val ladder = course.pitLadder(bot.position)
         if (ladder != null) {
             if (!AgilityCourseTravel.climbOut(bot, ladder)) return false
@@ -627,7 +700,25 @@ enum class AgilityBotCourse(val course: AgilityCourse, val zone: SubZone, val st
             approach = { Position(2757, 2733) }, destination = { _, _ -> Position(2770, 2747) })
     )),
     WEREWOLF(AgilityCourse.WEREWOLF, SubZone.WEREWOLF_AGILITY, werewolfBotSteps()),
-    AGILITY_PYRAMID(AgilityCourse.AGILITY_PYRAMID, SubZone.AGILITY_PYRAMID, pyramidBotSteps());
+    AGILITY_PYRAMID(AgilityCourse.AGILITY_PYRAMID, SubZone.AGILITY_PYRAMID, pyramidBotSteps()),
+    YANILLE_LEDGE(AgilityCourse.YANILLE_DUNGEON, SubZone.YANILLE_AGILITY_LEDGE,
+        YanilleAgilityTraining.ledge()),
+    YANILLE_PIPE(AgilityCourse.YANILLE_DUNGEON, SubZone.YANILLE_AGILITY_PIPE,
+        YanilleAgilityTraining.pipe()),
+    YANILLE_BARS(AgilityCourse.YANILLE_DUNGEON, SubZone.YANILLE_AGILITY_BARS,
+        YanilleAgilityTraining.bars()),
+    YANILLE_RUBBLE(AgilityCourse.YANILLE_DUNGEON, SubZone.YANILLE_AGILITY_RUBBLE,
+        YanilleAgilityTraining.rubble());
+
+    /**
+     * Per-obstacle dungeon admission is stricter than the shared native course's first level.
+     */
+    val minimumLevel: Int get() = maxOf(course.level, steps.maxOfOrNull { it.obstacle?.level ?: 0 } ?: 0)
+
+    /**
+     * These room crossings pay individual XP and never form a native bonus lap.
+     */
+    val isYanille: Boolean get() = course == AgilityCourse.YANILLE_DUNGEON
 
     /**
      * Course failure landing regions, including saved bots already walking toward a pit ladder.
@@ -661,6 +752,8 @@ enum class AgilityBotCourse(val course: AgilityCourse, val zone: SubZone, val st
         }
         WEREWOLF -> if (position in setOf(Position(3526, 9895), Position(3530, 9890), Position(3530, 9886))) 0 else null
         AGILITY_PYRAMID -> pyramidBotRecovery(position)
+        YANILLE_LEDGE, YANILLE_PIPE, YANILLE_BARS, YANILLE_RUBBLE ->
+            if (YanilleAgilityTraining.inSpiderCave(position)) 0 else null
     }
 }
 
@@ -774,6 +867,7 @@ private fun pyramidBotRecovery(position: Position): Int? = when (position) {
  * @property destination Expected landing calculated from the object and actual entry tile.
  * @property waypoints Forward walking checkpoints between Pyramid hazards, omitted once recovery reaches the entry.
  * @property policy An explicit native reach policy for obstacles such as the Werewolf course's two-tile stones.
+ * @property searchCenter An exact search anchor for a separate dungeon room outside the arrival subzone.
  * @author lare96
  */
 data class AgilityStep(val obstacle: AgilityObstacle?, val plane: Int, val objectIds: Set<Int>,
@@ -781,7 +875,8 @@ data class AgilityStep(val obstacle: AgilityObstacle?, val plane: Int, val objec
                        val matches: (GameObject) -> Boolean = { true },
                        val destination: (GameObject, Position) -> Position?,
                        val waypoints: List<Position> = emptyList(),
-                       val policy: InteractionPolicy? = null)
+                       val policy: InteractionPolicy? = null,
+                       val searchCenter: Position? = null)
 
 /**
  * Plays the native timed Skullball game through the Boss dialogue and actual Tap/Kick/Shoot interactions.

@@ -9,6 +9,7 @@ import game.bot.scripts.skills.IdentifyHerbBotScript
 import game.bot.scripts.skills.GrindIngredientBotScript
 import game.bot.scripts.skills.MakePotionBotScript
 import game.bot.scripts.skills.TelegrabBotScript
+import game.bot.scripts.SinisterChestBotScript
 import game.skill.herblore.makePotion.FinishedPotion
 import game.bot.scripts.skills.MakeUnfPotionBotScript
 import game.skill.herblore.grindIngredient.Ingredient
@@ -27,6 +28,7 @@ import io.luna.game.model.mob.SkillSet
  * and supplies in inventory or bank, then use the inherited level/personality selector.
  * Grinding and unfinished-potion preparation award no XP;
  * selecting a profit activity does not guarantee a market margin.
+ * Owned sinister keys can instead supply native chest herbs through a prepared Yanille Dungeon trip.
  *
  * Before either mode checks recipes or supplies, bots below permanent level three receive only the experience
  * needed to reach that level. This supplies the initial Herblore unlock while bot questing is unavailable.
@@ -47,6 +49,10 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         val selectionLevel = ensureMinimumLevel(bot, level)
+        if (SinisterChestBotScript.ready(bot)) {
+            zones += SubZone.YANILLE_DUNGEON_SINISTER_CHEST
+            return SinisterChestBotScript(bot, getDuration(bot))
+        }
         return getProductionScript(bot, selectionLevel, false) ?: getIngredientGatheringScript(bot) ?:
             getTrainingScript(bot, selectionLevel, zones)
     }

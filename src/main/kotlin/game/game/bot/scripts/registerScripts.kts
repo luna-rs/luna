@@ -51,6 +51,10 @@ import game.bot.scripts.skills.AgilityBotScript
 import game.bot.scripts.skills.AgilityBotScript.Companion.AgilityData
 import game.bot.scripts.skills.SkullballBotScript
 import game.bot.scripts.skills.SkullballBotScript.Companion.SkullballData
+import game.bot.scripts.skills.RoguesDenBotScript
+import game.bot.scripts.skills.RoguesDenBotScript.MazeData
+import game.bot.scripts.SalarinBotScript.Companion.SalarinData
+import game.bot.scripts.SinisterChestBotScript.Companion.ChestData as SinisterChestData
 import game.bot.scripts.skills.WeaveTextileBotScript
 import game.bot.scripts.skills.WeaveTextileBotScript.Companion.TextileData
 import game.bot.scripts.UseLampBotScript.Companion.LampData
@@ -187,6 +191,9 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<BoardGameData>(GamesRoomBotScript::class) { bot, data -> GamesRoomBotScript(bot, data) }
     scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
     scriptManager.addScript<SkullballData>(SkullballBotScript::class) { bot, data -> SkullballBotScript(bot, data) }
+    scriptManager.addScript<MazeData>(RoguesDenBotScript::class) { bot, data -> RoguesDenBotScript(bot, data) }
+    scriptManager.addScript<SalarinData>(SalarinBotScript::class) { bot, data -> SalarinBotScript(bot, data) }
+    scriptManager.addScript<SinisterChestData>(SinisterChestBotScript::class) { bot, data -> SinisterChestBotScript(bot, data) }
     scriptManager.addScript<TextileData>(WeaveTextileBotScript::class) { bot, data -> WeaveTextileBotScript(bot, data) }
     scriptManager.addScript<LampData>(UseLampBotScript::class) { bot, data -> UseLampBotScript(bot, data) }
     scriptManager.addScript<CutTreeData>(CutTreeBotScript::class) { bot, data -> CutTreeBotScript(bot, data) }
