@@ -1,6 +1,7 @@
 package game.player.command
 
 import api.bot.isRealBot
+import api.bot.script.BotScript
 
 import api.bot.script.DynamicBotScript
 import api.bot.script.ZonedBotScript
@@ -9,9 +10,15 @@ import api.bot.zone.Zone
 import api.drops.DropTableHandler
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.coordinator.CombatCoordinator
 import engine.bot.coordinator.skill.SmithingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.LogoutBotScript
+import game.bot.scripts.NpcCombatScript
+import game.bot.scripts.PestControlBotScript
+import game.bot.scripts.combat.PkBotScript
+import game.bot.scripts.trading.TradeBotScript
 import game.player.QuestJournalInterface
 import game.player.item.consume.food.Food
 import game.skill.magic.Rune
@@ -49,6 +56,7 @@ import io.luna.util.CacheDumpUtils
 import io.luna.util.NumberUtils
 import io.luna.util.RandomUtils
 import java.lang.Boolean.parseBoolean
+import kotlin.time.Duration.Companion.hours
 
 // todo each command in its own file
 
@@ -60,6 +68,23 @@ cmd("noclip", RIGHTS_ADMIN) {
         plr.sendMessage("Debug noclip enabled until the next region load or logout.")
     } else {
         plr.sendMessage("Debug noclip is available to administrators in development mode.")
+    }
+}
+
+cmd("injectall") {
+    val name = getInputFrom(0)
+    val script: ((Bot) -> BotScript)? = when(name) {
+        "pest control" -> { it -> PestControlBotScript(it) }
+        "castle wars" -> { it -> CastleWarsBotScript(it) }
+        "pking" -> { it -> PkBotScript(it, 1.hours) }
+        else -> null
+    }
+    if(script != null) {
+        for (bot in world.players) {
+            if (bot is Bot) {
+                bot.scriptStack.pushHead(script(bot))
+            }
+        }
     }
 }
 
