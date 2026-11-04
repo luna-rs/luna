@@ -15,20 +15,32 @@
     "serializer": "JsonGameSerializer",
     // The network port the game server listens on.
     "port": 43594,
-    // Optional native browser transport. Desktop clients continue using port above.
+    // Optional native browser transport in the same server/world. Restart after changing these settings.
+    // Desktop clients continue using the game port above; public HTTPS clients need a WSS/TLS proxy.
     "websocket": {
+      // Missing/false preserves TCP-only startup. See io.luna.net.websocket package documentation for setup.
       "enabled": false,
+      // Keep loopback for a local TLS proxy; this listener does not manage TLS certificates itself.
       "bind_address": "127.0.0.1",
+      // Internal listener port (1..65535), different from the desktop game port. Public WSS can use 443.
       "port": 43595,
+      // Exact upgrade path; optional server=beta/development is a compatibility label, not world routing.
       "path": "/game",
       // Exact website origins, without a trailing slash or project path.
       "allowed_origins": ["http://127.0.0.1:8095", "http://localhost:8095", "https://luna-rs.github.io"],
-      // Leave empty for direct connections. Add only the exact IP of your TLS proxy.
+      // Empty ignores forwarded headers. Trust only exact numeric proxy peers, never arbitrary client input.
+      // For local Cloudflare, use ["127.0.0.1"] so real player IPs receive the shared bans/connection limits.
       "trusted_proxy_addresses": [],
+      // Trusted proxies must overwrite this with ONE verified numeric client IP, without a port or list.
+      // Missing/duplicate/malformed trusted values reject the upgrade instead of falling back to localhost.
       "forwarded_ip_header": "CF-Connecting-IP",
+      // Aggregated HTTP body limit in bytes (1..65536). WebSocket upgrades still require an empty body.
       "max_http_content_length": 8192,
+      // Incoming frame AND fragmented-message/early-input limit in bytes (1..1048576).
       "max_frame_payload_length": 1048576,
+      // Game and encoded-wire queue limits in bytes (at least max_frame_payload_length, at most 67108864).
       "max_pending_outbound_bytes": 8388608,
+      // Upgrade deadline in milliseconds (1000..60000); the normal game read timeout starts afterwards.
       "handshake_timeout_millis": 10000
     },
     // The maximum number of simultaneous connections allowed from one source.

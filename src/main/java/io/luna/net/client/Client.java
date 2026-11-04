@@ -29,13 +29,21 @@ public abstract class Client<I> {
      */
     public static final AttributeKey<Client<?>> KEY = AttributeKey.valueOf("Client.key");
 
+    /**
+     * Canonical numeric identity resolved by an admitted transport before constructing its clients.
+     */
     private static final AttributeKey<String> VERIFIED_IP = AttributeKey.valueOf("Client.verifiedIp");
 
     /**
      * Records an immutable numeric peer address after transport-level proxy verification.
+     * <p>
+     * This method only normalizes the address; the caller must have authenticated its proxy source.
+     * It does not perform DNS resolution and cannot replace an identity already attached to the channel.
      *
      * @param channel The connection.
      * @param address The verified IPv4 or IPv6 address, without a port.
+     * @throws IllegalArgumentException If the address is not numeric.
+     * @throws IllegalStateException If a different identity was previously attached.
      */
     public static void setIpAddress(Channel channel, String address) {
         byte[] bytes = address == null ? null : NetUtil.createByteArrayFromIpAddressString(address);

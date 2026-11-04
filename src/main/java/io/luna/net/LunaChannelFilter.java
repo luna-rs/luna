@@ -39,6 +39,9 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
      */
     public static final AttributeKey<LunaChannelFilter> KEY = AttributeKey.valueOf("LunaChannelFilter.key");
 
+    /**
+     * Marks the single connection-count lease held until this channel closes.
+     */
     private static final AttributeKey<String> ADMITTED_IP = AttributeKey.valueOf("LunaChannelFilter.admittedIp");
 
     /**
@@ -73,6 +76,11 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
 
     /**
      * Applies the shared admission policy without writing transport-specific rejection bytes.
+     * <p>
+     * Desktop rejection uses the existing raw login response; the browser transport calls this only
+     * after upgrading and frames its response. Repeated admission of the same channel is idempotent.
+     * The synchronized check/increment prevents concurrent TCP and browser handshakes from exceeding
+     * the same per-IP quota, and the close future releases that quota even if later setup fails.
      *
      * @param channel The TCP or upgraded WebSocket connection.
      * @param verifiedIp The verified numeric address used for both limits and account metadata.

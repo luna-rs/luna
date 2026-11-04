@@ -163,9 +163,15 @@ public final class LunaServer {
     }
 
     /**
-     * Initializes the Netty server and binds to the configured port.
+     * Binds the desktop TCP listener and, when enabled, a separate browser WebSocket listener.
      * <p>
      * Resource leak detection level is configured via settings for debugging memory / ByteBuf leaks.
+     * Both listeners share the context, message repository, admission filter and event loops. Invalid
+     * WebSocket settings fail before binding; a bind failure closes any listener already opened and
+     * shuts down its event loops so startup never leaves a partial game server running.
+     *
+     * @throws IllegalArgumentException If the optional listener configuration is invalid.
+     * @throws IllegalStateException If either configured listener cannot be bound.
      */
     private void initNetwork() {
         ResourceLeakDetector.setLevel(Luna.settings().game().resourceLeakDetection());

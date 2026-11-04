@@ -68,9 +68,13 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     }
 
     /**
-     * Installs the shared RuneScape protocol after a transport has admitted its connection.
+     * Installs the client state, read timeout and login/game protocol shared by both transports.
+     * <p>
+     * TCP initialization inserts the admission filter before its login decoder. The browser transport
+     * calls this method after a successful WebSocket upgrade and admission. Handler names must remain
+     * stable because {@link io.luna.net.client.LoginClient} replaces the login codecs after authentication.
      *
-     * @param ch The admitted channel.
+     * @param ch The channel whose underlying transport carries ordered game bytes.
      */
     public void addGameHandlers(Channel ch) {
         ch.attr(Client.KEY).setIfAbsent(new IdleClient(ch));

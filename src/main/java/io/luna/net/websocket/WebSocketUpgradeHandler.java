@@ -31,18 +31,57 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Validates browser upgrades and admits the shared game protocol only after the WebSocket handshake.
+ * <p>
+ * The HTTP guard sits before Netty's WebSocket protocol handler, while its {@link ReadyHandler} sits after framing and
+ * the binary adapter. These two stages share state on one channel event loop. The first verifies the endpoint,
+ * origin, and proxy address; the second waits for a completed upgrade, records that immutable address, applies the
+ * existing admission policy, and installs the unchanged login pipeline.
+ * <p>
+ * An absolute deadline covers incomplete HTTP requests as well as the WebSocket handshake. No RuneScape login bytes
+ * are processed before admission, and admission failures are sent only after upgrade so their existing binary login
+ * response is correctly wrapped in WebSocket frames.
  *
  * @author lare96
  */
 final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
 
+    /**
+     * Validated endpoint, origin, proxy, and resource-limit configuration.
+     */
     private final WebSocketSettings settings;
+
+    /**
+     * Shared desktop and browser connection admission policy.
+     */
     private final LunaChannelFilter filter;
+
+    /**
+     * Installs the existing login codecs after successful transport admission.
+     */
     private final LunaChannelInitializer gameInitializer;
+
+    /**
+     * Absolute deadline started when the HTTP guard is added, cancelled on success or teardown.
+     */
     private ScheduledFuture<?> timeout;
+
+    /**
+     * Numeric client address verified from the upgrade request before its HTTP ownership is released.
+     */
     private String address;
+
+    /**
+     * Allows only one validated upgrade attempt on the connection.
+     */
     private boolean requestReceived;
 
+    /**
+     * Creates both admission stages for a single browser connection.
+     *
+     * @param settings The validated listener settings.
+     * @param filter The policy shared with desktop connections.
+     * @param gameInitializer The existing game protocol installer.
+     */
     WebSocketUpgradeHandler(WebSocketSettings settings, LunaChannelFilter filter,
                             LunaChannelInitializer gameInitializer) {
         this.settings = settings;
@@ -52,6 +91,7 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
+        // Netty's WebSocket handshake timeout starts after HTTP decoding; this also covers incomplete HTTP headers.
         timeout = ctx.executor().schedule(() -> { ctx.close(); },
                 settings.handshakeTimeoutMillis(), TimeUnit.MILLISECONDS);
     }
@@ -87,6 +127,7 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
             return;
         }
         requestReceived = true;
+        // Netty's handshake handler takes responsibility for releasing the forwarded HTTP request.
         ctx.fireChannelRead(request);
     }
 
@@ -96,9 +137,9 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * Creates the post-upgrade admission handler for this connection.
+     * Creates the post-upgrade admission handler that shares this guard's verified request state.
      *
-     * @return The handler installed after WebSocket framing.
+     * @return A new handler to install after WebSocket framing and the binary game adapter.
      */
     ChannelInboundHandler readyHandler() {
         return new ReadyHandler();
@@ -106,6 +147,9 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Checks the fixed endpoint and browser origin before allowing an HTTP upgrade.
+     * The optional {@code server} parameter preserves the existing browser client's endpoint format; it does not
+     * select an upstream server because this listener belongs to the game server itself. Netty performs the remaining
+     * WebSocket version, key, upgrade-header, and masking checks.
      *
      * @param request The upgrade request.
      * @return A rejection status, or {@code null} when allowed.
@@ -139,6 +183,7 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Sends a bounded HTTP rejection while the connection still speaks HTTP.
+     * Only the status is exposed, without echoing request headers or verified client metadata.
      *
      * @param ctx The upgrade context.
      * @param status The public response status.
@@ -153,7 +198,8 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * Cancels the absolute HTTP/WebSocket handshake deadline.
+     * Cancels the absolute HTTP/WebSocket handshake deadline if it is still registered.
+     * All callers execute on the same channel event loop, including handler removal and disconnect callbacks.
      */
     private void cancelTimeout() {
         if (timeout != null) {
@@ -164,14 +210,39 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Preserves a bounded amount of early binary input until admission has completed.
+     * <p>
+     * HTTP upgrade and the first game data can arrive in one network read. This stage owns any early byte buffers
+     * until it transfers them to the installed game decoder, or releases them when the connection fails. Both total
+     * bytes and the number of buffered chunks are bounded; empty chunks retain no queue entries.
      *
      * @author lare96
      */
     private final class ReadyHandler extends ChannelInboundHandlerAdapter {
 
+        /**
+         * Creates the event-loop-owned input gate for this connection's upgrade and admission.
+         */
+        private ReadyHandler() {
+        }
+
+        /**
+         * Owned references to decoded binary payloads received before the upgrade-complete event.
+         */
         private final ArrayDeque<ByteBuf> earlyInput = new ArrayDeque<>();
+
+        /**
+         * Total readable bytes held by {@link #earlyInput}.
+         */
         private int earlyBytes;
+
+        /**
+         * Becomes true only after successful admission and shared login pipeline installation.
+         */
         private boolean ready;
+
+        /**
+         * Terminal pre-login failure that prevents buffering or admitting further input.
+         */
         private boolean rejected;
 
         @Override
@@ -184,11 +255,13 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
                     return;
                 }
                 cancelTimeout();
+                // Freeze the verified address before IdleClient caches it during shared pipeline installation.
                 Client.setIpAddress(ctx.channel(), address);
                 LoginResponse rejection = filter.admit(ctx.channel(), address);
                 if (rejection != null) {
                     rejected = true;
                     releaseEarlyInput();
+                    // Preserve the desktop filter's eight-byte preamble and encoded login rejection response.
                     ctx.pipeline().addLast("login-encoder", new LoginEncoder());
                     ctx.channel().write(ctx.alloc().buffer(Long.BYTES).writeLong(0));
                     ctx.channel().writeAndFlush(new LoginResponseMessage(rejection))
@@ -199,6 +272,7 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
                 ready = true;
                 ctx.pipeline().remove(WebSocketUpgradeHandler.this);
                 ctx.fireUserEventTriggered(evt);
+                // Replay transport chunks in their original order; the shared decoder owns them after forwarding.
                 boolean replayed = !earlyInput.isEmpty();
                 ByteBuf bytes;
                 while ((bytes = earlyInput.poll()) != null) {
@@ -251,7 +325,8 @@ final class WebSocketUpgradeHandler extends ChannelInboundHandlerAdapter {
         }
 
         /**
-         * Releases retained data when a handshake or connection is abandoned.
+         * Releases every still-owned early payload when a handshake or connection is abandoned.
+         * Clearing the queue makes repeated teardown callbacks safe.
          */
         private void releaseEarlyInput() {
             ByteBuf bytes;
