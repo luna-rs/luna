@@ -14,7 +14,8 @@ enum class Food(val heal: Int,
                 val id: Int,
                 val id2: Int? = null,
                 val id3: Int? = null,
-                val id4: Int? = null) {
+                val id4: Int? = null,
+                val leftover: Int? = null) {
 
     BANANA(heal = 2,
            delay = 3,
@@ -85,6 +86,20 @@ enum class Food(val heal: Int,
     PINEAPPLE_PIZZA(heal = 11,
                     delay = 3,
                     id = 2301, id2 = 2303),
+    SUMMER_PIE(heal = 11,
+               delay = 1,
+               id = 7218, id2 = 7220,
+               leftover = 2313) {
+        override fun effect(plr: Player) {
+            plr.increaseRunEnergy(10.0)
+            plr.agility.boost(5)
+        }
+
+        override fun consumeMessage(name: String, portion: Int) =
+            if (portion == id) "You eat half the $name." else "You eat the remaining $name."
+
+        override fun healMessage(name: String): String? = null
+    },
     LOBSTER(heal = 12,
             delay = 3,
             id = 379),
@@ -168,9 +183,14 @@ enum class Food(val heal: Int,
     open fun consumeMessage(name: String) = "You eat the $name."
 
     /**
-     * The message sent when the food heals health.
+     * The message sent when the [portion] identifier of this food is eaten.
      */
-    open fun healMessage(name: String) = "It heals some health."
+    open fun consumeMessage(name: String, portion: Int) = consumeMessage(name)
+
+    /**
+     * The message sent when the food heals health, or `null` for none.
+     */
+    open fun healMessage(name: String): String? = "It heals some health."
 
     /**
      * Computes and returns the next food portion identifier.
