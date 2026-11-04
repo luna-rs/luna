@@ -3,6 +3,7 @@ package io.luna.game.model.mob.bot.brain;
 import api.bot.script.ReflexBotScript;
 import api.bot.action.BotCombatActionHandler;
 import engine.bot.speech.BotReactions;
+import game.bot.scripts.WildernessScavengeBotScript;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import game.bot.scripts.combat.PkBotScript;
@@ -73,6 +74,8 @@ public final class BotReflex {
      */
     public boolean process(Bot bot) {
         BotCombatActionHandler.observePvpMovement(bot);
+        bot.getScriptStack().findActive(WildernessScavengeBotScript.class)
+                .ifPresent(script -> script.observe(System.currentTimeMillis()));
         if (activeReflex != null) {
             if (activeReflex.isRunning()) {
                 // Reflex script is still running; skip all other processing.

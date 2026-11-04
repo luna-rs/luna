@@ -3,6 +3,8 @@ package game.bot.scripts
 import api.bot.isRealBot
 
 import api.bot.Suspendable.delay
+import api.bot.Suspendable.waitFor
+import api.bot.action.BotCombatActionHandler.Companion.isPkParticipant
 import api.bot.action.PkRiskBudget
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
@@ -73,6 +75,16 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     private var nextEdgevilleCheck = data.nextEdgevilleCheck
 
     /**
+     * Start of the quiet period after reaching a scavenging anchor, refreshed by visible PKers.
+     */
+    private var quietSince = data.quietSince
+
+    /**
+     * A quiet-area departure stays final even if a PKer appears during the escape or banking.
+     */
+    private var quietTimedOut = data.quietTimedOut
+
+    /**
      * Only the actual scavenging phase accepts reactive loot; preparation, banking and escapes do not.
      */
     private var collecting = false
@@ -123,8 +135,35 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     /**
      * Introductory completion changes activity choice, never skills. Detours obey their saved visit expiry.
      */
-    private fun ending(): Boolean = System.currentTimeMillis() >= deadline ||
+    private fun ending(): Boolean = quietTimedOut || System.currentTimeMillis() >= deadline ||
         (introductory && (!bot.preferences.scavenging.isIntroductory || bot.combatLevel != 3))
+
+    /**
+     * Samples visible PK activity each game cycle, including walking and loot-reflex pauses.
+     * Initial travel does not count, and roaming between anchors does not restart the quiet period.
+     */
+    fun observe(now: Long) {
+        if (!collecting || quietTimedOut || !allowsPosition(bot.position)) return
+        if (quietSince == 0L) {
+            val goal = destination ?: return
+            if (!bot.position.isWithinDistance(goal, 3)) return
+            quietSince = now
+        }
+        if (bot.world.locator.findViewablePlayers(bot).any {
+                it !== bot && it.state == EntityState.ACTIVE && it.isAlive &&
+                    levelAt(it.position) > 0 && isPkParticipant(it) &&
+                    (!it.isRealBot() || (!it.preferences.scavenging.isIntroductory &&
+                        !it.scriptStack.containsActive(WildernessScavengeBotScript::class.java)))
+            }) {
+            quietSince = now
+        }
+        if (now - quietSince >= 5.minutes.inWholeMilliseconds) {
+            quietTimedOut = true
+            collecting = false
+            bot.navigator.cancel()
+            bot.walking.clear()
+        }
+    }
 
     /**
      * Applies the existing native death-loss assessment with a scavenger's personality allowance.
@@ -138,6 +177,8 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     }
 
     override suspend fun run(): Boolean {
+        observe(System.currentTimeMillis())
+        if (quietTimedOut && introductory) bot.preferences.scavenging.completeIntroduction()
         if (bot.combat.inCombat() || bot.healthPercent < 50 || ending()) {
             collecting = false
             bot.combat.target = null
@@ -153,6 +194,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
         }
         if (!prepared || bot.inventory.isFull || !withinRiskBudget()) {
             collecting = false
+            quietSince = 0L
             if (bot.inWilderness() && !handler.combat.fleeWilderness()) return false
             if (!bankLoot()) {
                 bankingFailures++
@@ -182,15 +224,17 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
         }
         val goal = destination?.takeIf(::allowsPosition) ?: chooseDestination().also { destination = it }
         if (bot.position.isWithinDistance(goal, 3)) {
+            observe(System.currentTimeMillis())
             destination = null
             // Loiter while the loot reflex watches public drops and native death processing.
-            delay(rand(8, 20).seconds)
+            waitFor(rand(8, 20).seconds) { ending() || bot.combat.inCombat() || bot.healthPercent < 50 }
             return false
         }
         val reached = withTimeoutOrNull(45.seconds) {
             handler.webWalkTo(goal, bank = BankAccess.NONE)
         } == true
-        if (reached || bot.combat.inCombat()) destination = null
+        observe(System.currentTimeMillis())
+        if (reached || bot.combat.inCombat() || quietTimedOut) destination = null
         else {
             destination = null
             delay(5.seconds)
@@ -259,6 +303,8 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
         it.deadline = deadline
         it.destination = destination
         it.nextEdgevilleCheck = nextEdgevilleCheck
+        it.quietSince = quietSince
+        it.quietTimedOut = quietTimedOut
     }
 
     /**
@@ -283,11 +329,21 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
          * Next scheduled Edgeville return check.
          */
         var nextEdgevilleCheck = 0L
+        /**
+         * Quiet-period checkpoint; zero means the scavenging destination has not been reached.
+         */
+        var quietSince = 0L
+        /**
+         * Whether five minutes without visible PKers has ended this visit.
+         */
+        var quietTimedOut = false
 
         override fun load(data: JsonObject) {
             introductory = data.get("introductory").asBoolean
             deadline = data.get("deadline").asLong
             nextEdgevilleCheck = data.get("nextEdgevilleCheck")?.asLong ?: 0
+            quietSince = data.get("quietSince")?.asLong ?: 0
+            quietTimedOut = data.get("quietTimedOut")?.asBoolean ?: false
             destination = data.getAsJsonObject("destination")?.let {
                 Position(it.get("x").asInt, it.get("y").asInt, it.get("z").asInt)
             }
@@ -297,6 +353,8 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
             data.addProperty("introductory", introductory)
             data.addProperty("deadline", deadline)
             data.addProperty("nextEdgevilleCheck", nextEdgevilleCheck)
+            data.addProperty("quietSince", quietSince)
+            data.addProperty("quietTimedOut", quietTimedOut)
             destination?.let { position ->
                 data.add("destination", JsonObject().apply {
                     addProperty("x", position.x)
