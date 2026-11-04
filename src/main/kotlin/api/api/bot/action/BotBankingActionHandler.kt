@@ -184,29 +184,14 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     /**
      * Deposits all carried items except those whose ids are contained in [except].
      *
-     * The bank must already be open. Every eligible inventory item is attempted even if an earlier deposit fails.
+     * The bank must already be open. Existing stacks are merged first; a confirmed slot shortage permits one bounded
+     * bank-maintenance visit while excluded items remain protected. Other interaction failures return without cleanup.
      *
      * @param except Item ids that should remain in the inventory.
      * @return `true` if no items other than those in [except] remain.
      */
     suspend fun depositInventory(except: Set<Int> = emptySet()): Boolean {
-        if (!bot.bank.isOpen) {
-            return false
-        }
-
-        bot.log("Trying to deposit all items.")
-
-        for (item in bot.inventory) {
-            if (item != null) {
-                if (item.id !in except) {
-                    if (!depositAll(item.id)) {
-                        bot.log("Could not deposit $item.")
-                    }
-                }
-            }
-        }
-
-        return bot.inventory.none { it != null && it.id !in except }
+        return BotBankSpace.depositInventory(bot, handler, except)
     }
 
     /**

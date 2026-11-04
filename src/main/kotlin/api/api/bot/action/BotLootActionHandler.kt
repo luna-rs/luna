@@ -49,6 +49,7 @@ class BotLootActionHandler(private val bot: Bot, private val handler: BotActionH
         if (bot.state != EntityState.ACTIVE || !ActionSafety.COMBAT.allows(bot) ||
             item.state != EntityState.ACTIVE || !item.isVisibleTo(bot) ||
             !bot.inventory.hasSpaceFor(item.toItem())) return false
+        if (item !in bot.deathItems && BotBankSpace.recentlyDisposed(bot, item.id)) return false
         val activity = bot.scriptStack.current()
         return activity == null || (item.id !in activity.ignoredLoot && activity.allowsLoot(item))
     }

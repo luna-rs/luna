@@ -103,6 +103,11 @@ abstract class InventoryBotScript(
     protected open val maxFailures = 3
     /** Enables the common fifteen-second, unnoted, inventory-verified production withdrawal. */
     protected open val verifiedProductionWithdrawals = false
+    /**
+     * Runs an owned-stock disposal batch without creating replacement demand or purchasing missing inputs.
+     */
+    protected open val ownedSuppliesOnly = false
+    private var productionTools = emptySet<Int>()
     /** Consecutive interactions without verified production progress. */
     protected var failures = 0
         private set
@@ -172,15 +177,16 @@ abstract class InventoryBotScript(
             return emptyList()
         }
         val items = tools.map { Item(it) } + materials
-        BotTradeIntentions.recordSupplies(bot, materials, tools, stockTarget = 1_000)
+        productionTools = tools
+        if (!ownedSuppliesOnly) BotTradeIntentions.recordSupplies(bot, materials, tools, stockTarget = 1_000)
         if (!bot.ownsProductionSupplies(materials, tools)) {
             if (!requestMissing) { stop(); return emptyList() }
-            items.filter { bot.bank.computeAmountForId(it.id).toLong() +
+            if (!ownedSuppliesOnly) items.filter { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) < it.amount }.forEach {
                 bot.preferences.raiseWantedItemTarget(it.id, if (it.id in tools) 3 else maxOf(1_000, it.amount))
             }
         }
-        startupSupplies = StartupSupplies(items, requestMissing, prepareMissing)
+        startupSupplies = StartupSupplies(items, requestMissing && !ownedSuppliesOnly, prepareMissing)
         forceBanking = true
         return items
     }
@@ -285,8 +291,8 @@ abstract class InventoryBotScript(
         withdraw = withdraw()
         if (isTerminated() || isPaused()) return false
         val startup = startupSupplies
-        val supplied = if (startup?.allowAcquisition == false) {
-            startup.items.all { bot.bank.computeAmountForId(it.id).toLong() +
+        val supplied = if (ownedSuppliesOnly || startup?.allowAcquisition == false) {
+            (startup?.items ?: withdraw).all { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) >= it.amount }
         } else obtainStartupSupplies(startup?.items ?: withdraw)
         if (!supplied) {
@@ -376,6 +382,13 @@ abstract class InventoryBotScript(
      * @return The items needed for one inventory-processing cycle.
      */
     abstract fun withdraw(): List<Item>
+
+    /**
+     * Protects an active or paused session's planned inputs from emergency bank sales. Owned-stock relief sessions
+     * intentionally consume their materials and reserve only their reusable tools.
+     */
+    internal fun bankSpaceProtectedItems(): Set<Int> =
+        if (ownedSuppliesOnly) productionTools else withdraw.mapTo(HashSet()) { it.id }
 
     /** Supplies for this banking cycle; fixed-recipe scripts retain the initial list by default. */
     // TODO rename to setWithdraw or something else

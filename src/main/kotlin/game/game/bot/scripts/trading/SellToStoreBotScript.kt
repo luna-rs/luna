@@ -2,18 +2,14 @@
 package game.bot.scripts.trading
 
 import api.bot.script.DynamicBotScript
-import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotStoreSales
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePrice
 import api.bot.action.trading.BotTradePurpose
-import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
-import api.predef.ext.get
 import io.luna.game.model.item.Item
-import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
-import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -36,7 +32,7 @@ import io.luna.game.model.mob.bot.Bot
  */
 class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
 
-    private var retainedStock = emptyMap<Int, Int>()
+    private val sales = BotStoreSales(bot, handler)
     private var startedTrip = false
 
     override suspend fun run(): Boolean {
@@ -49,7 +45,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             return true
         }
 
-        retainedStock = BotTradeIntentions.retainedStock(bot)
+        sales.refreshRetention()
         for (item in surplus) {
             val id = item.id
             var remaining = item.amount
@@ -69,7 +65,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
                     bot.log("Could not prepare inventory for selling.")
                     return true
                 }
-                retainedStock = BotTradeIntentions.retainedStock(bot)
+                sales.refreshRetention()
                 handler.banking.clickBankingMode(false)
                 // Withdrawal selects by id and cannot safely choose a normal item from mixed dynamic stock.
                 if (bot.bank.any { it != null && it.id == id && it.isDynamic }) break
@@ -124,13 +120,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * @return The surplus quantity available for sale, clamped between zero and [Int.MAX_VALUE].
      */
     internal fun sellableAmount(id: Int): Int {
-        if (bot.preferences.isMerchant) return 0
-        val retained = maxOf(retainedStock[id] ?: 0, BotTradeIntentions.supplyTarget(bot, id))
-        val transferable = (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
-            .filter { !it.isDynamic && it.itemDef.unnotedId.orElse(it.id) == id }
-            .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        return minOf(transferable,
-            (bot.totalItemAmount(id).toLong() - retained).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
+        return sales.sellableAmount(id)
     }
 
     /**
@@ -149,27 +139,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * @return The total quantity successfully sold during this invocation.
      */
     private suspend fun sellItem(shop: Shop, id: Int, maxAmount: Int): Int {
-        var sold = 0
-        while (!bot.preferences.isMerchant && bot.overlays[ShopInterface::class]?.shop === shop &&
-            SubZone.HOME in bot.subZones && shop.botAccess.apply(bot) && shop.computeCanSell(id)) {
-            if (bot.inventory.any { it != null && it.id == id && it.isDynamic }) break
-            val available = minOf(maxAmount - sold, sellableAmount(id), bot.inventory.computeAmountForId(id))
-            if (available < 1) {
-                break
-            }
-            val before = bot.inventory.computeAmountForId(id)
-            val success = when {
-                available >= 10 -> handler.shop.sell10(id)
-                available >= 5 -> handler.shop.sell5(id)
-                else -> handler.shop.sell1(id)
-            }.await()
-            val decrease = before - bot.inventory.computeAmountForId(id)
-            if (!success || decrease < 1) {
-                break
-            }
-            sold += decrease
-        }
-        return sold
+        return sales.sellItem(shop, id, maxAmount)
     }
 
     /**
@@ -182,8 +152,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * @return The currently eligible shops, or an empty list if none are available.
      */
     private fun shopsFor(id: Int): List<Shop> {
-        return world.shops.values()
-            .filter { it.currency == Currency.COINS && it.botAccess.apply(bot) && it.computeCanSell(id) }
+        return sales.shopsFor(id)
     }
 
     /**
@@ -194,7 +163,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * @return `true` if the bot is already at home or the travel action succeeds.
      */
     private suspend fun travelHome(): Boolean {
-        return SubZone.HOME in bot.subZones || handler.webWalkTo(SubZone.HOME)
+        return sales.travelHome()
     }
 
     /**
@@ -207,12 +176,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * @return `true` if the requested shop interface becomes active.
      */
     private fun openShop(shop: Shop): Boolean {
-        if (SubZone.HOME !in bot.subZones || !shop.botAccess.apply(bot)) {
-            return false
-        }
-        bot.overlays.closeWindows()
-        bot.overlays.open(ShopInterface(shop))
-        return bot.overlays[ShopInterface::class]?.shop === shop
+        return sales.openShop(shop)
     }
 
     override suspend fun finish() {

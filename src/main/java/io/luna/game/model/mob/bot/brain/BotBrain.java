@@ -1,11 +1,14 @@
 package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.BotScript;
+import api.bot.action.BotBankSpace;
 import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
 import engine.bot.coordinator.RuneRunningCoordinator;
 import game.bot.scripts.CannonBotSupport;
 import game.bot.scripts.RecoverCannonBotScript;
+import game.bot.scripts.BankCleanupBotScript;
+import game.bot.scripts.BankRecoveryWaitBotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
@@ -56,6 +59,13 @@ public class BotBrain {
         }
         if (bot.getPreferences().getRuneRunning().isIntroductory() && RuneRunningCoordinator.INSTANCE.canDispatch(bot)) {
             return RuneRunningCoordinator.INSTANCE;
+        }
+        if (BotBankSpace.needsMaintenance(bot)) {
+            return owner -> owner.getScriptStack().push(new BankCleanupBotScript(owner));
+        }
+        if (BotBankSpace.recoveryDeferred(bot)) {
+            return owner -> owner.getScriptStack().push(
+                    new BankRecoveryWaitBotScript(owner, System.currentTimeMillis() + 120_000L));
         }
         var map = new HashMap<>(bot.getPreferences().getActivities());
         map.computeIfPresent(BotActivity.PKING, (key, value) -> PkingCoordinator.INSTANCE.activityWeight(bot));
