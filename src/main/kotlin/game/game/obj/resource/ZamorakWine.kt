@@ -9,9 +9,10 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 
 /**
- * World-spawned Zamorak wine theft, using Lost City's burn, drain and monk retaliation rules.
+ * World-spawned Zamorak wine theft, using Lost City's burn, drain and temple guardian retaliation rules.
  * Every persistent wine source uses the same interaction, including Wilderness and future sources;
- * nearby living monks prevent collection until defeated. Player drops and Telekinetic Grab bypass theft.
+ * nearby living Zamorak monks and chaos druids prevent collection until defeated.
+ * Player drops and Telekinetic Grab bypass theft.
  *
  * @author lare96
  */
@@ -21,12 +22,12 @@ object ZamorakWine {
      * Searches the wine's surroundings on its own plane, covering the Falador temple's full monk group.
      * The same radius is used for other wine sources without requiring per-temple coordinates.
      */
-    private const val MONK_RADIUS = 10
+    private const val GUARDIAN_RADIUS = 10
 
     /**
-     * All attackable Monk of Zamorak variants defined by Luna's revision-377 NPC data.
+     * Attackable Zamorak monks, chaos druids and chaos druid warriors from Luna's revision-377 NPC data.
      */
-    private val monkIds = setOf(188, 189, 190, 1044, 1045, 1046)
+    private val guardianIds = setOf(181, 188, 189, 190, 193, 1044, 1045, 1046)
 
     /**
      * Applies a world wine source's theft penalty and returns whether it prevents this pickup.
@@ -44,15 +45,15 @@ object ZamorakWine {
         for (skill in listOf(plr.attack, plr.strength, plr.defence, plr.ranged, plr.magic)) {
             skill.level -= 1 + skill.staticLevel * 5 / 100
         }
-        val monks = world.locator.findNpcs(groundItem.position, MONK_RADIUS) {
-            it.id in monkIds && it.isAlive
+        val guardians = world.locator.findNpcs(groundItem.position, GUARDIAN_RADIUS) {
+            it.id in guardianIds && it.isAlive
         }
-        monks.firstOrNull()?.speak("Hands off Zamorak's wine!")
-        for (monk in monks) {
-            if (monk.combat.target !is Player) {
-                monk.combat.attack(plr)
+        guardians.firstOrNull()?.speak("Hands off Zamorak's wine!")
+        for (guardian in guardians) {
+            if (guardian.combat.target !is Player) {
+                guardian.combat.attack(plr)
             }
         }
-        return monks.isNotEmpty() || !plr.isAlive
+        return guardians.isNotEmpty() || !plr.isAlive
     }
 }
