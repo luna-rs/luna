@@ -5,6 +5,7 @@ import api.attr.getValue
 import api.attr.setValue
 import api.bot.script.BotScript
 import api.bot.script.BotScript.ActionSafety
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import engine.trade.tradingWith
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
@@ -20,12 +21,25 @@ import io.luna.game.model.mob.bot.speech.BotSpeech
  */
 interface SocialBotScript {
     /**
-     * Whether this script is currently waiting and can accept a social approach.
+     * Whether the current activity can accept an ordinary nearby conversation.
      */
     fun canSocialize(): Boolean
 
-    /** Explicit opt-in for talking while safely carrying on ordinary training. */
+    /**
+     * Explicit opt-in for talking while safely carrying on ordinary training.
+     */
     fun canTalkWhileWorking(): Boolean = false
+
+    /**
+     * Ambient recruitment is opt-in; specialized conversations retain their existing decision systems.
+     */
+    fun ambientConversationTopic(): ConversationSpeech? = null
+
+    /**
+     * Retains an existing exchange through short stationary gaps in an otherwise continuing activity.
+     * Recruitment still requires [canSocialize]; travel, banking and emergencies revoke both permissions.
+     */
+    fun canContinueConversation(): Boolean = canSocialize()
 
     /**
      * Invalidates activity-specific stock assumptions after a native social exchange actually completes.
@@ -53,7 +67,7 @@ object BotConversations {
     private fun ready(bot: Bot, allowMovement: Boolean = false, allowWorking: Boolean = false): Boolean {
         val working = allowWorking && (bot.scriptStack.current() as? SocialBotScript)?.canTalkWhileWorking() == true
         return bot.state == EntityState.ACTIVE &&
-            (if (working) bot.health > 0 && !bot.isLocked else ActionSafety.NON_COMBAT.allows(bot)) &&
+            (if (working) ActionSafety.COMBAT.allows(bot) else ActionSafety.NON_COMBAT.allows(bot)) &&
             bot.reflex.activeReflex == null &&
             (working || bot.combat.target == null) &&
             (working || allowMovement || bot.walking.isEmpty && !bot.navigator.isActive) &&
@@ -92,7 +106,8 @@ object BotConversations {
               interaction: BotSocialInteractions.Session? = null,
               allowWorking: Boolean = false,
               delivered: (Bot) -> Unit = {},
-              speakers: List<Int> = emptyList()): Conversation? {
+              speakers: List<Int> = emptyList(),
+              finished: (Boolean) -> Unit = {}): Conversation? {
         if (first === second || lines.size !in 2..24 || lines.any { it.isBlank() || it.length > 80 } ||
             speakers.isNotEmpty() && (speakers.size != lines.size || speakers.any { it !in 0..1 }) ||
             !availableTo(first, interaction, allowMovement, allowWorking) ||
@@ -100,7 +115,7 @@ object BotConversations {
             !near(first, second)) return null
         val session = Conversation(listOf(first, second), lines.toList(), allowMovement, clock, interaction,
                                    delivered = delivered, allowWorking = allowWorking,
-                                   speakers = speakers.toList())
+                                   speakers = speakers.toList(), finished = finished)
         if (!first.speechStack.reserveConversation(session) { session.valid() }) return null
         if (!second.speechStack.reserveConversation(session) { session.valid() }) {
             first.speechStack.releaseConversation(session)
@@ -169,7 +184,8 @@ object BotConversations {
                                              private val delivered: (Bot) -> Unit = {},
                                              private val typingLimit: Int = 20,
                                              private val allowWorking: Boolean = false,
-                                             private val speakers: List<Int> = emptyList()) {
+                                             private val speakers: List<Int> = emptyList(),
+                                             private val finished: (Boolean) -> Unit = {}) {
         /**
          * Script identities captured at acquisition; a paused or replaced activity cannot keep talking.
          */
@@ -198,7 +214,8 @@ object BotConversations {
             contextValid() && (bots.size == 1 || near(bots[0], bots[1])) && bots.indices.all {
                 val script = bots[it].scriptStack.current()
                 script === scripts[it] && script is SocialBotScript && script.isRunning() &&
-                    ready(bots[it], allowMovement, allowWorking) && (if (interaction == null) script.canSocialize()
+                    ready(bots[it], allowMovement, allowWorking) && (if (interaction == null)
+                    script.canContinueConversation()
                     else BotSocialInteractions.owns(bots[it], interaction) && interaction.valid())
             }
 
@@ -243,6 +260,7 @@ object BotConversations {
                 if (it.conversation === this) it.conversation = null
                 it.speechStack.releaseConversation(this)
             }
+            finished(completed)
         }
     }
 }

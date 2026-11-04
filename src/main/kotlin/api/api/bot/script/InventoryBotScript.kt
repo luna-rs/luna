@@ -6,11 +6,14 @@ import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
+import api.bot.social.SocialBotScript
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import com.google.gson.JsonArray
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import io.luna.game.action.ActionType
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.withTimeoutOrNull
@@ -42,7 +45,24 @@ abstract class InventoryBotScript(
     bot: Bot,
     duration: Duration,
     zones: MutableList<SubZone>
-) : ZonedBotScript(bot, duration, zones) {
+) : ZonedBotScript(bot, duration, zones), SocialBotScript {
+
+    /**
+     * Only native batch activities with natural waiting periods opt into ambient conversation.
+     */
+    protected open val ambientProductionTopic: ConversationSpeech? = null
+
+    override fun ambientConversationTopic(): ConversationSpeech? = ambientProductionTopic
+
+    override fun canSocialize(): Boolean = canTalkWhileWorking()
+
+    override fun canTalkWhileWorking(): Boolean = canContinueConversation() &&
+        bot.actions.first(InventoryAction::class.java) != null
+
+    override fun canContinueConversation(): Boolean = ambientProductionTopic != null && !forceBanking &&
+        duration > Duration.ZERO && activeZone?.area?.contains(bot.position) == true &&
+        bot.walking.isEmpty && !bot.navigator.isActive && !bot.combat.inCombat() && bot.combat.target == null &&
+        !bot.overlays.hasWindow()
 
     /**
      * Optional experience-bearing skill checked before startup and each production cycle.

@@ -688,6 +688,7 @@ public final class Bot extends Player {
 
             // First process any instincts our bot has.
             if (reflex.process(this)) {
+                api.bot.social.BotAmbientConversations.INSTANCE.tick(this);
                 // Process context injectors before scripts so we can still react to events while doing stuff.
                 manager.getInjectorManager().injectEvents(this);
 

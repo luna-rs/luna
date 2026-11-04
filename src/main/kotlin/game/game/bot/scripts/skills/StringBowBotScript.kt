@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ownsProductionSupplies
@@ -40,6 +41,8 @@ class StringBowBotScript(
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_FLETCHING)
 ) : InventoryBotScript(bot, duration, zones) {
+    override val ambientProductionTopic = ConversationSpeech.FLETCHING
+
     override val verifiedProductionWithdrawals = true
 
     init {

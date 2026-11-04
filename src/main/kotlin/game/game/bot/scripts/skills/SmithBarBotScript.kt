@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.naturalDelay
 import api.bot.script.InventoryBotScript
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
@@ -43,6 +44,8 @@ class SmithBarBotScript(
     duration: Duration,
     zones: MutableList<SubZone> = ProductionZones.ANVILS.toMutableList()
 ) : InventoryBotScript(bot, duration, zones) {
+    override val ambientProductionTopic = ConversationSpeech.SMITHING
+
 
     /**
      * Recreates a smithing script from saved zone and duration data. Newer snapshots also restore retry counters

@@ -4,6 +4,7 @@ import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.InventoryBotScript
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
@@ -53,6 +54,8 @@ class CookFoodBotScript(
     duration: Duration,
     zones: MutableList<SubZone>
 ) : InventoryBotScript(bot, duration, zones) {
+    override val ambientProductionTopic = ConversationSpeech.COOKING
+
 
     companion object {
 

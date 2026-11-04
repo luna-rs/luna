@@ -2,17 +2,22 @@ package game.bot.scripts.skills
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotMarketplace
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.social.BotConversations
+import api.bot.social.BotHomeGathering
+import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import game.skill.fletching.stringBow.Bow
 import game.skill.magic.CombinationRune
 import game.skill.magic.Magic
@@ -24,6 +29,7 @@ import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.action.ActionType
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -52,7 +58,8 @@ class AlchemyBotScript(
     val type: AlchemyType,
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_MAGIC)
-) : ZonedBotScript(bot, duration, zones) {
+) : ZonedBotScript(bot, duration, (listOf(SubZone.VARROCK_HOME_GATHERING) + zones).distinct().toMutableList()),
+    SocialBotScript {
 
     companion object {
 
@@ -232,6 +239,55 @@ class AlchemyBotScript(
      */
     private var fireStaffId: Int? = null
 
+    /**
+     * Becomes true only after supplies and the actual work location have been prepared for a cast.
+     * Public speech then advances independently while the native alchemy action and coroutine delays continue.
+     */
+    private var castingReady = false
+
+    override fun selectWorkZone(): SubZone? =
+        SubZone.VARROCK_HOME_GATHERING.takeIf { it in zones } ?: super.selectWorkZone()
+
+    override fun ambientConversationTopic(): ConversationSpeech = ConversationSpeech.ALCHEMY
+
+    override fun canTalkWhileWorking(): Boolean = true
+
+    override fun canSocialize(): Boolean = castingReady && activeZone != null && !forceBanking &&
+        isActionSafe() && bot.combat.target == null && bot.walking.isEmpty && !bot.navigator.isActive &&
+        !bot.overlays.hasWindow() &&
+        (if (activeZone == SubZone.VARROCK_HOME_GATHERING) BotHomeGathering.settled(this)
+        else bot.position in activeZone!!.area)
+
+    override suspend fun prepareMarketplace(marketplace: BotMarketplace?): Boolean {
+        if (activeZone != SubZone.VARROCK_HOME_GATHERING) return super.prepareMarketplace(marketplace)
+        if (BotHomeGathering.settled(this)) return true
+        castingReady = false
+        BotConversations.cancel(bot)
+        if (bot.isLocked || bot.actions.size(ActionType.STRONG) > 0 || bot.actions.size(ActionType.WEAK) > 0) {
+            return true
+        }
+        if (bot.position !in SubZone.VARROCK_HOME_GATHERING.area &&
+            !handler.webWalkTo(SubZone.VARROCK_HOME_GATHERING.inside)) return false
+        if (!isActionSafe()) return true
+        val tile = BotHomeGathering.claim(this) ?: return false
+        return handler.webWalkTo(tile) && isActionSafe() && bot.position == tile && BotHomeGathering.settled(this)
+    }
+
+    override fun onPaused() {
+        castingReady = false
+        BotConversations.cancel(bot)
+        BotHomeGathering.release(this)
+    }
+
+    override suspend fun finish() {
+        onPaused()
+    }
+
+    override suspend fun beforeLeavingZone(): Boolean {
+        onPaused()
+        return true
+    }
+
     override suspend fun equipment(): BotGearLocator? {
         // Do not let generic skilling gear replace a useful elemental staff.
         return null
@@ -267,6 +323,9 @@ class AlchemyBotScript(
     }
 
     override suspend fun onBankOpen(initial: Boolean) {
+        castingReady = false
+        BotConversations.cancel(bot)
+        BotHomeGathering.release(this)
         targetId = null
 
         /*
@@ -340,7 +399,9 @@ class AlchemyBotScript(
     }
 
     override suspend fun executeInZone(): Boolean {
+        castingReady = false
         if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) { stop(); return false }
+        if (activeZone == SubZone.VARROCK_HOME_GATHERING && !BotHomeGathering.settled(this)) return true
         val target = currentInventoryTarget()
 
         if (target == null) {
@@ -364,6 +425,7 @@ class AlchemyBotScript(
             return true
         }
 
+        castingReady = true
         val before = bot.inventory.computeAmountForId(target)
 
         if (!handler.inventory.useSpellOnItem(type.spellId, target)) {

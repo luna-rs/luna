@@ -677,6 +677,15 @@ enum class SubZone(
         parent = { VARROCK }),
 
     /**
+     * Social travel area enclosing the square fountain and castle approach. BotHomeGathering supplies precise
+     * standing patches that keep the roads and entrance clear; HOME retains its west-bank facility geometry.
+     */
+    VARROCK_HOME_GATHERING(
+        inside = Position(3207, 3435),
+        area = SimpleBoxArea.of(3198, 3420, 3228, 3453),
+        parent = { VARROCK }),
+
+    /**
      * The deep wilderness area where the 10-coin chest is contained.
      */
     TEN_COIN_CHEST_HUT(

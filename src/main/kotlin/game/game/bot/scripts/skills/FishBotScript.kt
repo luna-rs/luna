@@ -3,6 +3,8 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.waitFor
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScriptData
+import api.bot.social.SocialBotScript
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
@@ -68,7 +70,18 @@ class FishBotScript(
      * A bounded karambwanji-gathering detour which resumes vessel fishing with the remaining session time.
      */
     val gatherKarambwanBait: Boolean = false
-) : SkillingBotScript<Npc>(bot, duration, zones, bot.fishing) {
+) : SkillingBotScript<Npc>(bot, duration, zones, bot.fishing), SocialBotScript {
+
+    override fun ambientConversationTopic(): ConversationSpeech = ConversationSpeech.FISHING
+
+    override fun canSocialize(): Boolean = canTalkWhileWorking()
+
+    override fun canTalkWhileWorking(): Boolean = canContinueConversation() &&
+        bot.actions.first(CatchFishAction::class.java) != null
+
+    override fun canContinueConversation(): Boolean = !forceBanking && !bot.inventory.isFull &&
+        duration > Duration.ZERO && activeZone?.area?.contains(bot.position) == true &&
+        bot.walking.isEmpty && !bot.navigator.isActive && !bot.combat.inCombat() && bot.combat.target == null
 
     companion object {
         /**

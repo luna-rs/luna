@@ -1,1422 +1,4696 @@
 /*
- * Back-and-forth bot conversations.
- *
- * Each inner array is one coherent conversation between two bots.
- * Lines are intended to alternate between bot A and bot B.
+ * Coherent bot conversations. Each exchange alternates between the initiating bot and a nearby partner.
+ * Topics describe the first speaker's actual activity; IDLE dialogue is suitable for any social activity.
+ * Legacy inner arrays remain supported as general IDLE conversations.
  */
 [
-  [
-    "you doing KBD later?",
-    "maybe, depends if i can find a small team",
-    "bring swordies and antifires",
-    "yeah i learned that the hard way last time",
-    "did you forget antifire again?",
-    "dont remind me lol",
-    "i can tank if you want",
-    "nice, i will bring range gear then",
-    "meet edge after i bank?",
-    "yeah give me two minutes",
-    "if we get a drop we split?",
-    "of course, no weird stuff"
-  ],
-  [
-    "how are your barrows runs going?",
-    "dry as usual lol",
-    "which brother owes you money?",
-    "guthan, i swear he refuses to drop anything",
-    "i got a body yesterday",
-    "of course you did",
-    "how many chests were you at?",
-    "17",
-    "thats actually lucky",
-    "yeah but now im scared the luck is gone",
-    "barrows always feels spooky in the tunnel",
-    "facts, i still bring too much food"
-  ],
-  [
-    "you cutting yews?",
-    "yeah at edge, pretty chill",
-    "is it crowded?",
-    "a bit, but not terrible",
-    "i might come there after this inventory",
-    "bring an axe that doesnt embarrass you",
-    "lol im still using rune",
-    "rune is fine, better than bronze energy",
-    "true, xp is xp",
-    "exactly, just keep chopping",
-    "you banking or dropping?",
-    "banking, logs still sell"
-  ],
-  [
-    "you mining coal?",
-    "yeah at varrock east",
-    "is it worth it?",
-    "depends how many people are hopping",
-    "rocks are always taken when i need them",
-    "thats the true mining skill",
-    "patience level 99",
-    "exactly lol",
-    "you banking the ores?",
-    "yeah, need bars later",
-    "i should probably do that instead of dropping",
-    "future you will be thankful"
-  ],
-  [
-    "what are you fishing?",
-    "monkfish",
-    "at piscatoris?",
-    "yeah, just watching the water and zoning out",
-    "fishing is weirdly relaxing",
-    "until the inventory fills and you forget to bank",
-    "that is me every time",
-    "you cooking them too?",
-    "maybe later, i burn too many right now",
-    "still better than buying food",
-    "true, free food tastes better",
-    "especially when pkers make you eat it"
-  ],
-  [
-    "you going mage bank pking?",
-    "thinking about it",
-    "bring rune 2h, it still hits funny",
-    "i always panic spec too early",
-    "same, then i stand there looking useless",
-    "you risking much?",
-    "nah, just cheap gear",
-    "smart, wildy loves deleting confidence",
-    "you want to duo?",
-    "yeah but no baiting me past multi",
-    "lol fair",
-    "meet edge after i restock"
-  ],
-  [
-    "gl if we fight",
-    "gl bro",
-    "no running to guards yeah?",
-    "yeah clean fight",
-    "you using veng?",
-    "nah just old school food and specs",
-    "respect",
-    "dont respect me too much, i still might panic",
-    "lol same",
-    "alright lets go",
-    "gf after either way",
-    "gf after either way"
-  ],
-  [
-    "pc yew logs?",
-    "last i saw around 120k",
-    "is that stable or just someone shouting?",
-    "hard to tell, market is weird today",
-    "i hate pricing stuff",
-    "same, i always undercut too hard",
-    "then someone flips it in two seconds",
-    "exactly lol",
-    "you selling or buying?",
-    "selling, need cash for supplies",
-    "then price a little high and wait",
-    "good call"
-  ],
-  [
-    "yo where should i train?",
-    "what skill, thieving?",
-    "yeah thieving",
-    "try edge bank, usually easy to start there",
-    "do i need anything special?",
-    "not really, just basic supplies",
-    "i keep getting lost",
-    "everyone gets lost at first",
-    "map feels huge when youre new",
-    "true, i walked in circles for ten minutes",
-    "thats basically tutorial part two",
-    "lol fair"
-  ],
-  [
-    "what slayer task did you get?",
-    "hill giants",
-    "thats not bad",
-    "yeah but i need to bank first",
-    "bring prayer pots",
-    "good shout",
-    "i always forget one thing",
-    "same, then the task becomes a walking simulator",
-    "you using cannon?",
-    "not for this one, too expensive",
-    "fair, cannonballs vanish fast",
-    "they really do"
-  ],
-  [
-    "you crafting deaths?",
-    "yeah, trying to be productive",
-    "runecrafting productive or painful?",
-    "both, somehow",
-    "abyss runs still make me nervous",
-    "same, i hover my tele every trip",
-    "do you use pouches?",
-    "yeah, annoying but worth it",
-    "i should stop being lazy and get them",
-    "you will complain less after",
-    "i doubt that",
-    "fair point lol"
-  ],
-  [
-    "you stealing from cake stall?",
-    "yeah but guards keep staring at me",
-    "wait until they turn away",
-    "i do, then one still catches me",
-    "sounds like a skill issue",
-    "sounds like a guard issue",
-    "bring food at least",
-    "yeah i banked some cakes",
-    "stealing cakes to survive stealing cakes",
-    "the circle of thieving",
-    "deep game design lol",
-    "lare knew what he was doing"
-  ],
-  [
-    "someone is yelling doubling gp at bank",
-    "classic, dont trade that",
-    "yeah it sounds sketchy",
-    "if it sounds free, it probably isnt",
-    "one guy keeps saying no scam too",
-    "thats the loudest scam flag",
-    "i told a noob to ignore it",
-    "good, bankstanding has enough chaos",
-    "people still fall for that?",
-    "sometimes, especially new players",
-    "sad tbh",
-    "yeah, better to earn gp normally"
-  ],
-  [
-    "should i upgrade from green d hide?",
-    "eventually yeah, aim for mystic",
-    "is it a big difference?",
-    "depends on what youre doing",
-    "mostly slayer and random fights",
-    "then upgrade when it doesnt empty your cash stack",
-    "smart, i hate being gear rich and food poor",
-    "supplies matter more than people think",
-    "true, a whip cant heal me",
-    "exactly",
-    "but it does look clean",
-    "also exactly"
-  ],
-  [
-    "how many glory charges do you have?",
-    "i think one left",
-    "dangerous words",
-    "yeah i should recharge before wildy",
-    "glory with no charges is emotional support",
-    "still looks good though",
-    "looking good wont teleport me",
-    "facts lol",
-    "i keep one spare in bank",
-    "thats actually smart",
-    "only because i learned badly",
-    "best teacher in this game"
-  ],
-  [
-    "bro i just got shield left half",
-    "from green dragon?",
-    "yeah",
-    "nice, thats actually good",
-    "i was about to bank too",
-    "rng waited until the last second",
-    "always does",
-    "you selling it?",
-    "probably, need supplies",
-    "keep one screenshot in your brain",
-    "lol already done",
-    "gz man"
-  ],
-  [
-    "edge bank is packed today",
-    "yeah everyone is just standing and judging outfits",
-    "bankstanding is a real skill",
-    "xp rate is terrible though",
-    "fashion xp is invisible",
-    "then im probably 99",
-    "your cape says otherwise",
-    "rude but fair",
-    "any good trades happening?",
-    "mostly people price checking everything",
-    "sounds normal",
-    "very normal"
-  ],
-  [
-    "are you cooking trout?",
-    "yeah trying to stop burning them",
-    "what level are you?",
-    "87",
-    "you should be fine soon",
-    "soon is doing a lot of work there",
-    "burnt food has character",
-    "burnt food has sadness",
-    "sell it as collector item",
-    "lol rare black lobster",
-    "limited edition mistake",
-    "id buy one for the meme"
-  ],
-  [
-    "you fletching yew longs?",
-    "yeah, bank is full of logs",
-    "stringing too?",
-    "eventually, right now im being lazy",
-    "classic fletching plan",
-    "cut first, complain later",
-    "do they sell well?",
-    "depends on market, alch value helps",
-    "i like skills that make neat stacks",
-    "same, inventory looks organized",
-    "until you run out of bowstrings",
-    "then sadness begins"
-  ],
-  [
-    "cannonballs are so expensive",
-    "yeah but cannon makes tasks fly",
-    "my cash stack disagrees",
-    "your slayer xp agrees though",
-    "true, but i blink and 1k balls vanish",
-    "thats the cannon tax",
-    "do you smith your own?",
-    "sometimes, if im feeling patient",
-    "that sounds slower than the task",
-    "it is, but it feels responsible",
-    "responsible and rune scape rarely mix",
-    "lol true"
-  ],
-  [
-    "you training agility at gnome course?",
-    "yeah, trying not to fall asleep",
-    "agility is pure patience",
-    "the shortcuts make it worth it",
-    "thats what i keep telling myself",
-    "any marks or tickets?",
-    "a few, nothing crazy",
-    "music on and click obstacles",
-    "basically meditation with misclicks",
-    "and occasional damage",
-    "very peaceful lol",
-    "somehow yes"
-  ],
-  [
-    "do you know what item this quest needs?",
-    "probably a spade, quests always want random stuff",
-    "why is it always random stuff",
-    "to make bank tabs suffer",
-    "i dropped one yesterday too",
-    "thats how the game knows",
-    "should i check a guide?",
-    "yeah unless you enjoy wandering",
-    "i do enjoy wandering a little",
-    "then check half a guide",
-    "balanced approach lol",
-    "exactly"
-  ],
-  [
-    "going green dragons?",
-    "yeah after i restock",
-    "bring antifire",
-    "already packed",
-    "and a teleport",
-    "packed too",
-    "look at you being prepared",
-    "dont jinx it",
-    "you banking bones or hides?",
-    "both if i can",
-    "wildy might disagree",
-    "then i tele and pretend it was planned"
-  ],
-  [
-    "dharok scares me",
-    "same, low hp dh is not normal behavior",
-    "one big axe hit and confidence disappears",
-    "thats why people love it",
-    "i prefer living",
-    "coward but reasonable",
-    "would you pk in dh?",
-    "maybe if i had spare money",
-    "so never?",
-    "basically never",
-    "fair",
-    "i respect the armor from a distance"
-  ],
-  [
-    "castle wars running?",
-    "not sure, might need more people",
-    "i miss when it was packed",
-    "same, everyone just barraged mid",
-    "and someone always hid with flag",
-    "that was strategy",
-    "that was emotional damage",
-    "lol true",
-    "you going if people show?",
-    "yeah, i still like it",
-    "same, old minigames have charm",
-    "facts"
-  ],
-  [
-    "market for prayer pots feels weird today",
-    "prices moving again?",
-    "yeah, bots keep buying and selling",
-    "honestly makes the world feel alive",
-    "until i try to buy supplies",
-    "then it feels expensive",
-    "did you list yours high?",
-    "a little, im not rushing",
-    "smart, impatient sellers feed flippers",
-    "i am usually the impatient seller",
-    "same, thats why im poor",
-    "at least we know why"
-  ],
-  [
-    "the weather in game feels nice today",
-    "bro its always the same sky",
-    "let me roleplay",
-    "fair, beautiful pixel sunshine",
-    "exactly lol",
-    "makes woodcutting feel chill",
-    "until a tree disappears",
-    "thats just nature being dramatic",
-    "you doing anything later?",
-    "maybe KBD if people show",
-    "i might join",
-    "nice, bring antifire this time"
-  ],
-  [
-    "prayer pots disappear too fast",
-    "thats because you drink them like juice",
-    "they are emergency juice",
-    "expensive emergency juice",
-    "i need more ranarrs",
-    "chaos druids maybe?",
-    "yeah but they are crowded",
-    "crowded means money usually",
-    "or disappointment",
-    "both can be true",
-    "you coming?",
-    "after i bank"
-  ],
-  [
-    "whats a good way to make early gp?",
-    "cowhides, fishing, mining, or collecting bones",
-    "which one is least boring?",
-    "fishing if you like relaxing",
-    "mining if you like fighting rocks",
-    "and cowhides?",
-    "if you like cows judging you",
-    "lol",
-    "dont chase rich methods too early",
-    "yeah i keep dying trying",
-    "build supplies first",
-    "got it"
-  ],
-  [
-    "this world feels busy today",
-    "yeah lots of people skilling",
-    "makes banks feel less empty",
-    "i like when random chats happen",
-    "same, even dumb ones",
-    "especially dumb ones",
-    "someone just asked if bread is armor",
-    "honestly maybe in this economy",
-    "im equipping toast",
-    "bis breakfast slot",
-    "new meta confirmed",
-    "dont let pkers know"
-  ],
-  [
-    "you doing KBD later?",
-    "maybe, depends if i can find a small team",
-    "bring sharks and antifires",
-    "yeah i learned that the hard way last time",
-    "did you forget antifire again?",
-    "dont remind me lol",
-    "i can tank if you want",
-    "nice, i will bring range gear then",
-    "meet edge after i bank?",
-    "yeah give me two minutes",
-    "if we get a drop we split?",
-    "of course, no weird stuff"
-  ],
-  [
-    "how are your barrows runs going?",
-    "dry as usual lol",
-    "which brother owes you money?",
-    "karil, i swear he refuses to drop anything",
-    "i got a weapon yesterday",
-    "of course you did",
-    "how many chests were you at?",
-    "69",
-    "thats actually lucky",
-    "yeah but now im scared the luck is gone",
-    "barrows always feels spooky in the tunnel",
-    "facts, i still bring too much food"
-  ],
-  [
-    "you cutting willows?",
-    "yeah at edge, pretty chill",
-    "is it crowded?",
-    "a bit, but not terrible",
-    "i might come there after this inventory",
-    "bring an axe that doesnt embarrass you",
-    "lol im still using rune",
-    "rune is fine, better than bronze energy",
-    "true, xp is xp",
-    "exactly, just keep chopping",
-    "you banking or dropping?",
-    "banking, logs still sell"
-  ],
-  [
-    "you mining rune?",
-    "yeah at wildy rocks",
-    "is it worth it?",
-    "depends how many people are hopping",
-    "rocks are always taken when i need them",
-    "thats the true mining skill",
-    "patience level 99",
-    "exactly lol",
-    "you banking the ores?",
-    "yeah, need bars later",
-    "i should probably do that instead of dropping",
-    "future you will be thankful"
-  ],
-  [
-    "you going edge pking?",
-    "thinking about it",
-    "bring rune 2h, it still hits funny",
-    "i always panic spec too early",
-    "same, then i stand there looking useless",
-    "you risking much?",
-    "nah, just cheap gear",
-    "smart, wildy loves deleting confidence",
-    "you want to duo?",
-    "yeah but no baiting me past multi",
-    "lol fair",
-    "meet edge after i restock"
-  ],
-  [
-    "pc lobsters?",
-    "last i saw around 1.2m",
-    "is that stable or just someone shouting?",
-    "hard to tell, market is weird today",
-    "i hate pricing stuff",
-    "same, i always undercut too hard",
-    "then someone flips it in two seconds",
-    "exactly lol",
-    "you selling or buying?",
-    "selling, need cash for supplies",
-    "then price a little high and wait",
-    "good call"
-  ],
-  [
-    "what slayer task did you get?",
-    "fire giants",
-    "thats not bad",
-    "yeah but i need to bank first",
-    "bring antipoison",
-    "good shout",
-    "i always forget one thing",
-    "same, then the task becomes a walking simulator",
-    "you using cannon?",
-    "not for this one, too expensive",
-    "fair, cannonballs vanish fast",
-    "they really do"
-  ],
-  [
-    "you crafting nats?",
-    "yeah, trying to be productive",
-    "runecrafting productive or painful?",
-    "both, somehow",
-    "abyss runs still make me nervous",
-    "same, i hover my tele every trip",
-    "do you use pouches?",
-    "yeah, annoying but worth it",
-    "i should stop being lazy and get them",
-    "you will complain less after",
-    "i doubt that",
-    "fair point lol"
-  ],
-  [
-    "you stealing from gem stall?",
-    "yeah but guards keep staring at me",
-    "wait until they turn away",
-    "i do, then one still catches me",
-    "sounds like a skill issue",
-    "sounds like a guard issue",
-    "bring food at least",
-    "yeah i banked some cakes",
-    "stealing cakes to survive stealing cakes",
-    "the circle of thieving",
-    "deep game design lol",
-    "lare knew what he was doing"
-  ],
-  [
-    "should i upgrade from rune plate?",
-    "eventually yeah, aim for mystic",
-    "is it a big difference?",
-    "depends on what youre doing",
-    "mostly slayer and random fights",
-    "then upgrade when it doesnt empty your cash stack",
-    "smart, i hate being gear rich and food poor",
-    "supplies matter more than people think",
-    "true, a whip cant heal me",
-    "exactly",
-    "but it does look clean",
-    "also exactly"
-  ],
-  [
-    "bro i just got rune med",
-    "from green dragon?",
-    "yeah",
-    "nice, thats actually good",
-    "i was about to bank too",
-    "rng waited until the last second",
-    "always does",
-    "you selling it?",
-    "probably, need supplies",
-    "keep one screenshot in your brain",
-    "lol already done",
-    "gz man"
-  ],
-  [
-    "fally bank is packed today",
-    "yeah everyone is just standing and judging outfits",
-    "bankstanding is a real skill",
-    "xp rate is terrible though",
-    "fashion xp is invisible",
-    "then im probably 99",
-    "your cape says otherwise",
-    "rude but fair",
-    "any good trades happening?",
-    "mostly people price checking everything",
-    "sounds normal",
-    "very normal"
-  ],
-  [
-    "are you cooking swordfish?",
-    "yeah trying to stop burning them",
-    "what level are you?",
-    "63",
-    "you should be fine soon",
-    "soon is doing a lot of work there",
-    "burnt food has character",
-    "burnt food has sadness",
-    "sell it as collector item",
-    "lol rare black lobster",
-    "limited edition mistake",
-    "id buy one for the meme"
-  ],
-  [
-    "you fletching longbows?",
-    "yeah, bank is full of logs",
-    "stringing too?",
-    "eventually, right now im being lazy",
-    "classic fletching plan",
-    "cut first, complain later",
-    "do they sell well?",
-    "depends on market, alch value helps",
-    "i like skills that make neat stacks",
-    "same, inventory looks organized",
-    "until you run out of bowstrings",
-    "then sadness begins"
-  ],
-  [
-    "you training agility at barbarian course?",
-    "yeah, trying not to fall asleep",
-    "agility is pure patience",
-    "the shortcuts make it worth it",
-    "thats what i keep telling myself",
-    "any marks or tickets?",
-    "a few, nothing crazy",
-    "music on and click obstacles",
-    "basically meditation with misclicks",
-    "and occasional damage",
-    "very peaceful lol",
-    "somehow yes"
-  ],
-  [
-    "do you know what item this quest needs?",
-    "probably a anti poison, quests always want random stuff",
-    "why is it always random stuff",
-    "to make bank tabs suffer",
-    "i dropped one yesterday too",
-    "thats how the game knows",
-    "should i check a guide?",
-    "yeah unless you enjoy wandering",
-    "i do enjoy wandering a little",
-    "then check half a guide",
-    "balanced approach lol",
-    "exactly"
-  ],
-  [
-    "going blue dragons?",
-    "yeah after i restock",
-    "bring antifire",
-    "already packed",
-    "and a teleport",
-    "packed too",
-    "look at you being prepared",
-    "dont jinx it",
-    "you banking bones or hides?",
-    "both if i can",
-    "wildy might disagree",
-    "then i tele and pretend it was planned"
-  ],
-  [
-    "you doing KBD later?",
-    "maybe, depends if i can find a small team",
-    "bring swordies and tele tabs",
-    "yeah i learned that the hard way last time",
-    "did you forget antifire again?",
-    "dont remind me lol",
-    "i can tank if you want",
-    "nice, i will bring range gear then",
-    "meet edge after i bank?",
-    "yeah give me two minutes",
-    "if we get a drop we split?",
-    "of course, no weird stuff"
-  ],
-  [
-    "how are your barrows runs going?",
-    "dry as usual lol",
-    "which brother owes you money?",
-    "dharok, i swear he refuses to drop anything",
-    "i got a helm yesterday",
-    "of course you did",
-    "how many chests were you at?",
-    "70",
-    "thats actually lucky",
-    "yeah but now im scared the luck is gone",
-    "barrows always feels spooky in the tunnel",
-    "facts, i still bring too much food"
-  ],
-  [
-    "what are you fishing?",
-    "sharks",
-    "at catherby?",
-    "yeah, just watching the water and zoning out",
-    "fishing is weirdly relaxing",
-    "until the inventory fills and you forget to bank",
-    "that is me every time",
-    "you cooking them too?",
-    "maybe later, i burn too many right now",
-    "still better than buying food",
-    "true, free food tastes better",
-    "especially when pkers make you eat it"
-  ],
-  [
-    "you going edge pking?",
-    "thinking about it",
-    "bring d long, it still hits funny",
-    "i always panic spec too early",
-    "same, then i stand there looking useless",
-    "you risking much?",
-    "nah, just cheap gear",
-    "smart, wildy loves deleting confidence",
-    "you want to duo?",
-    "yeah but no baiting me past multi",
-    "lol fair",
-    "meet edge after i restock"
-  ],
-  [
-    "pc rune scim?",
-    "last i saw around 85k",
-    "is that stable or just someone shouting?",
-    "hard to tell, market is weird today",
-    "i hate pricing stuff",
-    "same, i always undercut too hard",
-    "then someone flips it in two seconds",
-    "exactly lol",
-    "you selling or buying?",
-    "selling, need cash for supplies",
-    "then price a little high and wait",
-    "good call"
-  ],
-  [
-    "yo where should i train?",
-    "what skill, thieving?",
-    "yeah thieving",
-    "try ardy, usually easy to start there",
-    "do i need anything special?",
-    "not really, just basic supplies",
-    "i keep getting lost",
-    "everyone gets lost at first",
-    "map feels huge when youre new",
-    "true, i walked in circles for ten minutes",
-    "thats basically tutorial part two",
-    "lol fair"
-  ],
-  [
-    "what slayer task did you get?",
-    "ankous",
-    "thats not bad",
-    "yeah but i need to bank first",
-    "bring food",
-    "good shout",
-    "i always forget one thing",
-    "same, then the task becomes a walking simulator",
-    "you using cannon?",
-    "not for this one, too expensive",
-    "fair, cannonballs vanish fast",
-    "they really do"
-  ],
-  [
-    "should i upgrade from rune scim?",
-    "eventually yeah, aim for dragon scim",
-    "is it a big difference?",
-    "depends on what youre doing",
-    "mostly slayer and random fights",
-    "then upgrade when it doesnt empty your cash stack",
-    "smart, i hate being gear rich and food poor",
-    "supplies matter more than people think",
-    "true, a whip cant heal me",
-    "exactly",
-    "but it does look clean",
-    "also exactly"
-  ],
-  [
-    "bro i just got half key",
-    "from green dragon?",
-    "yeah",
-    "nice, thats actually good",
-    "i was about to bank too",
-    "rng waited until the last second",
-    "always does",
-    "you selling it?",
-    "probably, need supplies",
-    "keep one screenshot in your brain",
-    "lol already done",
-    "gz man"
-  ],
-  [
-    "varrock west bank is packed today",
-    "yeah everyone is just standing and judging outfits",
-    "bankstanding is a real skill",
-    "xp rate is terrible though",
-    "fashion xp is invisible",
-    "then im probably 99",
-    "your cape says otherwise",
-    "rude but fair",
-    "any good trades happening?",
-    "mostly people price checking everything",
-    "sounds normal",
-    "very normal"
-  ],
-  [
-    "are you cooking swordfish?",
-    "yeah trying to stop burning them",
-    "what level are you?",
-    "42",
-    "you should be fine soon",
-    "soon is doing a lot of work there",
-    "burnt food has character",
-    "burnt food has sadness",
-    "sell it as collector item",
-    "lol rare black lobster",
-    "limited edition mistake",
-    "id buy one for the meme"
-  ],
-  [
-    "do you know what item this quest needs?",
-    "probably a ghostspeak amulet, quests always want random stuff",
-    "why is it always random stuff",
-    "to make bank tabs suffer",
-    "i dropped one yesterday too",
-    "thats how the game knows",
-    "should i check a guide?",
-    "yeah unless you enjoy wandering",
-    "i do enjoy wandering a little",
-    "then check half a guide",
-    "balanced approach lol",
-    "exactly"
-  ],
-  [
-    "going KBD?",
-    "yeah after i restock",
-    "bring antifire",
-    "already packed",
-    "and a teleport",
-    "packed too",
-    "look at you being prepared",
-    "dont jinx it",
-    "you banking bones or hides?",
-    "both if i can",
-    "wildy might disagree",
-    "then i tele and pretend it was planned"
-  ],
-  [
-    "market for runes feels weird today",
-    "prices moving again?",
-    "yeah, bots keep buying and selling",
-    "honestly makes the world feel alive",
-    "until i try to buy supplies",
-    "then it feels expensive",
-    "did you list yours high?",
-    "a little, im not rushing",
-    "smart, impatient sellers feed flippers",
-    "i am usually the impatient seller",
-    "same, thats why im poor",
-    "at least we know why"
-  ],
-  [
-    "you doing KBD later?",
-    "maybe, depends if i can find a small team",
-    "bring monks and antifires",
-    "yeah i learned that the hard way last time",
-    "did you forget antifire again?",
-    "dont remind me lol",
-    "i can tank if you want",
-    "nice, i will bring range gear then",
-    "meet edge after i bank?",
-    "yeah give me two minutes",
-    "if we get a drop we split?",
-    "of course, no weird stuff"
-  ],
-  [
-    "how are your barrows runs going?",
-    "dry as usual lol",
-    "which brother owes you money?",
-    "ahrim, i swear he refuses to drop anything",
-    "i got a helm yesterday",
-    "of course you did",
-    "how many chests were you at?",
-    "32",
-    "thats actually lucky",
-    "yeah but now im scared the luck is gone",
-    "barrows always feels spooky in the tunnel",
-    "facts, i still bring too much food"
-  ],
-  [
-    "you cutting maples?",
-    "yeah at seers, pretty chill",
-    "is it crowded?",
-    "a bit, but not terrible",
-    "i might come there after this inventory",
-    "bring an axe that doesnt embarrass you",
-    "lol im still using rune",
-    "rune is fine, better than bronze energy",
-    "true, xp is xp",
-    "exactly, just keep chopping",
-    "you banking or dropping?",
-    "banking, logs still sell"
-  ],
-  [
-    "you mining addy?",
-    "yeah at varrock east",
-    "is it worth it?",
-    "depends how many people are hopping",
-    "rocks are always taken when i need them",
-    "thats the true mining skill",
-    "patience level 99",
-    "exactly lol",
-    "you banking the ores?",
-    "yeah, need bars later",
-    "i should probably do that instead of dropping",
-    "future you will be thankful"
-  ],
-  [
-    "you going green drags pking?",
-    "thinking about it",
-    "bring g maul, it still hits funny",
-    "i always panic spec too early",
-    "same, then i stand there looking useless",
-    "you risking much?",
-    "nah, just cheap gear",
-    "smart, wildy loves deleting confidence",
-    "you want to duo?",
-    "yeah but no baiting me past multi",
-    "lol fair",
-    "meet edge after i restock"
-  ],
-  [
-    "pc lobsters?",
-    "last i saw around 40k",
-    "is that stable or just someone shouting?",
-    "hard to tell, market is weird today",
-    "i hate pricing stuff",
-    "same, i always undercut too hard",
-    "then someone flips it in two seconds",
-    "exactly lol",
-    "you selling or buying?",
-    "selling, need cash for supplies",
-    "then price a little high and wait",
-    "good call"
-  ],
-  [
-    "yo where should i train?",
-    "what skill, runecrafting?",
-    "yeah runecrafting",
-    "try seers, usually easy to start there",
-    "do i need anything special?",
-    "not really, just basic supplies",
-    "i keep getting lost",
-    "everyone gets lost at first",
-    "map feels huge when youre new",
-    "true, i walked in circles for ten minutes",
-    "thats basically tutorial part two",
-    "lol fair"
-  ],
-  [
-    "what slayer task did you get?",
-    "lesser demons",
-    "thats not bad",
-    "yeah but i need to bank first",
-    "bring food",
-    "good shout",
-    "i always forget one thing",
-    "same, then the task becomes a walking simulator",
-    "you using cannon?",
-    "not for this one, too expensive",
-    "fair, cannonballs vanish fast",
-    "they really do"
-  ],
-  [
-    "should i upgrade from battle staff?",
-    "eventually yeah, aim for black d hide",
-    "is it a big difference?",
-    "depends on what youre doing",
-    "mostly slayer and random fights",
-    "then upgrade when it doesnt empty your cash stack",
-    "smart, i hate being gear rich and food poor",
-    "supplies matter more than people think",
-    "true, a whip cant heal me",
-    "exactly",
-    "but it does look clean",
-    "also exactly"
-  ],
-  [
-    "bro i just got dragon spear",
-    "from barrows chest?",
-    "yeah",
-    "nice, thats actually good",
-    "i was about to bank too",
-    "rng waited until the last second",
-    "always does",
-    "you selling it?",
-    "probably, need supplies",
-    "keep one screenshot in your brain",
-    "lol already done",
-    "gz man"
-  ],
-  [
-    "are you cooking sharks?",
-    "yeah trying to stop burning them",
-    "what level are you?",
-    "72",
-    "you should be fine soon",
-    "soon is doing a lot of work there",
-    "burnt food has character",
-    "burnt food has sadness",
-    "sell it as collector item",
-    "lol rare black lobster",
-    "limited edition mistake",
-    "id buy one for the meme"
-  ],
-  [
-    "you fletching maple longs?",
-    "yeah, bank is full of logs",
-    "stringing too?",
-    "eventually, right now im being lazy",
-    "classic fletching plan",
-    "cut first, complain later",
-    "do they sell well?",
-    "depends on market, alch value helps",
-    "i like skills that make neat stacks",
-    "same, inventory looks organized",
-    "until you run out of bowstrings",
-    "then sadness begins"
-  ],
-  [
-    "you training agility at brimhaven?",
-    "yeah, trying not to fall asleep",
-    "agility is pure patience",
-    "the shortcuts make it worth it",
-    "thats what i keep telling myself",
-    "any marks or tickets?",
-    "a few, nothing crazy",
-    "music on and click obstacles",
-    "basically meditation with misclicks",
-    "and occasional damage",
-    "very peaceful lol",
-    "somehow yes"
-  ],
-  [
-    "do you know what item this quest needs?",
-    "probably a bucket, quests always want random stuff",
-    "why is it always random stuff",
-    "to make bank tabs suffer",
-    "i dropped one yesterday too",
-    "thats how the game knows",
-    "should i check a guide?",
-    "yeah unless you enjoy wandering",
-    "i do enjoy wandering a little",
-    "then check half a guide",
-    "balanced approach lol",
-    "exactly"
-  ],
-  [
-    "you doing KBD later?",
-    "maybe, depends if i can find a small team",
-    "bring sharks and tele tabs",
-    "yeah i learned that the hard way last time",
-    "did you forget antifire again?",
-    "dont remind me lol",
-    "i can tank if you want",
-    "nice, i will bring range gear then",
-    "meet edge after i bank?",
-    "yeah give me two minutes",
-    "if we get a drop we split?",
-    "of course, no weird stuff"
-  ],
-  [
-    "how are your barrows runs going?",
-    "dry as usual lol",
-    "which brother owes you money?",
-    "ahrim, i swear he refuses to drop anything",
-    "i got a legs yesterday",
-    "of course you did",
-    "how many chests were you at?",
-    "53",
-    "thats actually lucky",
-    "yeah but now im scared the luck is gone",
-    "barrows always feels spooky in the tunnel",
-    "facts, i still bring too much food"
-  ],
-  [
-    "you mining mith?",
-    "yeah at wildy rocks",
-    "is it worth it?",
-    "depends how many people are hopping",
-    "rocks are always taken when i need them",
-    "thats the true mining skill",
-    "patience level 99",
-    "exactly lol",
-    "you banking the ores?",
-    "yeah, need bars later",
-    "i should probably do that instead of dropping",
-    "future you will be thankful"
-  ],
-  [
-    "you going varrock wild pking?",
-    "thinking about it",
-    "bring dds, it still hits funny",
-    "i always panic spec too early",
-    "same, then i stand there looking useless",
-    "you risking much?",
-    "nah, just cheap gear",
-    "smart, wildy loves deleting confidence",
-    "you want to duo?",
-    "yeah but no baiting me past multi",
-    "lol fair",
-    "meet edge after i restock"
-  ],
-  [
-    "pc dragon bones?",
-    "last i saw around 120k",
-    "is that stable or just someone shouting?",
-    "hard to tell, market is weird today",
-    "i hate pricing stuff",
-    "same, i always undercut too hard",
-    "then someone flips it in two seconds",
-    "exactly lol",
-    "you selling or buying?",
-    "selling, need cash for supplies",
-    "then price a little high and wait",
-    "good call"
-  ],
-  [
-    "yo where should i train?",
-    "what skill, fletching?",
-    "yeah fletching",
-    "try ardy, usually easy to start there",
-    "do i need anything special?",
-    "not really, just basic supplies",
-    "i keep getting lost",
-    "everyone gets lost at first",
-    "map feels huge when youre new",
-    "true, i walked in circles for ten minutes",
-    "thats basically tutorial part two",
-    "lol fair"
-  ],
-  [
-    "what slayer task did you get?",
-    "green dragons",
-    "thats not bad",
-    "yeah but i need to bank first",
-    "bring arrows",
-    "good shout",
-    "i always forget one thing",
-    "same, then the task becomes a walking simulator",
-    "you using cannon?",
-    "not for this one, too expensive",
-    "fair, cannonballs vanish fast",
-    "they really do"
-  ],
-  [
-    "you crafting laws?",
-    "yeah, trying to be productive",
-    "runecrafting productive or painful?",
-    "both, somehow",
-    "abyss runs still make me nervous",
-    "same, i hover my tele every trip",
-    "do you use pouches?",
-    "yeah, annoying but worth it",
-    "i should stop being lazy and get them",
-    "you will complain less after",
-    "i doubt that",
-    "fair point lol"
-  ],
-  [
-    "should i upgrade from battle staff?",
-    "eventually yeah, aim for msb",
-    "is it a big difference?",
-    "depends on what youre doing",
-    "mostly slayer and random fights",
-    "then upgrade when it doesnt empty your cash stack",
-    "smart, i hate being gear rich and food poor",
-    "supplies matter more than people think",
-    "true, a whip cant heal me",
-    "exactly",
-    "but it does look clean",
-    "also exactly"
-  ],
-  [
-    "bro i just got half key",
-    "from barrows chest?",
-    "yeah",
-    "nice, thats actually good",
-    "i was about to bank too",
-    "rng waited until the last second",
-    "always does",
-    "you selling it?",
-    "probably, need supplies",
-    "keep one screenshot in your brain",
-    "lol already done",
-    "gz man"
-  ],
-  [
-    "are you cooking salmon?",
-    "yeah trying to stop burning them",
-    "what level are you?",
-    "77",
-    "you should be fine soon",
-    "soon is doing a lot of work there",
-    "burnt food has character",
-    "burnt food has sadness",
-    "sell it as collector item",
-    "lol rare black lobster",
-    "limited edition mistake",
-    "id buy one for the meme"
-  ],
-  [
-    "you training agility at wilderness course?",
-    "yeah, trying not to fall asleep",
-    "agility is pure patience",
-    "the shortcuts make it worth it",
-    "thats what i keep telling myself",
-    "any marks or tickets?",
-    "a few, nothing crazy",
-    "music on and click obstacles",
-    "basically meditation with misclicks",
-    "and occasional damage",
-    "very peaceful lol",
-    "somehow yes"
-  ],
-  [
-    "do you know what item this quest needs?",
-    "probably a law rune, quests always want random stuff",
-    "why is it always random stuff",
-    "to make bank tabs suffer",
-    "i dropped one yesterday too",
-    "thats how the game knows",
-    "should i check a guide?",
-    "yeah unless you enjoy wandering",
-    "i do enjoy wandering a little",
-    "then check half a guide",
-    "balanced approach lol",
-    "exactly"
-  ],
-  [
-    "market for sharks feels weird today",
-    "prices moving again?",
-    "yeah, bots keep buying and selling",
-    "honestly makes the world feel alive",
-    "until i try to buy supplies",
-    "then it feels expensive",
-    "did you list yours high?",
-    "a little, im not rushing",
-    "smart, impatient sellers feed flippers",
-    "i am usually the impatient seller",
-    "same, thats why im poor",
-    "at least we know why"
-  ],
-  [
-    "you doing KBD later?",
-    "maybe, depends if i can find a small team",
-    "bring sharks and super strengths",
-    "yeah i learned that the hard way last time",
-    "did you forget antifire again?",
-    "dont remind me lol",
-    "i can tank if you want",
-    "nice, i will bring range gear then",
-    "meet edge after i bank?",
-    "yeah give me two minutes",
-    "if we get a drop we split?",
-    "of course, no weird stuff"
-  ],
-  [
-    "how are your barrows runs going?",
-    "dry as usual lol",
-    "which brother owes you money?",
-    "dharok, i swear he refuses to drop anything",
-    "i got a legs yesterday",
-    "of course you did",
-    "how many chests were you at?",
-    "57",
-    "thats actually lucky",
-    "yeah but now im scared the luck is gone",
-    "barrows always feels spooky in the tunnel",
-    "facts, i still bring too much food"
-  ],
-  [
-    "you cutting magic trees?",
-    "yeah at edge, pretty chill",
-    "is it crowded?",
-    "a bit, but not terrible",
-    "i might come there after this inventory",
-    "bring an axe that doesnt embarrass you",
-    "lol im still using rune",
-    "rune is fine, better than bronze energy",
-    "true, xp is xp",
-    "exactly, just keep chopping",
-    "you banking or dropping?",
-    "banking, logs still sell"
-  ],
-  [
-    "you mining mith?",
-    "yeah at dwarven mine",
-    "is it worth it?",
-    "depends how many people are hopping",
-    "rocks are always taken when i need them",
-    "thats the true mining skill",
-    "patience level 99",
-    "exactly lol",
-    "you banking the ores?",
-    "yeah, need bars later",
-    "i should probably do that instead of dropping",
-    "future you will be thankful"
-  ],
-  [
-    "what are you fishing?",
-    "lobsters",
-    "at catherby?",
-    "yeah, just watching the water and zoning out",
-    "fishing is weirdly relaxing",
-    "until the inventory fills and you forget to bank",
-    "that is me every time",
-    "you cooking them too?",
-    "maybe later, i burn too many right now",
-    "still better than buying food",
-    "true, free food tastes better",
-    "especially when pkers make you eat it"
-  ],
-  [
-    "pc death runes?",
-    "last i saw around 25k",
-    "is that stable or just someone shouting?",
-    "hard to tell, market is weird today",
-    "i hate pricing stuff",
-    "same, i always undercut too hard",
-    "then someone flips it in two seconds",
-    "exactly lol",
-    "you selling or buying?",
-    "selling, need cash for supplies",
-    "then price a little high and wait",
-    "good call"
-  ],
-  [
-    "yo where should i train?",
-    "what skill, slayer?",
-    "yeah slayer",
-    "try catherby, usually easy to start there",
-    "do i need anything special?",
-    "not really, just basic supplies",
-    "i keep getting lost",
-    "everyone gets lost at first",
-    "map feels huge when youre new",
-    "true, i walked in circles for ten minutes",
-    "thats basically tutorial part two",
-    "lol fair"
-  ],
-  [
-    "you stealing from fur stall?",
-    "yeah but guards keep staring at me",
-    "wait until they turn away",
-    "i do, then one still catches me",
-    "sounds like a skill issue",
-    "sounds like a guard issue",
-    "bring food at least",
-    "yeah i banked some cakes",
-    "stealing cakes to survive stealing cakes",
-    "the circle of thieving",
-    "deep game design lol",
-    "lare knew what he was doing"
-  ],
-  [
-    "bro i just got rune med",
-    "from hill giant?",
-    "yeah",
-    "nice, thats actually good",
-    "i was about to bank too",
-    "rng waited until the last second",
-    "always does",
-    "you selling it?",
-    "probably, need supplies",
-    "keep one screenshot in your brain",
-    "lol already done",
-    "gz man"
-  ],
-  [
-    "are you cooking sharks?",
-    "yeah trying to stop burning them",
-    "what level are you?",
-    "38",
-    "you should be fine soon",
-    "soon is doing a lot of work there",
-    "burnt food has character",
-    "burnt food has sadness",
-    "sell it as collector item",
-    "lol rare black lobster",
-    "limited edition mistake",
-    "id buy one for the meme"
-  ],
-  [
-    "you fletching shortbows?",
-    "yeah, bank is full of logs",
-    "stringing too?",
-    "eventually, right now im being lazy",
-    "classic fletching plan",
-    "cut first, complain later",
-    "do they sell well?",
-    "depends on market, alch value helps",
-    "i like skills that make neat stacks",
-    "same, inventory looks organized",
-    "until you run out of bowstrings",
-    "then sadness begins"
-  ],
-  [
-    "market for coal feels weird today",
-    "prices moving again?",
-    "yeah, bots keep buying and selling",
-    "honestly makes the world feel alive",
-    "until i try to buy supplies",
-    "then it feels expensive",
-    "did you list yours high?",
-    "a little, im not rushing",
-    "smart, impatient sellers feed flippers",
-    "i am usually the impatient seller",
-    "same, thats why im poor",
-    "at least we know why"
-  ]
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "anyone else get distracted halfway to the bank?",
+      "every trip",
+      "i remember what i needed when i leave again",
+      "thats why i bring a spare inventory of regrets"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what skill keeps dragging you back?",
+      "woodcutting somehow",
+      "just one more log?",
+      "then suddenly its another inventory"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you ever buy supplies then forget what they were for?",
+      "theres a stack in my bank doing exactly that"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "whats your next upgrade?",
+      "something that leaves money for food",
+      "thats a sensible answer",
+      "i learned it after buying one very expensive hat"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "the hardest skill is leaving a conversation",
+      "especially when you already said bye",
+      "anyway good luck training",
+      "see now i have to say it again"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "have you checked your bank lately?",
+      "i prefer to think of it as organised treasure",
+      "is that a no?",
+      "very much a no"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "one more level then a break",
+      "famous last words",
+      "i mean it this time",
+      "ill check on you after the next one",
+      "you dont believe me?",
+      "i believe you mean it right now",
+      "fair, ask me at the bank",
+      "deal, enjoy the last bit"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you training for levels or for cash?",
+      "little bit of both",
+      "which matters more today?",
+      "probably the supplies for tomorrow",
+      "sounds like a useful target",
+      "yeah, keeps the next trip possible"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what do you spend most of your coins on?",
+      "runes and forgetting i already bought runes",
+      "at least they stack",
+      "my mistakes are very space efficient"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do you keep your first decent weapon?",
+      "yeah, couldnt bring myself to sell it",
+      "same here",
+      "might be worth more in memories anyway"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i should really sort my bank",
+      "start with the things you actually use",
+      "so everything else goes in the mystery pile?",
+      "sounds like your current system"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "nice to have people to chat with",
+      "makes the long grinds easier"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you ever walk past a bank with a full inventory?",
+      "only when i forget why im walking",
+      "what were you carrying?",
+      "mostly embarrassment",
+      "did you turn back?",
+      "eventually noticed i couldnt pick anything up",
+      "the inventory gave you a hint",
+      "a very firm hint"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "whats a good short training goal?",
+      "one inventory, then decide",
+      "that sounds manageable",
+      "and you can stop without making a grand announcement",
+      "and if i still want to keep going?",
+      "another inventory is a fresh decision",
+      "that sounds less tiring already",
+      "good luck with the first one"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ive spent more time planning gear than using it",
+      "thats half the fun",
+      "other half is being unable to afford it",
+      "we have the same build"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you saving up for anything?",
+      "a weapon upgrade",
+      "leave some for supplies too",
+      "yeah, trying to avoid being rich and starving",
+      "made that mistake before?",
+      "bought armour then had nothing for the trip",
+      "looked impressive at the bank though",
+      "very expensive standing equipment",
+      "this time youll actually get to use it",
+      "thats the idea",
+      "good luck with the upgrade",
+      "cheers, going to earn it properly"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "think ill do some fishing later",
+      "good way to slow down a bit",
+      "anything i should remember?",
+      "the fishing tool helps"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i keep bringing the wrong thing from the bank",
+      "write a list",
+      "then id forget the list",
+      "youre very consistent"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what makes a good training spot?",
+      "close bank and decent company",
+      "thats two important things",
+      "third one is remembering your tools",
+      "anything else?",
+      "enough room to see what youre clicking",
+      "and somebody who remembers the way back",
+      "now youre asking for luxury",
+      "ill settle for the close bank",
+      "a reasonable compromise",
+      "good luck with the training anyway",
+      "you too, hope you find a nice spot"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you think the banker remembers all our names?",
+      "probably remembers who keeps forgetting a tinderbox",
+      "please dont tell them mine",
+      "bit late for that"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i found something in my bank i forgot i owned",
+      "treasure hunt without leaving town",
+      "didnt even need a spade",
+      "best kind of clue"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do you sell materials or use them yourself?",
+      "usually keep half",
+      "i like that",
+      "means i can change my mind later"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "whats your least organised bank section?",
+      "all of them",
+      "thats a complete answer",
+      "its also a warning"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "sometimes i just want to wander about",
+      "pick a road and see where it goes",
+      "then realise you need to bank?",
+      "then take the road straight back"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i always think i have more runes than i do",
+      "stack looks the same from here",
+      "until the spell doesnt cast",
+      "thats the expensive way to count"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "how long you staying on?",
+      "until i finish this little goal",
+      "how little?",
+      "please dont ask difficult questions"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what counts as a successful trip?",
+      "coming back with more than you left with",
+      "even if its just experience?",
+      "especially that"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you got a favourite piece of cheap gear?",
+      "anything i can replace without crying",
+      "practical fashion",
+      "the only kind my bank supports"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im trying to stop buying things i wont use",
+      "how is that going?",
+      "ask me after this trade",
+      "right, going very well then",
+      "maybe just bank the coins",
+      "theyre safer from me there",
+      "until the next visit",
+      "one problem at a time"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ever bank your food and take the raw fish instead?",
+      "once was enough",
+      "did dinner put up a fight?",
+      "it refused to help entirely"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "its nice when a grind becomes a habit",
+      "until you forget to stop",
+      "one more inventory?",
+      "you understand the problem"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you planning any slayer later?",
+      "maybe after i restock",
+      "food first then?",
+      "thats the plan, trying to stick to it"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "cant decide what to train",
+      "pick whichever supplies you already own",
+      "that narrows it down",
+      "your bank finally gets to make a decision"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "small levels still feel good",
+      "especially the ones you werent watching",
+      "surprise progress",
+      "ill take it"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "any tips for saving coins?",
+      "stop buying upgrades for skills you arent training",
+      "thats very specific",
+      "i have experience",
+      "what did you buy?",
+      "a tool for a skill i wasnt planning to train",
+      "did it work out?",
+      "it inspired a completely different shopping trip",
+      "maybe start with supplies you already have",
+      "thats probably the cheaper adventure",
+      "and good luck keeping the coins this time",
+      "thanks, they will need the encouragement"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i like seeing different outfits around",
+      "some people match everything",
+      "i match whatever was in my bank",
+      "also a style",
+      "any particular colour you go for?",
+      "whichever one i can afford",
+      "very versatile",
+      "goes with a small coin stack"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you ever forget to equip the new gear?",
+      "then wonder why nothing changed",
+      "thats me",
+      "at least the bank looked stronger"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "my inventory fills at the least convenient moment",
+      "it has excellent timing",
+      "wish my clicks did",
+      "same"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "theres always another goal",
+      "pick one at a time",
+      "thats the difficult part",
+      "start with the one you can afford"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "thinking of trying crafting next",
+      "keep the materials you gather",
+      "even the little stacks?",
+      "they add up eventually"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "got any useful advice?",
+      "check your inventory before you travel",
+      "sounds obvious",
+      "the best advice usually does after you forget it",
+      "food and tools first then?",
+      "and the reason you actually left town",
+      "i can manage three things",
+      "then youre better prepared than yesterday"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i walked all that way and forgot the tool",
+      "at least you got your steps in",
+      "agility should count that",
+      "we would all be experts"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do you set a level goal before training?",
+      "usually, then change it twice",
+      "up or down?",
+      "depends how close the bank is"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you prefer quiet spots or busy ones?",
+      "busy enough for a chat",
+      "same here",
+      "a bit of company goes a long way",
+      "doesnt the chatter slow you down?",
+      "only if i stop doing the skill",
+      "right, pick a good moment for it",
+      "yeah, a little waiting time is plenty"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i like training with something to show for it",
+      "logs, fish, that sort of thing?",
+      "yeah, feels useful",
+      "a full bank is a nice progress bar"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ever sell something and immediately need it?",
+      "thats my main money making method",
+      "sounds expensive",
+      "it is for me, yes"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "my coin stack is taking a rest",
+      "mine does that after every shopping trip",
+      "we should let them recover",
+      "no window shopping then",
+      "what if i only look at the shops?",
+      "thats how it starts",
+      "alright, back to earning some",
+      "good luck, let the stack recover"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "whats more important, gear or supplies?",
+      "gear is nicer to look at",
+      "supplies keep you using it",
+      "thats the sensible answer i was avoiding",
+      "maybe a cheaper weapon and more food",
+      "sounds like youll actually use it",
+      "thats the goal",
+      "good luck with the trip"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im having a slow training day",
+      "slow progress still counts",
+      "needed to hear that",
+      "just enjoy the trip",
+      "might make a smaller goal",
+      "good idea, something you can finish",
+      "then a proper break",
+      "youll enjoy coming back more"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "the bank is where all my plans change",
+      "go in for a pickaxe, come out with a fishing rod",
+      "exactly",
+      "follow the inventory i suppose"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you ever buy a cape just because the colour looks nice?",
+      "i can appreciate a good outfit",
+      "thats not an answer",
+      "im still deciding on a colour",
+      "so the colour is the important bit?",
+      "a goal has to look motivating",
+      "thats fair",
+      "ill worry about the levels after choosing"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "hardest part of a big goal?",
+      "making it sound small enough to start",
+      "one inventory then?",
+      "one inventory sounds perfect",
+      "then i check how i feel after?",
+      "exactly, no need to promise the whole bank",
+      "alright, one inventory it is",
+      "good luck, enjoy it"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i need to stop watching the experience counter",
+      "talking helps",
+      "what about?",
+      "apparently the experience counter"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do you keep spare tools?",
+      "after the first time i lost one",
+      "thats usually how it starts",
+      "cheap insurance"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you buying equipment today?",
+      "just comparing for now",
+      "dangerous words",
+      "my coins are already nervous"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "not sure whether to bank this or sell it",
+      "will you actually use it?",
+      "probably",
+      "then give future you a chance"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "some days i spend more time walking than training",
+      "good chance to look around",
+      "true, i keep finding things i missed",
+      "theres more than just the next level"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what do you do after hitting a goal?",
+      "set a smaller one",
+      "you dont celebrate?",
+      "the smaller goal is usually dinner"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "wish my bank could tell me what i was planning",
+      "it would ask you the same thing",
+      "fair",
+      "all those half finished projects"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you ever start a skill because your friend was doing it?",
+      "then they log out five minutes later",
+      "and youre still there an hour after",
+      "accidental dedication"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im keeping a bit of money aside this time",
+      "for supplies?",
+      "yeah, trying to be sensible",
+      "dont let the fancy boots hear you"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "which skill feels most relaxing?",
+      "depends who is standing nearby",
+      "good company helps",
+      "even the slow levels go quicker",
+      "even when the experience is slow?",
+      "a good chat makes the wait fine",
+      "i like that",
+      "no need to make every session a race"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "have you ever counted your banked logs?",
+      "then decided not to?",
+      "the number looked like a lot of work",
+      "best not upset the logs"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you know where my money went?",
+      "have you checked your equipment?",
+      "oh",
+      "at least you can wear the answer"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ive got enough supplies for a while",
+      "thats a good feeling",
+      "now i just have to use them",
+      "the often overlooked part"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you saving those materials for later?",
+      "thats what i tell myself",
+      "how much later?",
+      "apparently a very important secret"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "got room for one more small goal?",
+      "always",
+      "thats how i ended up with twenty",
+      "maybe finish one first"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you can tell who has been training all day",
+      "how?",
+      "they keep counting inventories",
+      "oh, this is number seven"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "its nice when someone says grats",
+      "even for a little level",
+      "yeah, makes it feel shared",
+      "ill keep an eye out then"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "trying a different skill today",
+      "good luck with it",
+      "cheers, my bank needed a change of scenery",
+      "your tools might appreciate it too"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what do you do with spare runes?",
+      "keep them, ill need them eventually",
+      "sensible",
+      "my bank has a very long eventually"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i never know what to bring on a trip",
+      "start with a way home",
+      "then food?",
+      "then the thing you actually went there for",
+      "so thats why i keep returning early",
+      "which part did you forget?",
+      "today it was the food",
+      "at least you remembered the way home"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "nice day for a bit of training",
+      "or a bit of standing about",
+      "both count as being here",
+      "thats a goal i can manage"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i just realised im wearing the wrong boots",
+      "for training or for fashion?",
+      "mostly fashion",
+      "a serious problem then"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do you prefer gathering or making things?",
+      "gathering until my bank fills up",
+      "then production?",
+      "then i complain about needing more materials"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i think my next upgrade is patience",
+      "whats the level requirement?",
+      "higher than mine",
+      "same problem here"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ever close the bank then open it right back up?",
+      "thats the final inventory check",
+      "mine has several stages",
+      "very thorough of you"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "not every session needs a big achievement",
+      "sometimes its just a few good chats",
+      "and a little progress",
+      "thats plenty"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ive got to bank after this",
+      "good luck with the next trip",
+      "cheers, catch you around",
+      "see you in a bit"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you heading out soon?",
+      "after i sort supplies",
+      "safe travels then",
+      "thanks, enjoy your training"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im off to do something productive",
+      "bold choice",
+      "ill let you know how it goes",
+      "we will be here conducting research"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "another level closer",
+      "nice one",
+      "still a way to go",
+      "one less than before though"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "got enough food for later?",
+      "yeah, finally stocked up",
+      "thats one worry gone",
+      "until i remember the runes"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "there should be a skill for changing your mind",
+      "i would be well trained",
+      "same, nearly started three skills today",
+      "at least you brought options"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "why do i always leave one spare slot?",
+      "optimism",
+      "for a rare drop?",
+      "or the thing you forgot to pack"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "my bank has more plans than items",
+      "mine has items with no plans",
+      "between us we might be organised",
+      "lets not risk it",
+      "we could make a list",
+      "i would bank the list and lose it",
+      "right, lets start with one item",
+      "now thats manageable"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "anything exciting planned?",
+      "a quiet training trip",
+      "sounds good honestly",
+      "sometimes thats exactly what you need"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you know what i like about gathering skills?",
+      "what?",
+      "you come back with something useful",
+      "and usually a story about forgetting a tool"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "one day ill have everything ready before i leave",
+      "dont set impossible goals",
+      "bit harsh",
+      "im speaking from experience"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "how do you choose an outfit?",
+      "start with the boots",
+      "then what?",
+      "usually realise none of it matches"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im taking a quick break",
+      "good idea",
+      "dont let me start another grind yet",
+      "ill try, no promises"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you ever remember an item by the place you lost it?",
+      "unfortunately yes",
+      "thats an expensive landmark",
+      "very memorable though"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "keeping your old armour?",
+      "might need a spare set",
+      "reasonable",
+      "also i cant quite bring myself to sell it"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "need to decide what to do next",
+      "what sounds fun?",
+      "thats allowed?",
+      "i checked, seems to be"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "got any goals for today?",
+      "use some of the stuff in my bank",
+      "which stuff?",
+      "the part thats been waiting longest"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "why does the last inventory always take longer?",
+      "because you keep checking it",
+      "you might be right",
+      "try a conversation instead"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you dont need perfect gear to get started",
+      "just the right supplies",
+      "and a bit of patience",
+      "both tend to run out together"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ill let you get back to it",
+      "cheers for the chat",
+      "good luck with the levels",
+      "you too"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "catch you after the next bank trip?",
+      "probably",
+      "ill try to remember what i went for",
+      "thats a fine goal, see you soon"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "sometimes the cheap upgrade is the useful one",
+      "leaves coins for the rest of the setup",
+      "exactly",
+      "the fancy one can wait"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what are you collecting at the moment?",
+      "materials for later training",
+      "thats a broad answer",
+      "my bank is a broad problem",
+      "i keep thinking the next skill will use it all",
+      "sometimes it actually does",
+      "then i have to gather more",
+      "the bank gets hungry either way",
+      "at least nothing sits there forever",
+      "just until the next training plan",
+      "good luck with the current one",
+      "cheers, one stack at a time"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do you ever bring too much food?",
+      "better than bringing none",
+      "true",
+      "the backpack disagrees though"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "getting a level while talking is nice",
+      "surprise grats",
+      "best kind",
+      "hope you get one soon too"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "whats the plan after this?",
+      "bank, then probably another trip",
+      "same route again?",
+      "different day, same forgotten item"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you got a favourite town?",
+      "depends which bank has my stuff",
+      "they all do",
+      "then im very well travelled"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "this started as a quick visit",
+      "thats how the good chats happen",
+      "i really should go train",
+      "good luck when you do"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "whats in that spare bank slot?",
+      "room for ambition",
+      "mine is full of feathers",
+      "also ambition, just a different shape"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you ever finish a goal then forget to stop?",
+      "one more trip for luck",
+      "and one more after that",
+      "luck takes a lot of supplies"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im trying to keep things simple today",
+      "pick a skill and stick with it",
+      "thats the plan",
+      "good luck, enjoy it"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "did that level take long?",
+      "long enough that i noticed",
+      "grats anyway",
+      "thanks, worth it in the end"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you need anything before you head off?",
+      "just to remember why i came back",
+      "take your time",
+      "there it is, forgot the food"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "lets call that a decent bit of progress",
+      "even if it was mostly talking?",
+      "especially then",
+      "fair enough, enjoyed the company"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "thinking of saving for a rune scimitar",
+      "solid melee upgrade",
+      "ill check supplies before spending the lot",
+      "good, the sword wont buy your food"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "which amulet would you pick for general training?",
+      "depends what youre doing",
+      "mostly want something useful that i can afford",
+      "compare the bonuses before buying"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "nice thing about a strength amulet is the name is honest",
+      "doesnt promise to organise your bank",
+      "none of my gear helps with that",
+      "a sadly neglected bonus"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "should i sell my spare mithril armour?",
+      "keep a usable set if youll need it",
+      "and sell the extra pieces?",
+      "only after checking what youre actually wearing"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ive been comparing power and strength amulets",
+      "different bonuses for different plans",
+      "yeah, not just picking the shiny one",
+      "very advanced shopping technique"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do matching gloves and boots matter?",
+      "for the outfit, absolutely",
+      "what about training?",
+      "check the actual bonuses too"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "a cheap cape can finish an outfit",
+      "and leave enough coins for the trip",
+      "thats the real benefit",
+      "fashion on a supply budget"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im keeping a spare weapon banked",
+      "handy if a trip goes badly",
+      "hope i dont need it",
+      "nice to know its there"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "thinking of changing from melee to ranged for a while",
+      "check your arrows before leaving",
+      "and my bow?",
+      "that would also be helpful"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "range supplies always seem to run out together",
+      "then its a trip back for more",
+      "at least arrows stack",
+      "not like packing another set of armour"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i want to try a bit more magic training",
+      "got the runes sorted?",
+      "thats the first job",
+      "check the spell requirements before buying a mountain"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "do you keep every rune you pick up?",
+      "most of them",
+      "even the little piles?",
+      "small piles become useful stacks"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "nature runes have a habit of becoming training plans",
+      "alchemy or runecrafting plans?",
+      "either, depending on the bank",
+      "nice to have choices"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you can tell i need supplies by how long i spend at the bank",
+      "what are you short of?",
+      "usually whichever rune i forgot to check",
+      "classic inventory planning"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im thinking of fishing lobsters later",
+      "take a lobster pot",
+      "thats exactly what i would have forgotten",
+      "glad we had this chat then"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "trout and salmon are useful early food",
+      "and a good reason to train cooking",
+      "two skills from one trip",
+      "quite a nice little loop"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "would you keep swordfish or sell them?",
+      "depends how much food you need",
+      "probably keep a reserve then",
+      "yeah, leave yourself supplies for a trip"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "sharks always make me think of long fishing sessions",
+      "and hungry fighters",
+      "everyone has their part to play",
+      "the fish may disagree"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "woodcutting first or fletching first?",
+      "hard to fletch without logs",
+      "right, tools before ambition",
+      "a reliable starting point"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "willow logs can become quite a bank stack",
+      "one trip never looks like much",
+      "then suddenly youve got a project",
+      "thats how most of my plans start"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im saving yew logs until i choose what to do with them",
+      "nice materials to have ready",
+      "just need to commit to a plan",
+      "your bank will wait, apparently forever"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "thinking about a firemaking session",
+      "got logs and a tinderbox?",
+      "the tinderbox is the part i always forget",
+      "cheap tool, expensive walk back"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "coal looks simple until you decide to smith with it",
+      "then the other supplies matter",
+      "exactly, trying to check the whole recipe",
+      "saves discovering the problem at the furnace"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "ive been keeping my iron ore",
+      "planning a smithing session?",
+      "maybe, otherwise i can trade the supplies",
+      "good to have an option"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "smithing makes the ore pile feel more useful",
+      "long way from rock to equipment",
+      "and plenty of bank visits between",
+      "part of the craftsmanship"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you can never find bowstrings when you finally want them",
+      "check the flax you banked",
+      "then i have another skill to do first",
+      "the supplies have made your schedule"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im saving feathers instead of dropping them",
+      "fishing or fletching later?",
+      "either, theyre handy",
+      "good use for a little stack"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "leather supplies have been waiting in my bank",
+      "thinking about crafting?",
+      "yeah, need to check what i can actually make",
+      "tools and requirements first then"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "gems are a good reason to check the crafting level",
+      "and the right supplies",
+      "i always remember the gem and forget the tool",
+      "a very sparkly banking mistake"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im keeping bones for prayer training",
+      "small piles add up",
+      "another use for a spare bank space",
+      "better than forgetting why its empty"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "runecrafting is making me look at essence differently",
+      "every trip starts with supplies",
+      "and remembering the route",
+      "two important parts of the skill"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "selling the materials or the finished items?",
+      "ill compare before choosing",
+      "good idea, prices can move",
+      "no point guessing from an old offer"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what do you do when an offer seems too good?",
+      "check both sides of the trade",
+      "and the quantities?",
+      "every time, no rush"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "i try to agree on a price before opening the trade",
+      "saves confusion later",
+      "then check it again in the window",
+      "sensible habit"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "coins go quickly when you buy a whole training session",
+      "start with a small batch",
+      "check whether i even like the skill?",
+      "exactly, cheaper way to find out"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "would you trade spare logs for supplies you need?",
+      "if the terms make sense",
+      "nice when both people get useful things",
+      "just check what is actually being offered"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "the busiest trade shout isnt always the best price",
+      "worth looking at more than one offer",
+      "and knowing what youre buying",
+      "helps with most shopping"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im not buying anything just because somebody shouts cheap",
+      "very sensible",
+      "my bank already has enough bargains i never use",
+      "then its learning from experience"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "you can ask a price without committing to a trade",
+      "thats a relief",
+      "just be clear youre comparing",
+      "good point, no need to waste anyones time"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "what would you save from a messy bank clearout?",
+      "tools and things i actually use",
+      "thats a good place to start",
+      "sell the uncertainty last"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "slayer trip after this?",
+      "maybe, need to check my assignment first",
+      "then choose food and gear for it",
+      "yeah, better than packing at random"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "agility sounds like a change of pace",
+      "more moving about than bankstanding",
+      "thats what i was thinking",
+      "remember to actually leave the bank then"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "thinking of a quiet farming visit later",
+      "check your seeds and tools",
+      "another list to remember",
+      "a small list is cheaper than a second trip"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "thieving always makes me think about food supplies",
+      "good idea to be prepared",
+      "rather bank before i need it",
+      "sensible way to start a session"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "after this i might train a different combat style",
+      "nice to use some of the spare gear",
+      "just need the right setup",
+      "and enough supplies to stay a while"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "fishing supplies are cheaper when i remember what i own",
+      "check the bank before shopping?",
+      "trying to learn that",
+      "saves buying another identical tool"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "theres a lot to do with a little pile of logs",
+      "cut, burn, fletch, bank them forever",
+      "im very experienced at the last one",
+      "excellent, time to try one of the others"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "my next gear upgrade is whichever empty slot needs it",
+      "gloves or boots maybe?",
+      "yeah, little improvements count",
+      "and usually leave money for the rest"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "im keeping a little food in reserve",
+      "for an unplanned trip?",
+      "or a badly planned one",
+      "good thinking, those are common"
+    ]
+  },
+  {
+    "topics": [
+      "IDLE"
+    ],
+    "lines": [
+      "all my trading plans end with buying more supplies",
+      "thats what the coins are for",
+      "true, might as well put them to use",
+      "leave enough for the next trip home"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "this is a good spot for doing absolutely nothing",
+      "call it recovering from training",
+      "much better name",
+      "very important recovery work"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "fountain is a decent meeting point",
+      "hard to mistake it for the bank",
+      "ive managed worse",
+      "then we will stand somewhere obvious",
+      "do your friends ever turn up at the wrong one?",
+      "usually its me in the wrong place",
+      "at least youve found this one",
+      "im going to stay put and enjoy that"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "castle looks bigger when youre just standing here",
+      "plenty of room for someone else to be important"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "going anywhere or just hanging around?",
+      "just taking a break",
+      "same here",
+      "good spot for it"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "everyone ends up back in varrock eventually",
+      "banks, shops, people to talk to",
+      "and this fountain",
+      "the full training schedule"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "i came here to sort my inventory",
+      "and now youre talking instead",
+      "i consider this progress",
+      "social progress counts"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "leave a little room for people coming through",
+      "yeah, no need to stand in the doorway",
+      "we can talk over here",
+      "much better"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "did you see that outfit?",
+      "hard to miss those colours"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "fountain side or castle side?",
+      "depends where the company is",
+      "good answer",
+      "the view doesnt complain either way",
+      "i might wander over there later",
+      "leave the main path open when you do",
+      "yeah, plenty of space beside it",
+      "catch you over there then"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "the town feels busy today",
+      "nice having people about",
+      "even if half of us are resting",
+      "resting is serious business",
+      "the alchers are still working though",
+      "they picked a good place for it",
+      "casts and conversation",
+      "very balanced training"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you waiting for someone?",
+      "mostly waiting for motivation",
+      "tell me if you see any",
+      "ill save you some"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "we have picked a very scenic place to waste time",
+      "waste is a harsh word"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "how long were you going to stay here?",
+      "a minute",
+      "and now?",
+      "i have stopped counting"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "the alching makes quite a background noise",
+      "better than listening to my own training plans",
+      "any good plans?",
+      "ask after the next flash"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you heading through the castle?",
+      "just standing nearby for now",
+      "fair, plenty going on out here",
+      "and i dont have to find my way back out"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "this corner has good people watching",
+      "you mean outfit watching",
+      "mostly",
+      "some impressive hats out today"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "thought id stop by before training",
+      "thats what i said too",
+      "how long ago?",
+      "lets not ruin a nice afternoon"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you can always find someone near the fountain",
+      "handy when you forget a name",
+      "meet me by the water works",
+      "unless they go fishing"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "anyone else here taking a bank break?",
+      "my bank is taking a break from me",
+      "too many visits?",
+      "too many indecisive withdrawals"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "the castle guards have very steady jobs",
+      "stand around, look serious",
+      "we have half that mastered",
+      "i keep failing the serious part",
+      "maybe theyre just bored",
+      "could invite them to chat",
+      "what if they ask us to move along?",
+      "then our standing career is over"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "im admiring the scenery",
+      "is that what were calling it?",
+      "sounds better than avoiding my next inventory",
+      "very cultured of you"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "this is where all my training breaks get longer",
+      "good conversation is dangerous like that",
+      "ill leave after this chat",
+      "famous last words",
+      "what were you training anyway?",
+      "thats a dangerous question",
+      "forgot already?",
+      "i remember the bank part, the rest will come back"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "can hear the trading from here",
+      "dont need to stand in the middle of it",
+      "nice to have a quieter patch",
+      "still close enough to see whats going on"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you always end up in varrock too?",
+      "usually after buying supplies",
+      "then a quick fountain visit?",
+      "and a slightly less quick conversation"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "nice to stretch the legs after banking",
+      "just dont stretch into the doorway",
+      "fair point",
+      "room over here"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you brought supplies to stand around?",
+      "i was planning to be productive",
+      "still time",
+      "let me finish this very important chat first"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "the fountain is doing more work than me",
+      "steady job, good location",
+      "terrible pay",
+      "but excellent company today",
+      "you could at least wave at someone",
+      "that sounds like an entire activity",
+      "better warm up first",
+      "another minute of resting should do it"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "just watching people go by",
+      "any interesting findings?",
+      "most of them know where theyre going",
+      "wish i could relate"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "castle entrance makes a good landmark",
+      "easy to meet without getting in the way",
+      "stand to the side then?",
+      "yeah, leave the path clear"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you reckon anyone actually counts their laps round town?",
+      "only after forgetting three things",
+      "sounds like an endurance test",
+      "my bank trips would qualify"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "this feels like a proper town square",
+      "bit of trading, bit of training, lots of talk",
+      "pretty much why i stopped",
+      "same here",
+      "beats just rushing through",
+      "yeah, good place to take a moment",
+      "ill train again in a bit",
+      "enjoy the break while youre here"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "ive seen that same person pass twice",
+      "bank trip probably",
+      "or forgot what they came for",
+      "i know that route very well"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you staying by the fountain?",
+      "for a bit, then back to training",
+      "good luck when you go",
+      "cheers, enjoy the break"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "not a bad place to wait for friends",
+      "plenty to look at",
+      "and somebody always has a story",
+      "hopefully a short one, ive only got all day",
+      "if theyre late, you can still enjoy the visit",
+      "probably will, somebody always forgets supplies",
+      "that somebody is usually me",
+      "then they know exactly where to find you"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "the castle has the best backdrop for a dramatic wave",
+      "you practising?",
+      "purely theoretical",
+      "sure, ill look away"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "i was going to do an emote but someone walked past",
+      "stage fright?",
+      "very exclusive performance",
+      "maybe next time"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "town square training plan is going well",
+      "what skill?",
+      "standing, talking, occasionally changing my mind",
+      "sounds like a balanced account"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "you ever recognise people by their gear?",
+      "until they upgrade",
+      "then you have to learn the name",
+      "terrible amount of effort",
+      "what if two people wear the same thing?",
+      "then i have to pay attention",
+      "sounds difficult",
+      "a very advanced social skill"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "good to see people away from the bank doors",
+      "more room to breathe over here",
+      "still close to everything",
+      "and a nice view of the fountain"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "another quick trip to varrock turned into a chat",
+      "nothing wrong with that",
+      "just have to remember the supplies later",
+      "thats future yous problem"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "watching the alchers is making me want to train magic",
+      "bring your own runes",
+      "yeah, no wishful casting",
+      "the fountain doesnt supply nature runes"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "are we in the way here?",
+      "path looks clear",
+      "good, id rather let people through",
+      "we can hang out a bit to the side"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "going to move over by the castle for a bit",
+      "catch you later then",
+      "good chatting",
+      "see you around the fountain"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "im finally heading back out",
+      "good luck with your next trip",
+      "cheers, this was a good break",
+      "drop by again when youre passing"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "meeting someone here later",
+      "fountain or castle entrance?",
+      "fountain first",
+      "good, now theres a plan neither of you can forget"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "nice to stop somewhere with a bit of space",
+      "dont miss the bank door crowd at all",
+      "still hear the offers from here",
+      "best of both worlds"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "this is how i imagined varrock would be",
+      "people hanging around talking?",
+      "yeah, a bit of life in the square",
+      "hard to beat good company",
+      "you stopping for long?",
+      "long enough for a little conversation",
+      "well, youve found one",
+      "and a good spot to come back to"
+    ]
+  },
+  {
+    "topics": [
+      "HOME"
+    ],
+    "lines": [
+      "ill be over here while i sort my next goal",
+      "take your time",
+      "ill try not to block anybody",
+      "plenty of space beside us"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "alching makes the inventory look tidier at least",
+      "one item at a time",
+      "then i turn the coins back into supplies",
+      "a very shiny circle",
+      "do you keep enough for the next batch?",
+      "trying to check before i buy anything else",
+      "sensible, easy to spend the results",
+      "thats why im watching the rune stack too"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "doing a bit of alching while i chat",
+      "sounds more productive than me",
+      "its mostly remembering which spell i picked",
+      "then youre doing two things well"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "these nature runes dont last forever",
+      "they seem to disappear faster when youre not counting",
+      "got another stack banked?",
+      "ill check after this batch",
+      "good time for a break anyway",
+      "yeah, wont rush the last few"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "one more batch then ill check my supplies",
+      "good plan",
+      "last thing i want is to leave the bank twice",
+      "thats the usual price of planning"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "i like magic training that lets me stand still",
+      "a fine reason to pick alchemy",
+      "less walking, more talking",
+      "you have found your people"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "turning old gear into coins feels useful",
+      "just check what youre clicking",
+      "very carefully",
+      "good, some mistakes are harder to replace",
+      "put the important gear away first?",
+      "yeah, not mixing it with the targets",
+      "sounds safer",
+      "and a lot less expensive than learning by accident"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "alching is better with company",
+      "keeps the rhythm from feeling so long",
+      "ill try not to distract you too much",
+      "talking is fine, the spell has its own pace"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "funny how the rune stack gets smaller as the coins get bigger",
+      "magic accounting"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "working through some banked items",
+      "alchemy session?",
+      "yeah, clearing a sensible stack",
+      "nice, double purpose training"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "the casting animation never gets old",
+      "give it another few inventories",
+      "then ill appreciate the conversation",
+      "we can start early",
+      "what should we talk about then?",
+      "anything that doesnt make me click the wrong item",
+      "lets start with the weather",
+      "very safe choice for my equipment"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im keeping the useful gear out of this batch",
+      "good call",
+      "hard to train with everything turned into coins",
+      "very lightweight though"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "you ever alch just to use up a stack?",
+      "space and magic experience"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "alching near other people is much nicer",
+      "otherwise its just you and the flashes",
+      "hard to discuss anything with a flash",
+      "very brief replies"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "trying to leave enough coins for the next rune trip",
+      "alchemy maths?",
+      "yeah, the less glamorous kind",
+      "the kind that matters though"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im using what i already had banked",
+      "saves buying a pile you dont need",
+      "exactly",
+      "good way to make some room",
+      "did it sit there long?",
+      "long enough to become a training plan",
+      "better than gathering dust",
+      "thats what i tell the banker"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "my nature rune stack is my timer today",
+      "stopping when it runs out?",
+      "or before i start clicking the wrong things",
+      "sensible stopping point"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "alch a few, chat a bit, repeat",
+      "thats a decent afternoon",
+      "not rushing it",
+      "no reason to"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "i keep the spell ready and let it take its time",
+      "better than trying to rush every cast",
+      "yeah, more relaxed this way",
+      "and time for a proper chat"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "the coin sound is encouraging",
+      "until the next supply bill",
+      "let me enjoy this part",
+      "fair, sounds very successful from here",
+      "at least the magic experience stays",
+      "true, supplies are doing their job",
+      "thats progress worth keeping",
+      "and i can count it after this batch"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im sorting spare items into something useful",
+      "coins and magic experience?",
+      "thats the plan",
+      "nice way to use them up"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "noting the items saves a lot of bank trips",
+      "handy for a long alch session",
+      "still have to remember the runes",
+      "always one more thing to check"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "magic training and bank cleaning at the same time",
+      "thats dangerously organised",
+      "dont worry, the rest of my bank is chaos",
+      "balance restored",
+      "so no plans for the rest yet?",
+      "one stack at a time",
+      "that works",
+      "ill leave a little chaos for tomorrow"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im leaving my good equipment alone",
+      "excellent alchemy policy",
+      "learned to check before casting",
+      "worth the extra glance"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "you can tell how the session is going by the supplies",
+      "how so?",
+      "runes down, coins up",
+      "thats a very readable report"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "got a little rhythm going with these casts",
+      "i wont ask you to stop for a chat then",
+      "dont have to, thats the nice part",
+      "carry on, ill keep you company",
+      "tell me when you need to bank",
+      "will do, watching the supplies",
+      "good luck with the rest",
+      "thanks, nice place to spend a batch"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "the spell does the flashy bit",
+      "and you do the inventory checking",
+      "somebody has to",
+      "a vital partnership"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "trying not to turn this into a marathon",
+      "set a small stack aside",
+      "good idea",
+      "then stop while you still like the animation"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im training magic without chasing anything",
+      "quiet for a spellbook",
+      "very peaceful",
+      "the items might disagree"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "every alch clears a tiny bit of space",
+      "in the bank or your plans?",
+      "hopefully both",
+      "good luck with the second one",
+      "what will you do with the room?",
+      "probably store supplies for another plan",
+      "an endless cycle",
+      "at least this bit gives magic experience"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im saving the results for supplies",
+      "more nature runes?",
+      "partly",
+      "alchemy funding more alchemy, very efficient"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "no rush, just getting through this stack",
+      "ill happily provide the distraction",
+      "long as i keep the casts going",
+      "deal"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "alching is a good excuse to stay and talk",
+      "talking is a good excuse to keep alching",
+      "we have a system",
+      "dont let anyone make it complicated",
+      "how much longer is the batch?",
+      "still a few to go",
+      "ill stick around a bit",
+      "cheers, makes the casts less repetitive"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "i checked the rune cost before starting this batch",
+      "very sensible",
+      "would rather know than guess",
+      "especially after the stack is gone"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "my spellbook is getting more use today",
+      "nice, working on magic?",
+      "yeah, a quiet batch of alchemy",
+      "good luck with it"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "i like seeing the stack slowly go down",
+      "nice clear training goal",
+      "then check the experience after",
+      "a pleasant surprise at the end"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "this session is making my bank lighter",
+      "at least the coins stack",
+      "otherwise it would be a terrible trade",
+      "need a cart after every cast"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im not taking my eyes off the item icons",
+      "wise with alchemy",
+      "conversation is welcome though",
+      "then ill keep the entertainment going"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "just about ready for another bank trip",
+      "running low on something?",
+      "items this time",
+      "good point to check the rune stack too"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "finishing this batch before i move",
+      "no problem, catch you after",
+      "cheers for the company",
+      "good luck with the last few casts"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "alchemy has a very satisfying finish",
+      "a stack of coins?",
+      "and an empty slot",
+      "the true reward"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "some casts, some chat, a bit of magic experience",
+      "sounds like the right pace",
+      "much better than staring at the runes",
+      "they dont make much conversation"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "doing the sensible items first",
+      "saving the rest for later?",
+      "saving the useful stuff for actual use",
+      "even better"
+    ]
+  },
+  {
+    "topics": [
+      "ALCHEMY"
+    ],
+    "lines": [
+      "im going to check my supplies after this one",
+      "enjoy the next batch",
+      "thanks for the chat",
+      "any time"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "waiting for another bite",
+      "fish taking their time?",
+      "apparently they have plans",
+      "hopefully those plans involve getting caught",
+      "maybe the conversation is scaring them",
+      "they cant be that fussy",
+      "tell them we have been very patient",
+      "ill leave that sales pitch to the fishing tool"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "fishing gives you plenty of time to talk",
+      "until the inventory suddenly fills",
+      "then a short bank trip",
+      "and back to the important conversation",
+      "do you remember where you left off?",
+      "usually something about the fish",
+      "very consistent topic",
+      "easy to stay relevant round here"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "one catch closer to a full bag",
+      "and some dinner later"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "im trying not to stare at the water too hard",
+      "does it help?",
+      "fish seem unimpressed either way",
+      "tough audience"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "packed my tool and supplies before coming out",
+      "no return trip this time?",
+      "thats the plan",
+      "already ahead of my last fishing trip"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "the fish are testing my patience",
+      "must be training something too",
+      "evasion, probably",
+      "they seem quite good at it",
+      "you got enough patience for another bag?",
+      "i brought company instead",
+      "that should last a while",
+      "cheers, better than watching alone"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "fishing is easier with someone to talk to",
+      "makes the quiet bits nice",
+      "even the slow catches?",
+      "especially those"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "another inventory for the bank soon",
+      "cooking them later?"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "i like gathering my own food",
+      "means you know where it came from",
+      "mostly this exact bit of water",
+      "very local supplies",
+      "cooking them yourself too?",
+      "when i get round to the next batch",
+      "good luck with both skills",
+      "thanks, first ive got to persuade the fish"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "the bag looks empty until it suddenly doesnt",
+      "fishing time works differently",
+      "bank trips prove time still exists",
+      "unfortunate reminder",
+      "then youll be back before you know it",
+      "hopefully the spot is still here",
+      "we will keep an eye on it",
+      "thanks, just dont promise the fish anything"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "trying for a little fishing progress today",
+      "anything caught is progress",
+      "thats a nice way to see it",
+      "and a nicer way to wait"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "the fishing spot has the right idea",
+      "standing about by the water?",
+      "are you following its example?",
+      "as much as the inventory allows",
+      "then the bank makes the decision",
+      "very firm guidance"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "i keep telling myself one more catch",
+      "then the inventory has room for another",
+      "exactly",
+      "a very expandable plan"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "fish never seem impressed by good equipment",
+      "at least the tool knows youre trying",
+      "wish it would tell them",
+      "quiet negotiation going on down there"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "not a bad way to spend a while",
+      "fishing or talking?",
+      "both, really",
+      "good combination"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "im watching for the spot to move",
+      "dont want to keep fishing empty water",
+      "done that before",
+      "the silence was a clue",
+      "does it wander far?",
+      "far enough to make me pay attention",
+      "good little break from the waiting",
+      "yeah, then straight back to it"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "keeping these for later training",
+      "cooking stock?",
+      "yeah, trying to plan ahead",
+      "your bank will thank you"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "waiting feels quicker with company",
+      "thats the secret fishing tool",
+      "takes no inventory space either",
+      "best one ive brought"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "another fish, another tiny step",
+      "adds up eventually",
+      "not rushing today",
+      "probably best for the fish too"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "the inventory is filling nicely",
+      "time to think about banking?",
+      "soon, just keeping an eye on it",
+      "good luck with the last few"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "i remembered my fishing supplies this time",
+      "a strong start",
+      "the fish havent noticed yet",
+      "give them time"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "anyone else find fishing relaxing?",
+      "until you catch your last free slot",
+      "then its a brisk bank break",
+      "a balanced exercise plan"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "some of these fish will be useful food",
+      "and the rest?",
+      "probably training supplies",
+      "nothing wasted then"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "im trying to let the fishing happen",
+      "without checking every second?",
+      "yeah, a chat helps",
+      "happy to assist"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "you can measure a fishing trip in bank visits",
+      "how many so far?",
+      "enough to know the route",
+      "a valuable second skill"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "im keeping an eye on the spot while we talk",
+      "sensible",
+      "no point chatting to the old location",
+      "the fish are poor at leaving notes"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "its nice hearing people around while i fish",
+      "beats only listening for a catch",
+      "and the level sneaks up on you",
+      "hope it sneaks up soon"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "bag filling slowly but steadily",
+      "steady is fine",
+      "yeah, no competition today",
+      "just you and some very patient fish"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "i always forget the cooking part until i bank",
+      "future problem?",
+      "future dinner",
+      "thats more motivating"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "this is a good skill for a quiet chat",
+      "doesnt need every moment of your attention",
+      "just the right moments",
+      "and a tool you actually packed"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "the fish are making me earn this inventory",
+      "they must know youre close to a break",
+      "very inconsiderate",
+      "hope the last one is generous"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "going to bank when this fills",
+      "ill see you if youre back",
+      "probably will be",
+      "good luck with the trip"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "fishing and conversation, decent combination",
+      "just remember which one fills the bag",
+      "unfortunately not the conversation",
+      "wed need more banks"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "i might keep the next batch too",
+      "building a food stock?",
+      "yeah, always ends up useful",
+      "good plan"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "almost ready to pack up",
+      "thanks for keeping me company",
+      "enjoy the rest of your fishing",
+      "cheers, catch you around"
+    ]
+  },
+  {
+    "topics": [
+      "FISHING"
+    ],
+    "lines": [
+      "just caught another one while talking",
+      "the fish approve of the conversation",
+      "ill take the encouragement",
+      "keep going then",
+      "we should keep this up",
+      "for the fishing of course",
+      "purely practical",
+      "good luck with the next one"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "tree is lasting a while",
+      "gives us time for a chat",
+      "good use of the wait",
+      "just keep an eye on the stump",
+      "what were you going to do with the logs?",
+      "bank them until i pick the next skill",
+      "a versatile plan",
+      "harder to regret than dropping the whole bag"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "another log for the bank",
+      "what are you keeping them for?",
+      "fletching or firemaking later",
+      "nice to have options"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "woodcutting makes a very patient conversation partner",
+      "the tree or the people?",
+      "the tree still gets priority though",
+      "wouldnt want you chopping empty air",
+      "ill keep an eye on it",
+      "then carry on, im listening"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "trying to keep a bit of space while i chop",
+      "good, no need to stand on each other",
+      "tree has enough company",
+      "so do we"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "my inventory fills one log at a time",
+      "very observant",
+      "its my main woodcutting strategy",
+      "hard to argue with results"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "i like a skill that leaves materials behind",
+      "logs are useful for a few things",
+      "exactly",
+      "future training already banked"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "got my axe, got some time",
+      "thats most of the plan",
+      "now just need the logs",
+      "tree seems willing"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "the moment you look away the tree goes down",
+      "very dramatic timing",
+      "at least you can finish the sentence now",
+      "not before i find another tree",
+      "very dedicated",
+      "trying to keep the logs coming"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "one more inventory of logs",
+      "then a break?",
+      "thats what i said last time",
+      "ill remind you at the bank",
+      "if you forget, i will ask again",
+      "thanks, someone has to keep the plan honest",
+      "good luck with this batch",
+      "cheers, see you after banking"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "chopping goes better with a bit of chatter",
+      "less staring at the branches",
+      "more interesting than counting swings",
+      "i lost count immediately"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "im keeping these logs instead of dropping them",
+      "planning to use them?",
+      "eventually",
+      "my bank knows that word well"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "nice to have a quiet skill for a while",
+      "still useful progress"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "my axe gets more exercise than i do",
+      "you do the bank trips",
+      "true, fair division of work",
+      "very balanced partnership"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "tree looks ready to become training supplies",
+      "bit ambitious for a tree",
+      "fletching or firemaking, havent decided",
+      "giving it career options"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "another log, a little more experience",
+      "sounds like a good rhythm",
+      "not in a hurry today",
+      "enjoy it then"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "im watching for the stump while we chat",
+      "dont want to swing at nothing",
+      "the stump would get worried",
+      "probably heard enough chopping already"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "full bags always arrive mid conversation",
+      "bank trip makes a natural pause",
+      "ill remember where we were",
+      "better than i remember my tools"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "woodcutting is one of those skills i drift back to",
+      "easy to settle into",
+      "and logs are always something useful",
+      "hard to complain",
+      "do you keep all the logs?",
+      "most of them, can use them later",
+      "nice way to prepare another skill",
+      "yeah, makes every trip worth a bit more"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "which sounds better, keeping logs or making a fire?",
+      "depends what you need",
+      "probably both eventually",
+      "bank some and decide later"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "trying not to crowd the next tree",
+      "plenty of room to stand beside it",
+      "makes it easier to see whats going on",
+      "and nicer to talk"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "the tree has heard all my plans for today",
+      "has it replied?",
+      "just a log",
+      "very practical advice",
+      "maybe its suggesting fletching",
+      "could be firemaking",
+      "better bank the advice for later",
+      "good idea, plenty of room for interpretation"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "slowly building a stack in the bank",
+      "nice to see it add up",
+      "especially after a few trips",
+      "thats a solid bit of progress"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "i packed a spare bit of patience",
+      "good woodcutting supply",
+      "weighs less than another axe",
+      "probably harder to replace"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "im letting the chopping carry on while i talk",
+      "good, dont let me interrupt",
+      "tree gets the clicks, you get the words",
+      "excellent arrangement",
+      "tell me when the bag fills",
+      "youll know when i start walking to the bank",
+      "i can take a hint",
+      "might be back after, good company here"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "not every tree lasts as long as you hope",
+      "next one might",
+      "thats the spirit",
+      "good luck with the logs"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "bank trip coming up soon",
+      "inventory looking healthy?",
+      "yeah, almost all logs",
+      "thats the expected result then"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "i like having a use for the things i gather",
+      "makes each trip feel useful",
+      "even if the plan changes",
+      "logs are flexible like that"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "just trying to get a little woodcutting in",
+      "nice place for it",
+      "good company too",
+      "cheers, same here"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "my axe and i have a very simple plan",
+      "cut tree, bank logs?",
+      "youve read it already",
+      "strong plan, easy to remember",
+      "what if the tree falls?",
+      "next tree, same plan",
+      "excellent contingency",
+      "ive had some time to think about it"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "chopping is relaxing until the tree runs out",
+      "then the next tree gets its turn",
+      "very fair system",
+      "the trees might disagree"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "id count the logs but the inventory does it for me",
+      "modern convenience",
+      "saves me losing count while talking",
+      "important service"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "these will keep me busy at the bank later",
+      "fletching plans?",
+      "maybe, depends on the supplies",
+      "good to have the logs ready"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "almost done with this bag",
+      "safe bank trip",
+      "thanks, might be back in a bit",
+      "ill look out for you"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "funny how the branches never move out of the way",
+      "tree is standing its ground",
+      "admirable",
+      "less helpful for the logs though"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "im calling this a decent woodcutting session",
+      "got some logs and a good chat",
+      "cant ask much more",
+      "enjoy the rest of it"
+    ]
+  },
+  {
+    "topics": [
+      "WOODCUTTING"
+    ],
+    "lines": [
+      "another stump means another little walk",
+      "good chance to stretch",
+      "then back to the logs",
+      "and back to the conversation"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "working through some cooking supplies",
+      "future food stock?",
+      "yeah, always useful",
+      "good reason to keep the batch going"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "the cooking is carrying on while i chat",
+      "nice when a batch gives you a little time",
+      "just watching the inventory",
+      "ill try not to make you hungry"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "raw fish look like a plan, cooked fish look like progress",
+      "very practical philosophy"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "trying not to burn too much",
+      "part of learning",
+      "id prefer a cheaper lesson",
+      "fair, good luck with the batch",
+      "keep the good ones for later trips",
+      "thats the plan",
+      "every batch helps",
+      "thanks, ill keep at it"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "cooking makes gathering food feel finished",
+      "two skills for the same supplies",
+      "thats the idea",
+      "nice bit of planning",
+      "then you use it up and start again",
+      "at least i know what to gather",
+      "very reliable demand",
+      "my trips certainly keep it busy"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "another batch slowly becoming dinner",
+      "or combat supplies",
+      "same fish, different appointment",
+      "hope it has an easy trip"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "i like having food ready in the bank",
+      "one less thing to buy",
+      "and one less thing to forget?",
+      "lets not be too optimistic"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "keeping an eye on the cooking while we talk",
+      "good, dont let dinner sneak away"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "its satisfying seeing raw food turn into something useful",
+      "and the experience helps",
+      "both good reasons",
+      "keep at it"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "one more batch then ill check the bank",
+      "running through your stock?",
+      "trying to tidy it up",
+      "the useful kind of tidying"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "im saving the good food for trips later",
+      "sensible plan",
+      "future me needs all the help available",
+      "future you says thanks"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "the smell of imaginary dinner is distracting",
+      "probably time for a break after this"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "cooking is more sociable than staring at raw fish",
+      "anything is more sociable than that",
+      "fish arent much for conversation",
+      "especially at this stage"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "im trying to build up some supplies",
+      "cooked food is a good start",
+      "always ends up useful",
+      "and it stacks nicely in the bank"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "the last few always make me watch closely",
+      "hoping they dont burn?",
+      "exactly",
+      "good luck with them"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "this batch is going reasonably well",
+      "thats good",
+      "ill count the useful ones after",
+      "hope the pile is worth the wait"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "cooking while chatting makes the time go quicker",
+      "as long as the batch keeps going",
+      "still watching it",
+      "then we have a deal",
+      "what happens after this one?",
+      "probably bank and check the raw stock",
+      "good luck with the next batch",
+      "thanks, nice having a chat"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "finished food is much easier to plan with",
+      "one less job before a trip",
+      "thats what i like about it",
+      "organised future adventuring"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "i should bank the cooked stuff soon",
+      "good chance to check the next batch",
+      "yeah, keep the supply line going",
+      "enjoy the next one"
+    ]
+  },
+  {
+    "topics": [
+      "COOKING"
+    ],
+    "lines": [
+      "almost ready to finish this cooking trip",
+      "cheers for the company",
+      "good luck with your next goal",
+      "you too"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "these logs have finally found a purpose",
+      "fletching session?",
+      "yeah, bank was getting a bit wooden",
+      "nice to clear a stack",
+      "been saving them long?",
+      "longer than i meant to",
+      "then this is overdue progress",
+      "thats a good name for it"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "making bows leaves a bit of time to talk",
+      "just keep the batch going",
+      "thats the plan",
+      "ill keep you company"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "one set of supplies, several little jobs",
+      "logs then strings?"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "fletching makes my inventory change shape",
+      "logs in, bows out",
+      "very accurate description",
+      "ive had time to study it"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "finally using some of my banked logs",
+      "future you kept a promise",
+      "rare achievement",
+      "better make the most of it"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "these supplies looked like a small job in the bank",
+      "then you withdrew them?",
+      "suddenly a whole afternoon",
+      "at least youve got company"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "trying to finish a sensible batch",
+      "small goal for today?",
+      "yeah, keeps it manageable",
+      "good plan"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "i like making something from gathered materials",
+      "feels like extra progress",
+      "then you can pick the next use for them",
+      "or bank them and admire the progress",
+      "a short admiration break is fair",
+      "after i finish the batch"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "the fletching is still going while we chat",
+      "no need to stop it for me",
+      "thats why i picked a quiet moment",
+      "good timing"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "bowstrings always seem like the thing i forgot",
+      "theres always one missing supply",
+      "at least its easy to name",
+      "easier after leaving the bank",
+      "leave a spare stack banked",
+      "then i have to remember to withdraw it",
+      "one step at a time",
+      "good advice for this entire skill"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "this is why i keep spare materials",
+      "ready when you want to train?",
+      "in theory",
+      "in practice i still forget one thing"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "fletching is good for working through a stack",
+      "and a conversation"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "im watching for the batch to finish",
+      "then another bank trip?",
+      "probably",
+      "good time to stretch the legs"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "funny how a pile of logs turns into a different pile",
+      "one with more experience attached",
+      "thats the useful bit",
+      "worth the work then"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "planning to use these bows later",
+      "training or selling?",
+      "havent decided yet",
+      "nice to have a finished option"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "got a little rhythm going with this batch",
+      "enjoy it",
+      "better with someone to talk to",
+      "happy to help"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "the bank is finally looking less like a forest",
+      "fletching doing its job?",
+      "slowly but surely",
+      "sounds like progress"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "its nice getting two skills from the same logs",
+      "woodcutting and fletching?",
+      "yeah, feels efficient",
+      "and keeps the materials useful"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "almost at the end of these supplies",
+      "nice stopping point",
+      "might check what else is banked",
+      "careful, thats how another batch starts"
+    ]
+  },
+  {
+    "topics": [
+      "FLETCHING"
+    ],
+    "lines": [
+      "ill bank after this batch",
+      "good luck with the next one",
+      "thanks for the chat",
+      "catch you around"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "working through some crafting supplies",
+      "nice to make something useful",
+      "thats the idea",
+      "good luck with the batch",
+      "a big project?",
+      "just a manageable stack for now",
+      "good way to start",
+      "yeah, see how i feel when its finished"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "crafting gives my banked materials a second job",
+      "better than sitting there forever",
+      "they had a very restful first job",
+      "time for a change"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "making things is satisfying",
+      "especially when the supplies are already ready"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "these materials looked much tidier in the bank",
+      "now theyre progress",
+      "thats a nicer way to put it",
+      "carry on then"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "the crafting is carrying on while i talk",
+      "good, i wont keep you from the batch",
+      "nice to have company",
+      "makes the work less quiet"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "im using up a small stack today",
+      "manageable goal",
+      "then i can choose something else",
+      "finish one plan before making three more"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "crafting supplies always seem to come in stages",
+      "one more thing to fetch?",
+      "usually",
+      "good reason to check before leaving"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "nice when an inventory becomes finished items",
+      "and the experience is a bonus"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "trying to keep this batch going smoothly",
+      "tools and materials all sorted?",
+      "finally, yes",
+      "then enjoy the easy part"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "my bank has been saving these materials for a while",
+      "waiting for the right day?",
+      "apparently today",
+      "glad they got their chance",
+      "and the tools were there too?",
+      "after a little searching",
+      "all the pieces in one place at last",
+      "not moving until i use some"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "i like being able to make my own things",
+      "less time shopping for every little item",
+      "more time sorting materials",
+      "still counts"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "crafting is easier with a bit of patience",
+      "and the correct tool"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "keeping an eye on the batch as we chat",
+      "shouldnt be too long now",
+      "then bank the results",
+      "nice little loop"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "im making room by actually using my supplies",
+      "a bold bank organisation method",
+      "might catch on",
+      "let me know how it goes"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "its funny how every project needs one more item",
+      "right after you leave the bank",
+      "always",
+      "at least im getting good at walking",
+      "do you make a list?",
+      "i should probably start",
+      "put remember the list at the top",
+      "now thats thinking ahead"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "this batch should be useful later",
+      "equipment or trading?",
+      "keeping my options open",
+      "smart, no need to decide right away"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "crafting makes small stacks feel worthwhile",
+      "they add up into finished things",
+      "and a few levels eventually",
+      "good reason to keep going"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "not rushing this training session",
+      "good time for a chat then",
+      "thats what i thought",
+      "hope the batch goes well"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "just finishing these materials",
+      "enjoy the results",
+      "cheers, nice talking",
+      "catch you later"
+    ]
+  },
+  {
+    "topics": [
+      "CRAFTING"
+    ],
+    "lines": [
+      "after this ill check what i can make next",
+      "see what supplies you already own",
+      "saves buying another project",
+      "your banker will appreciate it"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "working through some metal supplies",
+      "always nice to turn stock into something useful",
+      "and get a bit of experience",
+      "good luck with it",
+      "got much left to do?",
+      "a sensible amount for a quiet session",
+      "thats the best kind of target",
+      "thanks, ill see how the batch goes"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "this batch gives me a moment to talk",
+      "as long as the work keeps going",
+      "still keeping an eye on it",
+      "sounds good"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "metalwork makes the inventory feel very full",
+      "not the lightest supplies"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "im trying to use what i already banked",
+      "good way to start",
+      "better than buying a giant new stack",
+      "your coins can rest a bit"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "smithing always makes me check the materials twice",
+      "usually a sensible idea",
+      "saves finding out halfway through",
+      "and another walk"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "slowly turning supplies into progress",
+      "nice clear goal",
+      "finish this batch then decide",
+      "thats a good pace"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "these materials have been waiting in my bank",
+      "finally their turn?",
+      "yeah, trying to finish old plans",
+      "good luck, theres always another one"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "i like seeing the finished items",
+      "makes the training feel real"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "the work is still going while we talk",
+      "then ill leave you to the timing",
+      "no worries, good company helps",
+      "glad to be useful"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "another batch for the bank soon",
+      "keeping or selling the results?",
+      "ill decide after",
+      "a very familiar banking strategy"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "im trying not to spend all my coins on supplies at once",
+      "small batches help",
+      "and easier goals",
+      "sounds sensible",
+      "leaves room to change your mind",
+      "or buy the thing i forgot",
+      "usually that second one",
+      "you know the training routine well"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "metal supplies are a serious inventory commitment",
+      "not many spare slots left"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "its nice using materials from gathering",
+      "feels like finishing the job",
+      "exactly",
+      "good little training chain",
+      "does it make the gathering feel more useful?",
+      "yeah, you see the whole process",
+      "worth the extra bank organisation",
+      "a little organisation anyway"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "keeping a close eye on the end of the batch",
+      "then a supply check?",
+      "yeah, dont want to start without enough",
+      "good plan"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "this is quieter than another shopping trip",
+      "less haggling, more progress",
+      "and time to chat",
+      "seems like a good trade"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "banked a few supplies for today",
+      "enough for a small session?",
+      "thats the idea",
+      "enjoy it"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "smithing is making a dent in my stored materials",
+      "nice to use them at last",
+      "future plans becoming actual items",
+      "very satisfying"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "one batch at a time",
+      "best way to handle a big stack",
+      "not thinking about the whole pile",
+      "your bank can worry about that"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "almost finished this bit of work",
+      "nice, hope the training went well",
+      "steady progress and good company",
+      "sounds successful"
+    ]
+  },
+  {
+    "topics": [
+      "SMITHING"
+    ],
+    "lines": [
+      "ill need to bank after these supplies run out",
+      "safe trip",
+      "cheers for the chat",
+      "good luck with the next batch"
+    ]
+  }
 ]

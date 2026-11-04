@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.script.InventoryBotScript
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
@@ -50,6 +51,8 @@ class SmeltOreBotScript(
     zones: MutableList<SubZone>,
     val bankRelief: Boolean = false
 ) : InventoryBotScript(bot, duration, zones) {
+    override val ambientProductionTopic = ConversationSpeech.SMITHING
+
     override val ownedSuppliesOnly get() = bankRelief
     override val trainingSkill get() = if (bankRelief) SKILL_SMITHING else null
     override val verifiedProductionWithdrawals get() = bankRelief

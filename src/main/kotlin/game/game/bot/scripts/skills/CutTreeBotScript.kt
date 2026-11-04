@@ -6,6 +6,8 @@ import api.bot.webwalk.plan.BankAccess
 import api.bot.action.BotGatheringTools
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
+import api.bot.social.SocialBotScript
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
@@ -50,7 +52,18 @@ import kotlin.time.Duration.Companion.seconds
  */
 class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones: MutableList<SubZone>,
                        val firemakingTarget: Int = 0) :
-    SkillingBotScript<GameObject>(bot, duration, zones, bot.woodcutting) {
+    SkillingBotScript<GameObject>(bot, duration, zones, bot.woodcutting), SocialBotScript {
+
+    override fun ambientConversationTopic(): ConversationSpeech = ConversationSpeech.WOODCUTTING
+
+    override fun canSocialize(): Boolean = canTalkWhileWorking()
+
+    override fun canTalkWhileWorking(): Boolean = canContinueConversation() &&
+        bot.actions.first(CutTreeAction::class.java) != null
+
+    override fun canContinueConversation(): Boolean = !forceBanking && !bot.inventory.isFull &&
+        duration > Duration.ZERO && activeZone?.area?.contains(bot.position) == true &&
+        bot.walking.isEmpty && !bot.navigator.isActive && !bot.combat.inCombat() && bot.combat.target == null
 
     override val targetSearchTimeout: Duration = 180.seconds
 
