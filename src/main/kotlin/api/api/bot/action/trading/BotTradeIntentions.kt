@@ -6,6 +6,7 @@ import api.predef.ext.allSuitableFood
 import api.predef.ext.canUseWantedItem
 import api.predef.ext.totalItemAmount
 import api.predef.SKILL_MAGIC
+import api.predef.equipDef
 import com.google.common.collect.ImmutableSet
 import engine.bot.gear.BotEquipmentPreferences
 import engine.bot.gear.BotGearSelector
@@ -110,8 +111,13 @@ object BotTradeIntentions {
             val priority = if (owned < plan.minimum) WantedItemPriority.URGENT else WantedItemPriority.STANDARD
             result[id] = definition(id, plan.minimum, plan.target, priority)
         }
-        val progression = BotEquipmentPreferences.progressionCandidates(bot)
-        val gear = progression + if (discretionaryShopper(bot.username.orEmpty()) || bot.preferences.isMerchant)
+        val completion = BotEquipmentPreferences.completionCandidates(bot)
+        val completionSlots = completion.associateBy { equipDef(it).index }
+        val progression = BotEquipmentPreferences.progressionCandidates(bot).filter { id ->
+            val fallback = completionSlots[equipDef(id).index]
+            fallback == null || fallback == id
+        }
+        val gear = progression + completion + if (discretionaryShopper(bot.username.orEmpty()) || bot.preferences.isMerchant)
             BotEquipmentPreferences.fashionCandidates(bot) else emptyList()
         for (id in gear) {
             if (bot.totalItemAmount(id) > 0 || !bot.canUseWantedItem(id)) continue
@@ -120,6 +126,7 @@ object BotTradeIntentions {
                 bot.preferences.getWantedItem(id)?.priority == WantedItemPriority.URGENT
             result.putIfAbsent(id, definition(id, -1, 1,
                 if (urgentUpgrade) WantedItemPriority.URGENT
+                else if (id in completion && id !in progression) WantedItemPriority.STANDARD
                 else if (id !in progression && cosmetic) WantedItemPriority.LOW else WantedItemPriority.HIGH))
         }
         addCombatSupplies(bot, progression, result)

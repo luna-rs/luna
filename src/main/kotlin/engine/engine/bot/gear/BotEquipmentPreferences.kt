@@ -8,6 +8,7 @@ import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Equipment.AMMUNITION
 import io.luna.game.model.item.Equipment.WEAPON
+import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.mob.bot.Bot
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -36,6 +37,8 @@ object BotEquipmentPreferences {
         GlovesBotGear.entries.filter { it.name in ordinaryMetals }.flatMap { it.ids }).toSet()
     private val groups: List<BotGearType> = HeadBotGear.entries + AmuletBotGear.entries + BootsBotGear.entries +
         CapeBotGear.entries + GlovesBotGear.entries + RingBotGear.entries + ShieldBotGear.entries + WeaponBotGear.entries
+    private val completionItems = (AmuletBotGear.entries + BootsBotGear.entries + CapeBotGear.entries +
+        GlovesBotGear.entries).flatMapTo(hashSetOf()) { it.ids() }
     private val functionalWeapons = WeaponBotGear.entries.filter {
         it !in setOf(WeaponBotGear.FUN_WEAPONS, WeaponBotGear.DECORATIVE_MELEE_WEAPONS)
     }.flatMapTo(hashSetOf()) { it.ids }
@@ -135,10 +138,71 @@ object BotEquipmentPreferences {
     }
 
     /**
-     * Combines usable progression with one personal fashion goal. Ordinary shopping can request progression alone.
+     * Combines usable progression, affordable empty-slot equipment and one personal fashion goal.
      * Shopping applies its own cash reserve and quantity limits; this method never creates ownership targets.
      */
-    fun purchaseCandidates(bot: Bot): List<Int> = (progressionCandidates(bot) + fashionCandidates(bot)).distinct()
+    fun purchaseCandidates(bot: Bot): List<Int> {
+        val completion = completionCandidates(bot)
+        val slots = completion.associateBy { equipDef(it).index }
+        val progression = progressionCandidates(bot).filter { id ->
+            val fallback = slots[equipDef(id).index]
+            fallback == null || fallback == id
+        }
+        return (progression + completion + fashionCandidates(bot)).distinct()
+    }
+
+    /**
+     * Fills useful accessory gaps without turning every favourite or expensive requirement-free item into a need.
+     * Intelligent bots always notice; other accounts have a smaller, stable chance based on intelligence.
+     * Each slot may spend at most five percent of owned coins, preferring available shop stock before market goals.
+     * A usable owned copy, including a noted copy, satisfies the slot even when it is currently banked.
+     */
+    fun completionCandidates(bot: Bot): List<Int> {
+        if (bot.preferences.isSkiller || !fillsEquipmentGaps(bot.username.orEmpty(), bot.personality.intelligence)) {
+            return emptyList()
+        }
+        val allowance = bot.itemTracker.count(Currency.COINS.id) / 20
+        if (allowance < 1) return emptyList()
+        val purpose = setOf(planningPurpose(bot))
+        val eligible = completionItems.mapNotNull { BotGearSelector.ALL_GEAR_IDS.value[it] }.filter {
+            supports(it, purpose) && it.def.value.meetsAllRequirements(bot)
+        }.groupBy { it.index }.values.filter { choices -> choices.none { owns(bot, it.id) } }
+        val ids = eligible.flatten().mapTo(hashSetOf()) { it.id }
+        if (ids.isEmpty()) return emptyList()
+
+        val shopPrices = hashMapOf<Int, Int>()
+        for (shop in world.shops.values()) {
+            if (shop.currency != Currency.COINS || !shop.botAccess.apply(bot)) continue
+            for (stock in shop.items.filterNotNull()) {
+                if (stock.id !in ids || stock.amount < 1) continue
+                val quote = shop.computeBuyValue(stock.id, 1)
+                if (quote.isPresent && quote.asInt in 1..allowance) {
+                    shopPrices.merge(stock.id, quote.asInt, ::minOf)
+                }
+            }
+        }
+        return eligible.mapNotNull { choices ->
+            val tradeable = choices.filter { ItemDefinition.ALL.get(it.id).map { it.isTradeable }.orElse(false) }
+            val stocked = tradeable.filter { it.id in shopPrices }
+            val affordable = stocked.ifEmpty {
+                tradeable.filter {
+                    val price = world.economy.getRealPrice(it.id)
+                    price.isFinite() && price > 0 && price <= allowance
+                }
+            }
+            select(bot, affordable, purpose)?.id
+        }
+    }
+
+    /**
+     * Keeps gap-filling decisions consistent across shopping checks and logins instead of rerolling every quote.
+     */
+    internal fun fillsEquipmentGaps(username: String, intelligence: Double): Boolean {
+        val chance = intelligence.coerceIn(0.0, 1.0)
+        val name = username.lowercase(Locale.ROOT).replace('_', ' ').trim()
+        return chance >= 0.7 || Math.floorMod(stableWeight(name, "complete-equipment"), 1_000L) <
+            (chance * chance * 1_000).toLong()
+    }
 
     /**
      * Selects missing upgrades for one combat style, with at most one chosen item in each equipment slot.

@@ -13,6 +13,9 @@ import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotEquipmentPreferences
+import io.luna.game.model.item.Equipment.AMMUNITION
+import io.luna.game.model.item.Equipment.WEAPON
 import game.player.item.consume.food.Food
 import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
@@ -449,7 +452,14 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     open suspend fun equipment(): BotGearLocator? {
         val purpose = if (randBoolean() || bot.personality.isSocial) setOf(BotGearPurpose.SHOW_OFF)
         else setOf(BotGearPurpose.SKILLING)
-        return BotGearSelector.find(bot, purpose).buildLocator()
+        val selected = BotGearSelector.find(bot, purpose)
+        if (!bot.preferences.isSkiller &&
+            BotEquipmentPreferences.fillsEquipmentGaps(bot.username.orEmpty(), bot.personality.intelligence)) {
+            selected.fillAll(setOf(BotEquipmentPreferences.planningPurpose(bot))) {
+                it.index == WEAPON || it.index == AMMUNITION
+            }
+        }
+        return selected.buildLocator()
     }
 
     /**

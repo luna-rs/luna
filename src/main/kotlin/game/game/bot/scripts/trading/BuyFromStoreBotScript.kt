@@ -211,7 +211,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             .filterNot { it.id in blocked || it.id == COINS_ID }
             .filter { wanted -> shopsFor(shops, wanted.id).any { canBuyOne(it, wanted.id, budget) } }
         return ShopPurchaseSelection.order(candidates) { shoppingWeight(it.id) }
-            .sortedByDescending { bot.canUseWantedItem(it.id) }.firstOrNull()
+            .sortedWith(compareByDescending<WantedItemDefinition> { it.priority.level }
+                .thenByDescending { bot.canUseWantedItem(it.id) }).firstOrNull()
     }
 
     /**
