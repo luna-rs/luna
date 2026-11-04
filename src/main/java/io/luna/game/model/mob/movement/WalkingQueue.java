@@ -413,7 +413,8 @@ public final class WalkingQueue {
     /**
      * Depletes run energy for a player if they are running.
      * <p>
-     * The depletion rate is based on the player's carried weight. If run energy reaches zero, this method will:
+     * The depletion rate is based on the player's carried weight (see {@link #drainRate(double)}). If run energy
+     * reaches zero, this method will:
      * <ul>
      *     <li>Set the player's run energy to {@code 0}.</li>
      *     <li>Disable running on the player.</li>
@@ -430,10 +431,7 @@ public final class WalkingQueue {
             player.setRunning(false);
             return false;
         }
-        double totalWeight = player.getWeight();
-        double energyReduction = 0.117 * 3 * Math
-                .pow(Math.E, 0.0037725887222397812376689284858327062723020005374410 * totalWeight);
-        double newValue = player.getRunEnergy() - energyReduction;
+        double newValue = player.getRunEnergy() - drainRate(player.getWeight());
         if (newValue <= 0.0) {
             player.setRunEnergy(0.0, true);
             player.setRunning(false);
@@ -441,6 +439,19 @@ public final class WalkingQueue {
         }
         player.setRunEnergy(newValue, true);
         return true;
+    }
+
+    /**
+     * The run energy drained in one running tick, in percent: {@code 67 + 67 * weight / 64} hundredths of a percent,
+     * rounded down, with the weight held between 0 and 64 kg. Agility does not change it. A full bar lasts about 150
+     * running ticks at 0 kg and 75 at 64 kg or more.
+     *
+     * @param weight The player's carried weight, in kilograms.
+     * @return The percentage drained.
+     */
+    static double drainRate(double weight) {
+        double clamped = Math.max(0.0, Math.min(weight, 64.0));
+        return (67 + (int) (67 * clamped / 64)) / 100.0;
     }
 
     /**

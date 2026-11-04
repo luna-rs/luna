@@ -12,7 +12,10 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.LocalGraphic
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -61,6 +64,46 @@ internal object ShortcutMoves {
      * HUMAN_ROPESWING_LONG, the swing on a rope.
      */
     const val ROPE_SWING = 751
+
+    /**
+     * The line as a swing starts, in two spellings: the Moss Giant ropes' from 2009 footage and the ogre island's from
+     * 2007 footage.
+     */
+    const val SKILFULLY = "You skilfully swing across."
+    const val SKILLFULLY = "You skillfully swing across."
+
+    /**
+     * HUMAN_THROWROPE_UP, a rope thrown up over a branch.
+     */
+    const val THROW_ROPE_UP = 775
+
+    /**
+     * The rope tied over the ogre island's branch, which stands in the branch's place for the tie and the swing.
+     */
+    const val TIED_ROPE = 2325
+    private const val TIE_AND_SWING_TICKS = 5
+
+    /**
+     * HUMAN_JUMP_HURDLE, the jump over a fence.
+     */
+    const val JUMP_HURDLE = 1603
+
+    /**
+     * HUMAN_STEPPINGSTONEJUMP, the leap onto a stepping stone and off it, airborne between the crouch and the landing.
+     */
+    const val STONE_LEAP = 769
+    private const val STONE_LEAP_TAKEOFF = 28
+    private const val STONE_LEAP_LANDING = 40
+
+    /**
+     * How near a stone across the water a player must come to jump it: the bank two tiles away.
+     */
+    val ACROSS_WATER = InteractionPolicy(InteractionType.DISTANCE, 2)
+
+    /**
+     * The line as a player squeezes through a loose railing.
+     */
+    const val LOOSE_RAILING = "You squeeze through the loose railing."
 
     /**
      * HUMAN_MONKEYBARS_ON and HUMAN_MONKEYBARS_OFF: up onto the bars and the drop off them.
@@ -144,11 +187,18 @@ internal object ShortcutMoves {
         AgilityStep(to, 2, animation = EXIT_HOLE, jump = true)), null, valid = { active(plr) })
 
     /**
-     * Squeezes through a gap in a fence onto [to], the tile across it.
+     * Squeezes through a gap in a fence onto [to], the tile across it, with [message] at the start.
      */
-    fun squeezeThroughFence(plr: Player, to: Position) =
+    fun squeezeThroughFence(plr: Player, to: Position, message: String? = null) =
         AgilityAction(plr, listOf(AgilityStep(to, 3, animation = RAILING_SQUEEZE, moveStart = 30, moveEnd = 60)),
-                      null, valid = { active(plr) })
+                      message, valid = { active(plr) })
+
+    /**
+     * Jumps over a fence onto [to], the tile across it, inside the hurdle jump.
+     */
+    fun jumpFence(plr: Player, to: Position) =
+        AgilityAction(plr, listOf(AgilityStep(to, 2, animation = JUMP_HURDLE, moveStart = 19, moveEnd = 50)), null,
+                      valid = { active(plr) })
 
     /**
      * Walks across a log balance onto [to], a tile a tick.
@@ -222,13 +272,43 @@ internal object ShortcutMoves {
     }
 
     /**
-     * Swings across on [rope] to [to]: two ticks on the start tile, then the swing.
+     * Swings across on [rope] to [to]: two ticks on the start tile, then the swing, with [message] as it starts.
      */
-    fun swing(plr: Player, to: Position, rope: GameObject) = AgilityAction(plr, listOf(
+    fun swing(plr: Player, to: Position, rope: GameObject, message: String = SKILFULLY) = AgilityAction(plr, listOf(
         AgilityStep(plr.position, 2, jump = true),
-        AgilityStep(to, 2, animation = ROPE_SWING, message = "You skilfully swing across.", moveStart = 20,
-                    moveEnd = 50, begin = { rope.animate(Agility.ROPE_SWING_ANIMATION) })), null,
-        valid = { active(plr) })
+        AgilityStep(to, 2, animation = ROPE_SWING, message = message, moveStart = 20, moveEnd = 50,
+                    begin = { rope.animate(Agility.ROPE_SWING_ANIMATION) })), null, valid = { active(plr) })
+
+    /**
+     * Ties a rope over [branch] from the start tile and swings across on it to [to] three ticks later. The rope is used
+     * up, and the tied rope stands in the branch's place until the swing ends.
+     */
+    fun swingFromBranch(plr: Player, to: Position, branch: GameObject): AgilityAction {
+        plr.face(to)
+        var tied: GameObject? = null
+        return AgilityAction(plr, listOf(
+            AgilityStep(plr.position, 3, animation = THROW_ROPE_UP, jump = true,
+                        message = "You tie the rope to the tree...", begin = {
+                            plr.inventory.remove(Item(AgilityShortcut.ROPE))
+                            tied = tieRope(branch)
+                        }),
+            AgilityStep(to, 2, animation = ROPE_SWING, message = SKILLFULLY, moveStart = 20, moveEnd = 50,
+                        begin = { tied?.animate(Agility.ROPE_SWING_ANIMATION) })), null, valid = { active(plr) })
+    }
+
+    /**
+     * Puts the tied rope in [branch]'s place for the tie and the swing, then puts the branch back.
+     */
+    private fun tieRope(branch: GameObject): GameObject? {
+        if (!world.removeObject(branch)) return null
+        val tied = world.addObject(TIED_ROPE, branch.position, branch.objectType, branch.direction)
+        world.scheduleOnce(TIE_AND_SWING_TICKS) {
+            if (world.removeObject(tied)) {
+                world.addObject(branch.id, branch.position, branch.objectType, branch.direction)
+            }
+        }
+        return tied
+    }
 
     /**
      * Swings across the monkey bars from the bar end [from] to the other, [to]: a tick facing along the bars, the
@@ -260,6 +340,50 @@ internal object ShortcutMoves {
             AgilityStep(to, 2, animation = REACH_FOR_LADDER, jump = true, message = "You climb up the wall...",
                         begin = { plr.sendMessage("...and squeeze in through the window.") })), null,
                              valid = { active(plr) })
+    }
+
+    /**
+     * Climbs the rocks on a wall from [from], facing it, and comes down on its far side at [to] two ticks after the
+     * climb starts. A tick on [from] first lets the client finish the step onto it before the climb.
+     */
+    fun climbRocksOverWall(plr: Player, from: Position, to: Position): AgilityAction {
+        plr.face(Position(to.x, to.y, from.z))
+        return AgilityAction(plr, listOf(AgilityStep(from, 1, jump = true),
+                                         AgilityStep(to, 2, animation = REACH_FOR_LADDER, jump = true)), null,
+                             valid = { active(plr) })
+    }
+
+    /**
+     * Leaps from the bank onto [stone], stands two ticks on it and leaps on to the far bank, [to]. A player who slips
+     * falls into the water between the stone and the far bank and scrambles out onto the far bank, unhurt, for 1 XP:
+     * the slip four ticks after the first leap, out of the water five ticks after the slip.
+     */
+    fun leapAcrossStone(plr: Player, to: Position, stone: Position): AgilityAction {
+        val message = "You leap across with a mighty leap!"
+        val onto = AgilityStep(stone, 3, animation = STONE_LEAP, moveStart = STONE_LEAP_TAKEOFF,
+                               moveEnd = STONE_LEAP_LANDING)
+        if (keepsFooting(plr.agility.level, 51, 252)) {
+            return AgilityAction(plr, listOf(onto, AgilityStep(stone, 2, jump = true),
+                                             AgilityStep(to, 3, animation = STONE_LEAP, moveStart = STONE_LEAP_TAKEOFF,
+                                                         moveEnd = STONE_LEAP_LANDING)), message,
+                                 valid = { active(plr) })
+        }
+        val water = stone.translate(Integer.signum(to.x - stone.x), Integer.signum(to.y - stone.y))
+        val swim = AgilityWalk.SWIM.walk
+        return object : AgilityAction(plr, listOf(
+            onto,
+            AgilityStep(stone, 1, jump = true),
+            AgilityStep(stone, 1, animation = STUMBLE, jump = true, message = "You slip over on the slimy stone."),
+            AgilityStep(water, 1, walkingAnimation = swim, jump = true, begin = { fallInto(plr, water) }),
+            AgilityStep(to, 3, walkingAnimation = swim, jump = true)), message, valid = { active(plr) }),
+            DeathInterruptible, ShortcutFall {
+            init {
+                onSuccess = {
+                    plr.sendMessage("You scramble out of the muddy water.")
+                    plr.agility.addExperience(1.0)
+                }
+            }
+        }
     }
 
     /**
