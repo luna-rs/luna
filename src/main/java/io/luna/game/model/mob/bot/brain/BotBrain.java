@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.BotScript;
 import api.bot.action.BotBankSpace;
+import engine.bot.coordinator.BankResourceCoordinator;
 import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
 import engine.bot.coordinator.RuneRunningCoordinator;
@@ -59,6 +60,10 @@ public class BotBrain {
         }
         if (bot.getPreferences().getRuneRunning().isIntroductory() && RuneRunningCoordinator.INSTANCE.canDispatch(bot)) {
             return RuneRunningCoordinator.INSTANCE;
+        }
+        BotScript resourceRelief = BankResourceCoordinator.select(bot);
+        if (resourceRelief != null) {
+            return owner -> owner.getScriptStack().push(resourceRelief);
         }
         if (BotBankSpace.needsMaintenance(bot)) {
             return owner -> owner.getScriptStack().push(new BankCleanupBotScript(owner));

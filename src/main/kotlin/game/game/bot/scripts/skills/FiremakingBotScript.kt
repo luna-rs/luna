@@ -9,6 +9,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.FiremakingScriptFactory
+import engine.bot.coordinator.BankResourceCoordinator
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.firemaking.Firemaking
 import game.skill.firemaking.Firemaking.TINDERBOX
@@ -38,15 +39,21 @@ import kotlin.time.Duration.Companion.seconds
  * both unnoted logs and the tinderbox to reach the inventory. Forced bank requests use the inherited
  * bounded retry budget; verified withdrawals reset it, and snapshots retain it across resumes.
  * Pausing, finishing, and changing zones release the claimed spot and discard the transient lane.
+ * Bank-relief sessions require an already owned tinderbox, consume only unreserved logs and never gather replacements.
  *
  * @property log The type of log this script burns.
+ * @property bankRelief Whether this is a bounded owned-resource bank-relief session.
  * @author lare96
  * @author TheLining
  */
-class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: MutableList<SubZone>) :
+class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: MutableList<SubZone>,
+                          val bankRelief: Boolean = false) :
     InventoryBotScript(bot, duration, zones) {
 
     override val verifiedProductionWithdrawals = true
+    override val ownedSuppliesOnly get() = bankRelief
+    override val trainingSkill get() = if (bankRelief) SKILL_FIREMAKING else null
+    override fun allowsLoot(item: io.luna.game.model.item.GroundItem): Boolean = !bankRelief && super.allowsLoot(item)
 
     // Lighting a log drops it on the bot's tile first.
     override val ignoredLoot = setOf(log.id)
@@ -86,14 +93,21 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
              */
             var log: Log = Log.NORMAL
 
+            /**
+             * Whether this session may only consume expendable owned logs without gathering or acquiring supplies.
+             */
+            var bankRelief = false
+
             override fun load(data: JsonObject) {
                 super.load(data)
                 log = Log.valueOf(data.get("log").asString)
+                bankRelief = data.get("bank_relief")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("log", log.name)
+                if (bankRelief) data.addProperty("bank_relief", true) else data.remove("bank_relief")
             }
         }
     }
@@ -248,7 +262,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
      * @param bot The bot that owns this script.
      * @param data The previously saved firemaking script data.
      */
-    constructor(bot: Bot, data: FiremakingData) : this(bot, data.log, data.duration, data.zones) {
+    constructor(bot: Bot, data: FiremakingData) : this(bot, data.log, data.duration, data.zones, data.bankRelief) {
         restoreInventoryState(data)
     }
 
@@ -271,6 +285,11 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
      */
     private fun withdrawBatch(bankOnly: Boolean): List<Item> {
         if (!bankOnly && productionRetriesExhausted()) { stop(); return emptyList() }
+        if (bankRelief && (bot.firemaking.staticLevel < log.level ||
+                !BankResourceCoordinator.canProcess(bot, SKILL_FIREMAKING, listOf(Item(log.id)), setOf(TINDERBOX)))) {
+            stop()
+            return emptyList()
+        }
         if (bot.firemaking.staticLevel < log.level) {
             bot.log("I need Firemaking level ${log.level} to burn ${itemName(log.id)}.")
             stop()
@@ -283,13 +302,20 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             return emptyList()
         }
         if (TINDERBOX !in bot.itemTracker) {
+            if (bankRelief) { stop(); return emptyList() }
             // Emergency spawn tinderbox if needed.
             bot.bank.add(Item(TINDERBOX))
         }
+        if (bankRelief && !bankOnly) productionWithdraw(listOf(Item(log.id)), setOf(TINDERBOX), requestMissing = false)
         return listOf(Item(TINDERBOX), Item(log.id, minOf(stock, LOGS_PER_TRIP)))
     }
 
     override suspend fun onExecuteInZone(): Boolean {
+        if (bankRelief && (bot.firemaking.staticLevel < log.level ||
+                !BankResourceCoordinator.canProcess(bot, SKILL_FIREMAKING, listOf(Item(log.id)), setOf(TINDERBOX)))) {
+            stop()
+            return true
+        }
         if (log.id !in bot.inventory && bot.bank.computeAmountForId(log.id) < 1) {
             bot.log("I've burned all of my ${itemName(log.id)}.")
             chopMoreLogs()
@@ -350,6 +376,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         val data = FiremakingData()
         saveInventoryState(data)
         data.log = log
+        data.bankRelief = bankRelief
         return data
     }
 
@@ -398,6 +425,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         if (gatheringQueued) return
         gatheringQueued = true
         releaseSpot()
+        if (bankRelief) { stop(); return }
         val remaining = remainingDuration()
         if (remaining > Duration.ZERO) {
             val script = FiremakingScriptFactory.getTrainingScript(bot, bot.firemaking.staticLevel,
