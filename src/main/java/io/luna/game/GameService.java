@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -72,11 +73,15 @@ public final class GameService extends AbstractScheduledService {
          */
         @Override
         public void execute(Runnable command) {
-            if (Thread.currentThread() == thread) {
-                command.run();
-            } else {
-                syncTasks.add(command);
+            boolean inline = Thread.currentThread() == thread;
+            synchronized (submissionLock) {
+                checkGameTaskAdmission(inline);
+                if (!inline) {
+                    syncTasks.add(command);
+                    return;
+                }
             }
+            command.run();
         }
     }
 
@@ -174,6 +179,31 @@ public final class GameService extends AbstractScheduledService {
      * Async logger.
      */
     private static final Logger logger = LogManager.getLogger();
+
+    /**
+     * Shared callback/worker drain budget, leaving time for saves within the shutdown hook's one-minute deadline.
+     */
+    private static final long SHUTDOWN_TASK_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(30);
+
+    /**
+     * Serializes submission with the shutdown admission boundaries, without executing work under the lock.
+     */
+    private final Object submissionLock = new Object();
+
+    /**
+     * Whether new general-purpose work may enter the owned pool.
+     */
+    private boolean acceptingAsyncTasks = true;
+
+    /**
+     * Whether new game-thread work may be admitted.
+     */
+    private boolean acceptingGameTasks = true;
+
+    /**
+     * Allows already-admitted callbacks to compose inline work and yield while the game thread finishes their drain.
+     */
+    private boolean drainingAcceptedTasks;
 
     /**
      * Queue of "synchronization tasks" to be executed on the game thread.
@@ -281,14 +311,15 @@ public final class GameService extends AbstractScheduledService {
      * Attempts to shut down the game service gracefully.
      *
      * <p>Delegates to {@link #gracefulShutdown()} and logs any {@link Exception} thrown by the
-     * shutdown sequence without rethrowing it.
+     * shutdown sequence and lets the service fail when that sequence cannot complete.
      */
     @Override
-    public void shutDown() {
+    public void shutDown() throws Exception {
         try {
             gracefulShutdown();
         } catch (Exception e) {
             logger.fatal("Luna could not be terminated gracefully!", e);
+            throw e;
         }
     }
 
@@ -318,7 +349,14 @@ public final class GameService extends AbstractScheduledService {
      * tasks are added via {@link #sync(Supplier)} or {@link #getGameExecutor()} and executed here.
      */
     private void runSynchronizationTasks() {
-        for (; ; ) {
+        runSynchronizationTasks(Integer.MAX_VALUE);
+    }
+
+    /**
+     * Runs at most the supplied number of callbacks, allowing shutdown to recheck its worker pools and deadline.
+     */
+    private void runSynchronizationTasks(int limit) {
+        for (int completed = 0; completed < limit; completed++) {
             var runnable = syncTasks.poll();
             if (runnable == null) {
                 break;
@@ -365,12 +403,105 @@ public final class GameService extends AbstractScheduledService {
      * @param waitingMessage Log message printed while waiting.
      */
     private <E extends Event> void runKotlinTasks(Function<ExecutorService, E> eventFunction, String waitingMessage) {
+        runKotlinTasks(eventFunction, waitingMessage, 0);
+    }
+
+    /**
+     * Dispatches a lifecycle event, using the shared drain deadline for shutdown-owned workers.
+     */
+    private <E extends Event> void runKotlinTasks(Function<ExecutorService, E> eventFunction, String waitingMessage,
+                                               long shutdownDeadline) {
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         E msg = eventFunction.apply(pool);
-        context.getPlugins().post(msg);
-        pool.shutdown();
+        try {
+            context.getPlugins().post(msg);
+        } finally {
+            pool.shutdown();
+        }
         logger.info(waitingMessage);
-        awaitTerminationUninterruptibly(pool);
+        if (msg instanceof ServerShutdownEvent) {
+            awaitShutdownTasks(pool, shutdownDeadline - System.nanoTime());
+        } else {
+            awaitTerminationUninterruptibly(pool);
+        }
+    }
+
+    /**
+     * Waits for an owned shutdown pool while servicing its game-thread dependencies, without processing world ticks.
+     * Interruption is restored after draining; a timeout fails shutdown instead of claiming that accepted work finished.
+     */
+    private void awaitShutdownTasks(ExecutorService executor, long timeoutNanos) {
+        long deadline = System.nanoTime() + timeoutNanos;
+        boolean interrupted = Thread.interrupted();
+        try {
+            while (!executor.isTerminated()) {
+                runShutdownTasks();
+                long remaining = deadline - System.nanoTime();
+                if (remaining <= 0) {
+                    throw new IllegalStateException("Timed out draining shutdown workers: " + executor);
+                }
+                try {
+                    executor.awaitTermination(Math.min(remaining, TimeUnit.MILLISECONDS.toNanos(10)),
+                            TimeUnit.NANOSECONDS);
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
+            }
+            runShutdownTasks();
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    /**
+     * Pumps finite callback batches so accepted workers can finish and shutdown can check its deadline.
+     */
+    private void runShutdownTasks() {
+        runYieldedTasks();
+        runSynchronizationTasks(syncTasks.size());
+    }
+
+    /**
+     * Closes worker admission atomically with submission, then finishes accepted workers and their callbacks.
+     */
+    private void finishAsyncTasks(long deadline) {
+        synchronized (submissionLock) {
+            acceptingAsyncTasks = false;
+            pool.shutdown();
+        }
+        awaitShutdownTasks(pool, deadline - System.nanoTime());
+    }
+
+    /**
+     * Closes external callback admission and finishes everything admitted before that boundary.
+     * Nested inline work belongs to its accepted callback and cannot escape past the final snapshot.
+     */
+    private void finishGameTasks(long deadline) {
+        synchronized (submissionLock) {
+            acceptingGameTasks = false;
+        }
+        drainingAcceptedTasks = true;
+        try {
+            while (!yieldedTasks.isEmpty() || !syncTasks.isEmpty()) {
+                if (System.nanoTime() - deadline >= 0) {
+                    throw new IllegalStateException("Timed out draining admitted shutdown callbacks.");
+                }
+                runShutdownTasks();
+            }
+        } finally {
+            drainingAcceptedTasks = false;
+        }
+    }
+
+    /**
+     * Checks callback admission while holding the submission lock.
+     */
+    private void checkGameTaskAdmission(boolean inline) {
+        if (!acceptingGameTasks && !(inline && drainingAcceptedTasks)) {
+            throw new RejectedExecutionException("Game-thread work is closed for shutdown.");
+        }
     }
 
     /**
@@ -393,6 +524,7 @@ public final class GameService extends AbstractScheduledService {
         var world = context.getWorld();
         var loginService = world.getLoginService();
         var logoutService = world.getLogoutService();
+        long drainDeadline = System.nanoTime() + SHUTDOWN_TASK_TIMEOUT_NANOS;
 
         // Stop all coroutines.
         GameCoroutineScope.INSTANCE.shutdown();
@@ -404,7 +536,11 @@ public final class GameService extends AbstractScheduledService {
         runSynchronizationTasks();
 
         // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
-        runKotlinTasks(ServerShutdownEvent::new, "Waiting for Kotlin shutdown tasks to complete...");
+        runKotlinTasks(ServerShutdownEvent::new, "Waiting for Kotlin shutdown tasks to complete...", drainDeadline);
+
+        // Workers may still be waiting for game-thread callbacks; finish them before taking the final snapshot.
+        finishAsyncTasks(drainDeadline);
+        finishGameTasks(drainDeadline);
 
         // Close windows before the save, so items held in them (trade offers) are back in the inventory.
         for (Player player : world.getPlayers()) {
@@ -424,10 +560,6 @@ public final class GameService extends AbstractScheduledService {
 
         // Close cache resource.
         context.getCache().close();
-
-        // Wait for general-purpose tasks to complete.
-        pool.shutdown();
-        awaitTerminationUninterruptibly(pool);
     }
 
     /**
@@ -487,7 +619,10 @@ public final class GameService extends AbstractScheduledService {
      * @param task The continuation to execute in a future yield batch.
      */
     public void yield(Runnable task) {
-        yieldedTasks.add(task);
+        synchronized (submissionLock) {
+            checkGameTaskAdmission(Thread.currentThread() == thread);
+            yieldedTasks.add(task);
+        }
     }
 
     /**
@@ -516,13 +651,17 @@ public final class GameService extends AbstractScheduledService {
      */
     public <T> CompletableFuture<T> sync(Supplier<T> s) {
         CompletableFuture<T> result = new CompletableFuture<>();
-        gameExecutor.execute(() -> {
-            try {
-                result.complete(s.get());
-            } catch (Exception e) {
-                result.completeExceptionally(e);
-            }
-        });
+        try {
+            gameExecutor.execute(() -> {
+                try {
+                    result.complete(s.get());
+                } catch (Exception e) {
+                    result.completeExceptionally(e);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            result.completeExceptionally(e);
+        }
         return result;
     }
 
@@ -537,7 +676,12 @@ public final class GameService extends AbstractScheduledService {
      * @return A future completed with the task's result.
      */
     public <T> CompletableFuture<T> submit(Supplier<T> t) {
-        return CompletableFuture.supplyAsync(t, pool);
+        synchronized (submissionLock) {
+            if (!acceptingAsyncTasks) {
+                throw new RejectedExecutionException("General-purpose work is closed for shutdown.");
+            }
+            return CompletableFuture.supplyAsync(t, pool);
+        }
     }
 
     /**
@@ -550,7 +694,10 @@ public final class GameService extends AbstractScheduledService {
      * @return A future completed when the task finishes.
      */
     public CompletableFuture<Void> submit(Runnable t) {
-        return CompletableFuture.runAsync(t, pool);
+        return submit(() -> {
+            t.run();
+            return null;
+        });
     }
 
     /**
