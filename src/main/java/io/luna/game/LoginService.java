@@ -163,17 +163,31 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
 
     @Override
     void finishRequest(String username, LoginRequest request) {
-        Boolean result = loadMap.remove(username).join();
-        if (Boolean.FALSE.equals(result)) {
-            // Load failed or response already sent; do not proceed.
-            return;
-        }
-
         var client = request.client;
-        PlayerRights rights = PlayerRights.forLogin(request.player.getUsername(),
-                request.loadedData == null ? null : request.loadedData.rights,
-                Luna.settings().game().betaMode(), LunaChannelFilter.WHITELIST.contains(client.getIpAddress()));
-        var player = PlayerAutomation.prepareLoginPlayer(request.player, rights);
+        Player player;
+        try {
+            Boolean result = loadMap.remove(username).join();
+            if (Boolean.FALSE.equals(result)) {
+                // Load failed or response already sent; do not proceed.
+                return;
+            }
+
+            PlayerRights rights = PlayerRights.forLogin(request.player.getUsername(),
+                    request.loadedData == null ? null : request.loadedData.rights,
+                    Luna.settings().game().betaMode(), LunaChannelFilter.WHITELIST.contains(client.getIpAddress()));
+            player = PlayerAutomation.prepareLoginPlayer(request.player, rights);
+        } catch (RuntimeException | Error failure) {
+            // No game client or world registration has been published by this attempt yet.
+            pending.remove(username, request);
+            try {
+                client.disconnect();
+            } catch (RuntimeException | Error cleanupFailure) {
+                if (cleanupFailure != failure) {
+                    failure.addSuppressed(cleanupFailure);
+                }
+            }
+            throw failure;
+        }
 
         // If final response succeeds, register player and set ACTIVE.
         if (client.sendFinalLoginResponse(player, request.loadedData, request.message)) {
