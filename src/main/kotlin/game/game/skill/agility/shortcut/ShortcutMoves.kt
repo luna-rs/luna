@@ -69,9 +69,25 @@ internal object ShortcutMoves {
     const val BARS_OFF = 743
 
     /**
-     * HUMAN_REACHFORLADDER, the climb up the Watchtower's wall.
+     * HUMAN_REACHFORLADDER and HUMAN_PICKUPFLOOR: a climb up, and a climb down.
      */
     const val REACH_FOR_LADDER = 828
+    const val CLIMB_DOWN = 827
+
+    /**
+     * AGILITY_SHORTCUT_WALL_JUMP2, AGILITY_SHORTCUT_WALL_JUMPDOWN and AGILITY_SHORTCUT_WALL_JUMPDOWN2: the jump up a
+     * wall, the jump down it and the landing.
+     */
+    const val WALL_JUMP_UP = 2585
+    const val WALL_JUMP_DOWN = 2586
+    const val WALL_LAND = 2588
+
+    /**
+     * HUMAN_SPOT_JUMP, the jump over a strange floor.
+     */
+    const val SPOT_JUMP = 741
+    private const val SPOT_JUMP_CROUCH = 10
+    private const val SPOT_JUMP_CYCLES = 38
 
     /**
      * HUMAN_WALK_LOGBALANCE_STUMBLE, the stumble before a fall into a river.
@@ -244,5 +260,84 @@ internal object ShortcutMoves {
             AgilityStep(to, 2, animation = REACH_FOR_LADDER, jump = true, message = "You climb up the wall...",
                         begin = { plr.sendMessage("...and squeeze in through the window.") })), null,
                              valid = { active(plr) })
+    }
+
+    /**
+     * Climbs a cliffside scramble onto [to], a tile a tick. A player who slips still gets across, but takes 1 to
+     * [maxDamage] damage and no XP.
+     */
+    fun scramble(plr: Player, from: Position, to: Position, maxDamage: Int): AgilityAction {
+        if (keepsFooting(plr.agility.level, 170, 253)) return climbRocks(plr, from, to)
+        return object : AgilityAction(plr, listOf(AgilityStep(to, from.computeLongestDistance(to),
+                                                              walkingAnimation = AgilityWalk.CLIMB.walk)), null,
+                                      valid = { active(plr) }), DeathInterruptible, ShortcutFall {
+            init {
+                onSuccess = { plr.damage(rand(1, maxDamage)) }
+            }
+        }
+    }
+
+    /**
+     * Squeezes past a jutting wall onto [to], side-stepping with the back to the rock: a tick getting set, then 6 to
+     * get past, for 9.9 XP. A player the wall spikes stands two ticks, cries out on each of the next three, is hit
+     * twice for 2 on the one after and gets past over three more, for 6 XP.
+     */
+    fun squeezePastWall(plr: Player, from: Position, to: Position): AgilityAction {
+        val side = AgilityWalk.SIDESTEP.walk
+        val message = "You try to squeeze past."
+        if (keepsFooting(plr.agility.level, 50, 254)) {
+            return AgilityAction(plr, listOf(AgilityStep(from, 1, walkingAnimation = side, jump = true),
+                                             AgilityStep(to, 6)), message, valid = { active(plr) })
+        }
+        return object : AgilityAction(plr, listOf(
+            AgilityStep(from, 2, walkingAnimation = side, jump = true),
+            AgilityStep(from, 1, walkingAnimation = side, jump = true, begin = { plr.speak("Ahhh...") }),
+            AgilityStep(from, 1, walkingAnimation = side, jump = true, begin = { plr.speak("Owww...") }),
+            AgilityStep(from, 1, walkingAnimation = side, jump = true, begin = { plr.speak("Arrgghhhh!") }),
+            AgilityStep(from, 1, walkingAnimation = side, jump = true, begin = {
+                plr.damage(2)
+                plr.damage(2)
+            }),
+            AgilityStep(to, 3)), message, valid = { active(plr) }), DeathInterruptible, ShortcutFall {
+            init {
+                onSuccess = { plr.agility.addExperience(6.0) }
+            }
+        }
+    }
+
+    /**
+     * Jumps up a weathered wall from [from] onto the level above, [to], two ticks later.
+     */
+    fun jumpUpWall(plr: Player, from: Position, to: Position): AgilityAction {
+        plr.face(Position(to.x, to.y, from.z))
+        return AgilityAction(plr, listOf(AgilityStep(to, 2, animation = WALL_JUMP_UP, jump = true)), null,
+                             valid = { active(plr) })
+    }
+
+    /**
+     * Jumps down a weathered wall from [from] onto the level below, [to], landing a tick later.
+     */
+    fun jumpDownWall(plr: Player, from: Position, to: Position): AgilityAction {
+        plr.face(Position(to.x, to.y, from.z))
+        return AgilityAction(plr, listOf(AgilityStep(to, 1, animation = WALL_JUMP_DOWN, jump = true),
+                                         AgilityStep(to, 1, animation = WALL_LAND, jump = true)), null,
+                             valid = { active(plr) })
+    }
+
+    /**
+     * Jumps over a strange floor of spiked blades onto [to], leaving the ground after the crouch and landing as the
+     * jump ends. A player the blades catch still lands across, but takes 1 to 3 damage and no XP.
+     */
+    fun jumpSpikedBlades(plr: Player, to: Position): AgilityAction {
+        val jump = AgilityStep(to, 2, animation = SPOT_JUMP, moveStart = SPOT_JUMP_CROUCH, moveEnd = SPOT_JUMP_CYCLES)
+        if (keepsFooting(plr.agility.level, 1, 254)) {
+            return AgilityAction(plr, listOf(jump), null, valid = { active(plr) })
+        }
+        return object : AgilityAction(plr, listOf(jump), null, valid = { active(plr) }), DeathInterruptible,
+            ShortcutFall {
+            init {
+                onSuccess = { plr.damage(rand(1, 3)) }
+            }
+        }
     }
 }
