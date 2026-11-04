@@ -32,15 +32,15 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
         override fun execute() {
             val inv = plr.inventory
             if (inv.remove(index, eatItem)) {
-                // Add next portion of item, if applicable.
-                val nextId = food.getNextId(eatItem.id)
+                // Add next portion of item, or what is left once it is all eaten.
+                val nextId = food.getNextId(eatItem.id) ?: food.leftover
                 if (nextId != null) {
                     inv.add(index, Item(nextId))
                 }
 
                 // Send consume messages.
                 val name = food.formattedName
-                plr.sendMessage(food.consumeMessage(name))
+                plr.sendMessage(food.consumeMessage(name, eatItem.id))
                 plr.animation(eatAnimation)
                 plr.playSound(Sound.EAT)
                 food.effect(plr)
@@ -55,7 +55,7 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
                 val hp = plr.hitpoints
                 if (hp.level < hp.staticLevel) {
                     hp.adjustLevel(food.heal)
-                    plr.sendMessage(food.healMessage(name))
+                    food.healMessage(name)?.let { plr.sendMessage(it) }
                 }
             }
         }
