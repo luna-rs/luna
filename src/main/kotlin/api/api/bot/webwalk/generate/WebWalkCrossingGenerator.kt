@@ -282,7 +282,7 @@ object SpecialCrossings {
         KharaziJungleCrossingSpec.SPEC + NativeAccessCrossingSpec.ALL + PyramidRockSlideCrossingSpec.SPEC +
         KaramjaLogCrossingSpec.SPEC + TenzingCrossingSpec.DOORS + TenzingCrossingSpec.STILE +
         TrollSlopeCrossingSpec.SPEC + HangarExitCrossingSpec.POWERED_HANGAR + ApeGateCrossingSpec.GATE +
-        YanilleDungeonCrossingSpec.ALL
+        YanilleDungeonCrossingSpec.ALL + NativeAgilityShortcutSpec.ALL
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].

@@ -34,7 +34,7 @@ enum class AgilityShortcut(val level: Int,
                            val oneWay: Boolean = false,
                            private val levelMessage: String? = null,
                            private val freeFrom: Set<Position> = emptySet(),
-                           private val rope: Boolean = false,
+                           val rope: Boolean = false,
                            private val reach: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
                            private val crossing: (Player, Position, Position, GameObject) -> AgilityAction) {
 
@@ -281,13 +281,13 @@ enum class AgilityShortcut(val level: Int,
         fun use(plr: Player, obj: GameObject) {
             val shortcut = byObject[obj.id to obj.position] ?: return
             if (!ready(plr)) return
-            val first = shortcut.startEnd(plr) ?: return
-            val start = shortcut.inColumn(plr, shortcut.ends[first])
-            val end = shortcut.inColumn(plr, shortcut.ends[1 - first])
+            val first = shortcut.startEnd(plr.position) ?: return
+            val start = shortcut.inColumn(plr.position, shortcut.ends[first])
+            val end = shortcut.inColumn(plr.position, shortcut.ends[1 - first])
             val begin = begin@ {
                 if (!ready(plr) || plr.position != start || obj.state != EntityState.ACTIVE) return@begin
                 if (shortcut.rope && !plr.inventory.contains(ROPE)) return@begin
-                if (shortcut.level > 0 && start !in shortcut.freeFrom && plr.agility.level < shortcut.level) {
+                if (plr.agility.level < shortcut.requiredLevel(start)) {
                     if (shortcut.levelMessage == null) Agility.checkLevel(plr, shortcut.level)
                     else plr.sendMessage(shortcut.levelMessage)
                     return@begin
@@ -307,22 +307,32 @@ enum class AgilityShortcut(val level: Int,
     }
 
     /**
-     * The index of the end [plr] starts from: the nearer end within [AgilityApproach.RADIUS] tiles on their floor, or
+     * The current Agility level needed from [from], including the free exits between parts of a shortcut.
+     */
+    fun requiredLevel(from: Position): Int = if (from in freeFrom) 0 else level
+
+    /**
+     * The exact starting tile chosen for a click from [position], or `null` when no end is near on that floor.
+     */
+    fun startingTile(position: Position): Position? = startEnd(position)?.let { inColumn(position, ends[it]) }
+
+    /**
+     * The index of the end [position] starts from: the nearer end within [AgilityApproach.RADIUS] tiles on its floor, or
      * only the first end of a one-way shortcut. Ends as near as each other go by steps, so a player standing diagonally
      * beside a fence starts from their own side of it.
      */
-    private fun startEnd(plr: Player): Int? {
+    private fun startEnd(position: Position): Int? {
         val candidates = if (oneWay) listOf(0) else ends.indices.toList()
-        val near = candidates.filter { ends[it].z == plr.z }.minWithOrNull(compareBy(
-            { plr.position.computeLongestDistance(inColumn(plr, ends[it])) },
-            { abs(plr.x - inColumn(plr, ends[it]).x) + abs(plr.y - inColumn(plr, ends[it]).y) })) ?: return null
-        return if (plr.position.computeLongestDistance(inColumn(plr, ends[near])) <= AgilityApproach.RADIUS) near
+        val near = candidates.filter { ends[it].z == position.z }.minWithOrNull(compareBy(
+            { position.computeLongestDistance(inColumn(position, ends[it])) },
+            { abs(position.x - inColumn(position, ends[it]).x) + abs(position.y - inColumn(position, ends[it]).y) })) ?: return null
+        return if (position.computeLongestDistance(inColumn(position, ends[near])) <= AgilityApproach.RADIUS) near
         else null
     }
 
     /**
-     * [end] in the column [plr] is nearer: the monkey bars can be crossed in either of their two columns.
+     * [end] in the column [position] is nearer: the monkey bars can be crossed in either of their two columns.
      */
-    private fun inColumn(plr: Player, end: Position) =
-        if (this == EDGEVILLE_MONKEY_BARS) Position(plr.x.coerceIn(3120, 3121), end.y) else end
+    private fun inColumn(position: Position, end: Position) =
+        if (this == EDGEVILLE_MONKEY_BARS) Position(position.x.coerceIn(3120, 3121), end.y) else end
 }

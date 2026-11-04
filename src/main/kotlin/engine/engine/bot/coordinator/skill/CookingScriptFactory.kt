@@ -2,9 +2,11 @@ package engine.bot.coordinator.skill
 
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
+import api.bot.script.ownsProductionSupplies
 import api.bot.zone.SubZone
 import api.bot.zone.ProductionZones
 import api.predef.SKILL_COOKING
+import api.predef.cooking
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CookFoodBotScript
 import game.skill.cooking.cookFood.Food
@@ -14,6 +16,7 @@ import game.bot.scripts.skills.CutFoodBotScript
 import game.bot.scripts.skills.AssembleFoodBotScript
 import game.obj.resource.fillable.WaterResource
 import game.skill.cooking.prepareFood.IncompleteFood
+import io.luna.game.model.item.Item
 import api.predef.rand
 
 /**
@@ -46,6 +49,9 @@ import api.predef.rand
  * Wine experience is awarded later by the existing fermentation task. Non-training preparation can first
  * fill owned empty jugs when grapes are available; training requires already-filled jugs.
  * Ordinary food cooking remains the fallback activity.
+ * Summer pies are baked first when raw pies are owned at level 95. While the bot has fewer than 24 whole
+ * pies' worth of servings, complete owned summer-pie inputs can also select the next preparation stage.
+ * These zero-XP prerequisites require every remaining fruit so a training session can reach the baking step.
  *
  * @author lare96
  */
@@ -56,7 +62,21 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        if (level >= Food.SUMMER_PIE.lvl && bot.cooking.staticLevel >= Food.SUMMER_PIE.lvl &&
+            bot.itemTracker.count(Food.SUMMER_PIE.raw) > 0) {
+            return cookingScript(bot, Food.SUMMER_PIE, zones)
+        }
+        getSummerPiePreparation(bot, level)?.let { return it }
         getAssemblyScript(bot, level, training = true)?.let { return it }
+
+        return cookingScript(bot,
+            getBestActivity(bot, level, { it.lvl }, Food.entries.filter { bot.itemTracker.count(it.raw) > 0 }), zones)
+    }
+
+    /**
+     * Creates the ordinary range-cooking session using the shared personality and facility choices.
+     */
+    private fun cookingScript(bot: Bot, food: Food?, zones: MutableList<SubZone>): CookFoodBotScript {
         if (bot.personality.isDumb && !bot.personality.isDextrous) {
             zones += SubZone.AL_KHARID_BANK
             zones += SubZone.VARROCK_EAST_BANK
@@ -65,12 +85,7 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         }
         zones += ProductionZones.RANGES
 
-        return CookFoodBotScript(
-            bot,
-            getBestActivity(bot, level, { it.lvl }, Food.entries.filter { bot.itemTracker.count(it.raw) > 0 }),
-            getDuration(bot),
-            zones
-        )
+        return CookFoodBotScript(bot, food, getDuration(bot), zones)
     }
 
     override fun getProfitScript(
@@ -78,8 +93,30 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        getSummerPiePreparation(bot, level)?.let { return it }
         if (rand(0.25)) getNonTrainingPreparation(bot, level)?.let { return it }
         return getTrainingScript(bot, level, zones)
+    }
+
+    /**
+     * Selects the furthest owned summer-pie preparation stage with all later ingredients already available.
+     * Half pies count as one serving and whole pies as two; the preference stops once 48 servings are owned.
+     * Baking owned raw pies remains ordinary Cooking training even after that personal reserve is filled.
+     */
+    internal fun getSummerPiePreparation(bot: Bot, level: Int): AssembleFoodBotScript? {
+        if (level < Food.SUMMER_PIE.lvl || bot.cooking.staticLevel < Food.SUMMER_PIE.lvl) return null
+        val servings = bot.itemTracker.count(Food.SUMMER_PIE.cooked).toLong() * 2 + bot.itemTracker.count(7220)
+        if (servings >= 48 || bot.itemTracker.count(Food.SUMMER_PIE.raw) > 0) return null
+        val stages = listOf(
+            IncompleteFood.RAW_SUMMER_PIE to listOf(1955),
+            IncompleteFood.PART_SUMMER_PIE_2 to listOf(5982, 1955),
+            IncompleteFood.PART_SUMMER_PIE_1 to listOf(5504, 5982, 1955),
+            IncompleteFood.PIE_SHELL to listOf(1953, 5504, 5982, 1955)
+        )
+        val stage = stages.firstOrNull { (recipe, remaining) ->
+            bot.ownsProductionSupplies((listOf(recipe.baseIngredient) + remaining).map { Item(it) })
+        }?.first ?: return null
+        return AssembleFoodBotScript(bot, stage, getDuration(bot))
     }
 
     /** Selects a level-appropriate owned dough recipe using the existing personality rules. */

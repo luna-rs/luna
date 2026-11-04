@@ -17,6 +17,7 @@ import game.skill.agility.Agility.courseProgress
 import game.skill.agility.pyramid.AgilityPyramid
 import game.skill.agility.yanille.YanilleDungeon
 import game.player.item.consume.potion.Potion
+import game.player.item.consume.food.Food
 import game.skill.agility.skullball.Skullball
 import game.skill.agility.pyramid.AgilityPyramid.pyramidTopTaken
 import game.item.greegree.Greegree
@@ -183,6 +184,11 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     private var restored = false
 
     /**
+     * Optional support food never replaces the native course's required admission or emergency supplies.
+     */
+    private val summerPies = AgilitySummerPies(bot, course)
+
+    /**
      * Restores a saved course without retaining live object references or a navigation request.
      */
     constructor(bot: Bot, data: AgilityData) : this(bot, AgilityBotCourse.valueOf(data.course), data.duration) {
@@ -219,6 +225,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         }
         // A saved movement index is not proof of successful native obstacles, especially after a fall.
         // Retain live native progress on pause; a fresh login earns its next bonus on a complete lap.
+        summerPies.requestSupplies()
         return true
     }
 
@@ -231,10 +238,10 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     override suspend fun onBankRequested(initial: Boolean): Boolean {
         if (course.isYanille) {
             return !recovering && landing == null && (!handler.inventory.hasAnyFood() ||
-                YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) })
+                YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) } || initial && summerPies.canStock())
         }
         if (!initial || recovering || landing != null || rewardPending || bot.position.z != 0) return false
-        val requested = when (course) {
+        val requested = summerPies.canStock() || when (course) {
             AgilityBotCourse.GNOME_STRONGHOLD -> false
             AgilityBotCourse.APE_ATOLL -> !NINJA_GREEGREES.any {
                 bot.inventory.contains(it) || bot.equipment.contains(it)
@@ -272,7 +279,10 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             stop()
             return
         }
-        if (!handler.banking.withdrawAnyFood(8)) {
+        summerPies.withdraw()
+        if (course == AgilityBotCourse.GNOME_STRONGHOLD) return
+        val remainingFood = 8 - bot.inventory.count { it != null && it.id in Food.ID_TO_FOOD }
+        if (remainingFood > 0 && !handler.banking.withdrawAnyFood(remainingFood) && !handler.inventory.hasAnyFood()) {
             bot.preferences.allSuitableFood().forEach {
                 if (!course.isYanille || bot.preferences.getWantedItem(it.id) == null)
                     bot.preferences.addWantedItem(it.id, 24)
@@ -328,11 +338,13 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     }
 
     override suspend fun executeInZone(): Boolean {
-        if (failures >= 3 || bot.skill(SKILL_AGILITY).level < course.minimumLevel) return false
+        if (failures >= 3) return false
         // Native Agility actions own the player lock and strong queue until traversal finishes.
         if (!isSettled()) return true
         if (landing != null) return reconcileLanding()
         if (bot.overlays.hasWindow() && !handler.widgets.clickCloseInterface()) return failedAttempt()
+        if (summerPies.eatIfUseful()) return true
+        if (bot.skill(SKILL_AGILITY).level < course.minimumLevel) return false
         val next = course.steps[step]
         val maximumHit = when {
             course == AgilityBotCourse.WEREWOLF && next.obstacle == WEREWOLF_ZIP_LINE -> 45

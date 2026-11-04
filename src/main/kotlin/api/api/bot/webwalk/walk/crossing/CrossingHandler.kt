@@ -70,7 +70,8 @@ object CrossingHandlers {
                                                                TrollSlopeCrossing.ID to TrollSlopeCrossing,
                                                                HangarExitCrossing.ID to HangarExitCrossing,
                                                                ApeGateCrossing.ID to ApeGateCrossing,
-                                                               YanilleDungeonCrossing.ID to YanilleDungeonCrossing)
+                                                               YanilleDungeonCrossing.ID to YanilleDungeonCrossing,
+                                                               NativeAgilityShortcutCrossing.ID to NativeAgilityShortcutCrossing)
 
     /**
      * The names of every handler.

@@ -22849,6 +22849,18 @@
     ]
   },
   {
+    "id": 7218,
+    // Summer pie
+    "min": 4,
+    "target": 24,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
     "id": 1997,
     // Incomplete stew
     "min": 40,
