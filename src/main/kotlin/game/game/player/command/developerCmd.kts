@@ -465,13 +465,16 @@ cmd("findbot", RIGHTS_DEV) {
             it.cancel()
         } else {
             if (choices.isNotEmpty()) {
-                val nextBot = choices.removeAt(rand().nextInt(choices.size))
-                if(subzones.any { zone -> zone in nextBot.subZones }) {
-                    return@schedule
+                for(loop in 0..10) {
+                    val nextBot = choices.removeAt(rand().nextInt(choices.size))
+                    if (subzones.any { zone -> zone in nextBot.subZones }) {
+                        continue
+                    }
+                    plr.sendMessage("Moving to bot #${count++}: ${nextBot.username}.")
+                    plr.move(nextBot.position)
+                    subzones.addAll(nextBot.subZones)
+                    break
                 }
-                plr.sendMessage("Moving to bot #${count++}: ${nextBot.username}.")
-                plr.move(nextBot.position)
-                subzones.addAll(nextBot.subZones)
             } else {
                 plr.sendMessage("Viewable bot list has been exhausted.")
                 it.cancel()
