@@ -228,6 +228,15 @@ enum class Zone(val price: Int,
                             11821,
                             11825),
             bankAnchors = DRAYNOR.bankAnchors),
+
+    /**
+     * The TzHaar city under the Karamja volcano, reached through the volcano dungeon. Its banker, TzHaar-Ket-Zuh,
+     * has no booth, so his spawn tile is the bank anchor.
+     */
+    TZHAAR_CITY(price = 2500,
+                anchor = Position(2445, 5176),
+                regions = setOf(9552, 9808),
+                bankAnchors = listOf(Position(2445, 5180))),
     /**
      * Lumbridge castle, swamp and northern mill/farm approaches. Draynor remains its configured bank fallback.
      */
