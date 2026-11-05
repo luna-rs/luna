@@ -17,10 +17,7 @@ combat(JAD) {
         when (rand().nextInt(if (JadAttack.besideEdge(npc, other)) 3 else 2)) {
             0 -> JadAttack(npc, other, true)
             1 -> JadAttack(npc, other, false)
-            // Melee reach is measured from his south-west tile, so it spans his whole body; melee is only picked
-            // when the player is beside one of his edges.
-            else -> melee(animationId = MELEE_ANIMATION, maxHit = MELEE_MAX_HIT, range = npc.size(),
-                speed = MELEE_SPEED)
+            else -> melee(animationId = MELEE_ANIMATION, maxHit = MELEE_MAX_HIT, speed = MELEE_SPEED)
         }
     }
     defend {
