@@ -59,6 +59,11 @@ public final class ActionQueue {
     private final Queue<Action<?>> executing = new ArrayDeque<>();
 
     /**
+     * Reused phase snapshot storage, cleared after filtering so actions are not retained between passes.
+     */
+    private final List<Action<?>> candidates = new ArrayList<>();
+
+    /**
      * Creates a new {@link ActionQueue} for {@code mob}.
      *
      * @param mob The mob that owns this action queue.
@@ -229,7 +234,13 @@ public final class ActionQueue {
      * @param afterMovement Whether existing candidates should receive their reach-retry hook.
      */
     private void processPhase(ActionPhase phase, boolean afterMovement) {
-        boolean strong = processing.get(ActionType.STRONG).stream().anyMatch(action -> !action.isFinished());
+        boolean strong = false;
+        for (Action<?> action : processing.get(ActionType.STRONG)) {
+            if (!action.isFinished()) {
+                strong = true;
+                break;
+            }
+        }
         if (strong) {
             interruptWeak();
             if (mob.getType() == EntityType.PLAYER) {
@@ -237,12 +248,22 @@ public final class ActionQueue {
             }
         }
 
-        // Hooks may submit or cancel actions; iterate a snapshot rather than the live multimap.
-        for (Action<?> action : new ArrayList<>(processing.values())) {
-            if (action.isFinished() || action.getPhase() != phase) {
-                continue;
+        // Nested phase filtering must not overwrite an outer snapshot.
+        List<Action<?>> snapshot = candidates.isEmpty() ? candidates : new ArrayList<>();
+        try {
+            // Hooks may submit or cancel actions; finish copying before filtering candidates.
+            for (Action<?> action : processing.values()) {
+                snapshot.add(action);
             }
-            executing.add(action);
+            for (int i = 0; i < snapshot.size(); i++) {
+                Action<?> action = snapshot.get(i);
+                if (action.isFinished() || action.getPhase() != phase) {
+                    continue;
+                }
+                executing.add(action);
+            }
+        } finally {
+            snapshot.clear();
         }
         for (Action<?> action; (action = executing.poll()) != null; ) {
             boolean skipForInterface = action.actionType == ActionType.NORMAL &&

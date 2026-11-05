@@ -183,8 +183,8 @@ final class NavigationAction extends Action<Mob> {
             }
         }
 
-        // Check if we need to re-path because our target moved.
-        if (!targetChanged && !mob.getWalking().isEmpty()) {
+        // Keep an unchanged search or queued path while waiting for progress.
+        if (!targetChanged && (current != null || !mob.getWalking().isEmpty())) {
             return false;
         }
 
