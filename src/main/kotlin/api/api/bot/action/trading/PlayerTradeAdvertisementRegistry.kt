@@ -30,8 +30,11 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
         var expiresAt: Instant = expiresAt
             internal set
 
-        internal val attemptedBuyers = HashSet<Bot>()
-        private val attemptedOffers = HashMap<Bot, MutableSet<PlayerTradeAdvertisement>>()
+        /**
+         * Account identities preserve attempts across relogins without retaining former buyer sessions.
+         */
+        internal val attemptedBuyers = HashSet<Long>()
+        private val attemptedOffers = HashMap<Long, MutableSet<PlayerTradeAdvertisement>>()
         private val remainingQuantities = offers.associateWith { it.quantity }.toMutableMap()
 
         /**
@@ -54,7 +57,7 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
          */
         fun wasAttempted(buyer: Bot, offer: PlayerTradeAdvertisement): Boolean {
             require(offer in remainingQuantities)
-            return attemptedOffers[buyer]?.contains(offer) == true
+            return attemptedOffers[buyer.usernameHash]?.contains(offer) == true
         }
 
         internal val hasRemainingOffers: Boolean
@@ -64,7 +67,7 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
          * Finds remaining offers this buyer has not approached for, without consuming response ownership.
          */
         internal fun hasUntriedOffer(buyer: Bot): Boolean {
-            val attempted = attemptedOffers[buyer].orEmpty()
+            val attempted = attemptedOffers[buyer.usernameHash].orEmpty()
             return remainingQuantities.any { (offer, quantity) -> quantity != 0 && offer !in attempted }
         }
 
@@ -72,13 +75,14 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
          * Records either one selected offer or the original whole-advertisement attempt.
          */
         internal fun attempt(buyer: Bot, offer: PlayerTradeAdvertisement?): Boolean {
+            val buyerId = buyer.usernameHash
             if (offer == null) {
-                if (buyer in attemptedBuyers) return false
+                if (buyerId in attemptedBuyers) return false
             } else if (offer !in remainingQuantities || remainingQuantities[offer] == 0 || wasAttempted(buyer, offer)) {
                 return false
             }
-            attemptedBuyers += buyer
-            val attempted = attemptedOffers.getOrPut(buyer) { HashSet() }
+            attemptedBuyers += buyerId
+            val attempted = attemptedOffers.getOrPut(buyerId) { HashSet() }
             if (offer == null) attempted.addAll(offers) else attempted.add(offer)
             return true
         }
@@ -193,7 +197,7 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
         discardExpired(clock())
         if (entries[entry.player] !== entry || !entry.hasRemainingOffers || entry.player in responses) return null
         if (resuming) {
-            if (buyer !in entry.attemptedBuyers) return null
+            if (buyer.usernameHash !in entry.attemptedBuyers) return null
         } else if (!entry.attempt(buyer, offer)) return null
         return Response(entry, buyer).also { responses[entry.player] = it }
     }

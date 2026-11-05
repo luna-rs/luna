@@ -90,7 +90,7 @@ internal class PlayerTradeAdvertisementMarket(
     private data class Selected(val script: TradeBotScript, val offer: PlayerTradeAdvertisement)
 
     /**
-     * Bounded audience and quote memory for one live advertisement identity.
+     * Audience and quote memory for one live advertisement identity.
      *
      * @author lare96
      */
@@ -122,8 +122,9 @@ internal class PlayerTradeAdvertisementMarket(
         heard.entries.removeIf { it.key.player == player && it.key !== entry }
         if (entry != null) {
             val memory = heard.getOrPut(entry) { Heard(sample()) }
+            pruneBuyers(memory)
             for (bot in message.hearers) {
-                if (memory.audience.none { it === bot }) {
+                if (isCurrentBuyer(bot) && memory.audience.none { it === bot }) {
                     memory.audience += bot
                     memory.invalidateSelection()
                 }
@@ -137,6 +138,7 @@ internal class PlayerTradeAdvertisementMarket(
      */
     fun pricing(entry: PlayerTradeAdvertisementRegistry.Entry, buyer: Bot, offer: PlayerTradeAdvertisement, id: Int,
                 create: () -> Pricing?): Pricing? {
+        if (!isCurrentBuyer(buyer)) return null
         val memory = heard.getOrPut(entry) { Heard(sample()) }
         val quotes = memory.quotes.getOrPut(buyer) { HashMap() }
         val key = offer to id
@@ -163,6 +165,7 @@ internal class PlayerTradeAdvertisementMarket(
      * Retains only communicated requests or counteroffers for later player-initiated acceptance.
      */
     fun remember(opportunity: Opportunity) {
+        if (!isCurrentBuyer(opportunity.script.bot)) return
         if (registry.find(opportunity.entry.player) === opportunity.entry) {
             opportunity.communicated = true
             if (opportunity.pricing != null) {
@@ -275,7 +278,26 @@ internal class PlayerTradeAdvertisementMarket(
     }
 
     /**
-     * Drops expired and disconnected audiences without repeated full registry scans during candidate selection.
+     * Releases departed buyer sessions when an advertisement is heard again, without adding audience scans to polls.
+     * Unrefreshed advertisements retain their existing expiry cleanup.
+     */
+    private fun pruneBuyers(memory: Heard) {
+        val removed = memory.audience.removeIf { !isCurrentBuyer(it) }
+        memory.quotes.keys.removeIf { !isCurrentBuyer(it) }
+        memory.sent.keys.removeIf { !isCurrentBuyer(it) }
+        if (removed || memory.selected?.let { !isCurrentBuyer(it.script.bot) } == true) {
+            memory.invalidateSelection()
+        }
+    }
+
+    /**
+     * Checks the current session by reference so an active replacement does not keep the former buyer alive.
+     */
+    private fun isCurrentBuyer(buyer: Bot): Boolean = buyer.state == EntityState.ACTIVE &&
+        buyer.world.getPlayer(buyer.username).orElse(null) === buyer
+
+    /**
+     * Drops expired or disconnected sellers without scanning advertisement audiences on every candidate poll.
      */
     private fun prune() {
         val now = clock()
