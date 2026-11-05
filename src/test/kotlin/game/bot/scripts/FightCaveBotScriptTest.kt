@@ -86,19 +86,22 @@ class FightCaveBotScriptTest {
         val healer = npc(JadHealers.HEALER, bot)
         val script = FightCaveBotScript(bot)
         val output = bot.botClient.output
-        `when`(jad.blockData).thenReturn(tell(jad, JadAttack.RANGED_ANIMATION))
+        val rangedTell = tell(jad, JadAttack.RANGED_ANIMATION)
+        val emptyUpdate = tell(jad, null)
+        val magicTell = tell(jad, JadAttack.MAGIC_ANIMATION)
+        `when`(jad.blockData).thenReturn(rangedTell)
 
         script.maintain(listOf(healer, jad))
         verify(output).clickButton(CombatPrayer.PROTECT_FROM_MISSILES.button)
         verify(output, never()).clickButton(CombatPrayer.PROTECT_FROM_MELEE.button)
 
         clearInvocations(output)
-        `when`(jad.blockData).thenReturn(tell(jad, null))
+        `when`(jad.blockData).thenReturn(emptyUpdate)
         script.maintain(listOf(healer, jad))
         verify(output).clickButton(CombatPrayer.PROTECT_FROM_MISSILES.button)
 
         clearInvocations(output)
-        `when`(jad.blockData).thenReturn(tell(jad, JadAttack.MAGIC_ANIMATION))
+        `when`(jad.blockData).thenReturn(magicTell)
         script.maintain(listOf(healer, jad))
         verify(output).clickButton(CombatPrayer.PROTECT_FROM_MAGIC.button)
 
@@ -145,7 +148,8 @@ class FightCaveBotScriptTest {
         val healer = npc(JadHealers.HEALER, bot)
         val prayer = FightCaveBotScript.tellPrayer(animation)!!
         val output = bot.botClient.output
-        `when`(jad.blockData).thenReturn(tell(jad, animation))
+        val snapshot = tell(jad, animation)
+        `when`(jad.blockData).thenReturn(snapshot)
 
         script.maintain(listOf(jad, healer))
         verify(output).clickButton(prayer.button)
@@ -168,7 +172,8 @@ class FightCaveBotScriptTest {
         val bot = bot(inCave = true)
         val script = FightCaveBotScript(bot)
         val jad = npc(2745, bot)
-        `when`(jad.blockData).thenReturn(tell(jad, JadAttack.MAGIC_ANIMATION))
+        val snapshot = tell(jad, JadAttack.MAGIC_ANIMATION)
+        `when`(jad.blockData).thenReturn(snapshot)
         val output = bot.botClient.output
 
         `when`(bot.isLocked).thenReturn(true)
