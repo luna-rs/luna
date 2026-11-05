@@ -261,12 +261,14 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
             bot.health < 40 && !handler.inventory.hasAnyFood(minimumHeal = 16)) data.retreating = true
         if (data.retreating) return leave()
         if (bot.dialogues != null) output.sendContinueDialogue()
-        val jad = monsters.firstOrNull { it.id == 2745 }
-        if (jad != null && JadHealers.gap(bot, jad) < 2) {
+        // Ket-Zek, like Jad, can melee through our magic protection when we stand next to its body.
+        val closeThreat = monsters.filter { it.id in 2743..2745 && JadHealers.gap(bot, it) < 2 }
+            .maxByOrNull { it.id }
+        if (closeThreat != null) {
             bot.combat.target = null
             bot.navigator.cancel()
             bot.walking.clear()
-            handler.combat.stepAwayFrom(jad) { bot.dynamicMap.contains(it) }
+            handler.combat.stepAwayFrom(closeThreat) { bot.dynamicMap.contains(it) }
         } else {
             val healer = monsters.filterIsInstance<JadHealers.YtHurKot>().filter { !it.provoked && it.isViewableFrom(bot) }
                 .minByOrNull { it.position.computeLongestDistance(bot.position) }
