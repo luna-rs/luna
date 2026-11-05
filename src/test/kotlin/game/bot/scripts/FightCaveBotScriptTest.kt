@@ -38,6 +38,7 @@ class FightCaveBotScriptTest {
     private fun bot(inCave: Boolean = false): Bot = InventoryProductionFixtures.bot().also {
         `when`(it.totalHealth).thenReturn(99)
         `when`(it.world.currentTick).thenReturn(100L)
+        `when`(it.botClient.output.clickButton(anyInt())).thenReturn(true)
         `when`(it.spellbook).thenReturn(Spellbook.REGULAR)
         `when`(it.username).thenReturn("fight cave fixture")
         for (id in 0..6) {
@@ -98,7 +99,7 @@ class FightCaveBotScriptTest {
         clearInvocations(output)
         `when`(jad.blockData).thenReturn(emptyUpdate)
         script.maintain(listOf(healer, jad))
-        verify(output).clickButton(CombatPrayer.PROTECT_FROM_MISSILES.button)
+        verifyNoInteractions(output)
 
         clearInvocations(output)
         `when`(jad.blockData).thenReturn(magicTell)
@@ -109,6 +110,32 @@ class FightCaveBotScriptTest {
         `when`(bot.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)).thenReturn(true)
         script.maintain(listOf(healer, jad))
         verifyNoInteractions(output)
+    }
+
+    @Test fun queuedPrayerTogglesSettleBeforeRetryWithoutDelayingANewTell() {
+        val bot = bot(inCave = true)
+        val script = FightCaveBotScript(bot)
+        val jad = npc(2745, bot)
+        val rangedTell = tell(jad, JadAttack.RANGED_ANIMATION)
+        val magicTell = tell(jad, JadAttack.MAGIC_ANIMATION)
+        val output = bot.botClient.output
+        `when`(jad.blockData).thenReturn(rangedTell)
+
+        repeat(3) { script.maintain(listOf(jad)) }
+        verify(output, times(1)).clickButton(CombatPrayer.PROTECT_FROM_MISSILES.button)
+        `when`(bot.world.currentTick).thenReturn(101L)
+        script.maintain(listOf(jad))
+        verify(output, times(1)).clickButton(CombatPrayer.PROTECT_FROM_MISSILES.button)
+
+        `when`(jad.blockData).thenReturn(magicTell)
+        script.maintain(listOf(jad))
+        verify(output).clickButton(CombatPrayer.PROTECT_FROM_MAGIC.button)
+
+        `when`(bot.world.currentTick).thenReturn(102L)
+        `when`(jad.blockData).thenReturn(rangedTell)
+        script.maintain(listOf(jad))
+        verify(output, times(2)).clickButton(CombatPrayer.PROTECT_FROM_MISSILES.button)
+        verify(output, never()).clickButton(CombatPrayer.PROTECT_FROM_MELEE.button)
     }
 
     @Test fun ordinaryWaveProtectionTracksTheStrongestUnblockedStyle() {
@@ -124,8 +151,7 @@ class FightCaveBotScriptTest {
         clearInvocations(output)
         `when`(bot.world.currentTick).thenReturn(101L)
         script.maintain(listOf(melee, ranger))
-        verify(output).clickButton(CombatPrayer.PROTECT_FROM_MAGIC.button)
-        verify(output, never()).clickButton(CombatPrayer.PROTECT_FROM_MISSILES.button)
+        verifyNoInteractions(output)
         clearInvocations(output)
         `when`(bot.world.currentTick).thenReturn(104L)
         script.maintain(listOf(melee, ranger))
@@ -153,13 +179,14 @@ class FightCaveBotScriptTest {
 
         script.maintain(listOf(jad, healer))
         verify(output).clickButton(prayer.button)
-        for (tick in listOf(101L, 106L)) {
-            clearInvocations(output)
-            `when`(bot.world.currentTick).thenReturn(tick)
-            script.maintain(listOf(healer))
-            verify(output).clickButton(prayer.button)
-            verify(output, never()).clickButton(CombatPrayer.PROTECT_FROM_MELEE.button)
-        }
+        clearInvocations(output)
+        `when`(bot.world.currentTick).thenReturn(101L)
+        script.maintain(listOf(healer))
+        verifyNoInteractions(output)
+        `when`(bot.world.currentTick).thenReturn(106L)
+        script.maintain(listOf(healer))
+        verify(output).clickButton(prayer.button)
+        verify(output, never()).clickButton(CombatPrayer.PROTECT_FROM_MELEE.button)
 
         clearInvocations(output)
         `when`(bot.world.currentTick).thenReturn(107L)
