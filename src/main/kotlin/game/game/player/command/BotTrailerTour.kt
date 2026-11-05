@@ -19,6 +19,7 @@ import io.luna.net.msg.out.CameraTargetMessageWriter
 import io.luna.net.msg.out.ResetCameraMessageWriter
 import org.apache.logging.log4j.LogManager
 import java.util.IdentityHashMap
+import java.util.NoSuchElementException
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -31,8 +32,6 @@ import kotlin.math.ceil
 object BotTrailerTour {
     private val logger = LogManager.getLogger(BotTrailerTour::class.java)
     private val sessions = IdentityHashMap<Player, Tour>()
-    private val orbit = arrayOf(-5 to -3, -3 to -5, 3 to -5, 5 to -3,
-        5 to 3, 3 to 5, -3 to 5, -5 to 3)
 
     /**
      * Starts one finite tour of the currently occupied subzones in their declaration order.
@@ -138,6 +137,7 @@ object BotTrailerTour {
         private var index = -1
         private var ticks = 0
         private var waypoint = -1
+        private var shot: BotTourCamera.Shot? = null
         var anchor: Position = origin
             private set
         var waiting = true
@@ -169,12 +169,13 @@ object BotTrailerTour {
             if (closed || sessions[plr] !== this) return
             while (++index < zones.size) {
                 val bots = residents(zones[index])
-                val focus = bots.take(64).maxByOrNull { candidate ->
+                val focus = bots.take(64).sortedByDescending { candidate ->
                     bots.count { it.position.isWithinDistance(candidate.position, 8) }
-                } ?: continue
+                }.firstOrNull { BotTourCamera.plan(it.position, ::roofAt) { true } != null } ?: continue
                 anchor = focus.position
                 ticks = 0
                 waypoint = -1
+                shot = null
                 waiting = true
                 sceneReady = false
                 skipRequested = false
@@ -211,7 +212,12 @@ object BotTrailerTour {
                         } else {
                             waiting = false
                             ticks = 0
-                            camera(0, true)
+                            shot = BotTourCamera.plan(anchor, ::roofAt, ::inScene)
+                            if (shot == null) {
+                                advance()
+                            } else {
+                                camera(0, true, anchor)
+                            }
                         }
                     }
                     return
@@ -221,11 +227,29 @@ object BotTrailerTour {
                     advance()
                     return
                 }
-                val nextWaypoint = (ticks * orbit.size / shotTicks).coerceAtMost(orbit.lastIndex)
-                if (nextWaypoint != waypoint && !camera(nextWaypoint, false)) return
                 val focus = nearby.minByOrNull { abs(it.x - anchor.x) + abs(it.y - anchor.y) } ?: return
+                val roofed = roofAt(focus.position)
+                if (roofed == null) {
+                    advance()
+                    return
+                }
+                val previous = shot ?: return
+                var reframe = false
+                if ((roofed && !previous.roofsHidden) || !previous.frames(focus.position)) {
+                    val reframed = BotTourCamera.plan(focus.position, ::roofAt, ::inScene)
+                    if (reframed == null || (roofed && !reframed.roofsHidden)) {
+                        advance()
+                        return
+                    }
+                    shot = reframed
+                    waypoint = -1
+                    reframe = true
+                }
+                val current = shot ?: return
+                val nextWaypoint = (ticks * current.positions.size / shotTicks).coerceAtMost(current.positions.lastIndex)
+                if (nextWaypoint != waypoint && !camera(nextWaypoint, reframe, focus.position)) return
                 if (inScene(focus.position)) {
-                    plr.queue(CameraTargetMessageWriter(focus.position, 90, 2, 8, true))
+                    plr.queue(CameraTargetMessageWriter(focus.position, BotTourCamera.TARGET_HEIGHT, 2, 8, true))
                 }
             } catch (failure: Exception) {
                 finish(false)
@@ -243,18 +267,29 @@ object BotTrailerTour {
         }
 
         /**
-         * Snaps only the opening view; following orbit segments use the client's fixed and proportional easing.
+         * Reads the native roof marker without using bridge-adjusted collision data or inventing missing terrain.
          */
-        private fun camera(next: Int, snap: Boolean): Boolean {
-            val (dx, dy) = orbit[next]
-            val position = anchor.translate(dx, dy)
-            if (!inScene(position) || !inScene(anchor)) {
+        private fun roofAt(position: Position): Boolean? = try {
+            plr.context.cache.mapIndexTable.getTile(position).isRoof
+        } catch (_: NoSuchElementException) {
+            null
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+
+        /**
+         * Snaps the opening or an indoor reframe; only open-air orbit positions are eased across terrain.
+         */
+        private fun camera(next: Int, snap: Boolean, focus: Position): Boolean {
+            val current = shot ?: return false
+            val position = current.positions[next]
+            if (!inScene(position) || !inScene(focus)) {
                 advance()
                 return false
             }
             waypoint = next
-            plr.queue(CameraTargetMessageWriter(position, 420, 4, if (snap) 100 else 8, false))
-            plr.queue(CameraTargetMessageWriter(anchor, 90, 2, if (snap) 100 else 8, true))
+            plr.queue(CameraTargetMessageWriter(position, current.height, 4, if (snap) 100 else 8, false))
+            plr.queue(CameraTargetMessageWriter(focus, BotTourCamera.TARGET_HEIGHT, 2, if (snap) 100 else 8, true))
             return true
         }
 
