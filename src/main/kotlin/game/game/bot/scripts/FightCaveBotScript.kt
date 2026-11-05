@@ -138,6 +138,7 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
     private var protectedUntil = -1L
     private var jadProtectedUntil = -1L
     private var mageProtectedUntil = -1L
+    private val prayerClicks = mutableMapOf<CombatPrayer, Long>()
 
     override suspend fun init(resumed: Boolean): Boolean {
         if (data.attempted) {
@@ -232,9 +233,9 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
         }
         if (protection != null) {
             protectedUntil = bot.world.currentTick + 6
-            if (!bot.combat.prayers.isActive(protection)) output.clickButton(protection.button)
+            if (!bot.combat.prayers.isActive(protection)) clickPrayer(protection)
         } else if (bot.world.currentTick > protectedUntil)
-            PROTECTION.filter { bot.combat.prayers.isActive(it) }.forEach { output.clickButton(it.button) }
+            PROTECTION.filter { bot.combat.prayers.isActive(it) }.forEach(::clickPrayer)
 
         if (bot.health <= bot.totalHealth - 20 && tick >= nextFood) {
             val food = bot.inventory.withIndex().firstOrNull { (Food.ID_TO_FOOD[it.value?.id]?.heal ?: 0) >= 16 }
@@ -244,6 +245,13 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
             val potion = bot.inventory.withIndex().firstOrNull { it.value?.id in PRAYER_DOSES }
             if (potion != null && handler.inventory.clickItem(1, potion.value!!.id, potion.index)) nextPotion = tick + 3
         }
+    }
+
+    /** Prayer buttons toggle, so a queued click must settle before another poll can click the same prayer. */
+    private fun clickPrayer(prayer: CombatPrayer) {
+        val tick = bot.world.currentTick
+        if (tick - (prayerClicks[prayer] ?: -10L) >= 2 && output.clickButton(prayer.button))
+            prayerClicks[prayer] = tick
     }
 
     override suspend fun run(): Boolean {
