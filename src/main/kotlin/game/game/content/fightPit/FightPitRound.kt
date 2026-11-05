@@ -262,7 +262,7 @@ object FightPitRound {
             plr.contextMenu.show(OPTION_ATTACK)
             plr.sendMessage("Fight!")
         }
-        world.npcs.firstOrNull { it.id == FightPit.MEJ_KAH }?.speak("Fight!")
+        FightPit.say("Fight!")
     }
 
     /**

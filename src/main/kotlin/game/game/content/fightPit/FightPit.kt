@@ -104,10 +104,18 @@ object FightPit {
     }
 
     /**
-     * Names [name] as the new champion.
+     * Names [name] as the new champion, and Mej-Kah announces them.
      */
     fun crown(name: String) {
         championName = name
+        say("$name is the champion!")
+    }
+
+    /**
+     * Has TzHaar-Mej-Kah say [text] overhead, by the north door.
+     */
+    fun say(text: String) {
+        world.npcs.firstOrNull { it.id == MEJ_KAH }?.speak(text)
     }
 
     /**
