@@ -454,7 +454,8 @@ cmd("findbot", RIGHTS_DEV) {
         }
     }
     var count = 1
-    plr.sendMessage("Viewable subzone list: ${choices.size}")
+    plr.sendMessage("Viewable subzone list: ${subzones.size}")
+    choices += subzones
     world.schedule(10, true) {
         if (!plr.walking.isEmpty) {
             it.cancel()
