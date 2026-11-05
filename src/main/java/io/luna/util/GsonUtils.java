@@ -1,6 +1,17 @@
 package io.luna.util;
 
-import com.google.gson.*;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
+import com.google.gson.ReflectionAccessFilter;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 
 import java.io.BufferedReader;
 import java.io.FileWriter;
@@ -12,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.OptionalInt;
 
 /**
  * A static utility class that provides helper functions for working with the Google GSON serialization library.
@@ -38,6 +50,30 @@ import java.time.Instant;
 public final class GsonUtils {
 
     /**
+     * A {@link TypeAdapter} for {@link OptionalInt}.
+     */
+    private static class OptionalIntTypeAdapter extends TypeAdapter<OptionalInt> {
+        @Override
+        public void write(JsonWriter out, OptionalInt value) throws IOException {
+            if (value == null || value.isEmpty()) {
+                out.nullValue();
+            } else {
+                out.value(value.getAsInt());
+            }
+        }
+
+        @Override
+        public OptionalInt read(JsonReader in) throws IOException {
+            if (in.peek() == JsonToken.NULL) {
+                in.nextNull();
+                return OptionalInt.empty();
+            } else {
+                return OptionalInt.of(in.nextInt());
+            }
+        }
+    }
+
+    /**
      * A shared {@link Gson} instance configured for general-purpose use throughout the Luna engine.
      * <ul>
      *     <li>HTML escaping is disabled.</li>
@@ -56,11 +92,12 @@ public final class GsonUtils {
                     new JsonPrimitive(src.toString()))
             .registerTypeAdapter(Duration.class, (JsonDeserializer<Duration>) (json, typeOfT, context) ->
                     Duration.parse(json.getAsString()))
-            .disableHtmlEscaping()
-            .disableInnerClassSerialization()
-            .setPrettyPrinting()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create();
+            .registerTypeAdapter(OptionalInt.class, new OptionalIntTypeAdapter()).
+            disableHtmlEscaping().
+            disableInnerClassSerialization().
+            setPrettyPrinting().
+            setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).
+            create();
 
     /**
      * Converts a {@link JsonElement} into an object of the specified type.
@@ -70,8 +107,8 @@ public final class GsonUtils {
      * </p>
      *
      * @param element The JSON element to deserialize.
-     * @param clazz   The target class type.
-     * @param <T>     The generic type of the desired object.
+     * @param clazz The target class type.
+     * @param <T> The generic type of the desired object.
      * @return A new instance of {@code T} representing the JSON data.
      */
     public static <T> T getAsType(JsonElement element, Class<T> clazz) {
@@ -100,7 +137,7 @@ public final class GsonUtils {
      * </p>
      *
      * @param element The object to write.
-     * @param path    The destination file path.
+     * @param path The destination file path.
      * @throws IOException If an I/O error occurs during writing.
      */
     public static void writeJson(Object element, Path path) throws IOException {
@@ -115,9 +152,9 @@ public final class GsonUtils {
      * This is a shorthand for {@link Gson#fromJson(Reader, Type)} using a buffered reader.
      * </p>
      *
-     * @param path  The path to the JSON file.
+     * @param path The path to the JSON file.
      * @param clazz The class type to deserialize into.
-     * @param <T>   The generic type of the desired object.
+     * @param <T> The generic type of the desired object.
      * @return A new instance of {@code T} representing the file’s contents.
      * @throws IOException If the file cannot be read or parsed.
      */

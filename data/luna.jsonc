@@ -128,7 +128,7 @@
   },
   "bots": {
     // The baseline number of bots the world should try to keep online.
-    "base_online_count": 1500,
+    "base_online_count": 500,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
     // The typical break length in hours; uncommon and rare breaks use longer ranges.
