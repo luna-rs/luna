@@ -21,8 +21,8 @@ val SPINES: (Mob, Mob) -> LocalProjectile = { npc, other ->
         .build()
 }
 
-// Fight Pit and Fight Cave Tok-Xil. Jad is deliberately excluded.
-combat(2631, 2632, 2739, 2740) {
+// Fight Pit Tok-Xil. The Fight Cave's have their own hook, and Jad is deliberately excluded.
+combat(2631, 2632) {
     attack {
         if (npc.isWithinDistance(other, 1) && randBoolean()) {
             melee(animationId = 2628)
