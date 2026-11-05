@@ -215,7 +215,7 @@ object FightPitRound {
                 }
             }
             Phase.SIGNAL -> if (!over() && --clock == 0) signal()
-            Phase.FIGHT -> if (!over()) clock++
+            Phase.FIGHT -> if (!over()) FightPitWaves.process(++clock, standing(), pitTiles)
         }
         members.forEach { (it.controllers.primary as? FightPitController)?.refresh() }
     }
@@ -274,6 +274,7 @@ object FightPitRound {
      */
     private fun end(winner: Player?) {
         phase = Phase.IDLE
+        FightPitWaves.clear()
         fighters.forEach { it.contextMenu.hide(OPTION_ATTACK) }
         fighters.clear()
         if (winner != null) {
