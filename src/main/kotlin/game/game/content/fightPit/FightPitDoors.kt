@@ -36,7 +36,10 @@ object FightPitDoors {
             FightPit.SOUTH_DOOR -> if (plr.y > door.y) {
                 plr.sendMessage("You must wait for the next fight to start.")
             } else {
-                cross(plr, door, FightPit.PIT_EXIT, FightPit.SOUTH_INSIDE) { FightPit.enter(it) }
+                cross(plr, door, FightPit.PIT_EXIT, FightPit.SOUTH_INSIDE) {
+                    FightPit.enter(it)
+                    FightPitRound.walkedOut(it)
+                }
             }
         }
     }

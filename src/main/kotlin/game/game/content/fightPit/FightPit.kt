@@ -104,6 +104,13 @@ object FightPit {
     }
 
     /**
+     * Names [name] as the new champion.
+     */
+    fun crown(name: String) {
+        championName = name
+    }
+
+    /**
      * Shows [plr] the overlay as it stands now.
      */
     fun showOverlay(plr: Player) {
