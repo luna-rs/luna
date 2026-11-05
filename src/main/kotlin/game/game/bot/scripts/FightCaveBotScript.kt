@@ -304,8 +304,8 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
                 }
                 try {
                     while (!walk.isCompleted && cave != null) { maintain(enemies()); delay(200) }
-                    walk.await()
-                    while (cave != null) delay(100)
+                    if (!walk.await() && cave != null) return@coroutineScope false
+                    while (cave != null) { maintain(enemies()); delay(100) }
                     true
                 } finally { walk.cancelAndJoin() }
             }
