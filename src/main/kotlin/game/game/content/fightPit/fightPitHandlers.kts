@@ -14,6 +14,14 @@ object1(FightPit.NORTH_DOOR) { FightPitDoors.pass(plr, gameObject) }
 
 object1(FightPit.SOUTH_DOOR) { FightPitDoors.pass(plr, gameObject) }
 
+object1(FightPitOrb.ORB) { (plr.controllers.primary as? FightPitController)?.lookInto() }
+
+for (id in FightPitOrb.VIEWS.keys) {
+    button(id) { (plr.controllers.primary as? FightPitController)?.view(id) }
+}
+
+button(FightPitOrb.STOP_VIEWING) { (plr.controllers.primary as? FightPitController)?.stopViewing() }
+
 // Nobody comes back into the Fight Pit from a save, even one made before a crash. A champion who logged out is
 // paid now.
 on(LoginEvent::class) {

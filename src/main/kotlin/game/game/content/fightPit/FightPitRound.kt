@@ -221,11 +221,16 @@ object FightPitRound {
     }
 
     /**
-     * The players in the waiting room who'd be moved into the pit now.
+     * The players in the waiting room, or watching through its orb, who'd be moved into the pit now.
      */
     private fun waiting() = members.filter {
-        it.isAlive && !it.isLocked && FightPit.WAITING_ROOM.contains(it.position)
+        it.isAlive && !it.isLocked && (FightPit.WAITING_ROOM.contains(it.position) || viewing(it))
     }
+
+    /**
+     * Whether [plr] is watching through the orb.
+     */
+    private fun viewing(plr: Player) = (plr.controllers.primary as? FightPitController)?.viewing == true
 
     /**
      * Moves everyone waiting into the pit, apart from each other, to join the champion if there is one.
@@ -237,6 +242,7 @@ object FightPitRound {
         champion?.let { fighters += it }
         val tiles = spread(entrants.size)
         for ((index, plr) in entrants.withIndex()) {
+            (plr.controllers.primary as? FightPitController)?.stopViewing()
             plr.overlays.closeWindows()
             plr.walking.clear()
             plr.move(tiles[index])
