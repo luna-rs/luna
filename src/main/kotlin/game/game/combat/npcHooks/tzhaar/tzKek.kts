@@ -3,6 +3,7 @@ package game.combat.npcHooks.tzhaar
 import api.combat.death.DeathHookHandler
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
+import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
@@ -35,6 +36,7 @@ for (id in TZ_KEK) {
             repeat(2) {
                 val split = Npc(victim.context, TZ_KEK_SPLIT, victim.position)
                 split.respawnTicks = -1
+                split.combat.retreatPolicy = RetreatPolicy.NONE
                 if (victim.world.npcs.add(split) && killer != null && killer.isAlive) split.combat.attack(killer)
             }
         }

@@ -61,5 +61,6 @@ enum class Jingles(val id: Int, val length: Int) {
     QUEST_COMPLETE_3(240, 8000),
     PERFECTLY_TUNED(300, 4800),
     SKULLBALL_GOAL(350, 6214),
+    FIGHT_CONTINUES(472, 4975),
     GRAVE_ROBBER(382, 6729)
 }

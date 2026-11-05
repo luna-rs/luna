@@ -12,6 +12,7 @@ import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
 import game.bot.scripts.BarrowsBotScript
+import game.bot.scripts.FightCaveBotScript
 import game.bot.scripts.DagannothKingsBotScript
 import game.bot.scripts.DagannothKingsTrip
 import game.bot.scripts.SalarinBotScript
@@ -237,6 +238,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 bot.scriptStack.push(it)
                 return
             }
+        }
+        if (!training && FightCaveBotScript.canStart(bot) && rand(0.20)) {
+            bot.scriptStack.push(FightCaveBotScript(bot))
+            return
         }
         if (!training && BarrowsBotScript.eligible(bot) && rand(0.20)) {
             bot.scriptStack.push(BarrowsBotScript(bot))

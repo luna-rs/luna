@@ -418,4 +418,14 @@ public final class UpdateBlockData {
         this.combat = combat;
         this.skill = skill;
     }
+
+    /**
+     * Returns the animation in this immutable update snapshot. Bot observers can inspect the last synchronized
+     * animation after the mutable per-tick builder has been reset.
+     *
+     * @return The animation sent with this update, or {@code null} when no animation was included.
+     */
+    public Animation getAnimation() {
+        return animation;
+    }
 }
