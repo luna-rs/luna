@@ -26,7 +26,7 @@ object ScriptFixtures {
         Files.newBufferedReader(Path.of("data/dumps/items.json")).use { reader ->
             for (entry in JsonParser.parseReader(reader).asJsonArray) {
                 val item = entry.asJsonObject
-                if (item.getAsJsonObject("unnoted_id").get("is_present").asBoolean) continue
+                if (item.has("unnoted_id") && !item.get("unnoted_id").isJsonNull) continue
                 ItemDefinition.ALL.storeDefinition(ItemDefinition(
                     item.get("id").asInt, item.get("name").asString, "", 0, 0, 0, 0, 0, 0, 0,
                     item.get("stackable").asBoolean, 0, false, emptyArray(), emptyArray(), OptionalInt.empty(),
