@@ -25,6 +25,7 @@
  */
 package game.content.duelArena
 
+import api.combat.specialAttack.SpecialAttackHandler.specialBarClicks
 import game.skill.magic.teleportSpells.TeleportAction
 import io.luna.game.event.impl.*
 import io.luna.game.model.mob.controller.PlayerController
@@ -67,7 +68,12 @@ class DuelController(private val player: Player, val duel: DuelArena.Duel) : Pla
         player.walking.isLocked = walkingLocked || duel.countdown > 0 || rule(DuelRules.NO_MOVEMENT)
         if (player.walking.isLocked) { player.navigator.cancel(); player.walking.clear() }
         if (rule(DuelRules.NO_PRAYER)) player.combat.prayers.deactivateAll()
-        if (rule(DuelRules.NO_SPECIAL)) player.combat.specialBar.forceOff()
+        if (rule(DuelRules.NO_SPECIAL)) {
+            // A paid granite maul special stays queued after the bar is switched off.
+            player.combat.specialBar.forceOff()
+            player.combat.specialBar.isForced = false
+            player.specialBarClicks = 0
+        }
     }
     override fun event(event: ControllableEvent): Boolean {
         if (event is WalkingEvent && (duel.countdown > 0 || rule(DuelRules.NO_MOVEMENT))) return false
