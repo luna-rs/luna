@@ -2,6 +2,7 @@ package io.luna.game.model.item;
 
 import com.google.common.base.MoreObjects;
 import io.luna.LunaContext;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
@@ -68,6 +69,11 @@ public class GroundItem extends StationaryEntity {
      * public promotion. Retaining it allows removal to clear their tracking even when the current view is global.
      */
     private final ChunkUpdatableView originalView;
+
+    /**
+     * If this ground item has been picked up.
+     */
+    private boolean pickedUp;
 
     /**
      * Creates a new {@link GroundItem}.
@@ -215,26 +221,11 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
-     * Field-based comparison for "content equality" of ground items.
-     * <p>
-     * Two ground items are considered identical if:
-     * <ul>
-     *   <li>their {@link #id} matches</li>
-     *   <li>their {@link #amount} matches</li>
-     *   <li>their {@link #position} matches</li>
-     *   <li>their {@link #getView()} matches</li>
-     * </ul>
-     * <p>
-     * This method ignores entity identity and state (active/inactive).
+     * Invoked when this ground item is picked up.
      *
-     * @param other The other ground item to compare with.
-     * @return {@code true} if the two ground items represent the same "drop" data.
+     * @param player The player that picked this item up.
      */
-    public boolean isIdentical(GroundItem other) {
-        return id == other.id
-                && amount == other.amount
-                && Objects.equals(position, other.position)
-                && Objects.equals(getView(), other.getView());
+    public void onPickedUp(Player player) {
     }
 
     /**
@@ -362,5 +353,24 @@ public class GroundItem extends StationaryEntity {
      */
     public final Item toItem() {
         return hasAttributes() ? new DynamicItem(id, attributes()) : new Item(id, amount);
+    }
+
+    /**
+     * Marks this ground item as picked up by {@code player}.
+     *
+     * @param player The player that picked up this ground item.
+     */
+    public void setPickedUp(Player player) {
+        if (state == EntityState.INACTIVE && !pickedUp) {
+            pickedUp = true;
+            onPickedUp(player);
+        }
+    }
+
+    /**
+     * @return {@code true} if this ground item has been picked up by a player.
+     */
+    public boolean isPickedUp() {
+        return pickedUp;
     }
 }

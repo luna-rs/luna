@@ -54,6 +54,18 @@
     // How frequent the auto-save script should run. <= 0 means it will not run.
     "autosave_minutes": 60
   },
+  "events": {
+    // If seasonal events are active.
+    "enabled": true,
+    // The total amount of drops that can be claimed (looted) from any currently active events.
+    "quota": 2500,
+    // Whether the quota resets once the event completes or never resets.
+    "lifetime_quota": true,
+    // How often active events drop items.
+    "wave_interval_hours": 1,
+    // How many items are dropped per wave.
+    "drops_per_wave": 10
+  },
   "economy": {
     /**
      * The multiplier applied to historical sample resistance when calculating price movement strength.

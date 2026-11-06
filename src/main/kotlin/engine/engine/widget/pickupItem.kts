@@ -51,6 +51,7 @@ on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.GROUND_ITEM_PIC
             plr.sendMessage("You can only have one ${pouch.displayName} essence pouch at a time.")
 
         groundItem.state == EntityState.ACTIVE && world.items.unregister(groundItem) -> {
+            groundItem.setPickedUp(plr)
             plr.playSound(Sound.PICKUP_ITEM)
             plr.inventory.add(pickupItem)
             TreasureTrails.acquired(plr, pickupItem.id)

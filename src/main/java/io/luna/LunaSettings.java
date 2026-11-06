@@ -1,5 +1,6 @@
 package io.luna;
 
+import game.content.seasonalEvents.SeasonalEventSettings;
 import game.skill.SkillsSettings;
 import io.luna.game.GameSettings;
 import io.luna.game.model.item.economy.WorldEconomySettings;
@@ -36,6 +37,11 @@ public final class LunaSettings {
      * Skill-related tuning/parameters.
      */
     private final SkillsSettings skills;
+
+    /**
+     * Seasonal event related tuning/parameters.
+     */
+    private final SeasonalEventSettings events;
 
     /**
      * Bot scheduling and creation related behaviour.
@@ -76,6 +82,13 @@ public final class LunaSettings {
     }
 
     /**
+     * Returns seasonal event settings.
+     */
+    public SeasonalEventSettings events() {
+        return events;
+    }
+
+    /**
      * Returns bot settings.
      */
     public BotSettings bots() {
@@ -92,11 +105,13 @@ public final class LunaSettings {
     /**
      * Private constructor used by Gson. Not invoked directly.
      */
-    private LunaSettings(GameSettings game, DatabaseSettings database, LoggingSettings logging, SkillsSettings skills, BotSettings bots, WorldEconomySettings economy) {
+    private LunaSettings(GameSettings game, DatabaseSettings database, LoggingSettings logging, SkillsSettings skills,
+                         SeasonalEventSettings events, BotSettings bots, WorldEconomySettings economy) {
         this.game = game;
         this.database = database;
         this.logging = logging;
         this.skills = skills;
+        this.events = events;
         this.bots = bots;
         this.economy = economy;
     }
