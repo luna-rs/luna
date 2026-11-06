@@ -4,7 +4,7 @@ Enjoy faithful classic gameplay with limited changes, in a living world where au
 train, trade, fight, and progress alongside you.
 
 <p align="center">
-<a href="https://github.com/luna-rs/luna-client/releases/download/v0.5.0-alpha/luna-launcher.exe"><img src="data/resources/play-luna-launcher-v2.png" alt="Play with launcher (fullscreen mode)" width="200" height="222" border="0"></a><a href="https://luna-rs.github.io/luna-client/"><img src="data/resources/play-luna-web-v2.png" alt="Play with web client (fixed mode only)" width="200" height="222" border="0"></a><a href="#play-on-mobile"><img src="data/resources/play-luna-mobile-v2.png" alt="Play on mobile (ios, android) — in development; see mobile availability below" width="200" height="222" border="0"></a>
+<a href="https://github.com/luna-rs/luna-client/releases/download/v0.5.0-alpha/luna-launcher.exe"><img src="data/resources/play-luna-launcher-v3.png" alt="Play with launcher (fullscreen mode)" width="220" height="240" border="0"></a><a href="https://luna-rs.github.io/luna-client/"><img src="data/resources/play-luna-web-v3.png" alt="Play with web client (fixed mode only)" width="220" height="240" border="0"></a><a href="#play-on-mobile"><img src="data/resources/play-luna-mobile-v3.png" alt="Play on mobile (ios, android) — in development; see mobile availability below" width="220" height="240" border="0"></a>
 </p>
 
 - 5× XP
