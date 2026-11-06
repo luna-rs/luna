@@ -33,9 +33,15 @@ import org.apache.logging.log4j.LogManager
  */
 class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemContainerListener {
     companion object {
+        private const val TRAIL = 1
+        private const val TRADE = 2
+        private const val PICKUP = 3
+        private const val SHOP = 4
         private var Bot.acquisitionLogAttached by Attr.boolean { false }
         private val walker = StackWalker.getInstance()
         private val logger = LogManager.getLogger(BotItemAcquisitionLog::class.java)
+        private val acquisitionLogger = FileOutputType.ITEM_ACQUISITION.logger
+        private val acquisitionLevel = FileOutputType.ITEM_ACQUISITION.level
         private val clueRares by lazy { TrailTier.entries.flatMap { TrailRewards.rare(it) }.map { it.id }.toSet() }
         private val containerClass = ItemContainer::class.java.name
         private val transfers = setOf("io.luna.game.model.item.Bank", "io.luna.game.model.item.Equipment")
@@ -76,41 +82,73 @@ class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemCont
         try {
             val base = item.itemDef.unnotedId.orElse(item.id)
             if (EquipmentDefinition.ALL.get(base).isEmpty && item.itemDef.value < 10_000 && base !in clueRares) return
-            val type = FileOutputType.ITEM_ACQUISITION
-            if (!type.logger.isEnabled(type.level)) return
-            val frames = walker.walk { stream -> stream.limit(32).map { it.toStackTraceElement() }.toList() }
-            if (frames.any { it.className in transfers ||
-                    it.className == containerClass && it.methodName in arrangements ||
-                    it.className == "engine.trade.OfferTradeInterface" && it.methodName == "onClose" ||
-                    it.className == "game.content.partyRoom.dropParty.DropPartyOption" && it.methodName == "returnOffers" }) return
-            val caller = frames.firstOrNull {
-                (it.className.startsWith("game.") || it.className.startsWith("engine.")) &&
-                    !it.className.startsWith(BotItemAcquisitionLog::class.java.name)
-            } ?: frames.firstOrNull {
-                it.className.startsWith("io.luna.game.") && it.className != containerClass
-            } ?: return
-            val source = when {
-                frames.any { it.className == "game.content.treasureTrails.TreasureTrails" } -> "TREASURE_TRAIL"
-                frames.any { it.className == ConfirmTradeInterface::class.java.name } -> {
+            if (!acquisitionLogger.isEnabled(acquisitionLevel)) return
+            val origin = origin() ?: return
+            val source = when (origin.kind) {
+                TRAIL -> "TREASURE_TRAIL"
+                TRADE -> {
                     val partner = bot.overlays.getOverlay(ConfirmTradeInterface::class.java)?.offer?.other?.username
                     "TRADE partner=${partner ?: "unknown"}"
                 }
-                frames.any { it.className.startsWith("engine.widget.PickupItem") } -> pickupSource(item.id)
-                frames.any { it.className == Shop::class.java.name && it.methodName == "buy" } -> {
+                PICKUP -> pickupSource(item.id)
+                SHOP -> {
                     val shop = bot.overlays.getOverlay(ShopInterface::class.java)?.shop?.name
                     "SHOP name=${shop ?: "unknown"}"
                 }
-                else -> "${caller.className}.${caller.methodName}"
+                else -> "${origin.caller.className}.${origin.caller.methodName}"
             }
             val destination = when (items) { bot.inventory -> "inventory"; bot.bank -> "bank"; else -> "equipment" }
             val tile = bot.position
-            type.logger.log(type.level,
+            acquisitionLogger.log(acquisitionLevel,
                 "bot=\"{}\" item=\"{}\" id={} amount={} source=\"{}\" caller=\"{}\" destination={} position={},{},{}",
-                field(bot.username), field(item.itemDef.name), item.id, gained, field(source), field(caller.toString()),
+                field(bot.username), field(item.itemDef.name), item.id, gained, field(source), field(origin.caller.toString()),
                 destination, tile.x, tile.y, tile.z)
         } catch (failure: RuntimeException) {
             logger.warn("Could not record an item acquisition for {}.", bot.username, failure)
         }
+    }
+
+    /**
+     * Retains only the selected caller and source category from a bounded stack walk.
+     *
+     * @author lare96
+     */
+    private data class Origin(val caller: StackTraceElement, val kind: Int)
+
+    /**
+     * Stops immediately on excluded moves and reads each remaining frame once. Only the final caller
+     * is converted to a stack-trace element; unused frames need no file or line-number materialization.
+     */
+    private fun origin(): Origin? = walker.walk { stream ->
+        val frames = stream.iterator()
+        // This new helper is outside the original observe() frame window.
+        if (frames.hasNext()) frames.next()
+        var caller: StackWalker.StackFrame? = null
+        var fallback: StackWalker.StackFrame? = null
+        var kind = 0
+        var visited = 0
+        while (visited++ < 32 && frames.hasNext()) {
+            val frame = frames.next()
+            val name = frame.className
+            if (name in transfers ||
+                name == containerClass && frame.methodName in arrangements ||
+                name == "engine.trade.OfferTradeInterface" && frame.methodName == "onClose" ||
+                name == "game.content.partyRoom.dropParty.DropPartyOption" && frame.methodName == "returnOffers") {
+                return@walk null
+            }
+            if (caller == null && (name.startsWith("game.") || name.startsWith("engine.")) &&
+                !name.startsWith(BotItemAcquisitionLog::class.java.name)) caller = frame
+            if (fallback == null && name.startsWith("io.luna.game.") && name != containerClass) fallback = frame
+            val category = when {
+                name == "game.content.treasureTrails.TreasureTrails" -> TRAIL
+                name == ConfirmTradeInterface::class.java.name -> TRADE
+                name.startsWith("engine.widget.PickupItem") -> PICKUP
+                name == Shop::class.java.name && frame.methodName == "buy" -> SHOP
+                else -> 0
+            }
+            if (category != 0 && (kind == 0 || category < kind)) kind = category
+        }
+        (caller ?: fallback)?.let { Origin(it.toStackTraceElement(), kind) }
     }
 
     /**
