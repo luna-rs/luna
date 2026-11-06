@@ -1,6 +1,7 @@
 package io.luna.game.persistence;
 
 import io.luna.game.model.World;
+import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.attr.Attribute;
 
 import java.io.IOException;
@@ -105,8 +106,13 @@ public final class JsonGameSerializer extends GameSerializer {
      *
      * @param username The username of the player.
      * @return The direct path.
+     * @throws IllegalArgumentException If {@code username} is not a valid login username.
      */
     private Path getParentDir(World world, String username) {
+        // The username becomes part of the path, so only names a login could use are accepted.
+        if (!PlayerCredentials.isValidUsername(username)) {
+            throw new IllegalArgumentException("Invalid username [" + username + "].");
+        }
         return world.getBots().exists(username) ? BOT_DIR : PLAYER_DIR;
     }
 }
