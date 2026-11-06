@@ -4,10 +4,10 @@ Enjoy faithful classic gameplay with limited changes, in a living world where au
 train, trade, fight, and progress alongside you.
 
 <p align="center">
-<a href="#play-luna"><img src="data/resources/play-luna-v3.png" alt="Play Luna — choose the launcher, web client or mobile availability from the links below" width="570" border="0"></a>
+<a href="#play-luna"><img src="data/resources/play-luna-v3.png" alt="Play Luna — choose the launcher, web client or mobile web beta from the links below" width="570" border="0"></a>
 </p>
 <p align="center">
-<a name="play-luna"></a><a href="https://github.com/luna-rs/luna-client/releases/download/v0.5.0-alpha/luna-launcher.exe">Play with launcher</a> · <a href="https://luna-rs.github.io/luna-client/">Play with web client</a> · <a href="#play-on-mobile">Mobile availability (ios, android)</a>
+<a name="play-luna"></a><a href="https://github.com/luna-rs/luna-client/releases/download/v0.5.0-alpha/luna-launcher.exe">Play with launcher</a> · <a href="https://luna-rs.github.io/luna-client/">Play with web client</a> · <a href="https://luna-rs.github.io/luna-client/mobile/?mobile=1">Play on mobile (web beta)</a>
 </p>
 
 - 5× XP
@@ -19,8 +19,11 @@ Luna preserves the classic experience; **HiveScape** will be the home for our cu
 
 ### Play on mobile
 
-A dedicated mobile experience for iOS and Android is in development. The mobile stone will link to it
-when a public version is ready. For now, join Luna with the Windows launcher or desktop web client above.
+[Open Luna Mobile](https://luna-rs.github.io/luna-client/mobile/?mobile=1) on your phone for the touch-enabled web beta.
+Rotate to landscape, tap **Play**, and use the existing Luna login screen.
+
+On iPhone, open the link in Safari, choose **Share → Add to Home Screen**, and add the icon.
+Launch that icon to return to Luna Mobile. No app download is needed; an internet connection is required.
 
 # Meet the bots
 
