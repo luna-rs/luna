@@ -33,6 +33,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.content.castleWars.CastleWarsGame
 import game.content.duelArena.DuelArena
+import game.content.fightPit.FightPit
 import game.content.fishingTrawler.FishingTrawler
 import game.content.gnomeBall.GnomeBall
 import game.skill.fishing.catchFish.FishingSpot
@@ -148,11 +149,13 @@ object RandomEvents {
 
     /**
      * Checks native lifecycle, source exclusions and the personal event slot before reading readiness.
-     * Banks and the Wilderness are eligible. Bots are not excluded.
+     * Banks and the Wilderness are eligible. Bots are not excluded. Instanced maps and the Fight Pit are not: an
+     * event's move would end the run there, and a later return could land in an instance that was since deleted.
      */
     fun allowed(player: Player): Boolean = player.state == EntityState.ACTIVE && player.isAlive &&
         areaAllowed(player.position) && !CastleWarsGame.inArena(player.position) &&
-        !CastleWarsGame.inWaitingRoom(player.position) && encounters[player]?.blocksNewEvents != true
+        !CastleWarsGame.inWaitingRoom(player.position) && player.dynamicMap == null &&
+        !FightPit.inside(player.position) && encounters[player]?.blocksNewEvents != true
 
     /**
      * Soft content triggers wait for a player-owned delay or modal interaction to finish.
