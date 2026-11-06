@@ -4,6 +4,7 @@ import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
 import api.bot.isRealBot
+import com.google.common.cache.CacheBuilder
 import engine.trade.ConfirmTradeInterface
 import game.content.treasureTrails.TrailRewards
 import game.content.treasureTrails.TrailTier
@@ -22,6 +23,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.interact.InteractionAction
 import io.luna.util.logging.LoggingSettings.FileOutputType
 import org.apache.logging.log4j.LogManager
+import java.util.BitSet
 
 /**
  * Observes notable item gains without changing the functions that award or transfer items.
@@ -42,10 +44,13 @@ class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemCont
         private val logger = LogManager.getLogger(BotItemAcquisitionLog::class.java)
         private val acquisitionLogger = FileOutputType.ITEM_ACQUISITION.logger
         private val acquisitionLevel = FileOutputType.ITEM_ACQUISITION.level
-        private val clueRares by lazy { TrailTier.entries.flatMap { TrailRewards.rare(it) }.map { it.id }.toSet() }
+        private val clueRares by lazy {
+            BitSet().apply { TrailTier.entries.forEach { tier -> TrailRewards.rare(tier).forEach { set(it.id) } } }
+        }
         private val containerClass = ItemContainer::class.java.name
         private val transfers = setOf("io.luna.game.model.item.Bank", "io.luna.game.model.item.Equipment")
         private val arrangements = setOf("load", "swap", "insert", "swapOperation", "clearSpaces")
+        private val callSites = CacheBuilder.newBuilder().maximumSize(512).build<StackTraceElement, CallSite>()
 
         /**
          * Registers one observer after login while preserving every existing container listener.
@@ -80,9 +85,10 @@ class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemCont
         val gained = item.amount - if (old?.id == item.id) old.amount else 0
         if (gained <= 0 || item.id == 995) return
         try {
-            val base = item.itemDef.unnotedId.orElse(item.id)
-            if (EquipmentDefinition.ALL.get(base).isEmpty && item.itemDef.value < 10_000 && base !in clueRares) return
             if (!acquisitionLogger.isEnabled(acquisitionLevel)) return
+            val definition = item.itemDef
+            val base = definition.unnotedId.orElse(item.id)
+            if (definition.value < 10_000 && !clueRares[base] && EquipmentDefinition.ALL.get(base).isEmpty) return
             val origin = origin() ?: return
             val source = when (origin.kind) {
                 TRAIL -> "TREASURE_TRAIL"
@@ -95,13 +101,13 @@ class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemCont
                     val shop = bot.overlays.getOverlay(ShopInterface::class.java)?.shop?.name
                     "SHOP name=${shop ?: "unknown"}"
                 }
-                else -> "${origin.caller.className}.${origin.caller.methodName}"
+                else -> origin.caller.source
             }
             val destination = when (items) { bot.inventory -> "inventory"; bot.bank -> "bank"; else -> "equipment" }
             val tile = bot.position
             acquisitionLogger.log(acquisitionLevel,
                 "bot=\"{}\" item=\"{}\" id={} amount={} source=\"{}\" caller=\"{}\" destination={} position={},{},{}",
-                field(bot.username), field(item.itemDef.name), item.id, gained, field(source), field(origin.caller.toString()),
+                field(bot.username), field(definition.name), item.id, gained, field(source), origin.caller.description,
                 destination, tile.x, tile.y, tile.z)
         } catch (failure: RuntimeException) {
             logger.warn("Could not record an item acquisition for {}.", bot.username, failure)
@@ -113,7 +119,14 @@ class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemCont
      *
      * @author lare96
      */
-    private data class Origin(val caller: StackTraceElement, val kind: Int)
+    private data class Origin(val caller: CallSite, val kind: Int)
+
+    /**
+     * Immutable formatting for one source location. No bot, item or interaction state is cached.
+     *
+     * @author lare96
+     */
+    private class CallSite(val source: String, val description: String)
 
     /**
      * Stops immediately on excluded moves and reads each remaining frame once. Only the final caller
@@ -148,7 +161,10 @@ class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemCont
             }
             if (category != 0 && (kind == 0 || category < kind)) kind = category
         }
-        (caller ?: fallback)?.let { Origin(it.toStackTraceElement(), kind) }
+        val frame = (caller ?: fallback)?.toStackTraceElement() ?: return@walk null
+        val site = callSites.getIfPresent(frame) ?: CallSite("${frame.className}.${frame.methodName}", field(frame.toString()))
+            .also { callSites.put(frame, it) }
+        Origin(site, kind)
     }
 
     /**
