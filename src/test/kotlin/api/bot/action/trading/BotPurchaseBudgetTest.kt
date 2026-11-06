@@ -93,7 +93,7 @@ class BotPurchaseBudgetTest {
         val equipment = EquipmentDefinition.ALL.retrieve(id)
         assertTrue(equipment.requirements.isNotEmpty())
         equipment.requirements.forEach { requirement ->
-            `when`(bot.skill(requirement.id).level).thenReturn(requirement.level - 1)
+            `when`(bot.skill(requirement.id).staticLevel).thenReturn(requirement.level - 1)
         }
         val upgrade = WantedItemDefinition(id, -1, 1, -1, -1,
             WantedItemPriority.URGENT, WantedItemDefinition.DEFAULT_TAGS)
@@ -106,7 +106,7 @@ class BotPurchaseBudgetTest {
         }
         assertEquals(listOf(314, id), preferences.wantedItemsToAcquire().map { it.id })
         equipment.requirements.forEach { requirement ->
-            `when`(bot.skill(requirement.id).level).thenReturn(requirement.level)
+            `when`(bot.skill(requirement.id).staticLevel).thenReturn(requirement.level)
         }
         assertEquals(listOf(id, 314), preferences.wantedItemsToAcquire().map { it.id })
     }
