@@ -16,7 +16,9 @@ public final class TextInputMessageReader extends GameMessageReader<TextInputEve
 
     @Override
     public TextInputEvent decode(Player player, GameMessage msg) {
-        String text = StringUtils.decodeFromBase37(msg.getPayload().getLong());
+        long value = msg.getPayload().getLong();
+        // The client sends 0 for an answer with no letters or digits.
+        String text = StringUtils.isValidBase37(value) ? StringUtils.decodeFromBase37(value) : "";
         return new TextInputEvent(player, text);
     }
 
