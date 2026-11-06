@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import engine.player.punishment.PunishmentHandler.IP_BANS
 import engine.player.punishment.PunishmentHandler.futureDate
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.PlayerRights
 import io.luna.game.persistence.PersistenceService
 import io.luna.game.persistence.PlayerData
 import io.luna.util.logging.LoggingSettings.FileOutputType
@@ -61,6 +62,29 @@ object PunishmentHandler {
     }
 
     /**
+     * Like [loadData], but refuses with a message, and fails the future, when [username] is of [punisher]'s rank or
+     * higher.
+     */
+    private fun punishData(punisher: Player, username: String,
+                           transform: PlayerData.() -> Unit): CompletableFuture<Void> {
+        val rank = punisher.rights
+        return world.persistenceService.load(username).thenCompose { data ->
+            if (canPunish(rank, username, data?.rights)) {
+                loadData(username, transform)
+            } else {
+                gameService.gameExecutor.execute { punisher.sendMessage("You can't punish $username.") }
+                CompletableFuture.failedFuture<Void>(IllegalStateException("Can't punish $username."))
+            }
+        }
+    }
+
+    /**
+     * Staff can only punish lower ranks. Names in `developer_usernames` count as developers whatever their save says.
+     */
+    private fun canPunish(rank: PlayerRights, username: String, savedRights: PlayerRights?) =
+        PlayerRights.forLogin(username, savedRights, false, false) < rank
+
+    /**
      * IP-bans the given [username]. Writes the IP address to [IP_BANS] and forcibly logs out the player if online.
      *
      * @param punisher The staff member applying the ban.
@@ -71,9 +95,13 @@ object PunishmentHandler {
         val game = gameService
         val playerWorld = world
         val filter = server.channelFilter
+        val rank = punisher.rights
         return playerWorld.persistenceService.load(username).thenCompose { loaded ->
             game.submit(Supplier<CompletableFuture<Void>> {
                 val data = loaded ?: throw IllegalStateException("Player data not found for $username.")
+                if (!canPunish(rank, username, data.rights)) {
+                    return@Supplier game.sync(Runnable { punisher.sendMessage("You can't punish $username.") })
+                }
                 val ip = data.lastIp ?: throw IllegalStateException("No IP address recorded for $username.")
 
                 if (filter.addToBlacklist(ip)) {
@@ -109,7 +137,7 @@ object PunishmentHandler {
             "permanently banned $username"
         else
             "banned $username until ${FORMATTER.format(until)}"
-        loadData(username) {
+        punishData(punisher, username) {
             unbanInstant = until
         }.thenRunAsync({
                            world.getPlayer(username).ifPresent { it.forceLogout() }
@@ -158,7 +186,7 @@ object PunishmentHandler {
         else
             "muted $username until ${FORMATTER.format(until)}"
 
-        loadData(username) {
+        punishData(punisher, username) {
             unmuteInstant = until
         }.thenRunAsync({
                            punisher.sendMessage("You have $formatted.")

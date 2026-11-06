@@ -11,6 +11,8 @@ import api.predef.ext.*
 import engine.bot.coordinator.skill.SmithingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.CastleWarsBotScript
+import game.bot.scripts.FightCaveBotScript
+import game.bot.scripts.FightPitBotScript
 import game.bot.scripts.LogoutBotScript
 import game.bot.scripts.PestControlBotScript
 import game.bot.scripts.combat.PkBotScript
@@ -67,10 +69,12 @@ cmd("noclip", RIGHTS_ADMIN) {
     }
 }
 
-cmd("injectall") {
+cmd("injectall", RIGHTS_DEV) {
     val name = getInputFrom(0)
     val script: ((Bot) -> BotScript)? = when (name) {
         "pest control" -> { it -> PestControlBotScript(it) }
+        "fight cave" -> { it -> FightCaveBotScript(it) }
+        "fight pit" -> { it -> FightPitBotScript(it) }
         "castle wars" -> { it -> CastleWarsBotScript(it) }
         "pking" -> { it -> PkBotScript(it, 1.hours) }
         else -> null
@@ -94,7 +98,7 @@ cmd("config", RIGHTS_DEV) {
     plr.sendVarp(Varp(id, value))
 }
 
-cmd("shop") {
+cmd("shop", RIGHTS_DEV) {
     val shopList = ArrayList<Shop>()
     for (shop in world.shops.values()) {
         if (shop.viewing.isNotEmpty()) {
@@ -126,7 +130,7 @@ cmd("forcescript", RIGHTS_DEV) {
     }
 }
 
-cmd("setbotcount") {
+cmd("setbotcount", RIGHTS_DEV) {
     val amount = asInt(0)
 
 }
@@ -145,7 +149,7 @@ cmd("goto", RIGHTS_DEV) {
         }
     }
 }
-cmd("rockcrabs") {
+cmd("rockcrabs", RIGHTS_DEV) {
 
 }
 cmd("zonebots", RIGHTS_DEV) {
@@ -228,7 +232,7 @@ cmd("botrich", RIGHTS_DEV) {
     plr.sendMessage("Highest bank value ${NumberUtils.formatPrice(value - 810_000)}, by $valueUsername")
 }
 
-cmd("hasrunes") {
+cmd("hasrunes", RIGHTS_DEV) {
     for (bot in world.players) {
         if (bot.isRealBot() && bot.inventory.containsAnyIds(Rune.ID_TO_RUNE.keys)) {
             plr.move(bot.position)
@@ -297,7 +301,7 @@ cmd("bots", RIGHTS_DEV) {
     }
 }
 
-cmd("spawnbots") {
+cmd("spawnbots", RIGHTS_DEV) {
     repeat(10) {
 
         val bot = Bot.Builder(ctx).setTemporary().setBrain(object : BotBrain() {
@@ -315,7 +319,7 @@ cmd("spawnbots") {
     }
 }
 
-cmd("testscript") {
+cmd("testscript", RIGHTS_DEV) {
     repeat(1) {
         val bot = Bot.Builder(ctx).setTemporary().setUsername("test$it").setTemporary().build()
         bot.speechStack.setDisableAll(true)
@@ -419,14 +423,14 @@ cmd("obj", RIGHTS_DEV) {
                     plr = plr)
 }
 
-cmd("ok") {
+cmd("ok", RIGHTS_DEV) {
     val bot = Bot.Builder(ctx).setUsername("elite111111")
         .setSpawnPosition(plr.position).build()
     bot.maxSkills()
     bot.login()
 
 }
-cmd("findnpc") {
+cmd("findnpc", RIGHTS_DEV) {
     val name = getInputFrom(0)
     val choices = ArrayList<Position>()
     for (next in world.npcs) {
@@ -436,7 +440,7 @@ cmd("findnpc") {
     }
     plr.move(choices.random())
 }
-cmd("findfight") {
+cmd("findfight", RIGHTS_DEV) {
     val choices = ArrayList<Position>()
     for (next in world.players) {
         if (next.combat.inCombat()) {
@@ -457,13 +461,11 @@ cmd("findbot", RIGHTS_DEV) {
     plr.sendMessage("Viewable subzone list: ${subzones.size}")
     choices += subzones
     world.schedule(10, true) {
-        if (!plr.walking.isEmpty) {
-            it.cancel()
-        } else {
+        if (plr.walking.isEmpty && !plr.overlays.hasWindow()) {
             if (choices.isNotEmpty()) {
                 val nextSubzone = choices.removeAt(rand().nextInt(choices.size))
                 plr.sendMessage("Moving to subzone #${count++}: $nextSubzone.")
-                plr.move(nextSubzone.inside)
+                plr.move(world.locator.findNearestPlayer(nextSubzone.inside) { it.isRealBot() }?.position ?: nextSubzone.inside)
             } else {
                 plr.sendMessage("Viewable subzone list has been exhausted.")
                 it.cancel()
@@ -552,7 +554,7 @@ cmd("animation", RIGHTS_DEV) {
     plr.animation(Animation(id))
 }
 
-cmd("npcanim") {
+cmd("npcanim", RIGHTS_DEV) {
     val npcId = asInt(0)
     val animationId = asInt(1)
 

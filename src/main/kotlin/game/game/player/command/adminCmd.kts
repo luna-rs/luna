@@ -265,7 +265,7 @@ cmd("shutdown", RIGHTS_ADMIN) {
 /**
  * A command that changes your rights.
  */
-cmd("set_rights", RIGHTS_ADMIN) {
+cmd("set_rights", RIGHTS_DEV) {
     val rights = args[0]
     for (r in PlayerRights.values()) {
         if (r.name.equals(rights, true)) {

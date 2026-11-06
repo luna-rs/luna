@@ -11,7 +11,7 @@ on(ServerLaunchEvent::class) {
 
     // Load all banking npcs and make them initialize dialogues.
     Banking.loadBankingNpcs()
-    for (id in Banking.bankingNpcs) {
+    for (id in Banking.bankingNpcs - Banking.scriptedBankers) {
         npc1(id, { _, _ -> Banking.BANKER_POLICY }) { openDialogue(plr, id) }
         npc2(id, { _, _ -> Banking.BANKER_POLICY }) { plr.bank.open() }
     }

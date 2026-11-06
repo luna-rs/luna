@@ -59,5 +59,5 @@ cmd("unmute", RIGHTS_MOD) {
 
 cmd("unban", RIGHTS_MOD) {
     val username = getInputFrom(0)
-    PunishmentHandler.unmute(plr, username)
+    PunishmentHandler.unban(plr, username)
 }

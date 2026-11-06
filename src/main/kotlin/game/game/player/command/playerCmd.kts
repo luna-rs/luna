@@ -39,6 +39,11 @@ cmd("changepass") {
                 player.sendMessage("Your password must be between 1 and 20 characters.")
                 return
             }
+            // Text prompts carry letters and digits only; any other character arrives as '_'.
+            if ('_' in password) {
+                player.sendMessage("Your new password can only use letters and numbers.")
+                return
+            }
             val target = WeakReference(player)
             world.loginService.changePassword(player, password).whenCompleteAsync({ changed, error ->
                 val current = target.get()

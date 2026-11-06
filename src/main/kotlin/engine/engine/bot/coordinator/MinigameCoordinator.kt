@@ -13,6 +13,9 @@ import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.DepositPartyRoomItemBotScript
 import game.bot.scripts.BarrowsBotScript
+import game.bot.scripts.FightCaveBotScript
+import game.bot.scripts.FightPitBotScript
+import game.content.fightPit.FightPit
 import game.bot.scripts.DropPartyBotScript
 import game.bot.scripts.FishingTrawlerBotScript
 import game.bot.scripts.MageArenaBotScript
@@ -61,7 +64,9 @@ object MinigameCoordinator : ProgressiveCoordinator() {
             bot.attendedParty = id
             return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
         }
+        if (FightCaveBotScript.canStart(bot) && rand(0.20)) return FightCaveBotScript(bot)
         if (BarrowsBotScript.eligible(bot) && rand(0.20)) return BarrowsBotScript(bot)
+        if (FightPitBotScript.eligible(bot) && (FightPit.inside(bot.position) || rand(0.25))) return FightPitBotScript(bot)
         if (MageArenaBotScript.eligible(bot) && rand(0.25)) return MageArenaBotScript(bot)
         val furnaceBar = BarType.entries.filter { BlastFurnaceBotScript.eligible(bot, it) }.maxByOrNull { it.level }
         if (furnaceBar != null) return BlastFurnaceBotScript(bot, furnaceBar)

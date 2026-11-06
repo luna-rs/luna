@@ -43,6 +43,11 @@ object Banking {
     val bankingNpcs: Set<Int> = loadBankingNpcs
 
     /**
+     * Bankers whose options are handled by their own scripts, so they don't get the generic banker dialogue.
+     */
+    val scriptedBankers = setOf(2619) // TzHaar-Ket-Zuh.
+
+    /**
      * Loads all banking objects based on definitions from the cache.
      */
     fun loadBankingObjects() {
@@ -65,5 +70,6 @@ object Banking {
             .filter { npcDefinition -> npcDefinition?.name?.contains("Banker", ignoreCase = true) ?: false }
             .forEach { npcDefinition -> loadBankingNpcs.add(npcDefinition.id()) }
         loadBankingNpcs += 2271 // Emerald benedict.
+        loadBankingNpcs += scriptedBankers
     }
 }
