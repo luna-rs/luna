@@ -1,14 +1,23 @@
 # Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
-Luna is a high-performance #377 RuneScape game server built around a world that feels alive. Autonomous player bots 
+Luna is a permanent revision 377 RuneScape server where everyone is welcome to play and progress.
+Enjoy faithful classic gameplay with limited changes, in a living world where autonomous player bots
 train, trade, fight, and progress alongside you.
 
 <p align="center">
-<a href="https://github.com/luna-rs/luna-client/releases/download/v0.5.0-alpha/luna-launcher.exe"><img src="data/resources/luna-beta-launcher-half.png" alt="Play with launcher (fullscreen mode)" width="200" height="222" border="0"></a><a href="https://luna-rs.github.io/luna-client/"><img src="data/resources/luna-beta-web-client-half.png" alt="Play with web client (fixed mode only)" width="200" height="222" border="0"></a>
+<a href="https://github.com/luna-rs/luna-client/releases/download/v0.5.0-alpha/luna-launcher.exe"><img src="data/resources/play-luna-launcher.png" alt="Play with launcher (fullscreen mode)" width="200" height="219" border="0"></a><a href="https://luna-rs.github.io/luna-client/"><img src="data/resources/play-luna-web.png" alt="Play with web client (fixed mode only)" width="200" height="219" border="0"></a><a href="#play-on-mobile"><img src="data/resources/play-luna-mobile.png" alt="Play on mobile (ios, android) — in development; see mobile availability below" width="200" height="219" border="0"></a>
 </p>
 
 - 5× XP
 - Standard economy with restricted item spawning
 - No character wipes
+
+Luna is actively developed. Your feedback and bug reports help improve the world as you play.
+Luna preserves the classic experience; **HiveScape** will be the home for our custom content and “what if?” ideas.
+
+### Play on mobile
+
+A dedicated mobile experience for iOS and Android is in development. The mobile stone will link to it
+when a public version is ready. For now, join Luna with the Windows launcher or desktop web client above.
 
 # Meet the bots
 
