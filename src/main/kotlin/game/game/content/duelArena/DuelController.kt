@@ -58,6 +58,8 @@ class DuelController(private val player: Player, val duel: DuelArena.Duel) : Pla
     }
     override fun teleport(action: TeleportAction): Boolean = false
     override fun logout(): Boolean { duel.finish(duel.other(player)); return true }
+    // Every logout path, forced ones included, settles the stakes before the save is taken.
+    override fun beforeLogout() { if (!duel.ended) duel.finish(duel.other(player)) }
     override fun unregister() {
         player.walking.isLocked = walkingLocked
         if (!duel.ended) duel.finish(duel.other(player))
