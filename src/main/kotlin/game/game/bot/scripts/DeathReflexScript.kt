@@ -13,6 +13,7 @@ import api.predef.*
 import engine.controllers.WildernessLocatableController.levelAt
 import game.content.duelArena.DuelController
 import game.content.fightCave.FightCaveController
+import game.content.fightPit.FightPitController
 import game.content.pestControl.PestControlController
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -93,7 +94,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
 
     override fun shouldReact(): Boolean {
         if (bot.controllers.primary is DuelController || bot.controllers.primary is FightCaveController ||
-            bot.controllers.primary is PestControlController) return false
+            bot.controllers.primary is PestControlController || bot.controllers.primary is FightPitController) return false
         if (bot.health < 1) {
             deathLocation = Triple(bot.position, bot.zone, EnumSet.copyOf(bot.subZones))
             return true

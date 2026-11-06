@@ -68,7 +68,7 @@ object TzHaarNames {
     }
 
     /**
-     * The "What did you call me?" talk. [whatAreYou] runs when the player asks [npc] "What are you then?".
+     * The "What did you call me?" talk, where [whatAreYou] runs [npc]'s whole answer to "What are you then?".
      */
     fun whatDidYouCallMe(plr: Player, npc: Int, whatAreYou: (Player) -> Unit) {
         val title = title(plr)
