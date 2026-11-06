@@ -31,15 +31,15 @@ object TrollheimMountainRocks {
      *
      * @author TheLining
      */
-    data class Passage(val position: Position, val bottom: Position, val top: Position) {
+    data class Passage(val position: Position, val bottom: Position, val top: Position, val objectId: Int) {
         val facing: Direction get() = Direction.between(bottom, top)
     }
 
     val PASSAGES = listOf(
-        Passage(Position(2887, 3661), Position(2887, 3660), Position(2887, 3662)),
-        Passage(Position(2888, 3661), Position(2888, 3660), Position(2888, 3662)),
-        Passage(Position(2885, 3683), Position(2884, 3683), Position(2886, 3683)),
-        Passage(Position(2885, 3684), Position(2884, 3684), Position(2886, 3684)))
+        Passage(Position(2887, 3661), Position(2887, 3660), Position(2887, 3662), 3804),
+        Passage(Position(2888, 3661), Position(2888, 3660), Position(2888, 3662), 3803),
+        Passage(Position(2885, 3683), Position(2884, 3683), Position(2886, 3683), 3803),
+        Passage(Position(2885, 3684), Position(2884, 3684), Position(2886, 3684), 3804))
 
     /**
      * Climbs [obj] from the side [player] is nearer, after walking them onto it, with the 125/250 balance roll.
