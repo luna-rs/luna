@@ -1,5 +1,6 @@
 package engine.item.developerItem
 
+import api.predef.ext.removeObject
 import game.skill.magic.lowHighAlch.AlchemyType
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Bank.DynamicBankInterface
@@ -32,6 +33,17 @@ internal object DeveloperInspection {
                 }
             }
         })
+    }
+
+    fun objectMenu(actor: Player, target: GameObject) {
+        if (!DeveloperItemHandler.allowed(actor) || target.state != EntityState.ACTIVE) return
+        DeveloperItemHandler.menu(actor, listOf(
+            "View object info" to { p -> objectInfo(p, target) },
+            "Remove object" to { p ->
+                if (target.state == EntityState.ACTIVE && p.world.removeObject(target)) {
+                    p.sendMessage("Removed object ${target.id} at ${target.position}.")
+                } else p.sendMessage("That object is no longer available.")
+            }))
     }
 
     fun objectInfo(actor: Player, target: GameObject) {
