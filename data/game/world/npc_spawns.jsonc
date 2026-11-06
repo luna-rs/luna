@@ -27852,10 +27852,6 @@
       "x": 2436,
       "y": 5122,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // TzHaar-Xil (id 2608)
@@ -28002,10 +27998,6 @@
       "x": 2450,
       "y": 5121,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // TzHaar-Xil (id 2608)
@@ -28106,10 +28098,6 @@
       "x": 2457,
       "y": 5121,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // TzHaar-Ket (id 2616)
@@ -28300,10 +28288,6 @@
       "x": 2472,
       "y": 5139,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // TzHaar-Hur (id 2602)
@@ -28351,10 +28335,6 @@
       "x": 2474,
       "y": 5141,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // TzHaar-Hur (id 2603)
@@ -28546,10 +28526,6 @@
       "x": 2492,
       "y": 5173,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
@@ -28558,10 +28534,6 @@
       "x": 2492,
       "y": 5176,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // TzHaar-Hur (id 2603)
@@ -28584,10 +28556,6 @@
       "x": 2493,
       "y": 5156,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
@@ -28596,10 +28564,6 @@
       "x": 2493,
       "y": 5159,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Scared skavid (id 863)
