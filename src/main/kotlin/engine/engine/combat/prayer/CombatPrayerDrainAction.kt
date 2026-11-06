@@ -9,14 +9,15 @@ import io.luna.game.model.mob.Player
 /**
  * An [Action] that handles prayer-point drain while any [CombatPrayer] is active.
  *
- * Uses the five-tick normal timer from Lost City's 377 prayer script, converting combined drain into whole points
+ * Uses the five-tick timer from Lost City's 377 prayer script, converting combined drain into whole points
  * while [CombatPrayerSet] retains the remainder. Turning off the last prayer cancels this timer immediately.
+ * The drain is soft, not normal: combat keeps running behind an open window, so the drain must too.
  *
  * If the player reaches 0 prayer points, it plays the appropriate sound/message and deactivates all prayers.
  *
  * @author lare96
  */
-class CombatPrayerDrainAction(private val plr: Player) : Action<Player>(plr, ActionType.NORMAL, true, 1) {
+class CombatPrayerDrainAction(private val plr: Player) : Action<Player>(plr, ActionType.SOFT, true, 1) {
 
     /**
      * Prayer timer constants.
@@ -32,8 +33,7 @@ class CombatPrayerDrainAction(private val plr: Player) : Action<Player>(plr, Act
     }
 
     /**
-     * The next due world tick. A normal timer becomes due while an interface is open, but cannot execute until
-     * it closes. Rescheduling from the execution tick prevents charging for missed timer executions.
+     * The next due world tick.
      */
     private var nextDrain = world.currentTick + DRAIN_INTERVAL
 
