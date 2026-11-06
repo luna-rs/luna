@@ -6,6 +6,7 @@ import api.bot.webwalk.walk.crossing.NativeAgilityShortcutCrossing
 import game.skill.agility.shortcut.AgilityShortcut
 import game.skill.agility.shortcut.SpikyChains
 import game.skill.agility.shortcut.SteppingStones
+import game.skill.agility.TrollheimMountainRocks
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
 
@@ -24,12 +25,17 @@ object NativeAgilityShortcutSpec {
      */
     data class Passage(val objectId: Int, val position: Position, val from: Position, val to: Position,
                        val level: Int, val cost: Int, val maxDamage: Int = 0, val rope: Boolean = false,
-                       val stones: List<Pair<Int, Position>> = emptyList()) {
+                       val stones: List<Pair<Int, Position>> = emptyList(), val damagePercent: Int = 0) {
         val requirements: Requirements = Requirements(
             flags = if (level > 0) setOf(NativeAgilityShortcutCrossing.flag(level)) else emptySet(),
             items = if (rope) listOf(ItemRequirement(AgilityShortcut.ROPE)) else emptyList())
 
         val placement: CrossingPlacement = CrossingPlacement(objectId, position, from, to, requirements)
+
+        /**
+         * The native fall damage at the bot's current Hitpoints, including any proportional component.
+         */
+        fun fallDamage(health: Int): Int = maxDamage + health * damagePercent / 100
     }
 
     val PASSAGES: List<Passage> = AgilityShortcut.values().flatMap { shortcut ->
@@ -58,6 +64,11 @@ object NativeAgilityShortcutSpec {
                 Passage(if (down) SpikyChains.DOWN else SpikyChains.UP, position, from,
                     from.translate(0, 0, if (down) -1 else 1), chain.level, cost = 3, maxDamage = 5)
             }
+        }
+    } + TrollheimMountainRocks.PASSAGES.flatMap { passage ->
+        listOf(passage.bottom to passage.top, passage.top to passage.bottom).map { (from, to) ->
+            Passage(passage.objectId, passage.position, from, to, TrollheimMountainRocks.LEVEL,
+                cost = 6, maxDamage = 1, damagePercent = 5)
         }
     }
 

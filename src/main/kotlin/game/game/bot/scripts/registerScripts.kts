@@ -21,6 +21,7 @@ import game.bot.scripts.skills.TeleportTrainingBotScript
 import game.bot.scripts.skills.TeleOtherBotScript
 import game.bot.scripts.skills.TeleOtherBotScript.Companion.TeleOtherData
 import game.bot.scripts.DuelArenaBotScript.DuelData
+import game.bot.scripts.FightPitBotScript.PitData
 import game.bot.scripts.skills.TeleportTrainingBotScript.Companion.TeleportTrainingData
 
 import game.bot.scripts.combat.PkBotScript
@@ -179,6 +180,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ArenaData>(BrimhavenArenaBotScript::class) { bot, data -> BrimhavenArenaBotScript(bot, data) }
     scriptManager.addScript<ArcheryData>(RangingGuildBotScript::class) { bot, data -> RangingGuildBotScript(bot, data) }
     scriptManager.addScript<DuelData>(DuelArenaBotScript::class) { bot, data -> DuelArenaBotScript(bot, data) }
+    scriptManager.addScript<PitData>(FightPitBotScript::class) { bot, data -> FightPitBotScript(bot, data) }
     scriptManager.addScript<TeleportTrainingData>(TeleportTrainingBotScript::class) { bot, data -> TeleportTrainingBotScript(bot, data) }
     scriptManager.addScript<TrailData>(TreasureTrailBotScript::class) { bot, data -> TreasureTrailBotScript(bot, data) }
     scriptManager.addScript<GatheringData>(HerbGatheringScript::class) { bot, data -> HerbGatheringScript(bot, data) }

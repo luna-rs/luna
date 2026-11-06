@@ -13,7 +13,7 @@ on(ItemOnPlayerEvent::class).filter { usedItemId == DeveloperItemHandler.ITEM_ID
     DeveloperItemHandler.player(plr, targetPlr)
 }
 on(ItemOnObjectEvent::class).filter { usedItemId == DeveloperItemHandler.ITEM_ID }.then {
-    DeveloperInspection.objectInfo(plr, gameObject)
+    DeveloperInspection.objectMenu(plr, gameObject)
 }
 on(ItemOnNpcEvent::class).filter { usedItemId == DeveloperItemHandler.ITEM_ID }.then {
     DeveloperInspection.npcInfo(plr, targetNpc)

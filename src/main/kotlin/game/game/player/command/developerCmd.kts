@@ -12,6 +12,7 @@ import engine.bot.coordinator.skill.SmithingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.FightCaveBotScript
+import game.bot.scripts.FightPitBotScript
 import game.bot.scripts.LogoutBotScript
 import game.bot.scripts.PestControlBotScript
 import game.bot.scripts.combat.PkBotScript
@@ -73,6 +74,7 @@ cmd("injectall") {
     val script: ((Bot) -> BotScript)? = when (name) {
         "pest control" -> { it -> PestControlBotScript(it) }
         "fight cave" -> { it -> FightCaveBotScript(it) }
+        "fight pit" -> { it -> FightPitBotScript(it) }
         "castle wars" -> { it -> CastleWarsBotScript(it) }
         "pking" -> { it -> PkBotScript(it, 1.hours) }
         else -> null

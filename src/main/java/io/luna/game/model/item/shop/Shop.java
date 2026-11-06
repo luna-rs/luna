@@ -48,13 +48,23 @@ import java.util.Set;
 public final class Shop {
 
     /**
-     * Optional pricing for a shop's original stock. Buy prices start at the cache value; sell prices start at
-     * {@code sellMultiplier} of that value, and both change by {@code changePerItem} for each unit of stock.
+     * Optional pricing for a shop's original stock. Buy prices start at {@code buyMultiplier} of the cache value;
+     * sell prices start at {@code sellMultiplier} of that value, and both change by {@code changePerItem} for each
+     * unit of stock (the buy side scaled by {@code buyMultiplier} as well).
      */
-    public record StockPricing(double sellMultiplier, double changePerItem) {
+    public record StockPricing(double sellMultiplier, double changePerItem, double buyMultiplier) {
         public StockPricing {
             Preconditions.checkArgument(Double.isFinite(sellMultiplier) && sellMultiplier >= 0 && sellMultiplier <= 1);
             Preconditions.checkArgument(Double.isFinite(changePerItem) && changePerItem > 0 && changePerItem <= 1);
+            // Below 1, a player could buy an item for less than the shop pays for it.
+            Preconditions.checkArgument(Double.isFinite(buyMultiplier) && buyMultiplier >= 1);
+        }
+
+        /**
+         * Pricing whose buy prices start at the cache value.
+         */
+        public StockPricing(double sellMultiplier, double changePerItem) {
+            this(sellMultiplier, changePerItem, 1.0);
         }
     }
 
@@ -424,7 +434,7 @@ public final class Shop {
         Preconditions.checkArgument(amountBought >= 0);
 
         int totalMoney = 0;
-        int value = item.getItemDef().getValue();
+        double value = item.getItemDef().getValue();
         int amountStocked = items.computeAmountForIndex(index);
 
         int itemsToReachMaxPrice;
@@ -444,6 +454,9 @@ public final class Shop {
                     (expectedAmount >= SP_COMM_THRESHOLD) ? SP_COMM_PRICE_CHANGE : SP_RARE_PRICE_CHANGE;
             itemsToReachMaxPrice = (int) ((maxPrice - 1) / priceChange);
             itemsToReachMinPrice = (int) (((1 - minPrice) / priceChange) - 0.000001);
+            if (stockPricing != null) {
+                value *= stockPricing.buyMultiplier();
+            }
         } else {
             maxPrice = MAX_PRICE;
             minPrice = GEN_MIN_PRICE;
