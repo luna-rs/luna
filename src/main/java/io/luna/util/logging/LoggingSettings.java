@@ -90,6 +90,11 @@ public final class LoggingSettings {
         ITEM_PICKUP("ItemPickupLogger"),
 
         /**
+         * Log notable bot item gains and their awarding call sites to a text file.
+         */
+        ITEM_ACQUISITION("ItemAcquisitionLogger"),
+
+        /**
          * Log all private messages to a text file.
          */
         PRIVATE_MESSAGE("PrivateMessageLogger"),

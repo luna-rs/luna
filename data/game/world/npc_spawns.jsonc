@@ -27909,7 +27909,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 5,
+      "radius": 2,
       "frequency": "NORMAL"
     }
   },
@@ -27984,10 +27984,6 @@
       "x": 2445,
       "y": 5180,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // TzHaar-Ket (id 2614)
