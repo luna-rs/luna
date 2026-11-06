@@ -47,14 +47,14 @@ object NativeAgilityShortcutCrossing : CrossingHandler {
         if (!settled(bot) || !ShortcutMoves.ready(bot) || !ready(bot, passage.level)) {
             return "the shortcut needs current Agility ${passage.level} and freedom to move"
         }
-        if (bot.health <= passage.maxDamage) return "Hitpoints are too low to survive this shortcut"
+        if (bot.health <= passage.fallDamage(bot.health)) return "Hitpoints are too low to survive this shortcut"
         if (passage.stones.isNotEmpty()) {
             for ((id, position) in passage.stones) {
                 if (context.arrived(leg, 0) && settled(bot)) return null
                 if (!settled(bot) || !ShortcutMoves.ready(bot) || !ready(bot, passage.level)) {
                     return "the stepping stones need current Agility ${passage.level}"
                 }
-                if (bot.health <= passage.maxDamage) return "Hitpoints are too low to survive a stepping-stone fall"
+                if (bot.health <= passage.fallDamage(bot.health)) return "Hitpoints are too low to survive a stepping-stone fall"
                 val stone = context.find(position, id) ?: return "stepping stone $id is missing at $position"
                 if (!world.collisionManager.reached(bot, stone, InteractionPolicy.STANDARD_SIZE) ||
                     !bot.output.sendObjectInteraction(1, stone)) return "could not jump onto stepping stone $id"
@@ -73,7 +73,7 @@ object NativeAgilityShortcutCrossing : CrossingHandler {
         if (stand != leg.from) {
             context.walk(stand, 0)?.let { return it }
             if (!settled(bot) || !ShortcutMoves.ready(bot) || !ready(bot, passage.level) ||
-                bot.health <= passage.maxDamage) return "the shortcut's admission changed during its approach"
+                bot.health <= passage.fallDamage(bot.health)) return "the shortcut's admission changed during its approach"
         }
         if (!world.collisionManager.reached(bot, obj, AgilityShortcut.reach(obj))) {
             return "the shortcut cannot be reached from $stand"
