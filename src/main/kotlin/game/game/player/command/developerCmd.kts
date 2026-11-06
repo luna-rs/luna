@@ -459,13 +459,11 @@ cmd("findbot", RIGHTS_DEV) {
     plr.sendMessage("Viewable subzone list: ${subzones.size}")
     choices += subzones
     world.schedule(10, true) {
-        if (!plr.walking.isEmpty) {
-            it.cancel()
-        } else {
+        if (plr.walking.isEmpty && !plr.overlays.hasWindow()) {
             if (choices.isNotEmpty()) {
                 val nextSubzone = choices.removeAt(rand().nextInt(choices.size))
                 plr.sendMessage("Moving to subzone #${count++}: $nextSubzone.")
-                plr.move(nextSubzone.inside)
+                plr.move(world.locator.findNearestPlayer(nextSubzone.inside) { it.isRealBot() }?.position ?: nextSubzone.inside)
             } else {
                 plr.sendMessage("Viewable subzone list has been exhausted.")
                 it.cancel()

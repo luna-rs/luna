@@ -58,10 +58,23 @@ object TzHaarNames {
      * The "What did you call me?" talk. [selfLines] are what [npc] answers to "What are you then?".
      */
     fun whatDidYouCallMe(plr: Player, npc: Int, vararg selfLines: String) {
+        whatDidYouCallMe(plr, npc) {
+            var dialogue = it.newDialogue().player("What are you then?")
+            for (line in selfLines) {
+                dialogue = dialogue.npc(npc, *DialogueUtils.splitChatLines(line))
+            }
+            dialogue.open()
+        }
+    }
+
+    /**
+     * The "What did you call me?" talk. [whatAreYou] runs when the player asks [npc] "What are you then?".
+     */
+    fun whatDidYouCallMe(plr: Player, npc: Int, whatAreYou: (Player) -> Unit) {
         val title = title(plr)
         plr.newDialogue()
             .npc(npc, *DialogueUtils.splitChatLines("Are you not ${name(plr)}?"))
-            .options("What's a '$title'?", { explainTitle(it, npc, selfLines) },
+            .options("What's a '$title'?", { explainTitle(it, npc, whatAreYou) },
                      "I guess so...", {
                          it.newDialogue()
                              .player("I guess so...")
@@ -80,20 +93,14 @@ object TzHaarNames {
     /**
      * Explains the player's caste title, then lets them ask what [npc] is.
      */
-    private fun explainTitle(plr: Player, npc: Int, selfLines: Array<out String>) {
+    private fun explainTitle(plr: Player, npc: Int, whatAreYou: (Player) -> Unit) {
         val title = title(plr)
         plr.newDialogue()
             .player("What's a '$title'?")
             .npc(npc, "That what you are... ${caste(plr).description}")
             .player("Well yes I suppose I am...")
             .npc(npc, "Then you $title!")
-            .options("What are you then?", {
-                var dialogue = it.newDialogue().player("What are you then?")
-                for (line in selfLines) {
-                    dialogue = dialogue.npc(npc, *DialogueUtils.splitChatLines(line))
-                }
-                dialogue.open()
-            }, "Thanks for explaining it.", {
+            .options("What are you then?", { whatAreYou(it) }, "Thanks for explaining it.", {
                 it.newDialogue().player("Thanks for explaining it.").open()
             })
             .open()

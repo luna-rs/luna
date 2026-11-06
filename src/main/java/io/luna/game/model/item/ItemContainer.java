@@ -1258,6 +1258,18 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Adds an observer without replacing the container's existing listeners.
+     * Repeated registration of the same listener instance has no effect.
+     *
+     * @param listener The additional listener.
+     */
+    public final void addListener(ItemContainerListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners = ImmutableList.<ItemContainerListener>builder().addAll(listeners).add(listener).build();
+        }
+    }
+
+    /**
      * Dispatches item change events to listeners if events are enabled and the slot value actually changed.
      * <p>
      * If {@link #isBulkUpdating()} is true, listeners receive {@code onBulkUpdate}; otherwise they receive
