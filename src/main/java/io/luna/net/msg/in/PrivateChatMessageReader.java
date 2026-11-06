@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import engine.player.punishment.PunishmentHandler;
 import io.luna.game.event.impl.PrivateChatEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
@@ -24,6 +25,9 @@ public final class PrivateChatMessageReader extends GameMessageReader<PrivateCha
 
     @Override
     public boolean validate(Player player, PrivateChatEvent event) {
+        if (PunishmentHandler.INSTANCE.notifyIfMuted(player)) {
+            return false;
+        }
         if (!player.getFriends().contains(event.getName())) {
             player.sendMessage("That player is not on your friends list.");
             return false;
