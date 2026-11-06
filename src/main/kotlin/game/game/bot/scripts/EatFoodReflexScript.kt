@@ -4,6 +4,7 @@ import api.bot.action.eating.PvmEating
 import api.bot.script.ReflexBotScript
 import game.content.duelArena.DuelArena
 import game.content.fightCave.FightCaveController
+import game.content.fightPit.FightPitController
 import game.content.pestControl.PestControl
 import io.luna.game.model.mob.bot.Bot
 
@@ -21,7 +22,8 @@ class EatFoodReflexScript(bot: Bot) : ReflexBotScript(bot) {
     override fun shouldReact(): Boolean {
         if (DuelArena.session(bot) != null ||
             bot.scriptStack.current() is FightCaveBotScript && bot.controllers.primary is FightCaveController ||
-            bot.scriptStack.current() is PestControlBotScript && PestControl.round.playing(bot)) return false
+            bot.scriptStack.current() is PestControlBotScript && PestControl.round.playing(bot) ||
+            bot.scriptStack.current() is FightPitBotScript && bot.controllers.primary is FightPitController) return false
         return !PvmEating.isAttending(bot) && bot.emotions.isNervousAboutHp && inventoryActions.hasAnyFood()
     }
 

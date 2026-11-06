@@ -10,7 +10,7 @@ import io.luna.game.model.mob.Skill
  *
  * @author TheLining
  */
-combat(2734, 2735) {
+combat(2734, 2735, 2627, 2628) {
     attack {
         melee {
             val target = other
