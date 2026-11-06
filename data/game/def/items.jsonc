@@ -9405,6 +9405,11 @@
     "tradeable": true
   },
   {
+    "id": 6529, // Tokkul
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
     "id": 6541, // Mouse toy
     "weight": 0.1,
     "tradeable": true

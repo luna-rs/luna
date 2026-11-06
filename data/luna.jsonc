@@ -170,6 +170,7 @@
       "CONSOLE_ERR",
       "CHAT",
       "COMMANDS",
+      "ITEM_ACQUISITION",
       "PRIVATE_MESSAGE"
     ]
   }
