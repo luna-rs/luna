@@ -30,6 +30,8 @@ fun cook(plr: Player, amount: Int? = null) {
         val food = inter.food
         val usingFire = inter.usingFire
         val newAmt = amount ?: plr.inventory.computeAmountForId(food.raw)
+        // Close the menu now, so another click in the same tick finds it shut and starts nothing.
+        plr.overlays.closeWindows(false)
         plr.submitAction(CookFoodActionItem(plr, inter.cookObj, food, usingFire, newAmt))
     }
 }

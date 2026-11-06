@@ -32,6 +32,8 @@ fun lookupBar(player: Player): BarType? {
 fun smith(plr: Player, id: Int, amount: Int) {
     val smithItem = SmithingTable.ID_TO_ITEM[id] ?: throw IllegalStateException("Invalid smithing item ID [$id]")
     val smithTable = SmithingTable.ID_TO_TABLE[id] ?: throw IllegalStateException("Invalid smithing item ID [$id]")
+    // Close the menu now, so another click in the same tick finds it shut and starts nothing.
+    plr.overlays.closeWindows(false)
     plr.submitAction(SmithAction(plr, smithTable, smithItem, amount))
 }
 

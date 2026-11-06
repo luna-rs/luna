@@ -11,6 +11,8 @@ import io.luna.game.model.mob.overlay.NumberInput
  */
 fun addAction(plr: Player, material: GlassMaterial, amount: Int) {
     if (GlassBlowingInterface::class in plr.overlays) {
+        // Close the menu now, so another click in the same tick finds it shut and starts nothing.
+        plr.overlays.closeWindows(false)
         plr.submitAction(GlassBlowingActionItem(plr, material, amount))
     }
 }

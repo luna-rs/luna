@@ -1,6 +1,7 @@
 package game.skill.smithing.smeltOre
 
 import api.predef.*
+import api.predef.ext.*
 import com.google.common.collect.ImmutableList
 import game.skill.smithing.BarType
 import game.skill.smithing.Smithing
@@ -48,18 +49,31 @@ fun smelt(plr: Player, barType: BarType, times: Int) {
 }
 
 /**
+ * Smelts the specified [barType] for [times] amount of times if the [SmeltingInterface] is open.
+ */
+fun smeltFromMenu(plr: Player, barType: BarType, times: Int) {
+    if (SmeltingInterface::class in plr.overlays) {
+        // Close the menu now, so another click in the same tick finds it shut and starts nothing.
+        plr.overlays.closeWindows(false)
+        smelt(plr, barType, times)
+    }
+}
+
+/**
  * Handles the make 1, make 5, make 10, and make X options for each bar type.
  */
 fun smeltButtons(make1: Int, make5: Int, make10: Int, makeX: Int, barType: BarType) {
-    button(make1) { smelt(plr, barType, 1) }
-    button(make5) { smelt(plr, barType, 5) }
-    button(make10) { smelt(plr, barType, 10) }
+    button(make1) { smeltFromMenu(plr, barType, 1) }
+    button(make5) { smeltFromMenu(plr, barType, 5) }
+    button(make10) { smeltFromMenu(plr, barType, 10) }
     button(makeX) {
-        plr.overlays.open(object : NumberInput() {
-            override fun input(player: Player?, value: Int) {
-                smelt(plr, barType, value)
-            }
-        })
+        if (SmeltingInterface::class in plr.overlays) {
+            plr.overlays.open(object : NumberInput() {
+                override fun input(player: Player?, value: Int) {
+                    smeltFromMenu(plr, barType, value)
+                }
+            })
+        }
     }
 }
 
