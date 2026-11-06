@@ -84,6 +84,12 @@ object FightPitRound {
         private set
 
     /**
+     * Runtime round identity, so an interrupted visitor cannot carry an attack into a later round.
+     */
+    var roundId = 0L
+        private set
+
+    /**
      * The champion, while they're in the pit.
      */
     var champion: Player? = null
@@ -224,7 +230,8 @@ object FightPitRound {
      * The players in the waiting room, or watching through its orb, who'd be moved into the pit now.
      */
     private fun waiting() = members.filter {
-        it.isAlive && !it.isLocked && (FightPit.WAITING_ROOM.contains(it.position) || viewing(it))
+        it.isAlive && !it.isLocked && (it.controllers.primary as? FightPitController)?.withdrawing != true &&
+            (FightPit.WAITING_ROOM.contains(it.position) || viewing(it))
     }
 
     /**
@@ -236,6 +243,7 @@ object FightPitRound {
      * Moves everyone waiting into the pit, apart from each other, to join the champion if there is one.
      */
     private fun start() {
+        roundId++
         val entrants = waiting()
         fallen.clear()
         fighters.clear()

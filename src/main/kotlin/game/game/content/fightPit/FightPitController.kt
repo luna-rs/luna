@@ -1,6 +1,7 @@
 package game.content.fightPit
 
 import game.skill.magic.teleportSpells.TeleportAction
+import io.luna.game.action.ActionType
 import io.luna.game.event.impl.ControllableEvent
 import io.luna.game.event.impl.InteractableEvent
 import io.luna.game.event.impl.WalkingEvent
@@ -56,6 +57,12 @@ class FightPitController(private val plr: Player) : PlayerController(plr) {
     private var wasHidden = false
 
     /**
+     * An interrupted visitor waits for native movement or safe death to finish before leaving.
+     */
+    var withdrawing = false
+        private set
+
+    /**
      * Whether the player is watching the pit through the orb.
      */
     val viewing: Boolean
@@ -75,6 +82,10 @@ class FightPitController(private val plr: Player) : PlayerController(plr) {
     }
 
     override fun process() {
+        if (withdrawing) {
+            finishWithdrawal()
+            return
+        }
         // A Wilderness skull running out would otherwise take the champion's red skull with it.
         if (plr === FightPitRound.champion && plr.skullIcon != SkullIcon.RED) plr.skullIcon = SkullIcon.RED
     }
@@ -100,7 +111,7 @@ class FightPitController(private val plr: Player) : PlayerController(plr) {
     }
 
     override fun combat(victim: Mob): Boolean = when {
-        viewing -> false
+        viewing || withdrawing -> false
         victim is Player -> FightPitRound.canFight(plr, victim)
         victim is Npc -> FightPit.PIT.contains(plr.position)
         else -> false
@@ -109,6 +120,30 @@ class FightPitController(private val plr: Player) : PlayerController(plr) {
     // A viewer can't walk or use anything in the pit they're watching.
     override fun event(event: ControllableEvent): Boolean =
         !viewing || (event !is WalkingEvent && event !is InteractableEvent)
+
+    /**
+     * Forfeits an interrupted visit without replacing its safe-death hook or an active vent crossing.
+     */
+    fun withdraw() {
+        if (plr.controllers.primary !== this) return
+        withdrawing = true
+        if (plr.isAlive) FightPitRound.walkedOut(plr) else FightPitRound.died(plr)
+        finishWithdrawal()
+    }
+
+    /**
+     * Restores spectator state and releases this controller once native actions have settled.
+     */
+    private fun finishWithdrawal() {
+        if (plr.controllers.primary !== this || !plr.isAlive || plr.isLocked ||
+            plr.actions.size(ActionType.STRONG) > 0) return
+        stopViewing()
+        plr.combat.target = null
+        plr.combat.autoRetaliateTarget = null
+        plr.walking.clear()
+        plr.controllers.unregister()
+        plr.move(FightPit.OUTSIDE)
+    }
 
     /**
      * Looks into the orb: the orb's sidebar takes the place of the tabs, and the player, hidden, watches the pit from
