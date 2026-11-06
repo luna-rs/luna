@@ -1,6 +1,7 @@
 package game.npc.spawn.tzhaar
 
 import api.predef.*
+import engine.bank.Banking
 import io.luna.game.model.mob.dialogue.DialogueUtils
 
 /**
@@ -8,7 +9,7 @@ import io.luna.game.model.mob.dialogue.DialogueUtils
  */
 val KET_ZUH = 2619
 
-npc1(KET_ZUH) {
+npc1(KET_ZUH, { _, _ -> Banking.BANKER_POLICY }) {
     plr.newDialogue()
         .npc(KET_ZUH, *DialogueUtils.splitChatLines("Can I help you ${TzHaarNames.name(plr)}?"))
         .options("I'd like to access my bank account, please.", {
@@ -26,4 +27,4 @@ npc1(KET_ZUH) {
         .open()
 }
 
-npc2(KET_ZUH) { plr.bank.open() }
+npc2(KET_ZUH, { _, _ -> Banking.BANKER_POLICY }) { plr.bank.open() }
