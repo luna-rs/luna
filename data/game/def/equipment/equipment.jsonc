@@ -15924,12 +15924,13 @@
       0
     ]
   },
+  // Castle Wars team cloaks have a hood, so they hide the head like a helmet but leave the beard.
   {
     "id": 4041, // Hooded cloak
     "index": 1,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -15944,14 +15945,15 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4042, // Hooded cloak
     "index": 1,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -15966,7 +15968,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4068, // Decorative sword
