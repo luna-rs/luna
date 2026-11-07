@@ -113,6 +113,7 @@ public final class MobDeathAction extends Action<Mob> {
                 world.getNpcs().remove(victim.asNpc());
             }
             logger.error("Error while processing death for {}.", victim, e);
+            return true;
         } finally {
             currentLoop++;
         }
