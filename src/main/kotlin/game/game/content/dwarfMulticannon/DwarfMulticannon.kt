@@ -4,8 +4,10 @@ import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
+import game.content.fightPit.FightPit
 import io.luna.game.model.Position
 import io.luna.game.model.collision.CollisionFlag
+import io.luna.game.model.map.DynamicMapSpacePool
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.path.route.LineOfSight
@@ -156,6 +158,8 @@ object DwarfMulticannon {
         return when {
             DWARF_AREAS.any { it.contains(pos) } -> "The dwarves won't be happy if you set up a cannon here."
             BANKS.any { it.contains(pos) } || MINIGAMES.any { it.contains(pos) } -> "You can't set up a cannon here."
+            // An instance can be deleted with the cannon still in it, and the cannon can't be picked up after that.
+            pos.x >= DynamicMapSpacePool.MIN_X || FightPit.inside(pos) -> "You can't set up a cannon here."
             FIGHT_ARENA.contains(pos) -> "It is not permitted to set up a cannon inside the Fight Arena."
             isOccupied(pos.translate(-1, -1)) -> "There isn't enough space to set up here."
             LIGHTHOUSE_DUNGEON.contains(pos) -> "The air is too dank for you to set up a cannon here."
