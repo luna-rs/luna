@@ -3,6 +3,7 @@ package io.luna.game;
 import com.google.common.base.Stopwatch;
 import io.luna.game.LogoutService.LogoutRequest;
 import io.luna.game.model.World;
+import io.luna.game.model.mob.MobDeathAction;
 import io.luna.game.model.mob.Player;
 import io.luna.game.persistence.PlayerData;
 import org.apache.logging.log4j.LogManager;
@@ -134,6 +135,11 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     @Override
     boolean canFinishRequest(String username, LogoutRequest request) {
         Player player = request.player;
+
+        // Removing the player clears the death action, so the items would never drop.
+        if (player.getActions().first(MobDeathAction.class) != null) {
+            return false;
+        }
 
         // Forced disconnects skip normal checks.
         if (player.getClient().isForcedLogout()) {
