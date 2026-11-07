@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A model acting as a proxy for {@link Player} save data. It primarily ensures thread safety for interactions between
@@ -80,12 +81,23 @@ public class PlayerData {
     private transient final String username;
 
     /**
+     * Hands out snapshot sequence numbers, so the newer of two snapshots can be told apart.
+     */
+    private static final AtomicLong SEQUENCE = new AtomicLong();
+
+    /**
+     * When this snapshot was taken, relative to every other snapshot. Data loaded from storage has {@code 0}.
+     */
+    private transient long sequence;
+
+    /**
      * Creates a new {@link PlayerData}.
      *
      * @param username The username of the player this data belongs to.
      */
     public PlayerData(String username) {
         this.username = username;
+        sequence = SEQUENCE.incrementAndGet();
     }
 
     /**
@@ -194,6 +206,20 @@ public class PlayerData {
      */
     public String getUsername() {
         return username;
+    }
+
+    /**
+     * @return When this snapshot was taken, relative to every other snapshot.
+     */
+    long getSequence() {
+        return sequence;
+    }
+
+    /**
+     * Marks this data as the newest snapshot of its player.
+     */
+    void restamp() {
+        sequence = SEQUENCE.incrementAndGet();
     }
 
     /**
