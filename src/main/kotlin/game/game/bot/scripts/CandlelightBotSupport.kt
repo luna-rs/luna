@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Solves the visible native Candlelight puzzle with ordinary Pete interactions and lighter-panel button packets.
- * The existing random-event reflex owns the per-encounter ignore decision and keeps ordinary work paused in the church.
+ * The existing random-event reflex keeps ordinary work paused through the reaction delay and mandatory church puzzle.
  * Low intelligence and dexterity can misread a burnt candle, invoking the source gust and restart consequences.
  *
  * @author lare96
