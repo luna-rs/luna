@@ -10,6 +10,8 @@ import io.luna.game.model.mob.Player
  */
 fun craftArmor(plr: Player, armor: HideArmor, amount: Int) {
     if (SoftLeatherInterface::class in plr.overlays) {
+        // Close the menu now, so another click in the same tick finds it shut and starts nothing.
+        plr.overlays.closeWindows(false)
         plr.submitAction(CraftArmorActionItem(plr, armor, amount))
     }
 }

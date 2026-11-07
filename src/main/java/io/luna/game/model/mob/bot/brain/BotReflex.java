@@ -3,6 +3,7 @@ package io.luna.game.model.mob.bot.brain;
 import api.bot.script.ReflexBotScript;
 import api.bot.action.BotCombatActionHandler;
 import engine.bot.speech.BotReactions;
+import game.bot.scripts.LogoutBotScript;
 import game.bot.scripts.WildernessScavengeBotScript;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
@@ -66,6 +67,8 @@ public final class BotReflex {
      * Active custom reflex scripts take priority. If one is already running, all other reflex checks are skipped until it
      * finishes. If no custom reflex is active, registered reflex scripts are checked first, followed by built-in reflexes
      * for character design, dialogue continuation, and combat response.
+     * A logout script at the head of the stack cancels the active reflex and bypasses other reactions so the native
+     * logout checks can run.
      *
      * @param bot The bot being processed.
      *
@@ -73,6 +76,10 @@ public final class BotReflex {
      * took over this tick.
      */
     public boolean process(Bot bot) {
+        if (bot.getScriptStack().current() instanceof LogoutBotScript) {
+            stop();
+            return true;
+        }
         BotCombatActionHandler.observePvpMovement(bot);
         bot.getScriptStack().findActive(WildernessScavengeBotScript.class)
                 .ifPresent(script -> script.observe(System.currentTimeMillis()));

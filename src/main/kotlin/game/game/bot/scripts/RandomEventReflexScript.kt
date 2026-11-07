@@ -17,12 +17,12 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Responds to helpful personal random-event interactions, including ripe plants, through the normal NPC handler.
- * Intelligence and dexterity determine one ignore decision per encounter. Dexterous bots
+ * Intelligence and dexterity determine one ignore decision per optional visitor. Dexterous bots
  * always intend to respond; danger, locks and unreachable visitors can still prevent success.
  * Reaction time passes while normal work continues, then the reflex briefly pauses that work.
  * Ignored visitors keep their native warnings and consequences.
- * Candlelight always pauses ordinary work in its forced church. An ignored puzzle remains unfinished there;
- * responding bots use the native lighter panel until Pete returns them, without a recovery-teleport escape.
+ * Candlelight always pauses ordinary work in its forced church. Bots solve this mandatory puzzle after their
+ * reaction delay, using the native lighter panel until Pete returns them without a recovery-teleport escape.
  *
  * @author lare96
  */
@@ -67,7 +67,7 @@ class RandomEventReflexScript @JvmOverloads constructor(
             observed = encounter
             val intelligence = bot.personality.intelligence
             val dexterity = bot.personality.dexterity
-            ignoring = random.nextDouble() < ignoreChance(intelligence, dexterity)
+            ignoring = encounter !is CandlelightRandomEvent && random.nextDouble() < ignoreChance(intelligence, dexterity)
             val maximumDelay = (9 - 4 * dexterity - 2 * intelligence).roundToInt().coerceIn(2, 9)
             respondAt = world.currentTick + random.nextInt(2, maximumDelay + 1)
         }
@@ -78,7 +78,7 @@ class RandomEventReflexScript @JvmOverloads constructor(
         val encounter = observed ?: return true
         if (encounter is CandlelightRandomEvent) {
             if (!canRespond(encounter)) return true
-            if (ignoring || world.currentTick < respondAt) delay(1.seconds)
+            if (world.currentTick < respondAt) delay(1.seconds)
             else CandlelightBotSupport.step(bot, encounter, random)
             return !canRespond(encounter)
         }

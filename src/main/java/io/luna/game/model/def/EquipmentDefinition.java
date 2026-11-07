@@ -86,10 +86,10 @@ public final class EquipmentDefinition implements Definition {
          * Returns {@code true} if {@code mob} meets this requirement.
          *
          * @param mob The mob to check.
-         * @return {@code true} if the skill level is at least {@link #level}.
+         * @return {@code true} if the base skill level is at least {@link #level}.
          */
         public boolean meets(Mob mob) {
-            return mob.skill(id).getLevel() >= level;
+            return mob.skill(id).getStaticLevel() >= level;
         }
 
         /**

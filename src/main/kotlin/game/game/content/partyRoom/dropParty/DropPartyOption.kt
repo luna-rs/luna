@@ -336,10 +336,10 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         if (index !in 0 until plr.inventory.capacity()) return false
         val held = plr.inventory[index] ?: return false
         if (held.id != id || !held.itemDef.isTradeable) return false
-        val count = minOf(amount, plr.inventory.computeAmountForId(id),
+        val count = minOf(amount, plr.inventory.computeNonDynamicAmountForId(id),
             if (held.itemDef.isStackable) Int.MAX_VALUE else 8)
         val transfer = if (held.isDynamic) held else held.withAmount(count)
-        if (!plr.depositItems.hasSpaceFor(transfer) || !plr.inventory.remove(transfer)) return false
+        if (!plr.depositItems.hasSpaceFor(transfer) || !plr.inventory.removeFromIndex(index, transfer)) return false
         if (!plr.depositItems.add(transfer)) {
             check(plr.inventory.add(transfer)) { "Could not restore rejected party deposit." }
             return false

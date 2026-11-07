@@ -270,7 +270,7 @@ fun initialDialogue(plr: Player) {
                  "Idle test", { idleDialogue(plr) }).open()
 }
 
-cmd("test") {
+cmd("test", RIGHTS_DEV) {
     if (currentType != null) {
         plr.newDialogue().text("There is currently a $currentType type test running.",
                                "Would you like to stop it?")
