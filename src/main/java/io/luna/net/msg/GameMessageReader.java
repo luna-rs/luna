@@ -123,9 +123,9 @@ public abstract class GameMessageReader<E extends Event> {
             }
         } catch (Exception e) {
 
-            // Disconnect on exception.
+            // Disconnect on exception. Not forced, since the client sent this message.
             logger.error("{} failed in reading game message.", player, e);
-            player.forceLogout();
+            player.disconnect();
         }
     }
 
