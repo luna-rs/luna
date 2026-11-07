@@ -1,7 +1,7 @@
 package game.content.seasonalEvents
 
-import api.predef.ctx
-import api.predef.ext.toTicks
+import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.GroundItem
@@ -24,8 +24,8 @@ import kotlin.time.Duration.Companion.minutes
  * @author lare96
  */
 class SeasonalEventGroundItem(
-    val id: Int,
-    val amount: Int,
+    id: Int,
+    amount: Int,
     position: Position,
     val event: SeasonalEvent
 ) : GroundItem(ctx, id, amount, position, ChunkUpdatableView.globalView()) {
@@ -49,8 +49,8 @@ class SeasonalEventGroundItem(
     }
 
     override fun onPickedUp(player: Player) {
-            if (id !in SeasonalEvent.CONSUMABLES) {
-                // Increment seasonal event quota when picked up by a player.
+        if (id !in SeasonalEvent.CONSUMABLES) {
+            // Increment seasonal event quota when picked up by a player.
             SeasonalEventPersistence.incrementPickups(event)
         }
     }
