@@ -77,6 +77,11 @@ class FightPitController(private val plr: Player) : PlayerController(plr) {
     }
 
     override fun unregister() {
+        // Leaving the pit any other way than Stop Viewing. The controller manager puts the collision back.
+        if (viewing) {
+            viewingFrom = null
+            restoreView()
+        }
         FightPitRound.departed(plr)
         FightPit.hideOverlay(plr)
     }
@@ -180,6 +185,13 @@ class FightPitController(private val plr: Player) : PlayerController(plr) {
         plr.move(from)
         viewingFrom = null
         plr.world.collisionManager.updateEntity(plr, false)
+        restoreView()
+    }
+
+    /**
+     * Gives back the tabs and the model the orb put away.
+     */
+    private fun restoreView() {
         for ((tab, id) in tabs) {
             if (id.isPresent) plr.tabs.set(tab, id.asInt) else plr.tabs.clear(tab)
         }
