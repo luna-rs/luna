@@ -28,36 +28,36 @@ fun punish(msg: CommandEvent, listener: (Instant) -> Unit) {
 }
 
 cmd("ip_ban", RIGHTS_ADMIN) {
-    val username = getInputFrom(0)
+    val username = usernameFrom(this)
     PunishmentHandler.ipBan(plr, username)
 }
 
 cmd("perm_ban", RIGHTS_ADMIN) {
-    val username = getInputFrom(0)
+    val username = usernameFrom(this)
     PunishmentHandler.permBan(plr, username)
 }
 
 cmd("perm_mute", RIGHTS_MOD) {
-    val username = getInputFrom(0)
+    val username = usernameFrom(this)
     PunishmentHandler.permMute(plr, username)
 }
 
 cmd("ban", RIGHTS_MOD) {
-    val username = getInputFrom(0)
+    val username = usernameFrom(this)
     punish(this) { PunishmentHandler.ban(plr, username, it) }
 }
 
 cmd("mute", RIGHTS_MOD) {
-    val username = getInputFrom(0)
+    val username = usernameFrom(this)
     punish(this) { PunishmentHandler.mute(plr, username, it) }
 }
 
 cmd("unmute", RIGHTS_MOD) {
-    val username = getInputFrom(0)
+    val username = usernameFrom(this)
     PunishmentHandler.unmute(plr, username)
 }
 
 cmd("unban", RIGHTS_MOD) {
-    val username = getInputFrom(0)
+    val username = usernameFrom(this)
     PunishmentHandler.unban(plr, username)
 }

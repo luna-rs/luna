@@ -12,6 +12,7 @@ import game.bot.scripts.combat.CombatBotScript;
 import io.luna.Luna;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.BotLogManager.BotStreamType;
@@ -172,7 +173,9 @@ public final class BotScheduleService extends AbstractScheduledService {
             if (loadedLogouts != null) {
                 for (var entry : loadedLogouts.entrySet()) {
                     Instant loginAt = Instant.ofEpochMilli(entry.getValue().longValue());
-                    loginRequests.put(entry.getKey(), loginAt);
+                    // Saves were renamed to canonical names at startup.
+                    PlayerCredentials.canonicalUsername(entry.getKey())
+                            .ifPresent(name -> loginRequests.put(name, loginAt));
                 }
             }
         }

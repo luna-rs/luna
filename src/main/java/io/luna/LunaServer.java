@@ -15,6 +15,7 @@ import io.luna.game.cache.codec.VarBitDefinitionDecoder;
 import io.luna.game.cache.codec.VarpDefinitionDecoder;
 import io.luna.game.cache.codec.WidgetDefinitionDecoder;
 import io.luna.game.model.World;
+import io.luna.game.persistence.UsernameMigration;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
@@ -279,6 +280,7 @@ public final class LunaServer {
 
         pool.shutdown();
         awaitTerminationUninterruptibly(pool);
+        UsernameMigration.run(context.getWorld());
         context.getWorld().getBots().loadNames();
         context.getWorld().getBotManager().loadClans();
 

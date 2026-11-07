@@ -3,6 +3,7 @@ package io.luna.game.model.mob;
 import io.luna.util.StringUtils;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -29,6 +30,21 @@ public final class PlayerCredentials {
      */
     public static boolean isValidUsername(String username) {
         return USERNAME_PATTERN.matcher(username).matches();
+    }
+
+    /**
+     * Returns the account name for {@code username}'s base-37 hash, so every spelling with the same hash is one
+     * account. Spaces become '_', and leading or trailing separators are dropped.
+     *
+     * @param username The lower-case, trimmed name.
+     * @return The canonical name, or empty if the name is invalid or has no letters or digits.
+     */
+    public static Optional<String> canonicalUsername(String username) {
+        if (!isValidUsername(username)) {
+            return Optional.empty();
+        }
+        long hash = StringUtils.encodeToBase37(username);
+        return hash == 0L ? Optional.empty() : Optional.of(StringUtils.decodeFromBase37(hash));
     }
 
     /**

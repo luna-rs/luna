@@ -64,10 +64,10 @@ public class LoginClient extends Client<LoginRequestMessage> {
 
     @Override
     void onMessageReceived(LoginRequestMessage msg) {
-        String username = msg.getUsername();
+        String username = PlayerCredentials.canonicalUsername(msg.getUsername()).orElse(null);
         String password = msg.getPassword();
 
-        if (!PlayerCredentials.isValidUsername(username) ||
+        if (username == null ||
                 password.isEmpty() || password.length() > 20) {
             // Username/password format invalid, drop connection. Or we're already loading player data.
             channel.close();

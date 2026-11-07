@@ -45,7 +45,7 @@ cmd("empty", RIGHTS_ADMIN) {
  * A command that makes the player view someone's bank.
  */
 cmd("viewbank", RIGHTS_ADMIN) {
-    val viewing = getInputFrom(0).lowercase()
+    val viewing = usernameFrom(this)
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The bank of ${viewingPlr.username}") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> {
@@ -89,7 +89,7 @@ cmd("botitem", RIGHTS_ADMIN) {
  * A command that makes the player view someone's bank.
  */
 cmd("viewtracked", RIGHTS_ADMIN) {
-    val viewing = getInputFrom(0).lowercase()
+    val viewing = usernameFrom(this)
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The bank of ${viewingPlr.username}") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> {
@@ -112,7 +112,7 @@ cmd("viewtracked", RIGHTS_ADMIN) {
  * A command that makes the player view someone's bank.
  */
 cmd("viewinv", RIGHTS_ADMIN) {
-    val viewing = getInputFrom(0).lowercase()
+    val viewing = usernameFrom(this)
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The inventory of ${viewingPlr.username}") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> =
@@ -134,7 +134,7 @@ cmd("viewinv", RIGHTS_ADMIN) {
  * A command that makes the player view someone's equipment.
  */
 cmd("viewequip", RIGHTS_ADMIN) {
-    val viewing = getInputFrom(0).lowercase()
+    val viewing = usernameFrom(this)
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The equipment of ${viewingPlr.username}") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> =
@@ -157,7 +157,7 @@ cmd("viewequip", RIGHTS_ADMIN) {
  */
 cmd("moveto", RIGHTS_ADMIN) {
     val name = getInputFrom(0)
-    val target = world.getPlayer(name.lowercase())
+    val target = world.getPlayer(usernameFrom(this))
     if (target.isPresent) {
         plr.move(target.get().position)
     } else {
