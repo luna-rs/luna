@@ -12,6 +12,7 @@ import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.attr.AttributeMap;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 import io.luna.net.msg.out.UpdateGroundItemMessageWriter;
@@ -37,7 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * </ul>
  * <p>
  * <b>Identity equality:</b> {@link #equals(Object)} and {@link #hashCode()} use identity semantics (this instance
- * only). If you need content-based equality, use {@link #isIdentical(GroundItem)}.
+ * only).
  *
  * @author lare96
  */
@@ -193,7 +194,7 @@ public class GroundItem extends StationaryEntity {
     protected void onActive() {
         if (!getView().isGlobal()) {
             for (Player player : getView()) {
-                if (player instanceof io.luna.game.model.mob.bot.Bot) {
+                if (player instanceof Bot) {
                     player.asBot().getViewableItems().add(this);
                 }
             }
@@ -204,7 +205,7 @@ public class GroundItem extends StationaryEntity {
     protected void onInactive() {
         if (!originalView.isGlobal()) {
             for (Player player : originalView) {
-                if (player instanceof io.luna.game.model.mob.bot.Bot) {
+                if (player instanceof Bot) {
                     player.asBot().getViewableItems().remove(this);
                 }
             }
@@ -226,6 +227,25 @@ public class GroundItem extends StationaryEntity {
      * @param player The player that picked this item up.
      */
     public void onPickedUp(Player player) {
+    }
+
+    /**
+     * Invoked when this item is about to transition from {@code local (tradeable) -> global} or 
+     * {@code local (untradeable) -> expired}.
+     *
+     * @return {@code true} to proceed with the transition, {@code false} to skip it for this tick.
+     */
+    public boolean onLocalExpiration() {
+        return true;
+    }
+
+    /**
+     * Invoked when this item is about to transition from global -> expired.
+     *
+     * @return {@code true} to proceed with the transition, {@code false} to skip it for this tick.
+     */
+    public boolean onGlobalExpiration() {
+        return true;
     }
 
     /**

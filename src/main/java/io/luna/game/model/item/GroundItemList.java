@@ -43,6 +43,21 @@ import static com.google.common.base.Preconditions.checkState;
 public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
     /**
+     * The number of ticks before a tradeable local item becomes global.
+     */
+    public static final int TRADEABLE_LOCAL_TICKS = 100;
+
+    /**
+     * The number of ticks before an untradeable local item is removed.
+     */
+    public static final int UNTRADEABLE_LOCAL_TICKS = 300;
+
+    /**
+     * The number of ticks before a global item is removed.
+     */
+    public static final int GLOBAL_TICKS = 300;
+
+    /**
      * The maximum number of ground items that may be visible on a single tile.
      * <p>
      * The client builds a right-click entry for every action of every item on a hovered tile into a fixed
@@ -55,29 +70,14 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
      * Shares expiration policy with developer inspection without duplicating lifetime constants.
      */
     static int expirationTransitionTicks(GroundItem item) {
-        return item.isGlobal() ? ExpirationTask.GLOBAL_TICKS :
-                item.def().isTradeable() ? ExpirationTask.TRADEABLE_LOCAL_TICKS : ExpirationTask.UNTRADEABLE_LOCAL_TICKS;
+        return item.isGlobal() ? GLOBAL_TICKS :
+                item.def().isTradeable() ? TRADEABLE_LOCAL_TICKS : UNTRADEABLE_LOCAL_TICKS;
     }
 
     /**
      * A {@link Task} that processes ground item expiration.
      */
     private final class ExpirationTask extends Task {
-
-        /**
-         * The number of ticks before a tradeable local item becomes global.
-         */
-        private static final int TRADEABLE_LOCAL_TICKS = 100;
-
-        /**
-         * The number of ticks before an untradeable local item is removed.
-         */
-        private static final int UNTRADEABLE_LOCAL_TICKS = 300;
-
-        /**
-         * The number of ticks before a global item is removed.
-         */
-        private static final int GLOBAL_TICKS = 300;
 
         /**
          * Creates a new {@link ExpirationTask} that runs once per tick.
@@ -111,22 +111,28 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                         /*
                          * Local + tradeable: publish the same drop, preserving recovery references and item state.
                          */
-                        item.makePublic();
+                        if (item.onLocalExpiration()) {
+                            item.makePublic();
+                        }
                     } else if (!isTradeable && expireTicks >= UNTRADEABLE_LOCAL_TICKS) {
                         /*
                          * Local + untradeable: remove after local-only lifetime.
                          */
-                        it.remove();
-                        item.hide();
-                        item.setState(EntityState.INACTIVE);
+                        if (item.onLocalExpiration()) {
+                            it.remove();
+                            item.hide();
+                            item.setState(EntityState.INACTIVE);
+                        }
                     }
                 } else if (item.isGlobal() && expireTicks >= GLOBAL_TICKS) {
                     /*
                      * Global: remove after global lifetime.
                      */
-                    it.remove();
-                    item.hide();
-                    item.setState(EntityState.INACTIVE);
+                    if (item.onGlobalExpiration()) {
+                        it.remove();
+                        item.hide();
+                        item.setState(EntityState.INACTIVE);
+                    }
                 }
             }
         }
@@ -343,7 +349,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
     private boolean removeFromSet(GroundItem item) {
         if (active.remove(item.getPosition(), item) ||
                 pending.remove(item.getPosition(), item)) {
-            if(item.getState() == EntityState.ACTIVE) {
+            if (item.getState() == EntityState.ACTIVE) {
                 item.hide();
             }
             item.setState(EntityState.INACTIVE);

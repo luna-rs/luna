@@ -21,7 +21,7 @@ import java.time.Year
  *
  * @author lare96
  */
-enum class SeasonalEventType(
+enum class SeasonalEvent(
     val title: String,
     val month: () -> Month,
     val items: DropTableItemList
@@ -32,7 +32,23 @@ enum class SeasonalEventType(
      */
     EASTER(
         title = "Easter",
-        month = { calculateEasterMonth(Year.now().value) },
+        month = {
+            val year = Year.now().value
+            val a = year % 19
+            val b = year / 100
+            val c = year % 100
+            val d = b / 4
+            val e = b % 4
+            val f = (b + 8) / 25
+            val g = (b - f + 1) / 3
+            val h = (19 * a + b - d - g + 15) % 30
+            val i = c / 4
+            val k = c % 4
+            val l = (32 + 2 * e + 2 * i - h - k) % 7
+            val m = (a + 11 * h + 22 * l) / 451
+            val month = (h + l - 7 * m + 114) / 31
+            Month.of(month)
+        },
         items = DropTableHandler.createList {
             1961 x 1 chance ALWAYS // Easter egg
 
@@ -94,27 +110,9 @@ enum class SeasonalEventType(
     companion object {
 
         /**
-         * Calculates the month of Gregorian Easter using the Meeus/Jones/Butcher algorithm.
-         *
-         * @param year The Gregorian calendar year.
-         * @return March or April, according to the calculated Easter date.
+         * All consumables dropped by all event types.
          */
-        private fun calculateEasterMonth(year: Int): Month {
-            val a = year % 19
-            val b = year / 100
-            val c = year % 100
-            val d = b / 4
-            val e = b % 4
-            val f = (b + 8) / 25
-            val g = (b - f + 1) / 3
-            val h = (19 * a + b - d - g + 15) % 30
-            val i = c / 4
-            val k = c % 4
-            val l = (32 + 2 * e + 2 * i - h - k) % 7
-            val m = (a + 11 * h + 22 * l) / 451
-            val month = (h + l - 7 * m + 114) / 31
-            return Month.of(month)
-        }
+        val CONSUMABLES = entries.flatMap { it.consumables }.toSet()
     }
 
     /**
@@ -122,7 +120,7 @@ enum class SeasonalEventType(
      */
     val table =
         DropTableHandler.create {
-            items += this@SeasonalEventType.items
+            items += this@SeasonalEvent.items
         }.table {
             SeasonalEventDropTable(items)
         }
