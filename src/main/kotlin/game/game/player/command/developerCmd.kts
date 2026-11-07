@@ -69,7 +69,7 @@ cmd("noclip", RIGHTS_ADMIN) {
     }
 }
 
-cmd("injectall") {
+cmd("injectall", RIGHTS_DEV) {
     val name = getInputFrom(0)
     val script: ((Bot) -> BotScript)? = when (name) {
         "pest control" -> { it -> PestControlBotScript(it) }
@@ -98,7 +98,7 @@ cmd("config", RIGHTS_DEV) {
     plr.sendVarp(Varp(id, value))
 }
 
-cmd("shop") {
+cmd("shop", RIGHTS_DEV) {
     val shopList = ArrayList<Shop>()
     for (shop in world.shops.values()) {
         if (shop.viewing.isNotEmpty()) {
@@ -130,7 +130,7 @@ cmd("forcescript", RIGHTS_DEV) {
     }
 }
 
-cmd("setbotcount") {
+cmd("setbotcount", RIGHTS_DEV) {
     val amount = asInt(0)
 
 }
@@ -149,7 +149,7 @@ cmd("goto", RIGHTS_DEV) {
         }
     }
 }
-cmd("rockcrabs") {
+cmd("rockcrabs", RIGHTS_DEV) {
 
 }
 cmd("zonebots", RIGHTS_DEV) {
@@ -232,7 +232,7 @@ cmd("botrich", RIGHTS_DEV) {
     plr.sendMessage("Highest bank value ${NumberUtils.formatPrice(value - 810_000)}, by $valueUsername")
 }
 
-cmd("hasrunes") {
+cmd("hasrunes", RIGHTS_DEV) {
     for (bot in world.players) {
         if (bot.isRealBot() && bot.inventory.containsAnyIds(Rune.ID_TO_RUNE.keys)) {
             plr.move(bot.position)
@@ -301,7 +301,7 @@ cmd("bots", RIGHTS_DEV) {
     }
 }
 
-cmd("spawnbots") {
+cmd("spawnbots", RIGHTS_DEV) {
     repeat(10) {
 
         val bot = Bot.Builder(ctx).setTemporary().setBrain(object : BotBrain() {
@@ -319,7 +319,7 @@ cmd("spawnbots") {
     }
 }
 
-cmd("testscript") {
+cmd("testscript", RIGHTS_DEV) {
     repeat(1) {
         val bot = Bot.Builder(ctx).setTemporary().setUsername("test$it").setTemporary().build()
         bot.speechStack.setDisableAll(true)
@@ -423,14 +423,14 @@ cmd("obj", RIGHTS_DEV) {
                     plr = plr)
 }
 
-cmd("ok") {
+cmd("ok", RIGHTS_DEV) {
     val bot = Bot.Builder(ctx).setUsername("elite111111")
         .setSpawnPosition(plr.position).build()
     bot.maxSkills()
     bot.login()
 
 }
-cmd("findnpc") {
+cmd("findnpc", RIGHTS_DEV) {
     val name = getInputFrom(0)
     val choices = ArrayList<Position>()
     for (next in world.npcs) {
@@ -440,7 +440,7 @@ cmd("findnpc") {
     }
     plr.move(choices.random())
 }
-cmd("findfight") {
+cmd("findfight", RIGHTS_DEV) {
     val choices = ArrayList<Position>()
     for (next in world.players) {
         if (next.combat.inCombat()) {
@@ -554,7 +554,7 @@ cmd("animation", RIGHTS_DEV) {
     plr.animation(Animation(id))
 }
 
-cmd("npcanim") {
+cmd("npcanim", RIGHTS_DEV) {
     val npcId = asInt(0)
     val animationId = asInt(1)
 

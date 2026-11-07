@@ -217,7 +217,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * - The launch callback is executed.
      *
      * Non-instant attacks check energy before normal processing can consume ammunition or runes. Instant attacks
-     * have already handled their energy cost and clear the forced special selection here.
+     * have already handled their energy cost and clear the forced special selection here. An instant special switched
+     * on without a target was not paid at click time, so it checks and drains energy here like a non-instant one.
      *
      * @param attack The combat attack being processed.
      * @param damage The current damage result, if already resolved.
@@ -228,7 +229,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                          damage: CombatDamage?,
                          action: (CombatDamage?) -> CombatDamage?): CombatDamage? {
 
-        if (!receiver.instant && !attacker.combat.specialBar.checkEnergy(receiver.drain)) {
+        val unpaid = receiver.instant && !attacker.combat.specialBar.isForced
+        if ((!receiver.instant || unpaid) && !attacker.combat.specialBar.checkEnergy(receiver.drain)) {
             return null
         }
         var newDamage = action(damage)
@@ -237,6 +239,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             if(!receiver.instant) {
                 attacker.combat.specialBar.drain(receiver.drain, true)
             } else {
+                if (unpaid) {
+                    attacker.combat.specialBar.drain(receiver.drain, false)
+                }
                 attacker.specialBarClicks = 0
                 attacker.combat.specialBar.forceOff()
                 attacker.combat.specialBar.isForced = false

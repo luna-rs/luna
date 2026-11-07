@@ -15,7 +15,9 @@ import io.luna.game.model.mob.overlay.TextInput
 on(TextInputEvent::class, EventPriority.HIGH) {
     val input = plr.overlays[TextInput::class]
     plr.overlays.overlayMap.remove(OverlayType.INPUT)
-    input?.input(plr, text)
+    if (text.isNotEmpty()) {
+        input?.input(plr, text)
+    }
 }
 
 /**

@@ -266,9 +266,9 @@ object DuelArena {
             if (!negotiating(player) || confirmation || index !in 0..27 || quantity == 0 || quantity < -1) return false
             val offered = escrow(player).toMutableList()
             val source = if (remove) offered.getOrNull(index) else player.inventory.get(index)
-            if (source == null || source.id != id || !source.itemDef.isTradeable) return false
+            if (source == null || source.id != id || source.isDynamic || !source.itemDef.isTradeable) return false
             val total = if (remove) offered.filter { it.id == id }.sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-                else player.inventory.computeAmountForId(id)
+                else player.inventory.computeNonDynamicAmountForId(id)
             val count = if (quantity == -1) total else minOf(quantity, total)
             val item = Item(id, count)
             if (remove) {
@@ -286,7 +286,7 @@ object DuelArena {
                 val slot = if (item.itemDef.isStackable) offered.indexOfFirst { it.id == id } else -1
                 if (slot == -1 && offered.size + (if (item.itemDef.isStackable) 1 else count) > 28) return false
                 if (slot != -1 && offered[slot].amount.toLong() + count > Int.MAX_VALUE) return false
-                if (!player.inventory.remove(item)) return false
+                if (!player.inventory.removeFromIndex(index, item)) return false
                 if (slot != -1) offered[slot] = Item(id, offered[slot].amount + count)
                 else if (item.itemDef.isStackable) offered.add(item) else repeat(count) { offered.add(Item(id)) }
             }

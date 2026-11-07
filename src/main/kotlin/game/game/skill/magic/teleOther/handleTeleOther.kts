@@ -35,6 +35,9 @@ fun open(source: Player, target: Player, type: TeleOtherType) {
             return
         }
     }
+    if (!TeleOtherAction.canTeleport(source, target, type)) {
+        return
+    }
     if (Magic.checkRequirements(source, type.level, type.requirements) != null) {
         source.teleOtherRequests[target.usernameHash] = System.currentTimeMillis()
         target.overlays.open(TeleOtherInterface(source, target, type))
