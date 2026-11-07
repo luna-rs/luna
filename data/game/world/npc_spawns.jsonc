@@ -86725,6 +86725,7 @@
       "y": 4448,
       "z": 0
     },
+    "respawn_ticks": 150,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -86758,6 +86759,7 @@
       "y": 4451,
       "z": 0
     },
+    "respawn_ticks": 150,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -86781,6 +86783,7 @@
       "y": 4445,
       "z": 0
     },
+    "respawn_ticks": 150,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"

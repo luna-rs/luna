@@ -11,7 +11,7 @@ import io.luna.game.model.item.DynamicItem
 /**
  * The charge count assigned to a Barrows item when it first becomes tracked or advances to its next degradable stage.
  */
-val BARROWS_CHARGES = 1
+val BARROWS_CHARGES = 250
 
 /**
  * The amount of combat-active time, measured in ticks, required to consume one Barrows charge.
