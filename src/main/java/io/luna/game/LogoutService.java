@@ -192,7 +192,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
         workers.submit(() -> {
             try {
                 Stopwatch timer = Stopwatch.createStarted();
-                world.getSerializerManager().getSerializer().savePlayer(world, username, saveData);
+                world.getPersistenceService().write(username, saveData);
                 logger.debug("Finished saving {}'s data (took {}ms).",
                         username, box(timer.elapsed().toMillis()));
             } catch (Exception e) {

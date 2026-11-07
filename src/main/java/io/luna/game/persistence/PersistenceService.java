@@ -2,6 +2,7 @@ package io.luna.game.persistence;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.AbstractIdleService;
+import com.google.common.util.concurrent.Striped;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.LogoutService;
@@ -13,10 +14,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
@@ -54,6 +58,16 @@ public final class PersistenceService extends AbstractIdleService {
      * The single-threaded executor used for persistence work.
      */
     private final ExecutorService worker;
+
+    /**
+     * Locks that make the age check and the write for one username a single step.
+     */
+    private final Striped<Lock> writeLocks = Striped.lock(64);
+
+    /**
+     * The sequence of the newest snapshot written for each username.
+     */
+    private final Map<String, Long> lastWritten = new ConcurrentHashMap<>();
 
     /**
      * Creates a new {@link PersistenceService}.
@@ -130,7 +144,9 @@ public final class PersistenceService extends AbstractIdleService {
                     return;
                 }
                 action.accept(data);
-                serializerManager.getSerializer().savePlayer(world, username, data);
+                // Loaded data has no sequence. It's the newest state, since pending logout saves finished first.
+                data.restamp();
+                write(username, data);
             } catch (Exception e) {
                 throw new CompletionException(e);
             }
@@ -212,7 +228,7 @@ public final class PersistenceService extends AbstractIdleService {
                 throw ex;
             }
             var timer = Stopwatch.createStarted();
-            world.getSerializerManager().getSerializer().savePlayer(world, username, data);
+            write(username, data);
 
             long ms = timer.elapsed().toMillis();
             logger.debug("Finished saving {}'s data (took {}ms).", username, box(ms));
@@ -288,7 +304,6 @@ public final class PersistenceService extends AbstractIdleService {
      * @param shutdown {@code true} if this mass save is being performed during server shutdown.
      */
     private void writeAll(List<PlayerData> snapshots, Stopwatch timer, boolean shutdown) {
-        GameSerializer serializer = world.getSerializerManager().getSerializer();
         for (PlayerData data : snapshots) {
             String username = data.getUsername();
             if (!shutdown && world.getLogoutService().isSavePending(username)) {
@@ -296,7 +311,7 @@ public final class PersistenceService extends AbstractIdleService {
                 continue;
             }
             try {
-                serializer.savePlayer(world, username, data);
+                write(username, data);
             } catch (Exception e) {
                 logger.error("Issue saving {}'s data during mass save.", username, e);
             }
@@ -311,6 +326,34 @@ public final class PersistenceService extends AbstractIdleService {
      */
     public CompletableFuture<Void> saveAll() {
         return saveAll(false);
+    }
+
+    /**
+     * Writes a player's data, unless a newer snapshot of that player has already been written.
+     * <p>
+     * Every player save goes through here: logout saves on the {@link LogoutService} workers, and single saves, mass
+     * saves and offline transforms on this service's worker. A snapshot that waited behind other writes can't replace
+     * a newer save.
+     *
+     * @param username The username to save under.
+     * @param data The player data to save.
+     * @return {@code true} if the data was written, {@code false} if it was older than the last write.
+     */
+    public boolean write(String username, PlayerData data) {
+        Lock lock = writeLocks.get(username);
+        lock.lock();
+        try {
+            Long last = lastWritten.get(username);
+            if (last != null && data.getSequence() < last) {
+                logger.debug("Skipped an older snapshot of {}.", username);
+                return false;
+            }
+            world.getSerializerManager().getSerializer().savePlayer(world, username, data);
+            lastWritten.put(username, data.getSequence());
+            return true;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
