@@ -270,7 +270,7 @@
     "required_inventory": [
       {
         "id": 556,
-        "amount": 1
+        "amount": 2
       },
       {
         "id": 558,
@@ -773,7 +773,7 @@
     "required_inventory": [
       {
         "id": 555,
-        "amount": 3
+        "amount": 4
       },
       {
         "id": 557,
@@ -1315,7 +1315,7 @@
     "spell": "ENTANGLE",
     "level": 79,
     "max_hit": 5,
-    "exp": 91,
+    "exp": 89,
     "spellbook": "REGULAR",
     "cast_animation": 710,
     "start_graphic": {
@@ -1394,7 +1394,7 @@
         "amount": 12
       },
       {
-        "id": 556,
+        "id": 566,
         "amount": 1
       }
     ],
