@@ -18,6 +18,7 @@ import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.PlayerCredentials
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.interact.InteractionPolicy
 import java.util.*
@@ -305,7 +306,16 @@ fun cmd(name: String, rights: PlayerRights = RIGHTS_PLAYER, action: CommandEvent
 }
 
 /**
+ * Returns the account name in the arguments from [index] onwards, spelled the way logins store it. Input that isn't a
+ * valid name is returned lower-case and trimmed.
+ */
+fun usernameFrom(msg: CommandEvent, index: Int = 0): String {
+    val name = msg.getInputFrom(index).lowercase().trim()
+    return PlayerCredentials.canonicalUsername(name).orElse(name)
+}
+
+/**
  * Performs a lookup for a player based on the arguments from [index] onwards. By default, it starts from index 0.
  */
 fun getPlayer(msg: CommandEvent, index: Int = 0, action: (Player) -> Unit) =
-    world.getPlayer(msg.getInputFrom(index)).ifPresent(action)
+    world.getPlayer(usernameFrom(msg, index)).ifPresent(action)

@@ -3,6 +3,8 @@ package io.luna.game.model.mob;
 import io.luna.Luna;
 import io.luna.util.StringUtils;
 
+import java.util.Locale;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -26,7 +28,7 @@ public enum PlayerRights {
      * Saved rights take precedence over new-account beta and whitelist defaults. Configured developer
      * accounts receive developer rights for both new and saved accounts.
      *
-     * @param username The normalized account name.
+     * @param username The canonical account name, see {@link PlayerCredentials#canonicalUsername(String)}.
      * @param savedRights Saved rights, or null for a new account.
      * @param betaMode Whether new accounts receive developer rights in beta mode.
      * @param whitelisted Whether the connecting address is whitelisted.
@@ -34,7 +36,9 @@ public enum PlayerRights {
      */
     public static PlayerRights forLogin(String username, PlayerRights savedRights, boolean betaMode, boolean whitelisted) {
         if (Luna.settings().game().developerUsernames().stream()
-                .anyMatch(name -> name != null && name.equalsIgnoreCase(username))) return DEVELOPER;
+                .anyMatch(name -> name != null && PlayerCredentials.canonicalUsername(
+                        name.toLowerCase(Locale.ROOT).trim()).filter(canonical -> canonical.equals(username))
+                        .isPresent())) return DEVELOPER;
         if (savedRights != null) return savedRights;
         return betaMode || whitelisted ? DEVELOPER : PLAYER;
     }
