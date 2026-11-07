@@ -1,5 +1,6 @@
 package io.luna.game.persistence;
 
+import com.google.common.base.Stopwatch;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.PlayerCredentials;
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Renames saves to the canonical name of their base-37 hash (see {@link PlayerCredentials#canonicalUsername(String)}),
@@ -26,6 +28,9 @@ import java.util.Map;
  * @author TheLining
  */
 public final class UsernameMigration {
+
+    // TODO Remove this file once 1.0 is released, maybe earlier if it affects startup times too much.
+    private static final Stopwatch timer = Stopwatch.createUnstarted();
 
     /**
      * The logger.
@@ -40,6 +45,7 @@ public final class UsernameMigration {
      * @throws IllegalStateException If two saves are one account.
      */
     public static void run(World world) {
+        timer.start();
         try {
             if (world.getSerializerManager().isJson()) {
                 runJson();
@@ -51,6 +57,8 @@ public final class UsernameMigration {
         } catch (SQLException e) {
             throw new IllegalStateException("Could not rename saves to canonical usernames.", e);
         }
+        logger.info("Username migration completed in {}ms.", timer.elapsed(TimeUnit.MILLISECONDS));
+        timer.stop();
     }
 
     /**
@@ -72,7 +80,7 @@ public final class UsernameMigration {
             Path file = entry.getValue().get(0);
             Path renamed = file.resolveSibling(entry.getKey() + ".json");
             Files.move(file, renamed);
-            logger.info("Renamed save {} to {}.", file, renamed.getFileName());
+            logger.debug("Renamed save {} to {}.", file, renamed.getFileName());
         }
     }
 
@@ -98,7 +106,7 @@ public final class UsernameMigration {
                     update.setString(1, entry.getKey());
                     update.setString(2, name);
                     update.executeUpdate();
-                    logger.info("Renamed save {} to {}.", name, entry.getKey());
+                    logger.debug("Renamed save {} to {}.", name, entry.getKey());
                 }
             }
         }
