@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.block;
 
+import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -101,6 +102,19 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         Item[] equipment = data.equipment;
         int[] appearance = data.appearance;
 
+        // Coverage counts from every slot: the Castle Wars hooded cloak hides the head from the cape slot.
+        boolean hideArms = false;
+        boolean hideHead = false;
+        boolean hideBeard = gender == PlayerAppearance.GENDER_FEMALE;
+        for (Item item : equipment) {
+            EquipmentDefinition equipDef = item != null ? item.getEquipDef() : null;
+            if (equipDef != null) {
+                hideArms |= equipDef.isFullBody();
+                hideHead |= equipDef.isFullHelmet();
+                hideBeard |= equipDef.isBeardHidden();
+            }
+        }
+
         // Helmet model.
         Item headItem = equipment[Equipment.HEAD];
         if (headItem != null) {
@@ -149,8 +163,8 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
             buf.put(0);
         }
 
-        // Arms model (hidden if the chestpiece is full-body).
-        if (chestItem != null && chestItem.getEquipDef().isFullBody()) {
+        // Arms model (hidden by full-body equipment).
+        if (hideArms) {
             buf.put(0);
         } else {
             buf.putShort(0x100 + appearance[PlayerAppearance.ARMS]);
@@ -164,9 +178,8 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
             buf.putShort(0x100 + appearance[PlayerAppearance.LEGS]);
         }
 
-        // Head model (hidden if a full helmet is equipped).
-        boolean isFullHelmet = headItem != null && headItem.getEquipDef().isFullHelmet();
-        if (isFullHelmet) {
+        // Head model (hidden by equipment covering the head).
+        if (hideHead) {
             buf.put(0);
         } else {
             buf.putShort(0x100 + appearance[PlayerAppearance.HEAD]);
@@ -189,7 +202,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         }
 
         // Beard model (hidden for females and equipment covering the jaw).
-        if (gender == PlayerAppearance.GENDER_FEMALE || headItem != null && headItem.getEquipDef().isBeardHidden()) {
+        if (hideBeard) {
             buf.put(0);
         } else {
             buf.putShort(0x100 + appearance[PlayerAppearance.BEARD]);
