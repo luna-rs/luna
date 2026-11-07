@@ -6,6 +6,8 @@ import api.predef.ext.*
 import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
+import game.skill.magic.teleportSpells.TeleportAction
+import game.skill.magic.teleportSpells.TeleportSequence
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
@@ -33,6 +35,22 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
          * An attribute representing all recent teleother requests sent by the player.
          */
         val Player.teleOtherRequests by Attr.map<Long, Long>()
+
+        /**
+         * Checks [target] against the rules of a teleport of their own: Tele Block, then their controller, which
+         * applies the Wilderness level limit and minigame rules. The controller hook takes a [TeleportAction], so one
+         * is built for the check and never submitted.
+         */
+        fun canTeleport(source: Player, target: Player, type: TeleOtherType): Boolean {
+            if (target.status.isTeleBlocked()) {
+                target.sendMessage("A magical force stops you from teleporting.")
+            } else if (target.controllers.checkTeleport(
+                    TeleportAction(target, destination = type.destination, style = TeleportSequence { false }))) {
+                return true
+            }
+            source.sendMessage("${target.username} can't be teleported right now.")
+            return false
+        }
     }
 
     private var sourceLockAcquired = false
@@ -47,6 +65,10 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
         if (source === target || !alive(source) || !alive(target) || source.isLocked || target.isLocked ||
             hasOtherStrong(source) || hasOtherStrong(target) || !source.position.isViewable(target) ||
             target.varpManager.getValue(PersistentVarp.ACCEPT_AID) == 0) {
+            complete()
+            return
+        }
+        if (!canTeleport(source, target, type)) {
             complete()
             return
         }
@@ -97,6 +119,10 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
 
             4, 5 -> false
             6 -> {
+                if (!canTeleport(source, target, type)) {
+                    target.animation(Animation.CANCEL)
+                    return true
+                }
                 target.move(type.destination)
                 source.sendMessage("You teleport ${target.username} to ${type.location}.")
                 target.sendMessage("You are teleported to ${type.location} by {${source.username}.")

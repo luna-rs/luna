@@ -217,6 +217,18 @@ public final class StringUtils {
     }
 
     /**
+     * Determines if a {@code long} value can be decoded by {@link #decodeFromBase37(long)}.
+     *
+     * @param value The encoded long value.
+     * @return {@code true} if the value is a valid base-37 string.
+     */
+    public static boolean isValidBase37(long value) {
+        return value > 0L &&
+                value < 6582952005840035281L &&
+                value % 37L != 0L;
+    }
+
+    /**
      * Decodes a base-37 encoded {@code long} value into its string representation.
      *
      * @param value The encoded long value.
@@ -224,9 +236,7 @@ public final class StringUtils {
      * @throws IllegalArgumentException If the input value is outside the valid range.
      */
     public static String decodeFromBase37(long value) {
-        checkArgument(value > 0L &&
-                value < 6582952005840035281L &&
-                value % 37L != 0L, "Invalid long value.");
+        checkArgument(isValidBase37(value), "Invalid long value.");
         int offset = 0;
         char[] name = new char[12];
         while (value != 0L) {

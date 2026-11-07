@@ -294,6 +294,26 @@ public final class BotScheduleService extends AbstractScheduledService {
     }
 
     /**
+     * Checks that no bot or player uses {@code username}, online or saved. This runs on the scheduler's thread, so
+     * the save lookup stays off the game thread.
+     *
+     * @param username The generated username.
+     * @return {@code true} if a new bot may take the username.
+     */
+    private boolean isUsernameFree(String username) {
+        if (world.getBots().exists(username) || world.getPlayer(username).isPresent() ||
+                world.getLoginService().hasRequest(username) || world.getLogoutService().isSavePending(username)) {
+            return false;
+        }
+        try {
+            return world.getSerializerManager().getSerializer().loadPlayer(world, username) == null;
+        } catch (Exception e) {
+            // A save that can't be read still belongs to someone.
+            return false;
+        }
+    }
+
+    /**
      * Handles all pending login work for the current scheduler pass.
      * <p>
      * Login priority is:
@@ -354,7 +374,7 @@ public final class BotScheduleService extends AbstractScheduledService {
                 }
 
                 // Generate a username and attempt to log the bot in.
-                Optional<String> generatedUsername = usernameGenerator.generate(name -> !world.getBots().exists(name));
+                Optional<String> generatedUsername = usernameGenerator.generate(this::isUsernameFree);
                 if (generatedUsername.isEmpty()) {
                     continue;
                 }
