@@ -31,13 +31,13 @@ fun withdraw(plr: Player, event: WidgetItemClickEvent, amount: Int) {
         return
     }
 
-    val newAmount = minOf(amount, offered.computeAmountForId(offerItem.id))
+    val newAmount = minOf(amount, offered.computeNonDynamicAmountForId(offerItem.id))
     val removeItem = if (offerItem.isDynamic) offerItem else offerItem.withAmount(newAmount)
     if (!plr.inventory.hasSpaceFor(removeItem)) {
         plr.sendMessage(Messages.inventoryFull())
         return
     }
-    if (offered.remove(removeItem)) {
+    if (offered.removeFromIndex(event.index, removeItem)) {
         plr.inventory.add(removeItem)
     }
 }
