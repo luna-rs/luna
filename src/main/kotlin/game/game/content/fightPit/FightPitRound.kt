@@ -5,6 +5,7 @@ import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
 import api.predef.ext.*
+import engine.combat.status.StatusEffectType
 import game.content.fightCave.FightCave
 import game.npc.spawn.tzhaar.TzHaarNames
 import io.luna.game.model.Direction
@@ -165,7 +166,9 @@ object FightPitRound {
         plr.contextMenu.hide(OPTION_ATTACK)
         if (plr === champion) {
             champion = null
-            if (plr.skullIcon == SkullIcon.RED) plr.skullIcon = SkullIcon.NONE
+            if (plr.skullIcon == SkullIcon.RED) {
+                plr.skullIcon = if (StatusEffectType.SKULLED in plr.status) SkullIcon.WHITE else SkullIcon.NONE
+            }
             if (pay) payOut(plr)
         }
     }
