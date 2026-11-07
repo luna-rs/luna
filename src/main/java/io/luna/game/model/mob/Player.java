@@ -725,15 +725,10 @@ public class Player extends Mob {
                 return;
             }
         }
-        if (isBot()) {
-            asBot().forceLogout();
-        } else if (force) {
+        if (force && !isBot()) {
             client.setForcedLogout(true);
         }
-        var channel = client.getChannel();
-        if (channel.isActive()) {
-            queue(new LogoutMessageWriter());
-        }
+        disconnect();
     }
 
     /**
@@ -741,6 +736,20 @@ public class Player extends Mob {
      */
     public void forceLogout() {
         logout(true);
+    }
+
+    /**
+     * Ends this player's session without forcing the logout, so {@link LogoutService} still applies its normal checks.
+     */
+    public void disconnect() {
+        if (isBot()) {
+            asBot().forceLogout();
+        } else if (client.getChannel().isActive()) {
+            queue(new LogoutMessageWriter());
+            // Close after the message, so a client that ignores it can't stay online.
+            client.flush();
+            client.disconnect();
+        }
     }
 
     /**
