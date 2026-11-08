@@ -3,6 +3,7 @@ package engine.bot.coordinator.skill
 import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
 import api.bot.zone.SubZone
+import api.predef.SKILL_PRAYER
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.util.RandomUtils
@@ -103,6 +104,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
 
     /**
      * Weights only skills with a supported factory, preserving account-build eligibility and preferences.
+     * Prayer is available for training; its current methods do not provide a profit activity.
      */
     internal fun skillWeights(bot: Bot): Map<Int, Double> {
         val weights = HashMap<Int, Double>()
@@ -110,6 +112,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
             else BotCombatActionHandler.mayGainExperience(bot, skill)
 
         for (skillId in factories.keys) {
+            if (!training && skillId == SKILL_PRAYER) continue
             if (!eligible(skillId)) continue
             // In training mode, low level skills are more likely to be selected. In profit mode, the inverse applies.
             val level = bot.skill(skillId).staticLevel

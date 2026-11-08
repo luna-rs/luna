@@ -10,11 +10,11 @@ import game.skill.prayer.Bone
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Selects Ectofuntus worship or banked bone burial using owned supplies and existing personality rules.
+ * Selects Ectofuntus worship or banked bone burial using owned bones and normal account restrictions.
  *
- * All bone recipes are level-independent. Candidates are ordered by experience per bone, so intelligent
- * and dextrous bots prefer Ectofuntus when a complete owned batch is available, then the strongest burial recipe.
- * Other personalities retain normal burial selection. Failed worship trips defer to burial during their cooldown.
+ * All bone recipes are level-independent. Ectofuntus is available to every personality and prepares missing empty
+ * containers through native shop purchases before processing an owned batch. Failed worship trips defer to burial
+ * during their cooldown. Burial selection retains the ordinary personality policy.
  * An empty training selection records demand for 1,000 ordinary bones and completes immediately.
  * Prayer is registered alongside the other skill factories; its profit entry completes without consuming stock.
  *

@@ -27,11 +27,12 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Processes one small owned Ectofuntus batch through the manual revision 377 player interactions.
- * Intelligent or dextrous Prayer trainees load, wind and empty the grinder, fill buckets at the native pool,
+ * Prayer trainees load, wind and empty the grinder, fill buckets at the native pool,
  * worship and claim tokens. Existing bonemeal, slime and a player's unfinished grinder load are preserved.
  *
- * Normal banking and the existing stairs, trapdoor and cavern web routes own all travel. Supplies and a required
- * ghostspeak amulet must already belong to the bot. No materials, experience, tokens or saved stages are injected.
+ * Normal banking and the existing stairs, trapdoor and cavern web routes own all travel. Missing empty containers
+ * are obtained through ordinary shops before the owned batch is packed. Any required ghostspeak amulet must
+ * already belong to the bot. No materials, experience, tokens or saved stages are injected.
  * A saved deadline, consecutive failure limit and retry cooldown bound failed trips without recovery teleports.
  *
  * @author lare96
@@ -56,8 +57,27 @@ class EctofuntusBotScript(
         private fun permitted(bot: Bot): Boolean = bot.state == EntityState.ACTIVE &&
             ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness() &&
             BotCombatActionHandler.mayGainExperience(bot, SKILL_PRAYER) &&
-            (bot.personality.isIntelligent || bot.personality.isDextrous) &&
             (!Ectofuntus.requiresGhostspeak || wearsAmulet(bot) || amulet(bot) != null)
+
+        /**
+         * Matches reusable empty containers to at most eight owned worship inputs, using an unfinished load first.
+         * Existing bonemeal needs no empty pot and existing slime needs no empty bucket.
+         */
+        internal fun containerTargets(bot: Bot, bone: EctofuntusBone, limit: Int = 8): Map<Int, Int> {
+            val loaded = Ectofuntus.loadedBone(bot)
+            if (loaded != null && loaded != bone) return emptyMap()
+            val loadedCount = if (loaded == bone) 1L else 0L
+            val meals = owned(bot, bone.bonemealId)
+            val batches = minOf(limit.coerceIn(1, 8).toLong(), loadedCount + meals + owned(bot, bone.boneId))
+            val loadedUsed = minOf(batches, loadedCount)
+            val mealUsed = minOf(batches - loadedUsed, meals)
+            return buildMap {
+                val pots = batches - mealUsed
+                val buckets = (batches - owned(bot, Ectofuntus.SLIME)).coerceAtLeast(0)
+                if (pots > 0) put(Ectofuntus.POT, pots.toInt())
+                if (buckets > 0) put(Ectofuntus.BUCKET, buckets.toInt())
+            }
+        }
 
         /**
          * Plans at most eight worships from real unnoted stock, reserving room for tokens and an exchanged amulet.
@@ -94,18 +114,18 @@ class EctofuntusBotScript(
         }
 
         /**
-         * Prefers the strongest complete owned recipe while retaining a native unfinished load for recovery.
-         * Without supplies or after a failed trip, the factory can immediately choose ordinary bone burial.
+         * Prefers the strongest owned bone or bonemeal recipe, retaining an unfinished load for recovery.
+         * Missing empty containers are prepared during startup. A failed trip leaves ordinary burial available
+         * during the retry cooldown, and pending earned tokens can be collected without buying supplies.
          */
         fun select(bot: Bot, duration: Duration): EctofuntusBotScript? {
             if (!permitted(bot) || bot.ectoRetryAt > System.currentTimeMillis()) return null
             val loaded = Ectofuntus.loadedBone(bot)
-            val selected = if (loaded != null) loaded.takeIf { supplies(bot, it) != null }
+            val selected = if (loaded != null) loaded
             else {
                 val recipes = EctofuntusBone.entries.sortedByDescending { it.baseXp }
-                recipes.firstOrNull { recipe -> supplies(bot, recipe)?.any {
-                    it.id == recipe.boneId || it.id == recipe.bonemealId
-                } == true } ?: recipes.firstOrNull { supplies(bot, it) != null }
+                recipes.firstOrNull { owned(bot, it.boneId) > 0 || owned(bot, it.bonemealId) > 0 }
+                    ?: recipes.firstOrNull { Ectofuntus.pendingTokens(bot) > 0 }
             }
             return selected?.let {
                 EctofuntusBotScript(bot, it,
@@ -157,10 +177,41 @@ class EctofuntusBotScript(
         count(bone.boneId) > 0 && count(Ectofuntus.POT) > 0 ||
         count(bone.bonemealId) > 0 && (count(Ectofuntus.SLIME) > 0 || count(Ectofuntus.BUCKET) > 0)
 
+    /**
+     * Secures one usable worship before optional batch preparation, so a small wallet cannot buy only pots.
+     * Both phases share the native shop deadline and the visit's saved deadline. Actual partial stock is replanned
+     * afterwards; empty containers are never confused with replacement bones or fabricated bonemeal and slime.
+     */
+    internal suspend fun prepareSupplies(): Boolean {
+        if (!valid()) return false
+        fun readyBatch(): Boolean {
+            val plan = supplies(bot, bone) ?: return false
+            return Ectofuntus.loadedBone(bot) == bone || plan.any {
+                it.id == bone.boneId || it.id == bone.bonemealId
+            }
+        }
+        if (readyBatch() || containerTargets(bot, bone).isEmpty()) return supplies(bot, bone) != null
+        val budget = minOf(120_000L, deadline - System.currentTimeMillis())
+        if (budget <= 0) return false
+        withTimeoutOrNull(budget) {
+            for (limit in listOf(1, 8)) {
+                if (!valid()) return@withTimeoutOrNull
+                val targets = containerTargets(bot, bone, limit).filter { (id, amount) -> owned(bot, id) < amount }
+                if (targets.isNotEmpty()) {
+                    targets.forEach { (id, amount) -> bot.preferences.raiseWantedItemTarget(id, amount) }
+                    handler.shop.obtainWantedItems(targets)
+                }
+                if (limit == 1 && !readyBatch()) return@withTimeoutOrNull
+            }
+        }
+        return valid() && supplies(bot, bone) != null
+    }
+
     override suspend fun init(resumed: Boolean): Boolean {
         val stopped = withTimeoutOrNull(180_000) {
             if (!valid() || failures >= 4) return@withTimeoutOrNull true
             if (!prepared) {
+                if (!prepareSupplies()) return@withTimeoutOrNull true
                 val plan = supplies(bot, bone) ?: return@withTimeoutOrNull true
                 if ((!bot.inventory.containsAll(plan) || bot.inventory.isFull) && !bank(plan))
                     return@withTimeoutOrNull true
