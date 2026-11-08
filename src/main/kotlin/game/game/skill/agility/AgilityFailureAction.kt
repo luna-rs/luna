@@ -2,6 +2,7 @@ package game.skill.agility
 
 import api.predef.*
 import game.player.Sound
+import io.luna.game.action.DeathInterruptible
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
@@ -20,7 +21,7 @@ import io.luna.net.msg.out.SoundMessageWriter
  * @author lare96
  */
 class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
-                           private val startMessage: String? = null) : LockedAction(plr) {
+                           private val startMessage: String? = null) : LockedAction(plr), DeathInterruptible {
 
     private var previousAnimation: PlayerModelAnimation? = null
     private var ticks = 0

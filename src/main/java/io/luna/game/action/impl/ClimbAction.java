@@ -1,5 +1,6 @@
 package io.luna.game.action.impl;
 
+import io.luna.game.action.DeathInterruptible;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
@@ -13,7 +14,7 @@ import io.luna.game.model.mob.block.Animation;
  *
  * @author lare96
  */
-public final class ClimbAction extends LockedAction {
+public final class ClimbAction extends LockedAction implements DeathInterruptible {
 
     /**
      * The destination tile to move the player to after climbing.

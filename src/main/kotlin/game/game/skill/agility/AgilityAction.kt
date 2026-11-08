@@ -1,6 +1,7 @@
 package game.skill.agility
 
 import game.player.Sound
+import io.luna.game.action.DeathInterruptible
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
@@ -80,7 +81,7 @@ open class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
                     internal val message: String?,
                     private val start: () -> Unit = {},
                     private val endMessage: String? = null,
-                    private val valid: () -> Boolean = { true }) : LockedAction(plr) {
+                    private val valid: () -> Boolean = { true }) : LockedAction(plr), DeathInterruptible {
 
     companion object {
 
