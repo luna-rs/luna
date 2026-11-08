@@ -67,9 +67,11 @@ internal class PkLoadoutSelection(private val bot: Bot) {
     /**
      * Resolves compatible, equippable weapons and ammunition. Desired selection may buy missing items;
      * owned and carried selection never invent stock or downgrade the strongest spell to fit leftover runes.
+     * Full owned outfits need one hundred matching ammunition; carried combat checks need one remaining shot.
+     * Essential acquisition can prefer an owned weapon and a fully supplied owned ammunition stack over upgrades.
      */
     fun select(purpose: BotGearPurpose, desired: Boolean = false, carriedOnly: Boolean = false,
-               spellbook: Spellbook = bot.spellbook): CombatLoadout? {
+               spellbook: Spellbook = bot.spellbook, preferOwned: Boolean = false): CombatLoadout? {
         if (purpose !in purposes()) return null
         val spell = if (purpose == BotGearPurpose.MAGIC) strongestSpell(spellbook) ?: return null else null
         // One synchronous stock snapshot avoids rescanning every bank slot for every weapon candidate.
@@ -94,8 +96,10 @@ internal class PkLoadoutSelection(private val bot: Bot) {
         fun affordable(id: Int): Boolean = weaponAllowance == null ||
             BigInteger.valueOf(price(id)) <= weaponAllowance
         fun ammunition(weapon: Int): Int? = AmmoDefinition.ALL.values.filter { weapon in it.weapons }
-            .sortedByDescending { it.strength }.flatMap { it.ammo.sorted() }.firstOrNull {
-                accessible(it) && EquipmentDefinition.ALL.get(it).map { definition -> definition.meetsAllRequirements(bot) }.orElse(false)
+            .sortedByDescending { it.strength }.flatMap { it.ammo.sorted() }
+            .sortedByDescending { if (preferOwned && (stock[it] ?: 0) >= MIN_AMMUNITION) 1 else 0 }.firstOrNull {
+                accessible(it) && (desired || (stock[it] ?: 0) >= if (carriedOnly) 1 else MIN_AMMUNITION) &&
+                    EquipmentDefinition.ALL.get(it).map { definition -> definition.meetsAllRequirements(bot) }.orElse(false)
             }
         val candidates = WeaponDefinition.ALL.filter { definition ->
             val id = definition.id()
@@ -115,6 +119,8 @@ internal class PkLoadoutSelection(private val bot: Bot) {
         }
         fun bonus(id: Int, bonus: EquipmentBonus) = EquipmentDefinition.ALL.retrieve(id).getBonus(bonus.index)
         val weapon = candidates.maxWithOrNull(compareBy<WeaponDefinition> {
+            if (preferOwned && (stock[it.id()] ?: 0) > 0) 1 else 0
+        }.thenBy {
             when (purpose) {
                 BotGearPurpose.MELEE -> bonus(it.id(), EquipmentBonus.STRENGTH)
                 BotGearPurpose.RANGED -> bonus(it.id(), EquipmentBonus.RANGED_ATTACK)

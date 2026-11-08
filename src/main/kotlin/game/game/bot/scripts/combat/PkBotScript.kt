@@ -25,6 +25,13 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.selects.select
+import kotlin.coroutines.coroutineContext
+import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -148,6 +155,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
          * Existing LOW_LEVEL patrol anchors in this region supply entry and wandering destinations.
          */
         private const val EDGEVILLE_PK_REGION = 12343
+
+        private const val MIN_TRAVEL_SEARCH_CYCLES = 4
+        private const val MAX_TRAVEL_SEARCH_CYCLES = 8
+        private const val TRAVEL_SEARCH_LIMIT = 8
 
         /**
          * Low-level Wilderness anchor points used for entering, escaping, and returning toward safer Wilderness levels.
@@ -507,6 +518,15 @@ class PkBotScript(bot: Bot, val duration: Duration,
     private var nextPatrolCycle = 0L
 
     /**
+     * Only this parent's structured hunting walk may yield to an ordinary target search.
+     * Search offsets rotate through the local view, bounding candidate policy work in crowded areas.
+     */
+    private var huntingTravel = false
+    private var huntingTravelInterrupted = false
+    private var nextTravelSearchCycle = 0L
+    private var travelSearchOffset = 0
+
+    /**
      * Only this parent's clan travel may be interrupted by formation checks during a suspended web walk.
      */
     private var clanTravelDestination: Position? = null
@@ -532,15 +552,21 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Current death loss must remain affordable after stock, skull, prayer or equipment changes.
      * Defensive combat started by another coordinator does not inherit this session boundary.
      */
-    internal fun allowsPursuit(target: Player): Boolean {
+    internal fun allowsPursuit(target: Player): Boolean = permitsPursuit(target) &&
+        combatPolicy.pkRiskBudget().withinBudget
+
+    /**
+     * Keeps target-independent risk valuation outside bounded travel scans. A synchronous clan snapshot may
+     * be shared within one scan; ordinary pursuit and combat children continue to check the live clan policy.
+     */
+    private fun permitsPursuit(target: Player, clanReady: Boolean? = null): Boolean {
         if (isRestocking() || System.currentTimeMillis() >= expireAt) return false
         if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
-        if (!combatPolicy.pkRiskBudget().withinBudget) return false
         if (clan.enabled) {
             if (!clan.wearingCape()) return false
             if (clan.apparentAlly(target) && !observations.canDefendClanAgainst(target) &&
                 !combatPolicy.canRetaliateAgainst(target)) return false
-            if (clan.clanOuting) return (clanCanHunt() && (soloClanOuting || clan.inFormation())) ||
+            if (clan.clanOuting) return (clanReady ?: (clanCanHunt() && (soloClanOuting || clan.inFormation()))) ||
                 combatPolicy.canRetaliateAgainst(target)
         }
         if (!isGenericSession()) return true
@@ -593,13 +619,15 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * applied separately unless they are stupidly confident. Clan sessions challenge other capes and witnessed
      * friendly initiators, requiring their own cape and an online clanmate unless this is a solo outing.
      */
-    internal fun wantsToAttack(target: Player): Boolean {
+    internal fun wantsToAttack(target: Player): Boolean = wantsToAttack(target, null)
+
+    private fun wantsToAttack(target: Player, clanReady: Boolean?): Boolean {
         if (clan.apparentAlly(target) && !observations.canDefendClanAgainst(target)) return false
         return when (bot.preferences.pk?.purpose()) {
             Purpose.SKILL -> BotCombatActionHandler.isPkParticipant(target)
             Purpose.VALUE -> true
-            Purpose.CLAN -> clan.enabled && clan.wearingCape() && clanCanHunt() &&
-                (soloClanOuting || clan.inFormation()) &&
+            Purpose.CLAN -> clan.enabled && clan.wearingCape() &&
+                (clanReady ?: (clanCanHunt() && (soloClanOuting || clan.inFormation()))) &&
                 levelAt(bot.position) >= 30 && levelAt(target.position) >= 30 &&
                 (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target))
             Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
@@ -715,12 +743,102 @@ class PkBotScript(bot: Bot, val duration: Duration,
         clanTravelLeader = clan.patrolLeader()
         clanTravelInterrupted = false
         return try {
-            handler.webWalkTo(destination, radius = radius, bank = BankAccess.NONE, fallback = false)
+            walkHuntingRoute(destination, radius, fallback = false)
         } finally {
             clanTravelDestination = null
             clanTravelLeader = null
         }
     }
+
+    /**
+     * Races only the parent's own hunting route against a small local search. The route is fully cancelled
+     * before a combat child is queued, so walker cleanup restores reflex state before the child can run.
+     * Banking, fleeing, preparation and another script's movement never enter this scope.
+     */
+    internal suspend fun walkHuntingRoute(destination: Position, radius: Int = 0,
+                                         fallback: Boolean = true): Boolean {
+        huntingTravel = true
+        huntingTravelInterrupted = false
+        return try {
+            coroutineScope {
+                val travel = async {
+                    handler.webWalkTo(destination, radius = radius, bank = BankAccess.NONE, fallback = fallback)
+                }
+                val scouting = async {
+                    var target: Player? = null
+                    while (target == null) {
+                        delay(travelSearchCycles().ticks)
+                        target = findTravelTarget()
+                    }
+                    target
+                }
+                try {
+                    select {
+                        travel.onAwait { it }
+                        scouting.onAwait { target ->
+                            huntingTravelInterrupted = true
+                            travel.cancelAndJoin()
+                            if (canSearchWhileTravelling() && preparation.ready() && checkTarget(target)) {
+                                bot.scriptStack.pushHead(CombatBotScript(bot, target, pkSession = this@PkBotScript))
+                                coroutineContext.ensureActive()
+                            }
+                            false
+                        }
+                    }
+                } finally {
+                    travel.cancel()
+                    scouting.cancel()
+                }
+            }
+        } finally {
+            huntingTravel = false
+        }
+    }
+
+    /**
+     * Rejects queued, paused and child-owned sessions before evaluating supplies or player policies.
+     */
+    private fun canSearchWhileTravelling(): Boolean = huntingTravel && isRunning() &&
+        bot.scriptStack.current() === this && preparationState == PreparationState.READY &&
+        System.currentTimeMillis() < expireAt && isActionSafe() && !bot.combat.inCombat() &&
+        bot.combat.target == null && bot.inWilderness() && allowsHuntingAt(bot.position)
+
+    /**
+     * More intelligent hunters notice nearby opportunities sooner, ranging from eight to four game cycles.
+     * Invalid traits use the neutral six-cycle cadence without allowing out-of-range scheduling.
+     */
+    private fun travelSearchCycles(): Int {
+        val intelligence = bot.personality.intelligence.takeIf { it.isFinite() }?.coerceIn(0.0, 1.0) ?: 0.5
+        return (MAX_TRAVEL_SEARCH_CYCLES -
+            (MAX_TRAVEL_SEARCH_CYCLES - MIN_TRAVEL_SEARCH_CYCLES) * intelligence).roundToInt()
+    }
+
+    /**
+     * Checks at most eight nearby players every four to eight cycles. The offset advances even when all candidates are
+     * ineligible, so a crowded local view cannot permanently hide later players. Risk and clan availability
+     * are shared only inside this synchronous poll; handoff checks them again after the route has unwound.
+     */
+    internal fun findTravelTarget(): Player? {
+        if (!canSearchWhileTravelling() || bot.cycles < nextTravelSearchCycle) return null
+        nextTravelSearchCycle = bot.cycles + travelSearchCycles()
+        val nearby = world.locator.findViewablePlayers(bot).filter { it !== bot }
+        if (nearby.isEmpty()) return null
+        val count = minOf(TRAVEL_SEARCH_LIMIT, nearby.size)
+        val offset = travelSearchOffset % nearby.size
+        travelSearchOffset = (offset + count) % nearby.size
+        val local = List(count) { nearby[(offset + it) % nearby.size] }
+        val clanReady = if (clan.clanOuting) clanCanHunt() && (soloClanOuting || clan.inFormation()) else true
+        val eligible = local.filter { permitsPursuit(it, clanReady) && wantsToAttack(it, clanReady) &&
+            combatPolicy.canAttackWildernessPlayer(it) }
+        if (eligible.isEmpty() || !preparation.ready() || !combatPolicy.pkRiskBudget().withinBudget) return null
+        return orderTargets(eligible).firstOrNull()
+    }
+
+    /**
+     * Shares ordinary patrol eligibility with travel handoff, including a fresh native legality and risk check.
+     */
+    private fun checkTarget(other: Player): Boolean = other !== bot && allowsPursuit(other) &&
+        wantsToAttack(other) && combatPolicy.canAttackWildernessPlayer(other)
 
     override suspend fun init(resumed: Boolean): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
@@ -855,14 +973,6 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     fun searchAndAttack(): Boolean {
 
-        /**
-         * Checks whether [other] is a valid target candidate for this bot.
-         */
-        fun check(other: Player): Boolean {
-            return allowsPursuit(other) && wantsToAttack(other) &&
-                combatPolicy.canAttackWildernessPlayer(other)
-        }
-
         if (bot.combat.inCombat()) {
             bot.log("Skipping target search because bot is already in combat.")
             return false
@@ -875,7 +985,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
 
         val targets = ArrayList<Player>()
         for (other in world.locator.findViewablePlayers(bot)) {
-            if (other != bot && check(other)) {
+            if (checkTarget(other)) {
                 targets += other
             }
         }
@@ -895,7 +1005,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         }
 
         for (other in orderTargets(targets)) {
-            if (check(other)) {
+            if (checkTarget(other)) {
                 bot.log("Selected target $other. Pushing CombatBotScript.")
                 // The child owns the first attack, after its reaction delay and carried-supply checks.
                 bot.scriptStack.pushHead(CombatBotScript(bot, other, pkSession = this))
@@ -941,12 +1051,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
             val anchor = patrolDestination ?: selectPatrolDestination().also { patrolDestination = it }
             bot.log("Travelling to PK patrol anchor=$anchor")
             val reached = if (isGroupOuting()) walkWithClan(anchor, 2) else
-                handler.webWalkTo(anchor, bank = BankAccess.NONE)
+                walkHuntingRoute(anchor)
             if (reached && bot.position.z == anchor.z && bot.position.computeLongestDistance(anchor) <= 2) {
                 patrolDestination = null
                 nextPatrolCycle = bot.cycles + rand(8, 20)
             } else {
-                if (!isGroupOuting() || !clanTravelInterrupted) patrolDestination = null
+                if (!huntingTravelInterrupted && (!isGroupOuting() || !clanTravelInterrupted)) patrolDestination = null
                 nextPatrolCycle = bot.cycles + 8
             }
         }
@@ -964,16 +1074,20 @@ class PkBotScript(bot: Bot, val duration: Duration,
     internal suspend fun enterWild(): Boolean {
         if (!combatPolicy.pkRiskBudget().withinBudget || !clan.wearingCape() || !clanCanHunt()) return false
         if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
-            val anchor = when {
+            val anchor = patrolDestination ?: when {
                 isGroupOuting() -> selectPatrolDestination()
                 isSkillSession -> patrolAnchors().random()
                 rand(2 of 3) -> hotspotGroups(bot).random().random()
                 else -> LOW_LEVEL_ANCHOR_POINTS.random()
             }
+            patrolDestination = anchor
 
             bot.log("Bot is outside hunting area. Walking to entry anchor $anchor")
-            if (isGroupOuting()) walkWithClan(anchor, PkClanPolicy.FOLLOW_RADIUS) else
-                handler.webWalkTo(anchor, bank = BankAccess.NONE)
+            val reached = if (isGroupOuting()) walkWithClan(anchor, PkClanPolicy.FOLLOW_RADIUS) else
+                walkHuntingRoute(anchor)
+            if (!reached && !huntingTravelInterrupted && (!isGroupOuting() || !clanTravelInterrupted)) {
+                patrolDestination = null
+            }
 
             if (!bot.inWilderness() || !allowsHuntingAt(bot.position) || !clan.wearingCape() || !clanCanHunt() ||
                 !combatPolicy.pkRiskBudget().withinBudget) {
