@@ -21,7 +21,8 @@ import kotlin.time.Duration
  * These recipes produce one immediate batch per use without opening a make-item dialogue. Native recipe
  * definitions supply the levels, inputs, outputs and batch sizes; this script shares their banking and execution.
  *
- * Owned partial stacks qualify. Each interaction checks room for its output after consumed inputs leave, including
+ * Owned tip sources or attachment tips qualify; startup obtains missing tools or attachment supplies.
+ * Each interaction checks room for its output after consumed inputs leave, including
  * the two tips made from a gem or pearl. The inventory lifecycle supplies safe travel, verified withdrawals,
  * expiry and bounded retries. Saved sessions retain the recipe and inherited retry state.
  *
@@ -75,15 +76,21 @@ class FletchAmmunitionBotScript(
          */
         class AmmunitionData : InventoryScriptData() {
             var recipe = ""
+            var produced = false
+            var continued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe").asString
+                produced = data.get("produced")?.asBoolean ?: false
+                continued = data.get("continued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
+                data.addProperty("produced", produced)
+                data.addProperty("continued", continued)
             }
         }
     }
@@ -92,6 +99,8 @@ class FletchAmmunitionBotScript(
      * Permanent Fletching level used by factory selection and startup validation.
      */
     val requiredLevel = recipe.level
+    private var produced = false
+    private var continued = false
 
     /**
      * Restores the native recipe, zones, duration and retry budgets.
@@ -99,13 +108,20 @@ class FletchAmmunitionBotScript(
     constructor(bot: Bot, data: AmmunitionData) :
         this(bot, RECIPES.getValue(data.recipe), data.duration, data.zones) {
         restoreInventoryState(data)
+        produced = data.produced
+        continued = data.continued
     }
 
     /**
-     * Checks the native level and one owned production unit, including a chisel for tip shaping.
+     * Checks the native level and an owned tip or tip source before obtaining its secondary supplies.
      */
     fun isEligible(): Boolean = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel &&
-        bot.ownsProductionSupplies(recipe.materials, recipe.tools)
+        FletchingProduction.owned(bot, recipe.target) > 0
+
+    /**
+     * Distinguishes ready owned units from recipes that require startup acquisition.
+     */
+    internal fun hasCompleteSupplies(): Boolean = bot.ownsProductionSupplies(recipe.materials, recipe.tools)
 
     /**
      * Balances attachment inputs up to one thousand pairs, or reserves a chisel and space for shaped tips.
@@ -122,7 +138,32 @@ class FletchAmmunitionBotScript(
     override fun withdraw(): List<Item> = productionWithdraw(recipe.materials, recipe.tools,
         levelEligible = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel)
 
-    override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
+    override fun bankWithdraw(): List<Item> = bankBatch().also {
+        if (it.isEmpty()) {
+            queueContinuation()
+            stop()
+        }
+    }
+
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (produced && FletchingProduction.owned(bot, recipe.target) < 1) {
+            queueContinuation()
+            stop()
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Continues shaped tips into their matching bolt recipe once before exhausted stock stops this script.
+     */
+    private fun queueContinuation() {
+        if (!produced || continued || isPaused() || isTerminated() || productionRetriesExhausted() || !isActionSafe()) return
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return
+        continued = true
+        FletchingProduction.afterAmmunition(bot, recipe, remaining)?.let { bot.scriptStack.softPushHead(it) }
+    }
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
 
@@ -146,14 +187,23 @@ class FletchAmmunitionBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_FLETCHING).level >= requiredLevel)) return true
-        attemptProduction(recipe.materials.first().id, outputId = recipe.output) {
-            handler.inventory.useItem(recipe.used).onItem(recipe.target)
+        val inputBefore = bot.inventory.computeAmountForId(recipe.target)
+        val outputBefore = bot.inventory.computeAmountForId(recipe.output)
+        try {
+            attemptProduction(recipe.materials.first().id, outputId = recipe.output) {
+                handler.inventory.useItem(recipe.used).onItem(recipe.target)
+            }
+        } finally {
+            if (bot.inventory.computeAmountForId(recipe.target) < inputBefore ||
+                bot.inventory.computeAmountForId(recipe.output) > outputBefore) produced = true
         }
         return true
     }
 
     override fun snapshot(): AmmunitionData = AmmunitionData().also {
         it.recipe = recipe.key
+        it.produced = produced
+        it.continued = continued
         saveInventoryState(it)
     }
 }

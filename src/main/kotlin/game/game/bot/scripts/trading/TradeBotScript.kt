@@ -13,6 +13,7 @@ import api.bot.script.ZonedBotScript
 import api.bot.social.BotConversations
 import api.bot.social.BotSocialInteractions
 import api.bot.zone.SubZone
+import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Stopwatch
@@ -48,6 +49,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Buys wanted items or sells surplus stock at a configured marketplace.
@@ -68,6 +70,7 @@ import kotlin.time.toJavaDuration
  * @property marketplace The marketplace to return to after banking.
  * @param duration The maximum remaining duration of the marketplace session.
  * @param zone The candidate zones containing the marketplace.
+ * @property purchaseDeadline Optional absolute deadline for a targeted supply visit; zero keeps ordinary waits.
  * @author lare96
  */
 class TradeBotScript(bot: Bot,
@@ -76,7 +79,8 @@ class TradeBotScript(bot: Bot,
                      duration: Duration = getPreferenceBasedDuration(bot),
                      zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone),
                      private val purchaseTarget: Item? = null,
-                     private val purchasePrice: Long = 0) :
+                     private val purchasePrice: Long = 0,
+                     private val purchaseDeadline: Long = 0L) :
     ZonedBotScript(bot, duration, zone) {
 
     companion object {
@@ -85,15 +89,17 @@ class TradeBotScript(bot: Bot,
          * Creates a single-item buying session only when a prepared seller has an affordable match.
          * The target is total owned stock, not an additional quantity. Normal negotiation revalidates
          * stock and payment after travel; no items or money are reserved by this scan.
+         * An optional absolute deadline also bounds suspending negotiations for a temporary supply visit.
          */
-        fun buySpecific(bot: Bot, id: Int, target: Int): TradeBotScript? {
+        fun buySpecific(bot: Bot, id: Int, target: Int, deadlineMillis: Long = 0L): TradeBotScript? {
             require(target > 0 && id != COINS)
+            if (deadlineMillis > 0L && System.currentTimeMillis() >= deadlineMillis) return null
             val guide = world.economy.getPrice(id)
             if (guide <= 0) return null
             val price = BotTradePrice.computePriceStrategy(bot).applyBuy(guide).coerceAtLeast(1)
             for (market in BotMarketplace.entries) {
                 val script = TradeBotScript(bot, BotTradePurpose.BUY, market, 10.minutes,
-                    purchaseTarget = Item(id, target), purchasePrice = price)
+                    purchaseTarget = Item(id, target), purchasePrice = price, purchaseDeadline = deadlineMillis)
                 if (script.specificDemand().isEmpty()) return null
                 val payment = BotTradeManager.computeBudgetedOfferItems(bot, script.resolveTradePrice(), BotTradePurpose.BUY)
                     .filter { it.item.id == COINS }
@@ -254,6 +260,10 @@ class TradeBotScript(bot: Bot,
         get() = purpose == BotTradePurpose.MERCHANT_SELL || purpose == BotTradePurpose.SELL && bot.preferences.isMerchant
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if (purchaseExpired()) {
+            endSession("Specific purchase deadline expired.")
+            return false
+        }
         partnerSearch = null
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
@@ -276,6 +286,10 @@ class TradeBotScript(bot: Bot,
     override suspend fun equipment(): BotGearLocator? = null
 
     override suspend fun onBankOpen(initial: Boolean) {
+        withinPurchaseDeadline { prepareTradeInventory() }
+    }
+
+    private suspend fun prepareTradeInventory() {
         partnerSearch = null
         prepared = false
         if (!computeOfferAndExpected()) return
@@ -347,11 +361,13 @@ class TradeBotScript(bot: Bot,
 
     override suspend fun completed() {
         if (capacityBlocked) {
+            if (purchaseDeadline > 0L) return
             val next = BotMarketplace.select(bot)
             val remaining = remainingDuration()
             if (next != marketplace && remaining > Duration.ZERO) {
                 bot.scriptStack.push(TradeBotScript(bot, purpose, next, remaining,
-                    purchaseTarget = purchaseTarget, purchasePrice = purchasePrice))
+                    purchaseTarget = purchaseTarget, purchasePrice = purchasePrice,
+                    purchaseDeadline = purchaseDeadline))
             }
             return
         }
@@ -361,7 +377,9 @@ class TradeBotScript(bot: Bot,
         }
     }
 
-    override suspend fun executeInZone(): Boolean {
+    override suspend fun executeInZone(): Boolean = withinPurchaseDeadline { executeTradeInZone() } ?: false
+
+    private suspend fun executeTradeInZone(): Boolean {
         if (!prepared) {
             forceBanking = true
             return true
@@ -388,6 +406,29 @@ class TradeBotScript(bot: Bot,
         if (prepared && !forceBanking) sendMessage()
         return true
     }
+
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =
+        withinPurchaseDeadline { super.travelToWorkZone(zone, bank) } ?: false
+
+    /**
+     * A specific supply purchase shares its caller's absolute deadline. Cancellation unwinds native negotiation
+     * cleanup, so an unanswered request or an offer wait cannot consume the following gathering stage's budget.
+     * Ordinary marketplace sessions retain their existing duration and wait policy.
+     */
+    private suspend fun <T> withinPurchaseDeadline(action: suspend () -> T): T? {
+        if (purchaseDeadline <= 0L) return action()
+        val remaining = purchaseDeadline - System.currentTimeMillis()
+        if (remaining <= 0L) {
+            endSession("Specific purchase deadline expired.")
+            return null
+        }
+        return withTimeoutOrNull(remaining) { action() }.also {
+            if (it == null) endSession("Specific purchase deadline expired.")
+        }
+    }
+
+    private fun purchaseExpired(): Boolean = purchaseDeadline > 0L &&
+        System.currentTimeMillis() >= purchaseDeadline
 
     /**
      * Gives direct human requests first choice, followed by the selected heard player advertisement.
@@ -1395,6 +1436,10 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun onBankRequested(initial: Boolean): Boolean {
+        if (purchaseExpired()) {
+            endSession("Specific purchase deadline expired.")
+            return false
+        }
         partnerSearch = null
         if (!initial) {
             marketplace.releaseTradingSpot(this)

@@ -16,7 +16,7 @@ import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
 
 /**
- * Creates Fletching activities from owned ammunition supplies or matching unstrung bows and strings, then
+ * Creates Fletching activities from owned ammunition intermediates or matching unstrung bows, then
  * falls back to log cutting. Bow selection considers every unlocked owned recipe rather than assuming
  * that the bot owns the highest unlocked log tier or randomly choosing a different short/longbow variant.
  * Ammunition production includes headless and finished arrows, all dart tiers, tipped bolts and shaping bolt
@@ -25,6 +25,7 @@ import kotlin.time.Duration
  * fallback when no owned bow recipe is available.
  * Owned logs and a knife also enable every unlocked cutting recipe, including partial log batches.
  * Ogre shafts, tips, arrows, brutal arrows and composite bows join the owned-supply production choices.
+ * Complete owned recipes take priority over candidates that must obtain secondary supplies during startup.
  * Profit mode does not guarantee a market margin; log-cutting fallback retains its existing acquisition behavior.
  *
  * @author lare96
@@ -48,7 +49,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
     }
 
     /**
-     * Selects an unlocked bow recipe with at least one owned matching pair. Both dispatch modes use
+     * Selects an unlocked bow recipe with at least one owned unstrung bow. Both dispatch modes use
      * the inherited personality selector; current-level and safety checks occur again during execution.
      */
     internal fun getOwnedBowScript(bot: Bot, level: Int): StringBowBotScript? {
@@ -61,8 +62,22 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
     /**
      * Retains arrow-only selection for callers that specifically need shaft preparation or finished arrows.
      */
-    internal fun getOwnedArrowScript(bot: Bot, level: Int): MakeArrowBotScript? =
-        getBestActivity(bot, level, { it.requiredLevel }, ownedArrowScripts(bot, getDuration(bot)))
+    internal fun getOwnedArrowScript(bot: Bot, level: Int): MakeArrowBotScript? {
+        val candidates = ownedArrowScripts(bot, getDuration(bot)).filter { it.requiredLevel <= level }
+        return getBestActivity(bot, level, { it.requiredLevel },
+            candidates.filter { it.hasCompleteSupplies() }.ifEmpty { candidates })
+    }
+
+    /**
+     * Continues headless arrows using the ordinary level/personality choice and the caller's remaining budget.
+     * Ready tip stock takes priority over recipes that require a purchase.
+     */
+    internal fun getFinishedArrowScript(bot: Bot, duration: Duration): MakeArrowBotScript? {
+        val candidates = Arrow.entries.filter { it != Arrow.HEADLESS_ARROW }
+            .map { MakeArrowBotScript(bot, it, duration) }.filter { it.isEligible() }
+        return getBestActivity(bot, bot.skill(SKILL_FLETCHING).staticLevel, { it.requiredLevel },
+            candidates.filter { it.hasCompleteSupplies() }.ifEmpty { candidates })
+    }
 
     /**
      * Builds owned arrow candidates for both arrow-only and combined ammunition selection.
@@ -81,7 +96,15 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
             .filter { it.isEligible() }.map { it.requiredLevel to it }
         val ogre = OgreFletchingBotScript.RECIPES.values.map { OgreFletchingBotScript(bot, it, duration) }
             .filter { it.isEligible() }.map { it.requiredLevel to it }
-        return getBestActivity(bot, level, { it.first }, arrows + ammunition + ogre)?.second
+        val candidates = (arrows + ammunition + ogre).filter { it.first <= level }
+        val ready = candidates.filter { (_, script) ->
+            when (script) {
+                is MakeArrowBotScript -> script.hasCompleteSupplies()
+                is FletchAmmunitionBotScript -> script.hasCompleteSupplies()
+                else -> true
+            }
+        }
+        return getBestActivity(bot, level, { it.first }, ready.ifEmpty { candidates })?.second
     }
 
     /** Selects a valid cutting recipe from an owned log tier and knife before using acquisition fallback. */

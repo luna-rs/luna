@@ -18,6 +18,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Prepares owned tree or fruit-tree seeds through native pot-filling, planting and watering interactions.
@@ -25,8 +26,9 @@ import kotlin.time.Duration
  * occupied plots are never cleared for soil. Filled pots and existing seedlings can be processed in normal hubs.
  *
  * The target counts ready saplings and watered seedlings across inventory and bank. Batches fit one owned can's
- * remaining doses and the useful stock target. Empty cans use the shared water-filling script, then normal activity
- * selection can resume preparation. Finished batches are banked; native growth runs while the bot does other work.
+ * remaining doses and the useful stock target. Missing side supplies are acquired before banking. Empty cans use
+ * one shared water-filling prerequisite followed by a saved continuation with the original remaining budget.
+ * Finished batches are banked; native growth runs while the bot does other work.
  * No items, experience or growth timestamps are assigned here. Banking, travel, retries and safety are inherited.
  * Owned tools, cans or other supported supplies in native leprechaun storage are retrieved before banking or refilling.
  *
@@ -35,6 +37,7 @@ import kotlin.time.Duration
  * @property target Desired total saplings and watered seedlings of this recipe.
  * @param duration Maximum preparation session duration.
  * @property soilLocation Optional vacant patch used only when empty pots need soil.
+ * @property returnProfit Training/profit policy retained by later farming-return checks.
  * @author lare96
  */
 class PrepareSaplingBotScript(
@@ -42,7 +45,8 @@ class PrepareSaplingBotScript(
     val seedling: TreeSeedling,
     val target: Int,
     duration: Duration,
-    val soilLocation: PatchLocation? = findSoilSite(bot, seedling)
+    val soilLocation: PatchLocation? = findSoilSite(bot, seedling),
+    val returnProfit: Boolean = false
 ) : InventoryBotScript(bot, duration, soilLocation?.let { mutableListOf(FarmingBotScript.SITES.getValue(it)) }
     ?: StationaryInventoryBotScript.zonesForSkill(SKILL_FARMING)) {
     override val trainingSkill = SKILL_FARMING
@@ -55,12 +59,11 @@ class PrepareSaplingBotScript(
          */
         fun findSoilSite(bot: Bot, seedling: TreeSeedling): PatchLocation? {
             fun owned(id: Int) = BotFarmingActionHandler.stock(bot, id)
-            if (owned(seedling.seed) == 0L || owned(Farming.PLANT_POT) == 0L ||
+            if (owned(seedling.seed) == 0L ||
                 owned(seedling.seedling) > 0 || Farming.FILLED_PLANT_POTS.any { owned(it) > 0 }) return null
             return FarmingBotScript.SITES.keys.firstOrNull {
                 val patch = Farming.patches(bot).getValue(it)
-                it != HopsPatchLocation.ENTRANA && !patch.isOccupied() &&
-                    (!patch.needsRaking() || owned(Farming.RAKE) > 0)
+                it != HopsPatchLocation.ENTRANA && !patch.isOccupied()
             }
         }
 
@@ -83,17 +86,26 @@ class PrepareSaplingBotScript(
              * Native patch key for obtaining soil, or null for portable preparation.
              */
             var soilKey: String? = null
+            var returnProfit = false
+            var refillAttempted = false
+            var refillDeadline = 0L
             override fun load(data: JsonObject) {
                 super.load(data)
                 seedling = TreeSeedling.valueOf(data.get("seedling").asString)
                 target = data.get("target").asInt
                 soilKey = data.get("soilKey")?.takeUnless { it.isJsonNull }?.asString
+                returnProfit = data.get("returnProfit")?.asBoolean ?: false
+                refillAttempted = data.get("refillAttempted")?.asBoolean ?: false
+                refillDeadline = data.get("refillDeadline")?.asLong ?: 0L
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("seedling", seedling.name)
                 data.addProperty("target", target)
                 data.addProperty("soilKey", soilKey)
+                data.addProperty("returnProfit", returnProfit)
+                data.addProperty("refillAttempted", refillAttempted)
+                data.addProperty("refillDeadline", refillDeadline)
             }
         }
     }
@@ -102,12 +114,17 @@ class PrepareSaplingBotScript(
         require(target > 0 && (soilLocation == null || soilLocation in FarmingBotScript.SITES))
     }
 
+    private var refillAttempted = false
+    private var refillDeadline = 0L
+
     /**
      * Restores the exact recipe, optional soil site, target and remaining retry/session budgets.
      */
     constructor(bot: Bot, data: SaplingData) : this(bot, data.seedling, data.target, data.duration,
-        data.soilKey?.let { key -> FarmingBotScript.SITES.keys.first { it.key == key } }) {
+        data.soilKey?.let { key -> FarmingBotScript.SITES.keys.first { it.key == key } }, data.returnProfit) {
         restoreInventoryState(data)
+        refillAttempted = data.refillAttempted
+        refillDeadline = data.refillDeadline
     }
 
     /**
@@ -143,13 +160,55 @@ class PrepareSaplingBotScript(
         (Farming.WATERING_CANS.any { owned(it) > 0 } || owned(Farming.EMPTY_WATERING_CAN) > 0)
 
     /**
-     * Queues a single generic refill when all owned cans are empty. This session then ends rather than spinning
-     * through a prerequisite loop; a later Farming selection rechecks actual stock and native growth.
+     * Keeps an owned seed or seedling selectable while its ordinary pot, tools or watering can are missing.
+     * Occupied patches are never cleared to obtain soil, and a new tree seed is never purchased here.
+     */
+    fun canPrepare(): Boolean = remaining() > 0 && bot.farming.level >= seedling.level &&
+        (owned(seedling.seedling) > 0 || owned(seedling.seed) > 0 &&
+            (Farming.FILLED_PLANT_POTS.any { owned(it) > 0 } || soilLocation?.let {
+                !Farming.patches(bot).getValue(it).isOccupied()
+            } == true))
+
+    /**
+     * Plans up to one can's useful batch, preferring existing seedlings and pots before requesting side supplies.
+     */
+    fun preparationSupplies(): List<Item> {
+        if (!canPrepare()) return emptyList()
+        val can = Farming.WATERING_CANS.asReversed().firstOrNull { owned(it) > 0 } ?: Farming.EMPTY_WATERING_CAN
+        val doses = if (can == Farming.EMPTY_WATERING_CAN) Farming.WATERING_CANS.size
+            else Farming.WATERING_CANS.indexOf(can) + 1
+        val limit = minOf(remaining(), doses)
+        val existing = minOf(limit.toLong(), owned(seedling.seedling)).toInt()
+        if (existing > 0) return listOf(Item(can), Item(seedling.seedling, existing))
+        val amount = minOf(limit.toLong(), owned(seedling.seed)).toInt()
+        val pot = Farming.FILLED_PLANT_POTS.firstOrNull { owned(it) > 0 } ?: Farming.PLANT_POT
+        return buildList {
+            add(Item(can))
+            add(Item(Farming.GARDENING_TROWEL))
+            add(Item(seedling.seed, amount))
+            add(Item(pot, amount))
+            if (pot == Farming.PLANT_POT && soilLocation?.let { Farming.patches(bot).getValue(it).needsRaking() } == true) {
+                add(Item(Farming.RAKE))
+            }
+        }
+    }
+
+    /**
+     * Queues a single generic refill followed by this exact recipe with its remaining time and retry counters.
+     * A saved attempt flag prevents an unsuccessful refill from building another prerequisite chain.
      */
     private fun prepareWater(): Boolean {
-        if (!isActionSafe() || !hasWork() || Farming.WATERING_CANS.any { owned(it) > 0 } ||
+        if (refillAttempted || !isActionSafe() || !hasWork() || Farming.WATERING_CANS.any { owned(it) > 0 } ||
             owned(Farming.EMPTY_WATERING_CAN) == 0L) return false
-        bot.scriptStack.softPushHead(FillWaterBotScript(bot, Farming.EMPTY_WATERING_CAN, 1, duration))
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return false
+        refillAttempted = true
+        val continuation = snapshot().also {
+            it.duration = remaining
+            it.refillDeadline = System.currentTimeMillis() + remaining.inWholeMilliseconds
+        }
+        bot.scriptStack.softPushHead(PrepareSaplingBotScript(bot, continuation))
+        bot.scriptStack.softPushHead(FillWaterBotScript(bot, Farming.EMPTY_WATERING_CAN, 1, remaining))
         stop()
         return true
     }
@@ -183,15 +242,25 @@ class PrepareSaplingBotScript(
 
     override suspend fun equipment(): BotGearLocator? = null
     override suspend fun beforeInventoryInit(): Boolean {
+        FarmingReturnBotScript.arm(bot, returnProfit)
+        if (refillDeadline > 0) {
+            duration = minOf(duration, (refillDeadline - System.currentTimeMillis()).milliseconds)
+            refillDeadline = 0L
+        }
+        if (duration <= Duration.ZERO) return false
         Farming.update(bot)
+        if (!canPrepare()) return false
+        FarmingSupplyPreparation.prepare(bot, handler, preparationSupplies(),
+            soilLocation?.let { FarmingBotScript.SITES.getValue(it) }, { isActionSafe() }, remainingDuration())
         if (!isEligible()) return false
-        val items = if (Farming.WATERING_CANS.none { owned(it) > 0 }) listOf(Item(Farming.EMPTY_WATERING_CAN))
-            else supplies(::owned)
-        if (BotFarmingActionHandler.needsStorage(bot, items) &&
-            !handler.farming.retrieve(items, soilLocation?.let { FarmingBotScript.SITES.getValue(it) }) { isActionSafe() }) return false
-        return !prepareWater()
+        if (Farming.WATERING_CANS.none { owned(it) > 0 }) {
+            prepareWater()
+            return false
+        }
+        return supplies { BotFarmingActionHandler.portableStock(bot, it) }.isNotEmpty()
     }
-    override fun withdraw(): List<Item> = productionWithdraw(supplies(::owned), requestMissing = false)
+    override fun withdraw(): List<Item> = productionWithdraw(
+        supplies { BotFarmingActionHandler.portableStock(bot, it) }, requestMissing = false)
     override fun bankWithdraw(): List<Item> {
         Farming.update(bot)
         if (prepareWater()) return emptyList()
@@ -254,5 +323,8 @@ class PrepareSaplingBotScript(
         it.seedling = seedling
         it.target = target
         it.soilKey = soilLocation?.key
+        it.returnProfit = returnProfit
+        it.refillAttempted = refillAttempted
+        it.refillDeadline = refillDeadline
     }
 }

@@ -54,9 +54,11 @@ import kotlinx.coroutines.NonCancellable
  * @param duration How long this script should run before completing normally.
  * @param viaAbyss Whether trips use the native Wilderness mage, an outer-ring passage and an altar rift. This mode
  * banks worn gear, carries owned food/tools, budgets the forced skull and prayer drain, and repairs pouches en route.
+ * @param profit Whether new essence purchases and bank trips require a positive guide-price margin.
  * @author lare96
  */
-class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val viaAbyss: Boolean = false) :
+class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val viaAbyss: Boolean = false,
+                         val profit: Boolean = false) :
     InventoryBotScript(bot, duration, mutableListOf(altar.zone)) {
 
     companion object {
@@ -92,6 +94,28 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         }
 
         /**
+         * Checks native shop visibility and stock without reserving it or creating essence.
+         */
+        internal fun canPurchaseEssence(bot: Bot, id: Int): Boolean = bot.world.shops.values().any {
+            id in it.itemIds && it.botAccess.apply(bot) && it.items.computeAmountForId(id) > 0
+        }
+
+        /**
+         * Keeps owned compatible stock first. Low-level recipes may buy pure essence when ordinary stock is absent;
+         * higher recipes always require pure essence. Missing shop stock still permits a bounded wanted request.
+         */
+        internal fun essenceForPurchase(bot: Bot, rune: CraftableRune): Int = compatibleEssence(bot, rune)
+            ?: if (rune.level > 20 || !canPurchaseEssence(bot, RUNE_ESSENCE) && canPurchaseEssence(bot, PURE_ESSENCE))
+                PURE_ESSENCE else RUNE_ESSENCE
+
+        /**
+         * Compares the selected essence against native multiple-rune output, without treating guide prices as sales.
+         */
+        internal fun profitable(bot: Bot, rune: CraftableRune, essence: Int): Boolean =
+            bot.world.economy.getPrice(rune.id).coerceAtLeast(0).toDouble() * rune.outputMultiplier(bot.runecrafting.level) >
+                bot.world.economy.getPrice(essence).coerceAtLeast(0)
+
+        /**
          * Serializable data for restoring a [CraftRuneBotScript].
          *
          * This stores the selected [altar] and the shared production retry state. Older saves default the counters to zero.
@@ -110,16 +134,23 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
              */
             var viaAbyss = false
 
+            /**
+             * Profit checks survive pauses and restoration instead of following another coordinator's last mode.
+             */
+            var profit = false
+
             override fun load(data: JsonObject) {
                 super.load(data)
                 altar = Altar.valueOf(data.get("altar").asString)
                 viaAbyss = data.get("viaAbyss")?.asBoolean ?: false
+                profit = data.get("profit")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("altar", altar.name)
                 data.addProperty("viaAbyss", viaAbyss)
+                data.addProperty("profit", profit)
             }
         }
     }
@@ -130,7 +161,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
      * @param bot The bot running this script.
      * @param data The saved rune-crafting script data.
      */
-    constructor(bot: Bot, data: CraftRuneData) : this(bot, data.altar, data.duration, data.viaAbyss) {
+    constructor(bot: Bot, data: CraftRuneData) : this(bot, data.altar, data.duration, data.viaAbyss, data.profit) {
         restoreInventoryState(data)
     }
 
@@ -156,14 +187,59 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     private var ownsDialogue = false
 
     override suspend fun beforeInventoryInit(): Boolean {
-        if (!viaAbyss) return true
-        if (!guardsInstalled) {
-            previousCombatDisabled = bot.combat.isDisabled
-            bot.combat.isDisabled = true
-            guardsInstalled = true
+        if (viaAbyss) {
+            if (!guardsInstalled) {
+                previousCombatDisabled = bot.combat.isDisabled
+                bot.combat.isDisabled = true
+                guardsInstalled = true
+            }
+            bot.combat.target = null
+            if ((inAbyss() || bot.inWilderness() || bot.combat.inCombat()) && !retreat()) return false
         }
-        bot.combat.target = null
-        return if (inAbyss() || bot.inWilderness() || bot.combat.inCombat()) retreat() else true
+        return prepareEssence()
+    }
+
+    /**
+     * Buys a useful carried batch through normal wanted-item acquisition, bounded by the remaining session and one
+     * shared two-minute deadline. Actual partial stock or native pouch contents can still supply a final trip.
+     */
+    internal suspend fun prepareEssence(): Boolean {
+        val craftingRune = CraftableRune.ALTAR_TO_RUNE[altar] ?: return false
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO || productionRetriesExhausted() || isPaused() || isTerminated() ||
+            bot.state != EntityState.ACTIVE ||
+            bot.runecrafting.level < craftingRune.level || !isActionSafe(ActionSafety.NON_COMBAT) ||
+            bot.inWilderness() || inAbyss()) return false
+        val chosen = essenceForPurchase(bot, craftingRune)
+        if (profit && !profitable(bot, craftingRune, chosen)) return false
+        val pouchSlots = EssencePouch.entries.count {
+            it.level <= bot.runecrafting.staticLevel && it.isOwnedBy(bot) &&
+                (bot.attributes()[it.essence] == 0 || bot.attributes()[it.essenceId] == chosen) &&
+                (viaAbyss || it.capacity(bot.attributes()[it.wear]) > 0)
+        }
+        val reserved = if (viaAbyss) abyssSupplies().sumOf { it.amount } else 1
+        if (isTerminated()) return false
+        val capacity = (bot.inventory.capacity() - 1 - reserved - pouchSlots).coerceAtLeast(1)
+        fun owned(id: Int) = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+        withTimeoutOrNull(minOf(120_000L, remaining.inWholeMilliseconds)) {
+            val alternatives = if (craftingRune.level <= 20 && chosen == RUNE_ESSENCE)
+                listOf(RUNE_ESSENCE, PURE_ESSENCE) else listOf(chosen)
+            for (id in alternatives) {
+                if (isPaused() || isTerminated() || bot.state != EntityState.ACTIVE ||
+                    !isActionSafe(ActionSafety.NON_COMBAT) || bot.inWilderness() || inAbyss()) break
+                if (profit && !profitable(bot, craftingRune, id)) continue
+                val target = minOf(capacity, bot.preferences.getWantedItem(id)?.target()?.coerceAtLeast(1) ?: 1_000)
+                if (owned(id) < target) {
+                    bot.preferences.raiseWantedItemTarget(id, target)
+                    handler.shop.obtainWantedItem(id, target)
+                }
+                if (compatibleEssence(bot, craftingRune) != null) break
+            }
+        }
+        val actual = compatibleEssence(bot, craftingRune) ?: return false
+        return !isPaused() && !isTerminated() && bot.state == EntityState.ACTIVE &&
+            isActionSafe(ActionSafety.NON_COMBAT) && !bot.inWilderness() && !inAbyss() &&
+            remainingDuration() > Duration.ZERO && (!profit || profitable(bot, craftingRune, actual))
     }
 
     override suspend fun equipment(): BotGearLocator? {
@@ -224,6 +300,12 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             return listOf()
         }
 
+        if (profit && !profitable(bot, craftingRune, essence!!)) {
+            bot.log("Runecrafting guide-price margin is no longer positive.")
+            stop()
+            return emptyList()
+        }
+
         if (!viaAbyss && !bot.itemTracker.contains(altar.talisman)) {
             // Emergency spawn talisman if needed.
             bot.bank.add(altar.talisman)
@@ -277,7 +359,23 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         return handler.banking.withdraw(Item(id, amount)) && bot.inventory.computeAmountForId(id) == before + amount
     }
 
-    override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasEssence())
+    override suspend fun onInventoryBankRequested(): Boolean {
+        val craftingRune = CraftableRune.ALTAR_TO_RUNE[altar] ?: return false
+        if (!hasEssence() && compatibleEssence(bot, craftingRune) == null) {
+            if (viaAbyss && (inAbyss() || bot.inWilderness() || bot.combat.inCombat()) && !retreat()) {
+                stop()
+                return false
+            }
+            if (!prepareEssence()) {
+                stop()
+                return false
+            }
+            cachedBank = null
+            forceBanking = true
+            return requestProductionBank(false)
+        }
+        return requestProductionBank(hasEssence())
+    }
 
     override fun bankParent(zone: SubZone): Zone = if (viaAbyss) Zone.EDGEVILLE else super.bankParent(zone)
 
@@ -337,6 +435,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         saveInventoryState(data)
         data.altar = altar
         data.viaAbyss = viaAbyss
+        data.profit = profit
         return data
     }
 

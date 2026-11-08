@@ -21,7 +21,8 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Produces headless arrows from shafts and feathers, or finished arrows from headless arrows and tips.
- * One matching input pair qualifies. Bank withdrawals balance owned stacks up to [WITHDRAW_AMOUNT] of
+ * Owned shafts or headless arrows qualify; startup can obtain the matching feathers or tips.
+ * Bank withdrawals balance owned stacks up to [WITHDRAW_AMOUNT] of
  * each input, including partial stock. Non-stackable definitions use a capacity-safe balanced withdrawal.
  *
  * Production uses the native item interaction and dialogue. Its quantity counts sets of up to fifteen,
@@ -49,19 +50,29 @@ class MakeArrowBotScript(
         /** Maximum units of each stackable input withdrawn per bank visit. */
         const val WITHDRAW_AMOUNT = 1_000
 
-        /** Saved arrow recipe and inherited session/retry state. @author lare96 */
+        /**
+         * Saved arrow recipe, continuation guard and inherited session/retry state.
+         *
+         * @author lare96
+         */
         class MakeArrowData : InventoryScriptData() {
             /** Arrow enum retained under its existing snapshot field name. */
             var arrow: Arrow = Arrow.HEADLESS_ARROW
+            var produced = false
+            var continued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 arrow = Arrow.valueOf(data.get("arrow").asString)
+                produced = data.get("produced")?.asBoolean ?: false
+                continued = data.get("continued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("arrow", arrow.name)
+                data.addProperty("produced", produced)
+                data.addProperty("continued", continued)
             }
         }
     }
@@ -70,15 +81,27 @@ class MakeArrowBotScript(
     val requiredLevel = arrow.level
     /** Minimum paired consumables required for a partial native production set. */
     private val materials = listOf(Item(arrow.tip), Item(arrow.with))
+    private val primary = if (arrow == Arrow.HEADLESS_ARROW) arrow.tip else arrow.with
+    private var produced = false
+    private var continued = false
 
     /** Restores the existing arrow field, saved zones, duration, and shared retry budgets. */
     constructor(bot: Bot, data: MakeArrowData) : this(bot, data.arrow, data.duration, data.zones) {
         restoreInventoryState(data)
+        produced = data.produced
+        continued = data.continued
     }
 
-    /** Checks permanent level and one complete owned pair across inventory and bank. */
+    /**
+     * Checks permanent level and an owned intermediate, allowing startup to obtain the secondary input.
+     */
     fun isEligible(): Boolean = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel &&
-            bot.ownsProductionSupplies(materials)
+            FletchingProduction.owned(bot, primary) > 0
+
+    /**
+     * Distinguishes ready owned pairs from recipes that require secondary acquisition.
+     */
+    internal fun hasCompleteSupplies(): Boolean = bot.ownsProductionSupplies(materials)
 
     /** Returns balanced partial stacks, with a capacity-safe fallback for non-stackable definitions. */
     fun bankBatch(): List<Item> {
@@ -92,7 +115,32 @@ class MakeArrowBotScript(
     override fun withdraw(): List<Item> = productionWithdraw(materials,
         levelEligible = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel)
 
-    override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
+    override fun bankWithdraw(): List<Item> = bankBatch().also {
+        if (it.isEmpty()) {
+            queueContinuation()
+            stop()
+        }
+    }
+
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (produced && FletchingProduction.owned(bot, primary) < 1) {
+            queueContinuation()
+            stop()
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Continues verified headless arrows once, before depleted inputs cancel the current script.
+     */
+    private fun queueContinuation() {
+        if (!produced || continued || isPaused() || isTerminated() || productionRetriesExhausted() || !isActionSafe()) return
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return
+        continued = true
+        FletchingProduction.afterArrows(bot, arrow, remaining)?.let { bot.scriptStack.softPushHead(it) }
+    }
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
 
@@ -111,7 +159,14 @@ class MakeArrowBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_FLETCHING).level >= requiredLevel)) return true
-        attemptProduction(arrow.tip) { startProduction() }
+        val inputBefore = bot.inventory.computeAmountForId(primary)
+        val outputBefore = bot.inventory.computeAmountForId(arrow.id)
+        try {
+            attemptProduction(arrow.tip) { startProduction() }
+        } finally {
+            if (bot.inventory.computeAmountForId(primary) < inputBefore ||
+                bot.inventory.computeAmountForId(arrow.id) > outputBefore) produced = true
+        }
         return true
     }
 
@@ -133,6 +188,8 @@ class MakeArrowBotScript(
 
     override fun snapshot(): MakeArrowData = MakeArrowData().also {
         it.arrow = arrow
+        it.produced = produced
+        it.continued = continued
         saveInventoryState(it)
     }
 }

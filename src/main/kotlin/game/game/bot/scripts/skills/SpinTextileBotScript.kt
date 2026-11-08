@@ -3,6 +3,8 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
+import api.bot.action.BotCombatActionHandler
+import game.bot.scripts.trading.TradeBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
@@ -14,6 +16,7 @@ import api.predef.*
 import api.predef.ext.*
 import engine.bot.coordinator.skill.CraftingScriptFactory
 import engine.bot.coordinator.skill.FletchingScriptFactory
+import engine.bot.coordinator.skill.SkillingCoordinator.Companion.profitMode
 import engine.bot.gear.BotGearLocator
 import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
@@ -32,6 +35,7 @@ import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Spins wool, flax, or magic roots using the existing player textile recipes and spinning-wheel dialogue.
@@ -58,13 +62,17 @@ class SpinTextileBotScript(
     bot: Bot,
     duration: Duration,
     zones: MutableList<SubZone> = ProductionZones.SPINNING.toMutableList(),
-    val textile: Textile = Textile.BOWSTRING
+    val textile: Textile = Textile.BOWSTRING,
+    val supplyTarget: Int = 0,
+    private var supplyDeadline: Long = 0L
 ) : InventoryBotScript(bot, duration, zones) {
     init {
         require(textile.type == TextileType.SPINNING_WHEEL) { "A spinning-wheel recipe is required." }
+        require(supplyTarget >= 0 && (supplyTarget == 0 || textile == Textile.BOWSTRING))
     }
 
     override val verifiedProductionWithdrawals = true
+    override val trainingSkill = SKILL_CRAFTING
 
     companion object {
 
@@ -78,12 +86,18 @@ class SpinTextileBotScript(
             var textile = Textile.BOWSTRING
             var levelPreparationAttempts = 0
             var levelPreparationExperience = -1.0
+            var supplyTarget = 0
+            var supplyDeadline = 0L
+            var flaxSupplyPhase = 0
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 textile = data.get("textile")?.asString?.let(Textile::valueOf) ?: Textile.BOWSTRING
                 levelPreparationAttempts = data.get("level_preparation_attempts")?.asInt ?: 0
                 levelPreparationExperience = data.get("level_preparation_experience")?.asDouble ?: -1.0
+                supplyTarget = data.get("supplyTarget")?.asInt ?: 0
+                supplyDeadline = data.get("supplyDeadline")?.asLong ?: 0L
+                flaxSupplyPhase = data.get("flaxSupplyPhase")?.asInt ?: 0
             }
 
             override fun save(data: JsonObject) {
@@ -91,6 +105,9 @@ class SpinTextileBotScript(
                 data.addProperty("textile", textile.name)
                 data.addProperty("level_preparation_attempts", levelPreparationAttempts)
                 data.addProperty("level_preparation_experience", levelPreparationExperience)
+                data.addProperty("supplyTarget", supplyTarget)
+                data.addProperty("supplyDeadline", supplyDeadline)
+                data.addProperty("flaxSupplyPhase", flaxSupplyPhase)
             }
         }
 
@@ -129,7 +146,8 @@ class SpinTextileBotScript(
          *
          * @return `true` if the make-item interface opened and an amount was entered.
          */
-        private suspend fun spin(bot: Bot, wheel: GameObject, textile: Textile = Textile.BOWSTRING): Boolean {
+        private suspend fun spin(bot: Bot, wheel: GameObject, textile: Textile = Textile.BOWSTRING,
+                                 limit: Int = Int.MAX_VALUE): Boolean {
             if (!bot.actionHandler.inventory.useItem(textile.rawItem.id).onObject(wheel)) {
                 bot.log("Could not interact with spinning wheel. Trying again next cycle.")
                 return false
@@ -140,7 +158,8 @@ class SpinTextileBotScript(
                 return false
             }
             bot.log("Clicking textile make item option. make_item_open?=${MakeItemDialogue::class in bot.overlays}.")
-            val amount = bot.inventory.computeAmountForId(textile.rawItem.id) / textile.rawItem.amount
+            val amount = minOf(limit,
+                bot.inventory.computeAmountForId(textile.rawItem.id) / textile.rawItem.amount)
             if (amount < 1) return false
             bot.actionHandler.widgets.clickMakeItem(0, amount)
             return true
@@ -215,11 +234,13 @@ class SpinTextileBotScript(
 
     /** Restores recipe-aware data or an older flax snapshot, retaining any saved retry counters. */
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones,
-        (data as? TextileData)?.textile ?: Textile.BOWSTRING) {
+        (data as? TextileData)?.textile ?: Textile.BOWSTRING,
+        (data as? TextileData)?.supplyTarget ?: 0, (data as? TextileData)?.supplyDeadline ?: 0L) {
         if (data is InventoryScriptData) restoreInventoryState(data)
         if (data is TextileData) {
             levelPreparationAttempts = data.levelPreparationAttempts
             levelPreparationExperience = data.levelPreparationExperience
+            flaxSupplyPhase = data.flaxSupplyPhase
         }
     }
 
@@ -227,6 +248,7 @@ class SpinTextileBotScript(
     val requiredLevel = textile.level
     private var levelPreparationAttempts = 0
     private var levelPreparationExperience = -1.0
+    private var flaxSupplyPhase = 0
     /** Non-stackable input consumed by one player action. */
     private val materials = listOf(textile.rawItem)
 
@@ -234,7 +256,77 @@ class SpinTextileBotScript(
     fun isEligible(): Boolean = bot.crafting.staticLevel >= requiredLevel && bot.ownsProductionSupplies(materials)
 
     /** Returns up to twenty-eight inputs from bank stock, including a partially stocked bank. */
-    fun bankBatch(): List<Item> = bot.productionBatch(materials)
+    fun bankBatch(): List<Item> = bot.productionBatch(materials).mapNotNull { item ->
+        if (supplyTarget == 0) item else {
+            val amount = minOf(item.amount, (supplyTarget - ownedStrings()).coerceAtLeast(0))
+            if (amount == 0) null else item.withAmount(amount)
+        }
+    }
+
+    private fun ownedRaw(): Long = bot.inventory.computeAmountForId(FLAX).toLong() + bot.bank.computeAmountForId(FLAX)
+    private fun ownedStrings(): Int = (bot.inventory.computeAmountForId(Textile.BOWSTRING.processedItem.id).toLong() +
+        bot.bank.computeAmountForId(Textile.BOWSTRING.processedItem.id)).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+
+    private fun supplyTime(): Duration {
+        val remaining = remainingDuration()
+        if (supplyDeadline > 0) duration = minOf(remaining,
+            (supplyDeadline - System.currentTimeMillis()).milliseconds)
+        return duration
+    }
+
+    private suspend fun normalizeTradedFlax(): Boolean {
+        if (bot.inventory.contains(FLAX + 1) && isActionSafe()) {
+            return withTimeoutOrNull(minOf(120.seconds, supplyTime())) {
+                handler.banking.travelToBankDepositAll()
+            } == true
+        }
+        return !bot.inventory.contains(FLAX + 1)
+    }
+
+    private suspend fun prepareFlax(): Boolean {
+        if (supplyTime() <= Duration.ZERO || !isActionSafe() ||
+            !BotCombatActionHandler.mayGainExperience(bot, SKILL_CRAFTING) ||
+            supplyTarget > 0 && !bot.profitMode &&
+            !BotCombatActionHandler.wantsToTrain(bot, SKILL_FLETCHING)) return false
+        if (!normalizeTradedFlax()) return false
+        if (ownedRaw() > 0) return true
+        if (supplyTarget > 0 && ownedStrings() > 0) return false
+        if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() + duration.inWholeMilliseconds
+        val target = if (supplyTarget == 0) 28 else (supplyTarget - ownedStrings()).coerceAtLeast(1)
+        if (flaxSupplyPhase == 0) {
+            flaxSupplyPhase = 1
+            withTimeoutOrNull(minOf(120.seconds, supplyTime())) { handler.shop.obtainWantedItem(FLAX, target) }
+        }
+        if (supplyTime() <= Duration.ZERO || !isActionSafe()) return false
+        if (ownedRaw() > 0) return true
+        if (flaxSupplyPhase == 1) {
+            flaxSupplyPhase = 2
+            val deadline = minOf(supplyDeadline, System.currentTimeMillis() + 120_000L)
+            val trade = TradeBotScript.buySpecific(bot, FLAX, target, deadline)
+            if (trade != null) {
+                trade.duration = minOf(120.seconds, supplyTime())
+                bot.scriptStack.pushHead(trade)
+                return false
+            }
+        }
+        if (flaxSupplyPhase == 2 && supplyTime() > Duration.ZERO) {
+            flaxSupplyPhase = 3
+            bot.scriptStack.pushHead(HarvestBotScript(bot, Harvestable.FLAX, duration,
+                ProductionZones.FLAX.toMutableList(), targetAmount = target, supplyDeadline = supplyDeadline))
+        }
+        return false
+    }
+
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (supplyTime() <= Duration.ZERO) return false
+        if (textile != Textile.BOWSTRING) return true
+        if (supplyTarget > 0 && ownedStrings() >= supplyTarget) return false
+        if (bot.crafting.staticLevel < requiredLevel) {
+            if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() + duration.inWholeMilliseconds
+            return BotCombatActionHandler.wantsToTrain(bot, SKILL_CRAFTING)
+        }
+        return prepareFlax()
+    }
 
     override suspend fun equipment(): BotGearLocator? {
         withTimeoutOrNull(15_000) { leaveSeersWheel(bot) }
@@ -242,6 +334,14 @@ class SpinTextileBotScript(
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {
+        if (supplyTarget > 0 && ownedStrings() >= supplyTarget) {
+            stop()
+            return false
+        }
+        if (textile == Textile.BOWSTRING && ownedRaw() == 0L && !prepareFlax()) {
+            if (!isPaused()) stop()
+            return false
+        }
         if (!requestProductionBank(bot.inventory.containsAll(materials))) return false
         if (bot.z == 1 && bot in SEERS_HOUSE) {
             return withTimeoutOrNull(15_000) { climb(bot, 0) } == true
@@ -250,8 +350,14 @@ class SpinTextileBotScript(
     }
 
     override suspend fun onExecuteInZone(): Boolean {
+        if (supplyTarget > 0 && ownedStrings() >= supplyTarget) {
+            stop()
+            return true
+        }
         if (!productionReady(bot.inventory.containsAll(materials), bot.crafting.level >= requiredLevel)) return true
+        val before = bot.inventory.computeAmountForId(textile.rawItem.id)
         attemptProduction(textile.rawItem.id, outputId = textile.processedItem.id) { startProduction() }
+        if (supplyTarget == 0 && bot.inventory.computeAmountForId(textile.rawItem.id) < before) flaxSupplyPhase = 0
         return true
     }
 
@@ -266,7 +372,8 @@ class SpinTextileBotScript(
             }.firstOrNull()
         } ?: return false
         if (zone == SubZone.SEERS_VILLAGE_MAIN && !climb(bot, 1)) return false
-        return spin(bot, wheel, textile)
+        return spin(bot, wheel, textile,
+            if (supplyTarget == 0) Int.MAX_VALUE else (supplyTarget - ownedStrings()).coerceAtLeast(0))
     }
 
     override fun withdraw(): List<Item> {
@@ -280,19 +387,19 @@ class SpinTextileBotScript(
             } else {
                 levelPreparationAttempts++
                 // Pause this exact session. The stack resumes it after the prerequisite leaves.
-                bot.scriptStack.pushHead(CraftingScriptFactory.getBasicScript(bot, requiredLevel))
+                val remaining = supplyTime()
+                if (remaining <= Duration.ZERO || !BotCombatActionHandler.mayGainExperience(bot, SKILL_CRAFTING)) {
+                    stop()
+                } else {
+                    val prerequisite = CraftingScriptFactory.getBasicScript(bot, requiredLevel)
+                    prerequisite.duration = minOf(prerequisite.duration, remaining)
+                    bot.scriptStack.pushHead(prerequisite)
+                }
             }
             return emptyList()
         }
         return productionWithdraw(materials, levelEligible = bot.crafting.staticLevel >= requiredLevel,
-            prepareMissing = {
-                if (textile != Textile.BOWSTRING) false else {
-                    stop()
-                    bot.scriptStack.push(HarvestBotScript(bot, Harvestable.FLAX, duration,
-                        ProductionZones.FLAX.toMutableList()))
-                    true
-                }
-            })
+            requestMissing = textile != Textile.BOWSTRING)
     }
 
     override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
@@ -301,6 +408,9 @@ class SpinTextileBotScript(
         it.textile = textile
         it.levelPreparationAttempts = levelPreparationAttempts
         it.levelPreparationExperience = levelPreparationExperience
+        it.supplyTarget = supplyTarget
+        it.supplyDeadline = supplyDeadline
+        it.flaxSupplyPhase = flaxSupplyPhase
         saveInventoryState(it)
     }
 
@@ -311,7 +421,7 @@ class SpinTextileBotScript(
 
     override suspend fun completed() {
         // Chance to queue a fletching script.
-        if (textile == Textile.BOWSTRING && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
+        if (supplyTarget == 0 && textile == Textile.BOWSTRING && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             val script =
                 FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
             bot.scriptStack.pushTail(script, 2)

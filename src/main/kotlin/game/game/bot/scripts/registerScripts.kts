@@ -4,6 +4,8 @@ import game.bot.scripts.BarrowsBotScript.BarrowsData
 
 import game.bot.scripts.skills.FarmingBotScript
 import game.bot.scripts.skills.FarmingBotScript.Companion.FarmingData
+import game.bot.scripts.skills.FarmingReturnBotScript
+import game.bot.scripts.skills.FarmingReturnBotScript.Companion.ReturnData
 import game.bot.scripts.skills.PrepareSaplingBotScript
 import game.bot.scripts.skills.PrepareSaplingBotScript.Companion.SaplingData
 import game.bot.scripts.skills.MakeCompostBotScript
@@ -262,6 +264,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
     scriptManager.addScript<EctofuntusData>(EctofuntusBotScript::class) { bot, data -> EctofuntusBotScript(bot, data) }
     scriptManager.addScript<FarmingData>(FarmingBotScript::class) { bot, data -> FarmingBotScript(bot, data) }
+    scriptManager.addScript<ReturnData>(FarmingReturnBotScript::class) { bot, data -> FarmingReturnBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }

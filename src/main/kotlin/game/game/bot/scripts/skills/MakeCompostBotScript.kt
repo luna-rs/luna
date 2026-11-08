@@ -37,6 +37,7 @@ import kotlin.time.Duration
  * @property type Native bin recipe to prepare, retained when a session is saved.
  * @param duration Maximum visit duration, including banking and travel.
  * @property target Desired reserve of this fertilizer across carried/banked stock and pending native bins.
+ * @property returnProfit Training/profit policy retained by later farming-return checks.
  * @author lare96
  */
 class MakeCompostBotScript(
@@ -44,7 +45,8 @@ class MakeCompostBotScript(
     val location: CompostBinLocation,
     val type: CompostBinType,
     duration: Duration,
-    val target: Int = CompostBin.MAX_ITEMS * 2
+    val target: Int = CompostBin.MAX_ITEMS * 2,
+    val returnProfit: Boolean = false
 ) : InventoryBotScript(bot, duration, mutableListOf(SITES.getValue(location))) {
     override val trainingSkill = SKILL_FARMING
     override val verifiedProductionWithdrawals = true
@@ -86,17 +88,20 @@ class MakeCompostBotScript(
              * Desired fertilizer reserve, including bins already in progress.
              */
             var target = CompostBin.MAX_ITEMS * 2
+            var returnProfit = false
             override fun load(data: JsonObject) {
                 super.load(data)
                 location = CompostBinLocation.valueOf(data.get("location").asString)
                 type = CompostBinType.valueOf(data.get("type").asString)
                 target = data.get("target").asInt
+                returnProfit = data.get("returnProfit")?.asBoolean ?: false
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("location", location.name)
                 data.addProperty("type", type.name)
                 data.addProperty("target", target)
+                data.addProperty("returnProfit", returnProfit)
             }
         }
     }
@@ -113,7 +118,7 @@ class MakeCompostBotScript(
     /**
      * Restores visit policy without copying bin state or replenishing retry counters.
      */
-    constructor(bot: Bot, data: CompostData) : this(bot, data.location, data.type, data.duration, data.target) {
+    constructor(bot: Bot, data: CompostData) : this(bot, data.location, data.type, data.duration, data.target, data.returnProfit) {
         restoreInventoryState(data)
     }
 
@@ -161,15 +166,35 @@ class MakeCompostBotScript(
      */
     fun isEligible(): Boolean = supplies(::owned) != null
 
+    /**
+     * Permits collection from an existing ready bin before the bot owns enough empty buckets.
+     * Raw compost ingredients still require owned stock; preparation never starts demand for another bin.
+     */
+    fun canPrepare(): Boolean = preparationSupplies() != null
+
+    /**
+     * Brings a useful collection batch of buckets while retaining the native bin's current recipe and deadline.
+     */
+    fun preparationSupplies(): List<Item>? {
+        if (bin.type != null && bin.type != type || bin.closed && !bin.isRotted(System.currentTimeMillis())) return null
+        if ((bin.open || bin.closed) && type != CompostBinType.TOMATOES) {
+            val buckets = minOf(bin.amount, bot.inventory.capacity())
+            return if (buckets > 0) listOf(Item(Farming.BUCKET, buckets)) else null
+        }
+        return supplies(::owned)
+    }
+
     override suspend fun equipment(): BotGearLocator? = null
     override suspend fun beforeInventoryInit(): Boolean {
+        FarmingReturnBotScript.arm(bot, returnProfit)
         Farming.update(bot)
-        if (!isEligible()) return false
-        val items = supplies(::owned).orEmpty()
-        return !BotFarmingActionHandler.needsStorage(bot, items) ||
-            handler.farming.retrieve(items, SITES.getValue(location)) { isActionSafe() }
+        val preparation = preparationSupplies() ?: return false
+        FarmingSupplyPreparation.prepare(bot, handler, preparation, SITES.getValue(location),
+            { isActionSafe() }, remainingDuration())
+        return supplies { BotFarmingActionHandler.portableStock(bot, it) } != null
     }
-    override fun withdraw(): List<Item> = productionWithdraw(supplies(::owned).orEmpty(), requestMissing = false)
+    override fun withdraw(): List<Item> = productionWithdraw(
+        supplies { BotFarmingActionHandler.portableStock(bot, it) }.orEmpty(), requestMissing = false)
     override fun bankWithdraw(): List<Item> = supplies { bot.bank.computeAmountForId(it).toLong() }
         ?: emptyList<Item>().also { stop() }
 
@@ -210,5 +235,6 @@ class MakeCompostBotScript(
         it.location = location
         it.type = type
         it.target = target
+        it.returnProfit = returnProfit
     }
 }

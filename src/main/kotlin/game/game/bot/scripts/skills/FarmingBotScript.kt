@@ -8,6 +8,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
+import com.google.gson.JsonArray
 import engine.bot.gear.BotGearLocator
 import game.content.sailing.Entrana
 import game.skill.farming.Farming
@@ -60,24 +61,50 @@ import kotlin.time.Duration
  * once, then are picked and left standing for native produce regrowth. Mushrooms and belladonna use normal finite
  * harvests. Belladonna visits preserve existing hand gear or equip suitable owned hand gear through the equipment API.
  * Stored tools and fertilizer are retrieved through native leprechaun exchanges before the usual banking lifecycle.
- * Completed plot visits can put carried farming tools away with a nearby leprechaun; seeds and harvests stay carried.
+ * Nearby plots sharing one mapped farm can be visited in one session with one carried tool set. Completed runs can
+ * put carried farming tools away with a nearby leprechaun; seeds and harvests stay carried.
  *
  * @param bot The farmer.
- * @property location Native persistent patch identity, independent of its changing appearance.
- * @property seedId Optional owned seed selected for replanting; zero means tend or harvest only.
+ * @param location First native patch identity, independent of its changing appearance.
+ * @param seedId Optional seed selected for replanting; zero means tend or harvest only.
  * @param duration Maximum visit duration, including travel and banking.
  * @property replantTrees Whether to rotate mature trees when another owned sapling can be planted.
+ * @param nearbyVisits Additional plots at the same mapped farm, sharing preparation, banking and retry budgets.
  * @author lare96
  */
 class FarmingBotScript(
     bot: Bot,
-    val location: PatchLocation,
-    val seedId: Int,
+    location: PatchLocation,
+    seedId: Int,
     duration: Duration,
-    val replantTrees: Boolean = false
+    val replantTrees: Boolean = false,
+    nearbyVisits: List<Visit> = emptyList()
 ) : InventoryBotScript(bot, duration, mutableListOf(SITES.getValue(location))) {
     override val trainingSkill = SKILL_FARMING
     override val verifiedProductionWithdrawals = true
+
+    /**
+     * One intended native plot and its optional planting recipe, without copying crop state.
+     *
+     * @author lare96
+     */
+    data class Visit(val location: PatchLocation, val seedId: Int)
+
+    private val visits = (listOf(Visit(location, seedId)) + nearbyVisits.filter {
+        SITES[it.location] == SITES.getValue(location)
+    }).distinctBy { it.location }
+    private var visitIndex = 0
+    private var portableSuppliesOnly = false
+
+    /**
+     * Native patch currently being attended in this bounded run.
+     */
+    val location: PatchLocation get() = visits[visitIndex].location
+
+    /**
+     * Optional planting recipe for the current plot.
+     */
+    val seedId: Int get() = visits[visitIndex].seedId
 
     companion object {
         /**
@@ -140,17 +167,31 @@ class FarmingBotScript(
              * Preserves the factory's training/profit replacement policy across saved visits.
              */
             var replantTrees = false
+            var visits: List<Visit> = emptyList()
+            var visitIndex = 0
             override fun load(data: JsonObject) {
                 super.load(data)
                 patchKey = data.get("patchKey").asString
                 seedId = data.get("seedId")?.asInt ?: 0
                 replantTrees = data.get("replantTrees")?.asBoolean ?: false
+                visits = data.getAsJsonArray("visits")?.map { entry ->
+                    val visit = entry.asJsonObject
+                    Visit(SITES.keys.first { it.key == visit.get("patchKey").asString }, visit.get("seedId").asInt)
+                } ?: emptyList()
+                visitIndex = data.get("visitIndex")?.asInt ?: 0
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("patchKey", patchKey)
                 data.addProperty("seedId", seedId)
                 data.addProperty("replantTrees", replantTrees)
+                data.add("visits", JsonArray().also { array -> visits.forEach { entry ->
+                    array.add(JsonObject().also {
+                        it.addProperty("patchKey", entry.location.key)
+                        it.addProperty("seedId", entry.seedId)
+                    })
+                } })
+                data.addProperty("visitIndex", visitIndex)
             }
         }
     }
@@ -178,21 +219,169 @@ class FarmingBotScript(
      * Restores a visit without replenishing retry budgets or advancing crop timers.
      */
     constructor(bot: Bot, data: FarmingData) : this(bot,
-        SITES.keys.first { it.key == data.patchKey }, data.seedId, data.duration, data.replantTrees) {
+        data.visits.firstOrNull()?.location ?: SITES.keys.first { it.key == data.patchKey },
+        data.visits.firstOrNull()?.seedId ?: data.seedId, data.duration, data.replantTrees, data.visits.drop(1)) {
+        visitIndex = data.visitIndex.coerceIn(0, visits.lastIndex)
         restoreInventoryState(data)
     }
 
     /**
      * Counts portable unnoted stock and exact native leprechaun storage, excluding worn equipment.
      */
-    private fun owns(item: Item): Boolean = BotFarmingActionHandler.stock(bot, item.id) >= item.amount
+    private fun owns(item: Item): Boolean = (if (portableSuppliesOnly)
+        BotFarmingActionHandler.portableStock(bot, item.id) else BotFarmingActionHandler.stock(bot, item.id)) >= item.amount
+
+    /**
+     * Chooses executable alternatives after preparation without letting inaccessible native storage hide them.
+     * Factory and preparation queries still include genuine stored ownership.
+     */
+    private inline fun <T> withPortableSupplies(block: () -> T): T {
+        val previous = portableSuppliesOnly
+        portableSuppliesOnly = true
+        return try { block() } finally { portableSuppliesOnly = previous }
+    }
+
+    private fun selectedCrop(): Crop? = patch.findCrop(seedId)?.takeIf { bot.farming.level >= it.level }
+
+    private fun replantAfterWork(crop: Crop?): Boolean = crop != null && (patch.dead || !patch.isOccupied() ||
+        patch.harvestReady() && if (patch is AbstractTreePatch) replantTrees &&
+            ((patch.crop as? TreeSapling)?.let { bot.woodcutting.level >= it.tree.level } ?: true)
+        else patch !is HealthCheckPatch)
 
     /**
      * Replanting is optional and requires the native seed count, current level and planting tool.
      */
-    private fun plantingCrop(): Crop? = patch.findCrop(seedId)?.takeIf {
-        bot.farming.level >= it.level && owns(Item(it.seedId, patch.seedsRequired(it))) && owns(Item(patch.plantTool))
+    private fun plantingCrop(): Crop? = selectedCrop()?.takeIf {
+        owns(Item(it.seedId, patch.seedsRequired(it))) && owns(Item(patch.plantTool))
     }
+
+    private inline fun <T> atVisit(index: Int, block: () -> T): T {
+        val previous = visitIndex
+        visitIndex = index
+        return try { block() } finally { visitIndex = previous }
+    }
+
+    /**
+     * Retains useful native work even when its mandatory tools, cure or explicitly selected seed are missing.
+     * Healthy protected flowers and checked standing trees still do not create work merely to justify shopping.
+     */
+    private fun preparationForCurrent(): List<Item>? {
+        if (location == HopsPatchLocation.ENTRANA && Entrana.isCarryingForbidden(bot)) return null
+        val patch = patch
+        val crop = selectedCrop()
+        val supplies = when {
+            patch is FlowerPatch && patch.scarecrow -> if (needsScarecrow()) null else listOf(Item(Farming.SPADE))
+            patch.dead -> listOf(Item(Farming.SPADE))
+            patch.diseased -> listOf(Item(if (patch is AbstractTreePatch || patch is BushPatch)
+                listOf(Farming.MAGIC_SECATEURS, Farming.SECATEURS).firstOrNull { owns(Item(it)) }
+                    ?: Farming.SECATEURS else Farming.PLANT_CURE))
+            patch is AbstractTreePatch && patch.harvestReady() -> when {
+                patch.canCheckHealth() || patch is FruitTreePatch && patch.canPick() -> emptyList()
+                !replantTrees || crop == null -> null
+                patch.stump -> listOf(Item(Farming.SPADE))
+                patch.canChop() -> {
+                    val planted = patch.crop as? TreeSapling
+                    if (planted != null && bot.woodcutting.level < planted.tree.level) null
+                    else treeAxe()?.let { axe ->
+                        if (bot.equipment[Equipment.WEAPON]?.id == axe.id) emptyList() else listOf(Item(axe.id))
+                    } ?: Axe.entries.filter { bot.woodcutting.level >= it.level }
+                        .minByOrNull { it.level }?.let { listOf(Item(it.id)) }
+                }
+                else -> null
+            }
+            patch is HealthCheckPatch && patch.harvestReady() ->
+                if (patch.canCheckHealth() || patch is PickablePatch && patch.canPick()) emptyList() else null
+            patch.harvestReady() -> if (protectsAllotment()) null else listOfNotNull(patch.harvestTool?.let { Item(it) })
+            patch.needsRaking() -> if (crop != null || needsScarecrow() && owns(Item(Farming.SCARECROW)))
+                listOf(Item(Farming.RAKE)) else null
+            !patch.isOccupied() && needsScarecrow() && owns(Item(Farming.SCARECROW)) -> listOf(Item(Farming.SCARECROW))
+            !patch.isOccupied() && crop != null -> listOf(Item(crop.seedId, patch.seedsRequired(crop)), Item(patch.plantTool))
+            else -> nextWork()?.supplies
+        } ?: return null
+        return buildList {
+            addAll(supplies)
+            if (crop != null && replantAfterWork(crop)) {
+                add(Item(crop.seedId, patch.seedsRequired(crop)))
+                add(Item(patch.plantTool))
+                if (patch.needsRaking() || patch.dead) add(Item(Farming.RAKE))
+                if (patch is AbstractTreePatch && patch.harvestReady()) {
+                    val axe = treeAxe() ?: Axe.entries.filter { bot.woodcutting.level >= it.level }.minByOrNull { it.level }
+                    axe?.takeIf { bot.equipment[Equipment.WEAPON]?.id != it.id }?.let { add(Item(it.id)) }
+                }
+            }
+            if (needsGloves() && bot.equipment[Equipment.HANDS] == null) add(Item(harvestGloves() ?: 1059))
+        }.groupBy { it.id }.map { (id, entries) -> Item(id, entries.maxOf { it.amount }) }
+    }
+
+    /**
+     * Whether some remaining plot has meaningful native work that supply preparation can make possible.
+     */
+    fun canPrepare(): Boolean = (visitIndex..visits.lastIndex).any { atVisit(it) { preparationForCurrent() != null } }
+
+    /**
+     * Combines remaining plot recipes, sharing reusable tools while reserving each plot's consumed inputs.
+     * Optional fertilizer is limited to owned stock and spare carrying space so harvests retain room.
+     */
+    fun preparationSupplies(): List<Item> = runSupplies(preparing = true)
+
+    private fun runSupplies(preparing: Boolean): List<Item> {
+        val supplied = (visitIndex..visits.lastIndex).flatMap { index -> atVisit(index) {
+            if (preparing) preparationForCurrent().orEmpty() else withPortableSupplies {
+                if (isEligible()) singleVisitSupplies() else emptyList()
+            }
+        } }
+        val consumed = visits.mapTo(HashSet()) { it.seedId } + setOf(
+            Farming.PLANT_CURE, Farming.SCARECROW, CompostType.COMPOST.itemId, CompostType.SUPERCOMPOST.itemId)
+        val required = supplied.groupBy { it.id }.map { (id, entries) ->
+            val amount = if (id in consumed) entries.sumOf { it.amount } else entries.maxOf { it.amount }
+            Item(id, if (!preparing && id in consumed) minOf(amount,
+                BotFarmingActionHandler.portableStock(bot, id).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()) else amount)
+        }.sortedBy { if (it.id in consumed) 1 else 0 }.toMutableList()
+        val optional = (visitIndex..visits.lastIndex).flatMap { index -> atVisit(index) {
+            if ((if (preparing) preparationForCurrent() == null else !isPortablyEligible()) || protectsAllotment()) emptyList() else buildList {
+                if (patch.canApplyCompost() || replantAfterWork(selectedCrop()))
+                    listOf(CompostType.SUPERCOMPOST.itemId, CompostType.COMPOST.itemId)
+                    .firstOrNull { if (preparing) owns(Item(it)) else BotFarmingActionHandler.portableStock(bot, it) > 0 }
+                    ?.let { add(Item(it)) }
+                if (patch.canBeWatered) Farming.WATERING_CANS.asReversed()
+                    .firstOrNull { if (preparing) owns(Item(it)) else BotFarmingActionHandler.portableStock(bot, it) > 0 }
+                    ?.let { add(Item(it)) }
+            }
+        } }.groupBy { it.id }.map { (id, entries) ->
+            Item(id, if (id in consumed) minOf(entries.sumOf { it.amount },
+                (if (preparing) BotFarmingActionHandler.stock(bot, id) else BotFarmingActionHandler.portableStock(bot, id))
+                    .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()) else 1)
+        }
+        var slots = required.sumOf { if (it.itemDef.isStackable) 1 else it.amount }
+        for (item in optional) {
+            val existing = required.indexOfFirst { it.id == item.id }
+            val carried = if (existing == -1) 0 else required[existing].amount
+            val additional = (item.amount - carried).coerceAtLeast(0)
+            val free = (bot.inventory.capacity() - 10 - slots).coerceAtLeast(0)
+            val amount = if (item.itemDef.isStackable) additional.takeIf { existing != -1 || free > 0 } ?: 0
+                else minOf(additional, free)
+            if (amount == 0) continue
+            if (existing == -1) required.add(Item(item.id, amount)) else required[existing] = Item(item.id, carried + amount)
+            slots += if (item.itemDef.isStackable) if (existing == -1) 1 else 0 else amount
+        }
+        return required
+    }
+
+    /**
+     * Moves to another plot only after current carried stock offers no usable action. No banking or storage occurs.
+     */
+    internal fun advanceVisit(): Boolean {
+        if (isPortablyEligible() || visitIndex == visits.lastIndex) return false
+        visitIndex++
+        return true
+    }
+
+    private fun selectSuppliedVisit(): Boolean {
+        while (!isPortablyEligible()) if (!advanceVisit()) return false
+        return true
+    }
+
+    private fun isPortablyEligible(): Boolean = withPortableSupplies { isEligible() }
 
     /**
      * Keeps a mature protective flower while any linked, matching allotment still needs disease protection.
@@ -322,13 +511,12 @@ class FarmingBotScript(
      * Packs the next action plus an optional replant and care supplies, leaving ample room for native harvests.
      * Rebuilt after every deposit so depleted stock and crops changed during travel cannot cause repeated bank trips.
      */
-    fun visitSupplies(): List<Item> {
+    private fun singleVisitSupplies(): List<Item> {
         val work = nextWork() ?: return emptyList()
         return buildList {
             addAll(work.supplies)
             plantingCrop()?.let {
-                if (patch.dead || !patch.isOccupied() ||
-                    patch.harvestReady() && patch !is HealthCheckPatch && (patch !is AbstractTreePatch || replantTrees)) {
+                if (replantAfterWork(it)) {
                     add(Item(it.seedId, patch.seedsRequired(it)))
                     add(Item(patch.plantTool))
                     if (patch.needsRaking()) add(Item(Farming.RAKE))
@@ -338,28 +526,29 @@ class FarmingBotScript(
                 }
             }
             if (needsGloves() && bot.equipment[Equipment.HANDS] == null) harvestGloves()?.let { add(Item(it)) }
-            if (!protectsAllotment()) {
-                listOf(CompostType.SUPERCOMPOST.itemId, CompostType.COMPOST.itemId)
-                    .firstOrNull { owns(Item(it)) }?.let { add(Item(it)) }
-                if (patch.canBeWatered) Farming.WATERING_CANS.asReversed()
-                    .firstOrNull { owns(Item(it)) }?.let { add(Item(it)) }
-            }
         }.groupBy { it.id }.map { (id, items) -> Item(id, items.maxOf { it.amount }) }
     }
 
+    /**
+     * Packs currently owned supplies for every remaining nearby plot with one reusable tool set.
+     */
+    fun visitSupplies(): List<Item> = runSupplies(preparing = false)
+
     override suspend fun equipment(): BotGearLocator? = null
     override suspend fun beforeInventoryInit(): Boolean {
+        FarmingReturnBotScript.arm(bot, profit = !replantTrees)
         Farming.update(bot)
-        if (!isEligible()) return false
-        val items = visitSupplies()
-        return !BotFarmingActionHandler.needsStorage(bot, items) ||
-            handler.farming.retrieve(items, SITES.getValue(location)) { isActionSafe() }
+        if (!canPrepare()) return false
+        FarmingSupplyPreparation.prepare(bot, handler, preparationSupplies(), SITES.getValue(location),
+            { isActionSafe() }, remainingDuration())
+        Farming.update(bot)
+        return selectSuppliedVisit()
     }
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =
         (location != HopsPatchLocation.ENTRANA || !Entrana.isCarryingForbidden(bot)) && super.travelToWorkZone(zone, bank)
 
     override fun withdraw(): List<Item> = productionWithdraw(visitSupplies(), requestMissing = false)
-    override fun bankWithdraw(): List<Item> = visitSupplies().also { if (!isEligible()) stop() }
+    override fun bankWithdraw(): List<Item> = if (selectSuppliedVisit()) visitSupplies() else emptyList<Item>().also { stop() }
 
     override suspend fun withdrawBankItems(items: List<Item>): Boolean {
         if (!super.withdrawBankItems(items)) return false
@@ -378,16 +567,17 @@ class FarmingBotScript(
         (!needsGloves() || bot.equipment[Equipment.HANDS] != null) &&
         (work.output == null || bot.inventory.hasSpaceFor(work.output))
 
-    override suspend fun onInventoryBankRequested(): Boolean = nextWork()?.let {
+    override suspend fun onInventoryBankRequested(): Boolean = withPortableSupplies { nextWork() }?.let {
         requestProductionBank(canWork(it))
     } ?: false
 
     override suspend fun onExecuteInZone(): Boolean {
         Farming.update(bot)
-        val work = nextWork() ?: run {
+        if (!selectSuppliedVisit()) {
             handler.farming.store(SITES.getValue(location)) { isActionSafe() }
             return false
         }
+        val work = withPortableSupplies { nextWork() } ?: return true
         if (!productionReady(canWork(work))) return true
         val zone = SITES.getValue(location)
         val target = world.locator.findObjects(zone.area.centerPosition, zone.area.tileRadius) {
@@ -406,5 +596,7 @@ class FarmingBotScript(
         it.patchKey = location.key
         it.seedId = seedId
         it.replantTrees = replantTrees
+        it.visits = visits
+        it.visitIndex = visitIndex
     }
 }

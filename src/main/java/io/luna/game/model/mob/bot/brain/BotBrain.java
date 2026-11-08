@@ -10,6 +10,7 @@ import game.bot.scripts.CannonBotSupport;
 import game.bot.scripts.RecoverCannonBotScript;
 import game.bot.scripts.BankCleanupBotScript;
 import game.bot.scripts.BankRecoveryWaitBotScript;
+import game.bot.scripts.skills.FarmingReturnBotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
@@ -71,6 +72,10 @@ public class BotBrain {
         if (BotBankSpace.recoveryDeferred(bot)) {
             return owner -> owner.getScriptStack().push(
                     new BankRecoveryWaitBotScript(owner, System.currentTimeMillis() + 120_000L));
+        }
+        FarmingReturnBotScript farmingReturn = FarmingReturnBotScript.poll(bot);
+        if (farmingReturn != null) {
+            return owner -> owner.getScriptStack().pushTail(farmingReturn);
         }
         var map = new HashMap<>(bot.getPreferences().getActivities());
         map.computeIfPresent(BotActivity.PKING, (key, value) -> PkingCoordinator.INSTANCE.activityWeight(bot));

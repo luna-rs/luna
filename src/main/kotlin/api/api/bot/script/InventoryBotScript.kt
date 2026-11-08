@@ -30,7 +30,7 @@ import kotlin.time.Duration.Companion.seconds
  * recipe requirements and the normal player interaction. Failure budgets and their legacy JSON fields live here.
  * [verifiedProductionWithdrawals] opts production scripts into bounded unnoted withdrawal verification; existing
  * inventory scripts retain their default withdrawal behavior. Custom stock targets, output space, prerequisites,
- * and completion remain in the activity script. Missing minimum startup supplies use the shared
+ * and completion remain in the activity script. Production startup acquires useful carried batches through the shared
  * quantity-aware shop acquisition before an optional activity-specific prerequisite is queued.
  *
  * Subclasses provide the required withdrawal items, the activity-specific execution step, and the condition that decides
@@ -179,7 +179,7 @@ abstract class InventoryBotScript(
 
     /** The selected recipe's startup requirements; rebuilt rather than persisted on each resume. */
     private class StartupSupplies(
-        val items: List<Item>, val allowAcquisition: Boolean, val prepareMissing: () -> Boolean
+        val items: List<Item>, val tools: Set<Int>, val allowAcquisition: Boolean, val prepareMissing: () -> Boolean
     )
     private var startupSupplies: StartupSupplies? = null
 
@@ -206,21 +206,86 @@ abstract class InventoryBotScript(
                 bot.preferences.raiseWantedItemTarget(it.id, if (it.id in tools) 3 else maxOf(1_000, it.amount))
             }
         }
-        startupSupplies = StartupSupplies(items, requestMissing && !ownedSuppliesOnly, prepareMissing)
+        startupSupplies = StartupSupplies(items, tools.toSet(), requestMissing && !ownedSuppliesOnly, prepareMissing)
         forceBanking = true
         return items
     }
 
-    /** Acquires only missing minimum quantities, within one shared deadline and normal non-combat safety. */
-    private suspend fun obtainStartupSupplies(items: List<Item>): Boolean = withTimeoutOrNull(120.seconds) {
-        for (item in items) {
-            if (!awaitActionSafety()) return@withTimeoutOrNull false
-            if (bot.bank.computeAmountForId(item.id).toLong() + bot.inventory.computeAmountForId(item.id) >= item.amount) continue
-            if (!handler.shop.obtainWantedItem(item.id, item.amount)) return@withTimeoutOrNull false
+    /**
+     * Plans balanced recipe quantities using real stackability and one reserved currency slot. Tools stay at one
+     * copy; stock targets, carried capacity, accessible shop stock and actual currency balances limit each batch.
+     * Native purchases recheck the quotes after travel. Legacy withdrawal lists retain their exact quantities.
+     */
+    private fun startupPurchaseTargets(startup: StartupSupplies): Map<Int, Int> {
+        val materials = startup.items.filterNot { it.id in startup.tools }
+        val stackedSlots = materials.count { it.itemDef.isStackable }
+        val looseSlots = materials.filterNot { it.itemDef.isStackable }.sumOf { it.amount.toLong() }
+        val availableSlots = (bot.inventory.capacity() - 1 - startup.tools.size - stackedSlots).coerceAtLeast(0)
+        val capacity = if (looseSlots == 0L) 1_000 else (availableSlots / looseSlots).coerceAtMost(1_000).toInt()
+        val stockLimit = materials.minOfOrNull { item ->
+            val target = bot.preferences.getWantedItem(item.id)?.target()?.coerceAtLeast(item.amount) ?: 1_000
+            (target / item.amount).coerceAtLeast(1)
+        } ?: 1
+        fun owned(id: Int) = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+        fun affordable(operations: Int): Boolean {
+            val costs = HashMap<Int, Long>()
+            for (item in materials) {
+                var missing = (item.amount.toLong() * operations - owned(item.id)).coerceAtLeast(0)
+                if (missing == 0L) continue
+                val shops = bot.world.shops.values().filter {
+                    item.id in it.itemIds && it.botAccess.apply(bot) && it.items.computeAmountForId(item.id) > 0
+                }.sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
+                    .thenBy { it.computeBuyValue(item.id, 1).orElse(Int.MAX_VALUE) })
+                for (shop in shops) {
+                    val amount = minOf(missing, shop.items.computeAmountForId(item.id).toLong()).toInt()
+                    val quote = shop.computeBuyValue(item.id, amount).orElse(-1)
+                    if (quote < 0) continue
+                    val currency = shop.currency.id
+                    val cost = (costs[currency] ?: 0L) + quote
+                    if (cost > owned(currency)) return false
+                    costs[currency] = cost
+                    missing -= amount
+                    if (missing == 0L) break
+                }
+                if (missing > 0) return false
+            }
+            return true
         }
-        items.all { bot.bank.computeAmountForId(it.id).toLong() +
-                bot.inventory.computeAmountForId(it.id) >= it.amount }
-    } == true
+        var operations = 1
+        var limit = minOf(capacity, stockLimit).coerceAtLeast(1)
+        while (operations < limit) {
+            val candidate = operations + (limit - operations + 1) / 2
+            if (affordable(candidate)) operations = candidate else limit = candidate - 1
+        }
+        return startup.items.associate { item -> item.id to
+            if (item.id in startup.tools) 1 else (item.amount.toLong() * operations).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }
+    }
+
+    /**
+     * Secures every recipe minimum before optional batch purchases, preserving all basket items during banking.
+     * A single deadline covers both phases. Limited funds, shop stock or a top-up timeout never discard a usable
+     * partial batch; an absent recipe minimum still allows the activity's existing preparation callback.
+     */
+    private suspend fun obtainStartupSupplies(items: List<Item>, targets: (() -> Map<Int, Int>)? = null): Boolean {
+        val minimums = items.associate { it.id to it.amount }
+        fun stocked(required: Map<Int, Int>) = required.all { (id, amount) ->
+            bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id) >= amount
+        }
+        withTimeoutOrNull(120.seconds) {
+            if (!awaitActionSafety()) return@withTimeoutOrNull
+            if (!stocked(minimums)) {
+                if (targets == null) BotTradeIntentions.recordSupplies(bot, items.filter {
+                    bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
+                }, stockTarget = 1)
+                handler.shop.obtainWantedItems(minimums)
+            }
+            val purchases = if (stocked(minimums)) targets?.invoke() else null
+            if (purchases != null && !stocked(purchases) && awaitActionSafety()) {
+                handler.shop.obtainWantedItems(purchases)
+            }
+        }
+        return stocked(minimums)
+    }
 
     /**
      * Allows banking only when safe and necessary, charging its independent retry budget.
@@ -320,7 +385,8 @@ abstract class InventoryBotScript(
         val supplied = if (ownedSuppliesOnly || startup?.allowAcquisition == false) {
             (startup?.items ?: withdraw).all { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) >= it.amount }
-        } else obtainStartupSupplies(startup?.items ?: withdraw)
+        } else obtainStartupSupplies(startup?.items ?: withdraw,
+            startup?.let { plan -> { startupPurchaseTargets(plan) } })
         if (!supplied) {
             bot.log("Could not obtain the minimum production supplies.")
             if (startup != null && isActionSafe() && startup.prepareMissing()) return false

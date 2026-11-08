@@ -3,16 +3,19 @@ package game.bot.scripts
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.TargetingZonedBotScript
+import api.bot.action.BotCombatActionHandler
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.SkillingScriptFactory
+import engine.bot.coordinator.skill.SkillingCoordinator.Companion.profitMode
 import game.bot.scripts.skills.MillFlourBotScript
 import game.bot.scripts.skills.SpinTextileBotScript
 import game.obj.resource.harvestable.CabbageResource
 import game.obj.resource.harvestable.FlaxResource
 import game.obj.resource.harvestable.HarvestableResource
+import game.obj.resource.harvestable.HarvestActionItem
 import game.obj.resource.harvestable.OnionResource
 import game.obj.resource.harvestable.PotatoResource
 import game.obj.resource.harvestable.WheatResource
@@ -20,6 +23,7 @@ import game.skill.crafting.textileCrafting.Textile
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A generic object-targeting script for harvesting simple world resources.
@@ -39,8 +43,13 @@ class HarvestBotScript(
     bot: Bot,
     val harvestable: Harvestable,
     duration: Duration,
-    zones: MutableList<SubZone>
+    zones: MutableList<SubZone>,
+    val targetAmount: Int = 0,
+    private var supplyDeadline: Long = 0L
 ) : TargetingZonedBotScript<GameObject>(bot, duration, zones) {
+    init {
+        require(targetAmount >= 0 && (targetAmount == 0 || harvestable == Harvestable.FLAX))
+    }
 
     companion object {
 
@@ -92,15 +101,21 @@ class HarvestBotScript(
              * The resource type this script should harvest.
              */
             var harvestable: Harvestable? = null
+            var targetAmount = 0
+            var supplyDeadline = 0L
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 harvestable = Harvestable.valueOf(data.get("resource").asString)
+                targetAmount = data.get("targetAmount")?.asInt ?: 0
+                supplyDeadline = data.get("supplyDeadline")?.asLong ?: 0L
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("resource", harvestable!!.name)
+                data.addProperty("targetAmount", targetAmount)
+                data.addProperty("supplyDeadline", supplyDeadline)
             }
         }
     }
@@ -111,24 +126,51 @@ class HarvestBotScript(
      * @param bot The bot running this script.
      * @param data The saved harvest script data.
      */
-    constructor(bot: Bot, data: HarvestData) : this(bot, data.harvestable!!, data.duration, data.zones)
+    constructor(bot: Bot, data: HarvestData) : this(bot, data.harvestable!!, data.duration, data.zones,
+        data.targetAmount, data.supplyDeadline)
 
     /**
      * Whether this bot spins each inventory of flax at the Seers' Village wheel before banking it.
      */
     private var spinFlax = false
 
+    private fun quotaReached(): Boolean = targetAmount > 0 &&
+        bot.inventory.computeAmountForId(SpinTextileBotScript.FLAX).toLong() +
+        bot.bank.computeAmountForId(SpinTextileBotScript.FLAX) >= targetAmount
+
+    private fun supplyAllowed(): Boolean = targetAmount == 0 ||
+        BotCombatActionHandler.mayGainExperience(bot, SKILL_CRAFTING) &&
+            (bot.profitMode || BotCombatActionHandler.wantsToTrain(bot, SKILL_FLETCHING)) &&
+            (supplyDeadline == 0L || System.currentTimeMillis() < supplyDeadline)
+
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if (supplyDeadline > 0) duration = minOf(duration,
+            (supplyDeadline - System.currentTimeMillis()).milliseconds)
+        if (duration <= Duration.ZERO || !supplyAllowed() || quotaReached()) return false
         if (harvestable == Harvestable.FLAX) {
             SpinTextileBotScript.leaveSeersWheel(bot)
-            if (!resumed) {
+            if (!resumed && targetAmount == 0) {
                 spinFlax = bot.crafting.staticLevel >= Textile.BOWSTRING.level && rand(bot.personality.intelligence)
             }
         }
         return true
     }
 
+    override suspend fun onPrepareTargeting(): Boolean {
+        if (!supplyAllowed() || quotaReached()) {
+            stopSupplyHarvest()
+            stop()
+            return false
+        }
+        return true
+    }
+
     override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
+        if (!supplyAllowed() || quotaReached()) {
+            stopSupplyHarvest()
+            stop()
+            return false
+        }
         if (!initial && spinFlax && activeZone == SubZone.SOUTH_SEERS_VILLAGE_FLAX &&
             SpinTextileBotScript.FLAX in bot.inventory) {
             spinFlax = SpinTextileBotScript.spinAtSeers(bot)
@@ -137,7 +179,17 @@ class HarvestBotScript(
     }
 
     // Don't start another plant with a full inventory. Its click would cancel the walk to the bank.
-    override suspend fun interactionOption(target: GameObject): Int? = if (bot.inventory.isFull) null else 2
+    override suspend fun interactionOption(target: GameObject): Int? =
+        if (bot.inventory.isFull || !supplyAllowed() || quotaReached()) null else 2
+
+    private fun stopSupplyHarvest() {
+        if (targetAmount > 0) bot.actions.first(HarvestActionItem::class.java)
+            ?.takeIf { it.resource == harvestable.resource }?.interrupt()
+    }
+
+    override suspend fun finish() {
+        stopSupplyHarvest()
+    }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         return world.locator.findObjects(searchBase, searchRadius, true) { harvestable.resource.isResource(it.def()) }
@@ -148,10 +200,13 @@ class HarvestBotScript(
         data.harvestable = harvestable
         data.duration = duration
         data.zones = zones
+        data.targetAmount = targetAmount
+        data.supplyDeadline = supplyDeadline
         return data
     }
 
     override suspend fun completed() {
+        if (targetAmount > 0) return
         // Chance to queue a flax spinning script, unless this bot spins its own flax.
         if (harvestable == Harvestable.FLAX && !spinFlax &&
             (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {

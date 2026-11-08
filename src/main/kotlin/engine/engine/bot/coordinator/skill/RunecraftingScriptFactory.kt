@@ -35,25 +35,30 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
         createScript(bot, level, zones, training = false)
 
     /**
-     * Ranks actual rune rewards using a single price snapshot per decision and only essence the bot owns, including
-     * stored pouch contents. Profit sessions skip non-positive margins; an unavailable method lets normal activity
-     * selection continue. No population or target-availability information participates in the choice.
+     * Ranks actual rune rewards using a single price snapshot per decision. Owned essence, including stored pouch
+     * contents, takes priority; otherwise stocked accessible shops precede a bounded missing-essence request.
+     * Profit sessions skip non-positive margins and recheck the actual input after acquisition.
      */
     private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
         val currentLevel = minOf(level, bot.runecrafting.level)
         val prices = HashMap<Int, Long>()
         fun price(id: Int): Long = prices.getOrPut(id) { bot.world.economy.getPrice(id).coerceAtLeast(0) }
-        val scores = CraftableRune.entries.filter { it.level <= currentLevel }.mapNotNull { rune ->
-            val essence = CraftRuneBotScript.compatibleEssence(bot, rune) ?: return@mapNotNull null
+        val candidates = CraftableRune.entries.filter { it.level <= currentLevel }.mapNotNull { rune ->
+            val essence = CraftRuneBotScript.essenceForPurchase(bot, rune)
             val score = if (training) rune.exp else
-                (price(rune.id) * rune.outputMultiplier(bot.runecrafting.level) - price(essence)).toDouble()
-            if (!training && score <= 0.0) null else rune to score
-        }.sortedWith(compareByDescending<Pair<CraftableRune, Double>> { it.second }.thenByDescending { it.first.level })
+                price(rune.id).toDouble() * rune.outputMultiplier(bot.runecrafting.level) - price(essence)
+            if (!training && score <= 0.0) null else Triple(rune, score, essence)
+        }
+        val supplied = candidates.filter { CraftRuneBotScript.compatibleEssence(bot, it.first) != null }
+        val obtainable = candidates.filter { CraftRuneBotScript.canPurchaseEssence(bot, it.third) }
+        val scores = supplied.ifEmpty { obtainable.ifEmpty { candidates } }
+            .sortedWith(compareByDescending<Triple<CraftableRune, Double, Int>> { it.second }
+                .thenByDescending { it.first.level })
         val rune = selectRankedActivity(bot, scores.map { it.first }) ?: return VoidBotScript(bot)
         zones.clear()
         zones.add(rune.altar.zone)
         val abyss = bot.health >= 30 && Food.values().any { it.heal >= 8 && bot.itemTracker.count(it.id) >= 4 } &&
             rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5)
-        return CraftRuneBotScript(bot, rune.altar, getDuration(bot), viaAbyss = abyss)
+        return CraftRuneBotScript(bot, rune.altar, getDuration(bot), viaAbyss = abyss, profit = !training)
     }
 }
