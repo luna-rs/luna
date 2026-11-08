@@ -25,16 +25,18 @@ import kotlin.time.Duration.Companion.seconds
  * consumption, current-level validation, animation, and XP awards. All recipes come from [FinishedPotion],
  * including preparation oil; this script adds no quest requirements or recipe rules absent from that handler.
  * The Herblore factory can select eligible recipes in training or profit mode using its usual personality rules.
- * Selecting profit mode does not imply a market margin, and the script does not purchase or manufacture supplies.
+ * Selecting profit mode does not imply a market margin. Owned unfinished potions permit selection even when
+ * the secondary is missing; bounded startup acquisition purchases only missing secondary ingredients.
  *
  * [InventoryBotScript] handles travel to existing processing zones, banking, duration, and weak-action gating.
  * Each bank visit withdraws up to fourteen balanced input pairs, limited by the smaller available stock.
- * Missing startup inputs request total stock targets of 1,000 and end the session. Death, locks, combat, strong
+ * Missing secondaries retain their normal stock targets. Death, locks, combat, strong
  * actions, and insufficient permanent level prevent startup; current level is checked before each interaction.
  *
  * Three failed interactions or unresolved banking requests stop production. Unnoted withdrawals are verified
  * and bounded to fifteen seconds. Snapshots preserve the recipe, duration, zones, and both retry budgets.
- * Finishing interrupts only the matching potion action so the coordinator can choose another activity.
+ * Finishing interrupts only the matching potion action. Successful stock exhaustion can queue one eligible
+ * next production stage with the remaining budget; failed or paused work never starts a continuation.
  *
  * @param bot The bot mixing potions.
  * @property potion The existing finished-potion recipe used for this session.
@@ -60,15 +62,21 @@ class MakePotionBotScript(
         class PotionData : InventoryScriptData() {
             /** [FinishedPotion] enum name used to reconstruct the configured recipe. */
             var recipe = ""
+            var produced = false
+            var continued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
+                produced = data.get("produced")?.asBoolean ?: false
+                continued = data.get("continued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
+                data.addProperty("produced", produced)
+                data.addProperty("continued", continued)
             }
         }
     }
@@ -77,6 +85,8 @@ class MakePotionBotScript(
     val requiredLevel = potion.level
     /** One unfinished potion and one secondary ingredient, the minimum supplies for a single conversion. */
     private val materials = listOf(potion.unfItem, potion.secondaryItem)
+    private var produced = false
+    private var continued = false
 
     /**
      * Restores the recipe, session configuration, and retry budgets from saved state.
@@ -88,11 +98,24 @@ class MakePotionBotScript(
     constructor(bot: Bot, data: PotionData) :
         this(bot, FinishedPotion.valueOf(data.recipe), data.duration, data.zones) {
         restoreInventoryState(data)
+        produced = data.produced
+        continued = data.continued
     }
 
-    /** Checks permanent level eligibility and one complete input pair across inventory and bank. */
+    /**
+     * Checks permanent level and one owned unfinished potion; missing secondary is acquired during startup.
+     */
     fun isEligible(): Boolean = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel &&
-            bot.ownsProductionSupplies(materials)
+            bot.ownsProductionSupplies(listOf(potion.unfItem))
+
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (produced && HerbloreProduction.owned(bot, potion.unf) < 1) {
+            queueContinuation()
+            stop()
+            return false
+        }
+        return isEligible() && HerbloreProduction.prepare(bot, potion.unf, potion.secondary)
+    }
 
     /** Returns up to fourteen balanced input pairs, or an empty batch when either banked ingredient is missing. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
@@ -100,7 +123,21 @@ class MakePotionBotScript(
     override fun withdraw(): List<Item> = productionWithdraw(materials, levelEligible = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel)
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
-        if (it.isEmpty()) stop()
+        if (it.isEmpty()) {
+            queueContinuation()
+            stop()
+        }
+    }
+
+    /**
+     * Continues verified production once, retaining the remaining budget and rejecting interrupted work.
+     */
+    private fun queueContinuation() {
+        if (!produced || continued || isPaused() || isTerminated() || productionRetriesExhausted() || !isActionSafe()) return
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return
+        continued = true
+        HerbloreProduction.afterFinished(bot, potion, remaining)?.let { bot.scriptStack.softPushHead(it) }
     }
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
@@ -110,7 +147,14 @@ class MakePotionBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_HERBLORE).level >= requiredLevel)) return true
-        attemptProduction(materials.first().id) { startProduction() }
+        val inputBefore = bot.inventory.computeAmountForId(potion.unf)
+        val outputBefore = bot.inventory.computeAmountForId(potion.id)
+        try {
+            attemptProduction(materials.first().id) { startProduction() }
+        } finally {
+            if (bot.inventory.computeAmountForId(potion.unf) < inputBefore ||
+                bot.inventory.computeAmountForId(potion.id) > outputBefore) produced = true
+        }
         return true
     }
 
@@ -129,6 +173,8 @@ class MakePotionBotScript(
 
     override fun snapshot(): PotionData = PotionData().also {
         it.recipe = potion.name
+        it.produced = produced
+        it.continued = continued
         saveInventoryState(it)
     }
 }

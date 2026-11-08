@@ -26,9 +26,10 @@ import kotlin.time.Duration.Companion.seconds
  * Smaller remaining batches are allowed; exhausted inputs or a missing tool end the session.
  *
  * The existing [GrindActionItem] performs conversion without awarding Herblore experience. This activity
- * prepares owned supplies for other uses and is selected only by the factory's profit mode. It neither buys
- * inputs nor assumes that their processed form will sell at a profit. Missing startup supplies are added to
- * wanted items before stopping.
+ * prepares owned supplies for other uses in training or profit mode. Selecting profit mode does not assume
+ * that the processed form will sell at a profit. Missing startup supplies use the shared bounded acquisition.
+ * Successfully exhausting ingredients queues matching finished-potion work once when its primary is owned,
+ * using only the remaining budget. Failed or paused work never starts a continuation.
  *
  * Each interaction must consume an input within ten seconds. Three consecutive failed interactions or
  * unresolved banking requests exhaust their separate budgets. Withdrawals are unnoted, verified, and limited
@@ -59,15 +60,21 @@ class GrindIngredientBotScript(
         class IngredientData : InventoryScriptData() {
             /** [Ingredient] enum name used to reconstruct the configured recipe. */
             var recipe = ""
+            var produced = false
+            var continued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
+                produced = data.get("produced")?.asBoolean ?: false
+                continued = data.get("continued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
+                data.addProperty("produced", produced)
+                data.addProperty("continued", continued)
             }
         }
     }
@@ -78,6 +85,8 @@ class GrindIngredientBotScript(
     private val materials = listOf(ingredient.oldItem)
     /** The reusable tool reserved in each batch and retained by the grinding action. */
     private val tools = setOf(Ingredient.PESTLE_AND_MORTAR)
+    private var produced = false
+    private var continued = false
 
     /**
      * Restores the recipe, session configuration, and retry budgets from a saved snapshot.
@@ -89,6 +98,8 @@ class GrindIngredientBotScript(
     constructor(bot: Bot, data: IngredientData) :
         this(bot, Ingredient.valueOf(data.recipe), data.duration, data.zones) {
         restoreInventoryState(data)
+        produced = data.produced
+        continued = data.continued
     }
 
     /** Checks permanent level eligibility and an owned ingredient plus pestle and mortar across inventory and bank. */
@@ -102,7 +113,30 @@ class GrindIngredientBotScript(
         productionWithdraw(materials, tools, levelEligible = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel)
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
-        if (it.isEmpty()) stop()
+        if (it.isEmpty()) {
+            queueContinuation()
+            stop()
+        }
+    }
+
+    /**
+     * Continues verified production once, retaining the remaining budget and rejecting interrupted work.
+     */
+    private fun queueContinuation() {
+        if (!produced || continued || isPaused() || isTerminated() || productionRetriesExhausted() || !isActionSafe()) return
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return
+        continued = true
+        HerbloreProduction.afterGrinding(bot, ingredient, remaining)?.let { bot.scriptStack.softPushHead(it) }
+    }
+
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (produced && HerbloreProduction.owned(bot, ingredient.id) < 1) {
+            queueContinuation()
+            stop()
+            return false
+        }
+        return true
     }
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
@@ -112,7 +146,14 @@ class GrindIngredientBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_HERBLORE).level >= requiredLevel)) return true
-        attemptProduction(materials.first().id) { startProduction() }
+        val inputBefore = bot.inventory.computeAmountForId(ingredient.id)
+        val outputBefore = bot.inventory.computeAmountForId(ingredient.newId)
+        try {
+            attemptProduction(materials.first().id) { startProduction() }
+        } finally {
+            if (bot.inventory.computeAmountForId(ingredient.id) < inputBefore ||
+                bot.inventory.computeAmountForId(ingredient.newId) > outputBefore) produced = true
+        }
         return true
     }
 
@@ -131,6 +172,8 @@ class GrindIngredientBotScript(
 
     override fun snapshot(): IngredientData = IngredientData().also {
         it.recipe = ingredient.name
+        it.produced = produced
+        it.continued = continued
         saveInventoryState(it)
     }
 }

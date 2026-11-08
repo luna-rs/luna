@@ -14,6 +14,7 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.controllers.Controllers.inWilderness
 import engine.spawn.PersistentGroundItem
+import game.skill.herblore.makePotion.FinishedPotion
 import game.skill.magic.Magic
 import game.skill.magic.SpellCost
 import game.skill.magic.telekineticGrab.TelekineticGrabAction
@@ -39,12 +40,15 @@ import kotlin.time.Duration.Companion.seconds
  * bounded waits. Occupied sources and two consecutive attempts without receiving an item reject the source
  * so another candidate can be tried. Wilderness entry and ongoing trips respect the existing death-loss budget and escape API.
  * Player drops are excluded. Other item types can reuse this script with their own source zones.
+ * Herblore-owned wine trips collect only enough for owned ranging-potion inputs, then queue finished mixing
+ * once with the remaining budget. Partial wine hauls can be mixed when rune stock is exhausted.
  *
  * @property itemId The unnoted world-spawned item to collect.
  * @property profit Whether guide value must exceed the actual planned rune costs.
  * @author lare96
  */
-class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration: Duration, zones: MutableList<SubZone>) :
+class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration: Duration, zones: MutableList<SubZone>,
+                       private val herbloreContinuation: Boolean = false) :
     InventoryBotScript(bot, duration, zones) {
     override val trainingSkill = SKILL_MAGIC
     override val verifiedProductionWithdrawals = true
@@ -84,17 +88,23 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
              * Retains the profit-margin requirement after login or interruption.
              */
             var profit = false
+            var herbloreContinuation = false
+            var continued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 itemId = data.get("itemId")?.asInt ?: WINE
                 profit = data.get("profit")?.asBoolean ?: false
+                herbloreContinuation = data.get("herbloreContinuation")?.asBoolean ?: false
+                continued = data.get("continued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("itemId", itemId)
                 data.addProperty("profit", profit)
+                data.addProperty("herbloreContinuation", herbloreContinuation)
+                data.addProperty("continued", continued)
             }
         }
     }
@@ -102,9 +112,27 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
     /**
      * Restores the resource and purpose without retaining live ground-item references.
      */
-    constructor(bot: Bot, data: TelegrabData) : this(bot, data.itemId, data.profit, data.duration, data.zones) {
+    constructor(bot: Bot, data: TelegrabData) :
+        this(bot, data.itemId, data.profit, data.duration, data.zones, data.herbloreContinuation) {
         restoreInventoryState(data)
+        continued = data.continued
     }
+
+    private var continued = false
+
+    /**
+     * Ingredient trips stop at the matching owned unfinished-potion stock; ordinary trips retain their reserve.
+     */
+    internal fun collectionGoal(): Int = if (herbloreContinuation)
+        minOf(STOCK_TARGET.toLong(), HerbloreProduction.owned(bot, FinishedPotion.RANGING_POTION.unf)).toInt()
+    else STOCK_TARGET
+
+    private fun outputStock(): Int = if (herbloreContinuation)
+        HerbloreProduction.owned(bot, itemId).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+    else bot.itemTracker.count(itemId)
+
+    private fun purposeAllowed(): Boolean = !herbloreContinuation || itemId == WINE &&
+        bot.herblore.staticLevel >= FinishedPotion.RANGING_POTION.level && collectionGoal() > 0
 
     /**
      * Current guide margin after staff and combination-rune substitutions in the supplied plan.
@@ -116,15 +144,16 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
      * Checks spellbook, permanent Magic and build caps, minimum stock, and the total owned output target.
      */
     fun isEligible(): Boolean = bot.spellbook == Spellbook.REGULAR && bot.magic.staticLevel >= LEVEL &&
-        BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) && bot.itemTracker.count(itemId) < STOCK_TARGET &&
+        BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) && purposeAllowed() && outputStock() < collectionGoal() &&
         bot.ownsProductionSupplies(bot.productionRuneCosts(REQUIREMENTS)) && (!profit || margin() > 0)
 
     /**
      * Withdraws a small cast budget, reserving room for every output and limiting it to banked rune stock.
      */
     fun bankBatch(): List<Item> {
+        if (!purposeAllowed()) return emptyList()
         val costs = bot.productionRuneCosts(REQUIREMENTS, bankedOnly = true)
-        val casts = minOf(bot.inventory.capacity() - costs.size, STOCK_TARGET - bot.itemTracker.count(itemId),
+        val casts = minOf(bot.inventory.capacity() - costs.size, collectionGoal() - outputStock(),
             costs.minOfOrNull { bot.bank.computeAmountForId(it.id) / it.amount } ?: 0)
         if (casts < 1 || (profit && margin(costs) <= 0)) return emptyList()
         return costs.map { Item(it.id, it.amount * casts) }
@@ -135,12 +164,40 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
     }
 
     override suspend fun equipment(): BotGearLocator? = null
-    override suspend fun beforeInventoryInit(): Boolean = !bot.inWilderness() || handler.combat.fleeWilderness()
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (bot.inWilderness() && !handler.combat.fleeWilderness()) return false
+        if (!herbloreContinuation) return true
+        if (!purposeAllowed()) { stop(); return false }
+        if (outputStock() >= collectionGoal() || outputStock() > 0 &&
+            !bot.ownsProductionSupplies(bot.productionRuneCosts(REQUIREMENTS))) {
+            queueHerbloreContinuation()
+            stop()
+            return false
+        }
+        return true
+    }
 
     override fun withdraw(): List<Item> = productionWithdraw(bot.productionRuneCosts(REQUIREMENTS), levelEligible =
-        bot.spellbook == Spellbook.REGULAR && bot.magic.staticLevel >= LEVEL && bot.itemTracker.count(itemId) < STOCK_TARGET)
+        bot.spellbook == Spellbook.REGULAR && bot.magic.staticLevel >= LEVEL && purposeAllowed() && outputStock() < collectionGoal())
 
-    override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
+    override fun bankWithdraw(): List<Item> = bankBatch().also {
+        if (it.isEmpty()) {
+            queueHerbloreContinuation()
+            stop()
+        }
+    }
+
+    /**
+     * Uses a real partial or completed haul once; interruptions and failed collection cannot create ingredients.
+     */
+    private fun queueHerbloreContinuation() {
+        if (!herbloreContinuation || continued || !purposeAllowed() || isPaused() || isTerminated() ||
+            productionRetriesExhausted() || !isActionSafe() || outputStock() < 1) return
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return
+        continued = true
+        bot.scriptStack.softPushHead(MakePotionBotScript(bot, FinishedPotion.RANGING_POTION, remaining))
+    }
 
     /**
      * Rechecks carried spell costs and output space without sending repeated missing-supply messages.
@@ -180,7 +237,11 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
     }
 
     override suspend fun onExecuteInZone(): Boolean {
-        if (bot.itemTracker.count(itemId) >= STOCK_TARGET) { stop(); return true }
+        if (!purposeAllowed()) { stop(); return true }
+        if (outputStock() >= collectionGoal()) {
+            if (herbloreContinuation) forceBanking = true else stop()
+            return true
+        }
         if (bot.inWilderness() && !handler.combat.pkRiskBudget().withinBudget) {
             handler.combat.fleeWilderness()
             return false
@@ -211,6 +272,8 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
     override fun snapshot(): TelegrabData = TelegrabData().also {
         it.itemId = itemId
         it.profit = profit
+        it.herbloreContinuation = herbloreContinuation
+        it.continued = continued
         saveInventoryState(it)
     }
 }

@@ -27,9 +27,10 @@ import kotlin.time.Duration.Companion.seconds
  * No reusable tool is needed; each conversion consumes one herb and one water vial.
  *
  * The existing [MakeUnfActionItem] validates the recipe's Herblore level and converts the inputs without
- * awarding experience. This script prepares owned supplies and is selected only by the factory's profit mode.
- * It does not purchase inputs or assume a market margin. Missing startup ingredients are added to wanted
- * items before stopping, and current Herblore level is checked again before each production interaction.
+ * awarding experience. Both training and profit selection can prepare owned herbs, purchasing only missing
+ * water vials through bounded startup acquisition. Selecting profit mode does not assume a market margin.
+ * Current Herblore level is checked again before each production interaction. Successful stock exhaustion
+ * queues matching finished-potion mixing once with the remaining budget; failed or paused work never chains.
  *
  * Three consecutive interactions without input consumption end the session. Unresolved banking requests
  * have a separate retry budget. Withdrawals are unnoted, verified, and bounded to fifteen seconds; failure ends
@@ -60,15 +61,21 @@ class MakeUnfPotionBotScript(
         class UnfPotionData : InventoryScriptData() {
             /** [UnfPotion] enum name used to reconstruct the configured recipe. */
             var recipe = ""
+            var produced = false
+            var continued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
+                produced = data.get("produced")?.asBoolean ?: false
+                continued = data.get("continued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
+                data.addProperty("produced", produced)
+                data.addProperty("continued", continued)
             }
         }
     }
@@ -77,6 +84,8 @@ class MakeUnfPotionBotScript(
     val requiredLevel = potion.level
     /** One identified herb and one water vial, the minimum supplies for a single conversion. */
     private val materials = listOf(potion.herbItem, Item(UnfPotion.VIAL_OF_WATER))
+    private var produced = false
+    private var continued = false
 
     /**
      * Restores the recipe, session configuration, and retry budgets from saved state.
@@ -88,11 +97,24 @@ class MakeUnfPotionBotScript(
     constructor(bot: Bot, data: UnfPotionData) :
         this(bot, UnfPotion.valueOf(data.recipe), data.duration, data.zones) {
         restoreInventoryState(data)
+        produced = data.produced
+        continued = data.continued
     }
 
-    /** Checks permanent level eligibility and one complete input pair across inventory and bank. */
+    /**
+     * Checks permanent level and one owned identified herb; missing water is acquired during startup.
+     */
     fun isEligible(): Boolean = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel &&
-            bot.ownsProductionSupplies(materials)
+            bot.ownsProductionSupplies(listOf(potion.herbItem))
+
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (produced && HerbloreProduction.owned(bot, potion.herb) < 1) {
+            queueContinuation()
+            stop()
+            return false
+        }
+        return isEligible() && HerbloreProduction.prepare(bot, potion.herb, UnfPotion.VIAL_OF_WATER)
+    }
 
     /** Returns up to fourteen balanced input pairs, or an empty batch when either banked ingredient is missing. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
@@ -100,7 +122,21 @@ class MakeUnfPotionBotScript(
     override fun withdraw(): List<Item> = productionWithdraw(materials, levelEligible = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel)
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
-        if (it.isEmpty()) stop()
+        if (it.isEmpty()) {
+            queueContinuation()
+            stop()
+        }
+    }
+
+    /**
+     * Continues verified production once, retaining the remaining budget and rejecting interrupted work.
+     */
+    private fun queueContinuation() {
+        if (!produced || continued || isPaused() || isTerminated() || productionRetriesExhausted() || !isActionSafe()) return
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return
+        continued = true
+        HerbloreProduction.afterUnfinished(bot, potion, remaining)?.let { bot.scriptStack.softPushHead(it) }
     }
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
@@ -110,7 +146,14 @@ class MakeUnfPotionBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_HERBLORE).level >= requiredLevel)) return true
-        attemptProduction(materials.first().id) { startProduction() }
+        val inputBefore = bot.inventory.computeAmountForId(potion.herb)
+        val outputBefore = bot.inventory.computeAmountForId(potion.id)
+        try {
+            attemptProduction(materials.first().id) { startProduction() }
+        } finally {
+            if (bot.inventory.computeAmountForId(potion.herb) < inputBefore ||
+                bot.inventory.computeAmountForId(potion.id) > outputBefore) produced = true
+        }
         return true
     }
 
@@ -129,6 +172,8 @@ class MakeUnfPotionBotScript(
 
     override fun snapshot(): UnfPotionData = UnfPotionData().also {
         it.recipe = potion.name
+        it.produced = produced
+        it.continued = continued
         saveInventoryState(it)
     }
 }

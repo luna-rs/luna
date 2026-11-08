@@ -11013,11 +11013,11 @@
   {
     "id": 221,
     // Eye of newt
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11025,11 +11025,11 @@
   {
     "id": 223,
     // Red spiders' eggs
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11037,11 +11037,11 @@
   {
     "id": 225,
     // Limpwurt root
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11049,11 +11049,11 @@
   {
     "id": 227,
     // Vial of water
-    "min": 40,
-    "target": 250,
+    "min": 200,
+    "target": 2000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11061,11 +11061,11 @@
   {
     "id": 231,
     // Snape grass
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11085,11 +11085,11 @@
   {
     "id": 235,
     // Unicorn horn dust
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11097,11 +11097,11 @@
   {
     "id": 237,
     // Unicorn horn
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11109,11 +11109,11 @@
   {
     "id": 239,
     // White berries
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11121,11 +11121,11 @@
   {
     "id": 241,
     // Dragon scale dust
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11133,11 +11133,11 @@
   {
     "id": 243,
     // Blue dragon scale
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11145,11 +11145,11 @@
   {
     "id": 245,
     // Wine of zamorak
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11157,11 +11157,11 @@
   {
     "id": 247,
     // Jangerberries
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -11560,11 +11560,11 @@
   {
     "id": 592,
     // Ashes
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -12628,11 +12628,11 @@
   {
     "id": 1973,
     // Chocolate bar
-    "min": 50,
-    "target": 300,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -12640,11 +12640,11 @@
   {
     "id": 1975,
     // Chocolate dust
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -12856,11 +12856,11 @@
   {
     "id": 2970,
     // Mort myre fungi
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -12916,11 +12916,11 @@
   {
     "id": 3138,
     // Potato cactus
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -13924,11 +13924,11 @@
   {
     "id": 6693,
     // Crushed nest
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -20638,11 +20638,11 @@
   {
     "id": 1581,
     // Blamish snail slime
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -20650,11 +20650,11 @@
   {
     "id": 2152,
     // Toad's legs
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]
@@ -20662,11 +20662,11 @@
   {
     "id": 5075,
     // Bird nest
-    "min": 40,
-    "target": 250,
+    "min": 100,
+    "target": 1000,
     "skill": -1,
     "max_level": -1,
-    "priority": "STANDARD",
+    "priority": "HIGH",
     "tags": [
       "SKILLING_CONSUMABLE"
     ]

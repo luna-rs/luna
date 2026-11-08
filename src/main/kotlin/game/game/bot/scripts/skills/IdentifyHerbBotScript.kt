@@ -28,6 +28,8 @@ import kotlin.time.Duration
  * while combat, locks, and strong actions defer processing. Three consecutive interactions without input
  * consumption end the session; unresolved banking requests are bounded separately. A failed or timed-out
  * withdrawal ends the script through the inherited banking hook.
+ * Successfully exhausting owned herbs queues matching unfinished-potion preparation once, using only the
+ * remaining session budget. Failed or paused work never starts a continuation.
  *
  * Snapshots retain the herb recipe, duration, candidate zones, and retry counters. Inventory slots and other
  * live state are rebuilt on resumption. No tool, quest, or orb/potion preparation is required by this activity.
@@ -64,12 +66,16 @@ class IdentifyHerbBotScript(
             var recipe = ""
             var allowGathering = true
             var started = false
+            var produced = false
+            var continued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
                 allowGathering = data.get("allow_gathering")?.asBoolean ?: true
                 started = data.get("started")?.asBoolean ?: false
+                produced = data.get("produced")?.asBoolean ?: false
+                continued = data.get("continued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
@@ -77,6 +83,8 @@ class IdentifyHerbBotScript(
                 data.addProperty("recipe", recipe)
                 data.addProperty("allow_gathering", allowGathering)
                 data.addProperty("started", started)
+                data.addProperty("produced", produced)
+                data.addProperty("continued", continued)
             }
         }
     }
@@ -84,6 +92,8 @@ class IdentifyHerbBotScript(
     /** Permanent Herblore level required for selection and startup validation. */
     val requiredLevel = herb.level
     private var started = false
+    private var produced = false
+    private var continued = false
     /** One unidentified herb, the minimum supply for a single conversion. */
     private val materials = listOf(herb.idItem)
 
@@ -98,6 +108,8 @@ class IdentifyHerbBotScript(
         restoreInventoryState(data)
         allowGathering = data.allowGathering
         started = data.started
+        produced = data.produced
+        continued = data.continued
     }
 
     /**
@@ -125,7 +137,30 @@ class IdentifyHerbBotScript(
     }
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
-        if (it.isEmpty()) stop()
+        if (it.isEmpty()) {
+            queueContinuation()
+            stop()
+        }
+    }
+
+    /**
+     * Continues verified production once, retaining the remaining budget and rejecting interrupted work.
+     */
+    private fun queueContinuation() {
+        if (!produced || continued || isPaused() || isTerminated() || productionRetriesExhausted() || !isActionSafe()) return
+        val remaining = remainingDuration()
+        if (remaining <= Duration.ZERO) return
+        continued = true
+        HerbloreProduction.afterIdentify(bot, herb, remaining)?.let { bot.scriptStack.softPushHead(it) }
+    }
+
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (produced && HerbloreProduction.owned(bot, herb.id) < 1) {
+            queueContinuation()
+            stop()
+            return false
+        }
+        return true
     }
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
@@ -135,7 +170,14 @@ class IdentifyHerbBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_HERBLORE).level >= requiredLevel)) return true
-        attemptProduction(materials.first().id) { startProduction() }
+        val inputBefore = bot.inventory.computeAmountForId(herb.id)
+        val outputBefore = bot.inventory.computeAmountForId(herb.identified)
+        try {
+            attemptProduction(materials.first().id) { startProduction() }
+        } finally {
+            if (bot.inventory.computeAmountForId(herb.id) < inputBefore ||
+                bot.inventory.computeAmountForId(herb.identified) > outputBefore) produced = true
+        }
         return true
     }
 
@@ -146,6 +188,8 @@ class IdentifyHerbBotScript(
         it.recipe = herb.name
         it.allowGathering = allowGathering
         it.started = started
+        it.produced = produced
+        it.continued = continued
         saveInventoryState(it)
     }
 }
