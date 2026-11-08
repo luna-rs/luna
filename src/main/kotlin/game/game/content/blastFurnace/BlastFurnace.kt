@@ -379,7 +379,7 @@ object BlastFurnace {
             stock.bars[bar.ordinal]++
             stock.hot = true
             val goldsmith = bar == BarType.GOLD && player.equipment.computeIdForIndex(Equipment.HANDS) == 776
-            player.smithing.addExperience(bar.xp * if (goldsmith) 2.5 else 1.0)
+            player.smithing.addExperience(bar.smeltXp * if (goldsmith) 2.5 else 1.0)
             publish(player)
             return true
         }
