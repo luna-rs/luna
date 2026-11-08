@@ -9,6 +9,9 @@ import game.obj.doors.DoorType
 import game.obj.doors.Doors
 import game.skill.mining.Pickaxe
 import game.skill.Skills
+import io.luna.game.action.Action
+import io.luna.game.action.ActionPhase
+import io.luna.game.action.ActionType
 import io.luna.game.model.Position
 import io.luna.game.model.EntityState
 import io.luna.game.model.Direction
@@ -17,6 +20,7 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.CombatFormula
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.`object`.GameObject
@@ -120,59 +124,116 @@ class CastleWarsSiege(private val game: CastleWarsGame) {
     }
 
     fun mainDoor(player: Player, obj: GameObject, attack: Boolean = false, repair: Boolean = false) {
-        if (!allowed(player, obj.position)) return
+        if (!allowed(player, obj.position) || !current(obj)) return
         val owner = if (obj.id in 4423..4426 || obj.id in 4431..4432) Team.SARADOMIN else Team.ZAMORAK
         val own = game.match.team(player) == owner
         val types = mainDoors.filter { (it.closed <= 4424) == (owner == Team.SARADOMIN) }
-        val leaves = world.locator.findObjects(obj.position, 5) { candidate ->
-            candidate.id in types.flatMap { listOf(it.closed, it.open) } ||
-                candidate.id in (if (owner == Team.SARADOMIN) 4431..4432 else 4433..4434)
-        }
+        val leaves = mainDoorLeaves(obj, owner)
+        val closed = leaves.filter { leaf -> types.any { it.closed == leaf.id } }
+        closed.forEach(::remember)
         if (repair) {
             if (!own || !player.inventory.contains(4051)) return
             doorHealth[owner.ordinal] = 100
-            // Restore both original leaves, including their closed positions and orientations.
+            // Keep intact leaves in place so healing does not cancel attackers targeting them.
             val homes = originals.values.filter { old -> types.any { it.closed == old.id } }
-            leaves.forEach { world.removeObject(it) }
-            homes.forEach { world.addObject(it.id, it.position, it.objectType, it.direction) }
+            leaves.filter { leaf -> types.none { it.closed == leaf.id } }.forEach { world.removeObject(it) }
+            homes.filter { home -> closed.none { it.id == home.id && it.position == home.position && it.objectType == home.objectType } }
+                .forEach { world.addObject(it.id, it.position, it.objectType, it.direction) }
             player.sendMessage("You repair your castle doors.")
             return
         }
         if (attack) {
-            if (own || !Doors.isEntering(obj.position, obj.direction, player.position)) return
-            if (player.combat.attackDelay > 0 || !ready(player, player.combat.weapon.speed.coerceAtLeast(1))) return
-            player.combat.attackDelay = player.combat.weapon.speed.coerceAtLeast(1)
-            val ranged = player.combat.weapon.isRanged
-            val max = CombatFormula.calculatePhysicalMaxHit(player,
+            if (own || types.none { it.closed == obj.id } ||
+                !Doors.isEntering(obj.position, obj.direction, player.position)) return
+            val active = player.actions.first(MainDoorAttackAction::class.java)
+            if (active?.door === obj) return
+            active?.interrupt()
+            player.submitAction(MainDoorAttackAction(player, obj, owner))
+            return
+        }
+        if (types.any { it.open == obj.id }) {
+            for (leaf in leaves) {
+                val type = types.firstOrNull { it.open == leaf.id } ?: continue
+                val swap = Doors.doubleSwap(leaf, type, false)
+                if (world.removeObject(leaf)) world.addObject(swap.id, swap.position, leaf.objectType, swap.direction)
+            }
+            return
+        }
+        if (!own && Doors.isEntering(obj.position, obj.direction, player.position)) {
+            player.sendMessage("It's shut; you'll have to break it down.")
+            return
+        }
+        openMainDoors(closed, owner, false)
+    }
+
+    private fun mainDoorLeaves(obj: GameObject, owner: Team): Set<GameObject> =
+        world.locator.findObjects(obj.position, 5) { candidate ->
+            candidate.id in (if (owner == Team.SARADOMIN) 4423..4426 else 4427..4430) ||
+                candidate.id in (if (owner == Team.SARADOMIN) 4431..4432 else 4433..4434)
+        }
+
+    private fun openMainDoors(leaves: Collection<GameObject>, owner: Team, broken: Boolean) {
+        for (leaf in leaves) {
+            val type = mainDoors.firstOrNull { it.closed == leaf.id } ?: continue
+            remember(leaf)
+            val swap = Doors.doubleSwap(leaf, type, true)
+            if (!world.removeObject(leaf)) continue
+            val id = if (!broken) swap.id else if (owner == Team.SARADOMIN) {
+                if (type.side == DoorSide.LEFT) 4431 else 4432
+            } else if (type.side == DoorSide.LEFT) 4433 else 4434
+            val open = world.addObject(id, swap.position, leaf.objectType, swap.direction)
+            replacements += open
+            if (!broken) later(500) {
+                if (current(open) && world.removeObject(open)) world.addObject(leaf.id, leaf.position, leaf.objectType, leaf.direction)
+            }
+        }
+    }
+
+    /**
+     * Retains one door attack intent while the native combat cooldown advances independently of clicks.
+     * Walking, other interactions and strong actions interrupt this weak action through the normal queue.
+     *
+     * @author lare96
+     */
+    private inner class MainDoorAttackAction(player: Player, val door: GameObject, private val owner: Team) :
+        Action<Player>(player, ActionType.WEAK) {
+
+        private val version = generation
+        private val origin = player.position
+
+        override fun getPhase(): ActionPhase = ActionPhase.COMBAT
+
+        override fun onSubmit() {
+            mob.interact(door)
+        }
+
+        override fun run(): Boolean {
+            if (generation != version || !allowed(mob, door.position) || !current(door) ||
+                mob.isActionLocked || mob.position != origin || !mob.walking.isEmpty ||
+                mob.combat.isDisabled || mob.combat.target != null || mob.interactingWith !== door ||
+                !Doors.isEntering(door.position, door.direction, mob.position) ||
+                !world.collisionManager.reached(mob, door, InteractionPolicy.STANDARD_SIZE)) return true
+            if (!mob.combat.isAttackReady) return false
+            mob.combat.attackDelay = mob.combat.weapon.speed.coerceAtLeast(1)
+            val ranged = mob.combat.weapon.isRanged
+            val max = CombatFormula.calculatePhysicalMaxHit(mob,
                 if (ranged) CombatFormula.PhysicalType.RANGED else CombatFormula.PhysicalType.MELEE)
-            val scale = when (player.combat.styleDef.bonus) {
+            val scale = when (mob.combat.styleDef.bonus) {
                 EquipmentBonus.STAB_ATTACK -> 25
                 EquipmentBonus.SLASH_ATTACK -> 50
                 else -> 35
             }
             val damage = rand().nextInt(max + 1) * scale / 100
             doorHealth[owner.ordinal] = (doorHealth[owner.ordinal] - damage).coerceAtLeast(0)
-            player.animation(io.luna.game.model.mob.block.Animation(player.combat.getAttackAnimation(
+            mob.animation(io.luna.game.model.mob.block.Animation(mob.combat.getAttackAnimation(
                 if (ranged) CombatDamageType.RANGED else CombatDamageType.MELEE)))
-            if (doorHealth[owner.ordinal] > 0) return
-        } else if (!own && Doors.isEntering(obj.position, obj.direction, player.position)) {
-            player.sendMessage("It's shut; you'll have to break it down.")
-            return
+            if (doorHealth[owner.ordinal] > 0) return false
+            openMainDoors(mainDoorLeaves(door, owner), owner, true)
+            return true
         }
-        val closed = leaves.filter { leaf -> types.any { it.closed == leaf.id } }
-        for (leaf in closed) {
-            remember(leaf)
-            val type = types.first { it.closed == leaf.id }
-            val swap = Doors.doubleSwap(leaf, type, true)
-            world.removeObject(leaf)
-            val id = if (!attack) swap.id else if (owner == Team.SARADOMIN) {
-                if (type.side == DoorSide.LEFT) 4431 else 4432
-            } else if (type.side == DoorSide.LEFT) 4433 else 4434
-            val open = world.addObject(id, swap.position, leaf.objectType, swap.direction)
-            replacements += open
-            if (!attack) later(500) {
-                if (current(open) && world.removeObject(open)) world.addObject(leaf.id, leaf.position, leaf.objectType, leaf.direction)
-            }
+
+        override fun onFinished() {
+            if (mob.interactingWith === door) mob.interact(null)
         }
     }
 
