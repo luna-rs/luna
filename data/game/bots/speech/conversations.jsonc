@@ -5,6 +5,54 @@
  */
 [
   {
+    "topics": ["CASTLE_WARS"],
+    "lines": [
+      "you running the flag or defending?",
+      "ill start on defence",
+      "ill see if i can get through the tunnels",
+      "bring a pickaxe, just in case"
+    ]
+  },
+  {
+    "topics": ["CASTLE_WARS"],
+    "lines": [
+      "what are you saving your tickets for?",
+      "a bit of castle wars armour",
+      "same, still got a few matches to go",
+      "at least the matches are fun"
+    ]
+  },
+  {
+    "topics": ["CASTLE_WARS"],
+    "lines": [
+      "last time i got lost under the castle",
+      "the tunnels all look the same to me",
+      "this time im following someone",
+      "probably best if it isnt me"
+    ]
+  },
+  {
+    "topics": ["CASTLE_WARS"],
+    "lines": [
+      "got room over here if you need a spot",
+      "cheers, better than standing on the portal"
+    ]
+  },
+  {
+    "topics": ["CASTLE_WARS"],
+    "lines": [
+      "dont let me forget bandages this round",
+      "grab a few as soon as we get in"
+    ]
+  },
+  {
+    "topics": ["CASTLE_WARS"],
+    "lines": [
+      "reckon we can get the first flag?",
+      "lets get through their gate first"
+    ]
+  },
+  {
     "topics": [
       "IDLE"
     ],

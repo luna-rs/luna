@@ -5,11 +5,15 @@ import api.bot.Suspendable.waitFor
 import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.social.BotConversations
+import api.bot.social.SocialBotScript
 import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
+import engine.bot.speech.BotCastleWarsSpeechPool
+import engine.bot.speech.BotConversationPool.ConversationSpeech
 import game.content.castleWars.CastleWars
 import game.content.castleWars.CastleWarsGame
 import game.content.castleWars.CastleWarsMatch.Team
@@ -34,6 +38,7 @@ import kotlin.time.Duration.Companion.seconds
  * Each match retains a personality-selected runner, defender, medic, engineer or raider role. Native supply tables,
  * ally bandages, repairs, barricades, catapults, ropes and tunnel actions share the same travel and match lifecycle.
  * Match combat stays in this script, so its ordinary combat reflex cannot accidentally leave the game.
+ * Waiting bots spread around their own room, occasionally reposition and talk until their match begins.
  * After returning, one affordable owned-ticket reward may be redeemed through Lanthus's native exchange.
  *
  * @author lare96
@@ -43,7 +48,7 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
                           private val deadline: Long = System.currentTimeMillis() + 1_800_000,
                           private var role: Role? = null,
                           private var rewardAttempted: Boolean = false,
-                          private var waitingUntil: Long = System.currentTimeMillis() + 480_000) : BotScript(bot) {
+                          private var waitingUntil: Long = System.currentTimeMillis() + 480_000) : BotScript(bot), SocialBotScript {
 
     /**
      * A saved single-match purpose; role changes never discard a carried standard or interrupt a native fight.
@@ -123,6 +128,10 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
     override val actionSafety = ActionSafety.COMBAT
     override val allowsCombatResponse get() = !CastleWars.game.match.isPlaying(bot)
     private var failures = 0
+    private var waitingDestination: Position? = null
+    private var nextReposition = 0L
+    private var nextRemark = System.currentTimeMillis() + (30_000L..90_000L).random()
+    private var lastRemark = ""
 
     /**
      * Local retry state belongs to this match; native actions own all supplies, damage and rewards.
@@ -162,9 +171,12 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
         if (System.currentTimeMillis() >= deadline) return true
         if (match.isWaiting(bot)) {
             if (started || System.currentTimeMillis() >= waitingUntil) return true
+            waitInRoom(team)
             delay(3.seconds)
             return false
         }
+        BotConversations.cancel(bot)
+        waitingDestination = null
         started = true
         if (!isActionSafe()) return false
         if (bot.health < bot.hitpoints.staticLevel - 6 && bot.inventory.contains(4049)) {
@@ -233,6 +245,55 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
         return failures >= 20
     }
 
+    override fun canSocialize(): Boolean {
+        val match = CastleWars.game.match
+        val team = match.team(bot) ?: return false
+        val now = System.currentTimeMillis()
+        return !started && now < minOf(deadline, waitingUntil) && match.isWaiting(bot) &&
+            CastleWarsWaitingRoom.contains(team, bot.position) && bot.position == waitingDestination &&
+            bot.walking.isEmpty && !bot.navigator.isActive && isActionSafe(ActionSafety.NON_COMBAT)
+    }
+
+    override fun ambientConversationTopic(): ConversationSpeech? =
+        if (canSocialize()) ConversationSpeech.CASTLE_WARS else null
+
+    /**
+     * Reconsiders movement infrequently and leaves a current conversation undisturbed.
+     * Destinations are runtime-only reservations rebuilt after restore; native match entry clears queued steps.
+     */
+    private fun waitInRoom(team: Team) {
+        if (!isActionSafe(ActionSafety.NON_COMBAT) || !CastleWarsWaitingRoom.contains(team, bot.position) ||
+            !bot.walking.isEmpty || bot.navigator.isActive || BotConversations.engaged(bot)) return
+        val now = System.currentTimeMillis()
+        if (waitingDestination != null && bot.position != waitingDestination) {
+            waitingDestination = null
+            nextReposition = now + (3_000L..9_000L).random()
+        }
+        if (now >= nextReposition) {
+            nextReposition = now + (60_000L..180_000L).random()
+            val occupied = world.locator.findPlayers(team.waiting, 32) { it !== bot }.flatMap { player ->
+                val script = (player as? Bot)?.scriptStack?.current() as? CastleWarsBotScript
+                listOfNotNull(player.position, script?.waitingDestination)
+            }
+            val path = CastleWarsWaitingRoom.route(world, bot.position, team, occupied)
+            if (path != null) {
+                waitingDestination = path.peekLast()
+                bot.walking.replacePath(path)
+                return
+            }
+            nextReposition = now + (10_000L..20_000L).random()
+        }
+        if (now >= nextRemark && canSocialize()) {
+            nextRemark = now + (60_000L..150_000L).random()
+            if (world.locator.findViewablePlayers(bot) { it !== bot && it.isWithinDistance(bot, 8) }.isNotEmpty() &&
+                rand(bot.personality.social)) {
+                val line = BotCastleWarsSpeechPool.take(bot, BotCastleWarsSpeechPool.Line.WAITING) { it != lastRemark }
+                if (line != null) BotConversations.say(bot, line, valid = { canSocialize() },
+                    delivered = { lastRemark = line })
+            }
+        }
+    }
+
     private suspend fun click(obj: GameObject, option: Int = 1): Boolean {
         val interacted = withTimeoutOrNull(12_000) {
             handler.interactions.interact(option, obj) {
@@ -245,6 +306,8 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
     }
 
     override fun paused() {
+        BotConversations.cancel(bot)
+        waitingDestination = null
         if (CastleWars.game.match.team(bot) != null) CastleWars.game.exit(bot)
         bot.navigator.cancel()
         bot.walking.clear()

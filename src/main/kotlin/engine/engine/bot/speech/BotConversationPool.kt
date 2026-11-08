@@ -25,7 +25,7 @@ object BotConversationPool : BotSpeechPool<BotConversationPool.ConversationSpeec
      * @author lare96
      */
     enum class ConversationSpeech {
-        IDLE, HOME, ALCHEMY, FISHING, WOODCUTTING, COOKING, FLETCHING, CRAFTING, SMITHING
+        IDLE, HOME, ALCHEMY, FISHING, WOODCUTTING, COOKING, FLETCHING, CRAFTING, SMITHING, CASTLE_WARS
     }
 
     /**
