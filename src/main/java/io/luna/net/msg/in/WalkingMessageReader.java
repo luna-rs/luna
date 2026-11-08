@@ -35,6 +35,11 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
      */
     private static final int SCENE_SIZE = 104;
 
+    /**
+     * The maximum expanded route length, including movement retraced within the loaded scene.
+     */
+    private static final int MAX_ROUTE_STEPS = SCENE_SIZE * SCENE_SIZE;
+
     @Override
     public WalkingEvent decode(Player player, GameMessage msg) {
         int opcode = msg.getOpcode();
@@ -86,28 +91,25 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         // A packet contains compressed corners, not the client's starting position. After a teleport its first
         // corner can still belong to the old scene. Never join that route through unloaded tiles or walls.
         Position region = player.getLastRegion();
-        Position lastStep = player.getPosition();
-        if (region == null || !insideScene(lastStep, region)) {
+        Position start = player.getPosition();
+        if (region == null || !insideScene(start, region)) {
             return false;
         }
         CollisionManager collisionManager = player.getWorld().getCollisionManager();
         boolean noclip = player.isDebugNoclipEnabled();
         int plane = player.getZ();
         for (Position waypoint : event.getSteps()) {
-            Position step = waypoint.setZ(plane);
-            if (!insideScene(step, region)) {
+            if (waypoint.getZ() != plane || !insideScene(waypoint, region)) {
                 return false;
             }
-            // Match WalkingQueue's interpolation and validate every edge, including the first and second run tiles.
-            while (!lastStep.equals(step)) {
-                Direction direction = Direction.between(lastStep, step);
-                if (!noclip && !collisionManager.traversable(lastStep, player.getType(), direction,
-                        player.size(), player.getRouteStrategy())) {
-                    return false;
-                }
-                lastStep = lastStep.translate(1, direction);
-            }
         }
+        var planned = player.getWalking().planPath(event.getSteps(), noclip, MAX_ROUTE_STEPS, (from, to) ->
+                insideScene(to, region) && (noclip || collisionManager.traversable(from, player.getType(),
+                        Direction.between(from, to), player.size(), player.getRouteStrategy())));
+        if (planned.isEmpty()) {
+            return false;
+        }
+        event.setPlannedPath(planned.get());
         return true;
     }
 

@@ -2,6 +2,7 @@ package io.luna.game.event.impl;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.movement.WalkingQueue.PlannedPath;
 
 import java.util.Deque;
 
@@ -67,6 +68,11 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
      */
     private final boolean running;
 
+    /**
+     * The validated route, retained across controller and overlay callbacks before it is queued.
+     */
+    private PlannedPath plannedPath;
+
 
     /**
      * Creates a new {@link WalkingEvent}.
@@ -102,5 +108,23 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
      */
     public Deque<Position> getSteps() {
         return steps;
+    }
+
+    /**
+     * Returns the validated route, or {@code null} for an event that has not passed packet validation.
+     *
+     * @return The prepared route.
+     */
+    public PlannedPath getPlannedPath() {
+        return plannedPath;
+    }
+
+    /**
+     * Retains a successfully validated route without changing the client's original compressed waypoints.
+     *
+     * @param plannedPath The prepared route.
+     */
+    public void setPlannedPath(PlannedPath plannedPath) {
+        this.plannedPath = plannedPath;
     }
 }

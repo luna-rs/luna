@@ -11,8 +11,15 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.path.route.RouteStrategy;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
-import java.util.Queue;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A model representing a walking queue for a {@link Mob}.
@@ -28,6 +35,36 @@ import java.util.Queue;
  * @author Graham
  */
 public final class WalkingQueue {
+
+    /**
+     * A bounded route prepared without changing its queue, ready to install from its original position.
+     *
+     * @author lare96
+     */
+    public static final class PlannedPath {
+
+        private final Position start;
+        private final List<Position> steps;
+        private final boolean forced;
+
+        private PlannedPath(Position start, List<Position> steps, boolean forced) {
+            this.start = start;
+            this.steps = List.copyOf(steps);
+            this.forced = forced;
+        }
+
+        public Position getStart() {
+            return start;
+        }
+
+        public List<Position> getSteps() {
+            return steps;
+        }
+
+        public boolean isForced() {
+            return forced;
+        }
+    }
 
     /**
      * The mob that owns this walking queue.
@@ -141,7 +178,7 @@ public final class WalkingQueue {
             incrementRunEnergy();
             return;
         }
-        history.add(nextStep);
+        history.add(nextStep.setZ(plane));
         mob.setLastDirection(firstStepDir);
         mob.setWalkingDirection(firstStepDir);
         currentStep = nextStep;
@@ -175,7 +212,7 @@ public final class WalkingQueue {
             if (decrementRunEnergy()) {
                 if (exitInstance(destination)) return;
                 current.poll();
-                history.add(nextStep);
+                history.add(nextStep.setZ(plane));
                 mob.setLastDirection(nextStepDir);
                 mob.setRunningDirection(nextStepDir);
                 currentStep = nextStep;
@@ -221,6 +258,52 @@ public final class WalkingQueue {
      */
     public void replacePath(Deque<Position> path) {
         replacePath(path, false);
+    }
+
+    /**
+     * Prepares the same interpolated route as a replacement, including any recent movement it must retrace.
+     * The queue, history and supplied waypoints remain unchanged, including when a step is rejected. Both the
+     * history search and the resulting route are bounded by {@code maxSteps}.
+     *
+     * @param path The compressed waypoints.
+     * @param forced Whether the route ignores history and collision when installed.
+     * @param maxSteps The maximum history entries to inspect and route steps to retain.
+     * @param accepts The check for each directed edge of the route.
+     * @return The immutable route, or empty if its budget or an edge check failed.
+     */
+    public Optional<PlannedPath> planPath(Deque<Position> path, boolean forced, int maxSteps,
+                                          BiPredicate<Position, Position> accepts) {
+        checkArgument(maxSteps >= 0, "maxSteps < 0");
+        Position start = mob.getPosition();
+        Position[] previous = {start};
+        List<Position> steps = new ArrayList<>();
+        boolean accepted = visitPath(start, history, path, !forced, maxSteps, next -> {
+            Position step = next.setZ(start.getZ());
+            if (steps.size() >= maxSteps || !accepts.test(previous[0], step)) {
+                return false;
+            }
+            steps.add(step);
+            previous[0] = step;
+            return true;
+        });
+        return accepted ? Optional.of(new PlannedPath(start, steps, forced)) : Optional.empty();
+    }
+
+    /**
+     * Installs an already prepared route without consulting history again. Earlier actions may have cleared the
+     * queue since it was prepared; a change of position or plane instead discards the route.
+     *
+     * @param path The prepared route.
+     * @return Whether the mob is still at the route's starting position.
+     */
+    public boolean replacePlannedPath(PlannedPath path) {
+        clear();
+        if (!mob.getPosition().equals(path.start)) {
+            return false;
+        }
+        forced = path.forced && !path.steps.isEmpty();
+        current.addAll(path.steps);
+        return true;
     }
 
     /**
@@ -330,21 +413,11 @@ public final class WalkingQueue {
      */
     private void addFirst(Position step) {
         current.clear();
-        Queue<Position> backtrack = new ArrayDeque<>();
-        for (; ; ) {
-            Position prev = history.pollLast();
-            if (prev == null) {
-                break;
-            }
-            backtrack.add(prev);
-            if (prev.getX() == step.getX() && prev.getY() == step.getY()) {
-                backtrack.forEach(this::add);
-                history.clear();
-                return;
-            }
-        }
+        visitPath(mob.getPosition(), history, List.of(step), true, Integer.MAX_VALUE, next -> {
+            current.add(next);
+            return true;
+        });
         history.clear();
-        add(step);
     }
 
     /**
@@ -360,6 +433,76 @@ public final class WalkingQueue {
         if (last == null) {
             last = mob.getPosition();
         }
+        visitSegment(last, next, step -> {
+            current.add(step);
+            return true;
+        });
+    }
+
+    /**
+     * Visits a replacement route without consuming either its waypoints or its movement history.
+     */
+    private static boolean visitPath(Position start, Deque<Position> history, Iterable<Position> path,
+                                     boolean retrace, int maxHistorySteps, Predicate<Position> visitor) {
+        if (path == null) {
+            return true;
+        }
+        Iterator<Position> waypoints = path.iterator();
+        if (!waypoints.hasNext()) {
+            return true;
+        }
+        Position first = waypoints.next();
+        Position last = start;
+        int backtrackSize = 0;
+        if (retrace && start.equals(history.peekLast())) {
+            Iterator<Position> previous = history.descendingIterator();
+            Position newer = start;
+            int inspected = 0;
+            while (previous.hasNext()) {
+                if (inspected == maxHistorySteps) {
+                    return false;
+                }
+                Position older = previous.next();
+                if (older.getZ() != start.getZ() || (inspected > 0 && !isAdjacent(newer, older))) {
+                    break;
+                }
+                inspected++;
+                if (older.getX() == first.getX() && older.getY() == first.getY()) {
+                    backtrackSize = inspected;
+                    break;
+                }
+                newer = older;
+            }
+        }
+        if (backtrackSize > 0) {
+            Iterator<Position> previous = history.descendingIterator();
+            for (int index = 0; index < backtrackSize; index++) {
+                Position step = previous.next();
+                if (!visitSegment(last, step, visitor)) {
+                    return false;
+                }
+                last = step;
+            }
+        } else {
+            if (!visitSegment(last, first, visitor)) {
+                return false;
+            }
+            last = first;
+        }
+        while (waypoints.hasNext()) {
+            Position step = waypoints.next();
+            if (!visitSegment(last, step, visitor)) {
+                return false;
+            }
+            last = step;
+        }
+        return true;
+    }
+
+    /**
+     * Visits every adjacent tile of one interpolated segment, stopping immediately if a tile is rejected.
+     */
+    private static boolean visitSegment(Position last, Position next, Predicate<Position> visitor) {
         int nextX = next.getX();
         int nextY = next.getY();
         int deltaX = nextX - last.getX();
@@ -379,8 +522,11 @@ public final class WalkingQueue {
             } else if (deltaY > 0) {
                 deltaY--;
             }
-            current.add(new Position(nextX - deltaX, nextY - deltaY));
+            if (!visitor.test(new Position(nextX - deltaX, nextY - deltaY))) {
+                return false;
+            }
         }
+        return true;
     }
 
     /**
