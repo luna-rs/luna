@@ -64,6 +64,10 @@ object MinigameCoordinator : ProgressiveCoordinator() {
             bot.attendedParty = id
             return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
         }
+        val pestReady = PestControlBotScript.eligible(bot)
+        if (pestReady && (PestControl.atOutpost(bot.position) || PestControl.round.waiting().isNotEmpty())) {
+            return PestControlBotScript(bot)
+        }
         if (FightCaveBotScript.canStart(bot) && rand(0.20)) return FightCaveBotScript(bot)
         if (BarrowsBotScript.eligible(bot) && rand(0.20)) return BarrowsBotScript(bot)
         if (FightPitBotScript.eligible(bot) && (FightPit.inside(bot.position) || rand(0.25))) return FightPitBotScript(bot)
@@ -71,8 +75,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
         val furnaceBar = BarType.entries.filter { BlastFurnaceBotScript.eligible(bot, it) }.maxByOrNull { it.level }
         if (furnaceBar != null) return BlastFurnaceBotScript(bot, furnaceBar)
         if (GamesRoom.inRoom(bot.position) && GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
-        if (PestControlBotScript.eligible(bot) && (PestControl.atOutpost(bot.position) ||
-                PestControl.round.waiting().isNotEmpty() || rand(0.25))) return PestControlBotScript(bot)
+        if (pestReady && rand(0.25)) return PestControlBotScript(bot)
         if (RangingGuildBotScript.eligible(bot) && (bot.count > 0 || rand(0.25))) return RangingGuildBotScript(bot)
         if (BrimhavenArenaBotScript.eligible(bot) && (BrimhavenArena.inside(bot.position) || rand(0.25)))
             return BrimhavenArenaBotScript(bot)

@@ -13,6 +13,8 @@ import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
 import game.bot.scripts.BarrowsBotScript
 import game.bot.scripts.FightCaveBotScript
+import game.bot.scripts.PestControlBotScript
+import game.content.pestControl.PestControl
 import game.bot.scripts.DagannothKingsBotScript
 import game.bot.scripts.DagannothKingsTrip
 import game.bot.scripts.SalarinBotScript
@@ -207,6 +209,20 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             } else null
 
         /**
+         * Gives ready combat trainees optional native minigame outings before ordinary camp selection.
+         * Eligible Pest Control volunteers join an existing group first; every route retains its own admission rules.
+         */
+        internal fun trainingMinigameScript(bot: Bot, roll: (Double) -> Boolean = { rand(it) }): BotScript? {
+            val pestReady = PestControlBotScript.eligible(bot)
+            if (pestReady && (PestControl.atOutpost(bot.position) || PestControl.round.waiting().isNotEmpty())) {
+                return PestControlBotScript(bot)
+            }
+            if (FightCaveBotScript.canStart(bot) && roll(0.20)) return FightCaveBotScript(bot)
+            if (pestReady && roll(0.25)) return PestControlBotScript(bot)
+            return null
+        }
+
+        /**
          * Builds the appropriate combat session from an already supplied discipline and its eligible camps.
          */
         private fun createScript(bot: Bot, training: Boolean, purpose: BotGearPurpose,
@@ -237,6 +253,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     override fun accept(bot: Bot) {
         if (bot.personality.type == PersonalityTemplateType.SKILLER) {
             (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
+            return
+        }
+        if (training) trainingMinigameScript(bot)?.let {
+            bot.scriptStack.push(it)
             return
         }
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
