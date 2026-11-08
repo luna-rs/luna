@@ -212,7 +212,7 @@ class CastleWarsSiege(private val game: CastleWarsGame) {
         val team = game.match.team(player) ?: return
         if (!allowed(player, position) || CastleWarsGame.inSpawnRoom(position) ||
             barricades.values.count { it == team } >= 10 || blockers.values.any { it.position == position } ||
-            world.locator.findObjectsOnTile(position) { it.objectType == ObjectType.DEFAULT }.isNotEmpty() ||
+            world.locator.findObjectsOnTile(position) { it.objectType.group == ObjectType.DIAGONAL_WALL.group }.isNotEmpty() ||
             world.collisionManager.isBlocked(position, false)) return
         if (!player.inventory.remove(4053)) return
         val npc = world.addNpc(1532 + team.ordinal * 2, position.x, position.y, position.z)
@@ -220,8 +220,8 @@ class CastleWarsSiege(private val game: CastleWarsGame) {
         npc.respawnTicks = -1
         npc.combat.isDisabled = true
         barricades[npc] = team
-        // NPCs do not obstruct player route finding in Luna. A colocated invisible wall supplies clipping.
-        blockers[npc] = world.addObject(83, position)
+        // Object 83's empty type-9 model keeps client scene registration and clipping removal paired.
+        blockers[npc] = world.addObject(83, position, ObjectType.DIAGONAL_WALL)
     }
 
     fun isBarricade(npc: Npc): Boolean = npc in barricades
