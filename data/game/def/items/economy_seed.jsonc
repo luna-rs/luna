@@ -2,7 +2,8 @@
   This definition file is used for resolving initial economy prices and popularity.
 
   initial_price is an optional positive whole-GP starting price, clamped to economy minimums.
-  Existing saved prices always win. Omit it to use the item's normal definition value.
+  Existing saved prices win, except untouched legacy wine seeds migrated at startup.
+  Omit it to use the item's normal definition value.
 
   initial_popularity is an optional nonnegative integer in effective-sample units (default 0).
   It affects bot selection only, never price resistance or saved sample counts. Its contribution
@@ -611,7 +612,7 @@
   },
   {
     "id": 245, // Wine of zamorak
-    "initial_price": 25,
+    "initial_price": 1079,
     "initial_popularity": 80
   },
   {

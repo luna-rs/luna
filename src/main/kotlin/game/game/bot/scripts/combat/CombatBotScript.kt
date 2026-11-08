@@ -373,6 +373,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             if (focus is Player && bot.combat.inCombat()) activatePlayerPrayer()
             return runAway()
         }
+        if (focus is Npc && WineTheftLesson.attempt(bot) {
+                isRunning() && !running && targetAllowed() && focusAlive() && isActionSafe()
+            }) return false
         if (usesPkSwitching) {
             if (!focus.isAlive && lootOnVictory) {
                 waitFor(5.seconds) { focus.health > 0 || focus.state != io.luna.game.model.EntityState.ACTIVE }

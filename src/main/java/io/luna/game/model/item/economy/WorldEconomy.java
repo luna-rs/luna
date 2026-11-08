@@ -191,12 +191,33 @@ public final class WorldEconomy extends AbstractScheduledService {
 
     /**
      * Makes configured items available to marketplace consumers immediately after saved prices are loaded.
-     * Missing snapshots enter the normal persistence queues; existing JSON or SQL snapshots remain authoritative.
+     * Missing snapshots enter the normal persistence queues. Observed prices and developer overrides remain
+     * authoritative; the untouched original wine seed is upgraded to its configured starting value.
      */
     void initializeDefinitions() {
+        refreshLegacyWineSeed();
         for (ItemEconomyDefinition definition : ItemEconomyDefinition.ALL) {
             resolvePriceData(definition.id());
         }
+    }
+
+    /**
+     * Corrects only the unobserved 25-GP wine seed, without fabricating trades or replacing market history.
+     */
+    private void refreshLegacyWineSeed() {
+        ItemPriceData previous = prices.get(245);
+        if (previous == null || previous.price != 25.0 || previous.lastPrice != 25.0 ||
+                previous.samples != 0 || previous.lastSamples != 0 || EconomySeedOverrides.get(245) != null) {
+            return;
+        }
+        var definition = ItemEconomyDefinition.ALL.get(245).orElse(null);
+        if (definition == null || definition.getInitialPrice() == null || definition.getInitialPrice() <= 25) {
+            return;
+        }
+        ItemPriceData replacement = new ItemPriceData(245);
+        prices.put(245, replacement);
+        priceUpdates.put(245, replacement);
+        historyUpdates.add(replacement);
     }
 
     /**
@@ -215,7 +236,8 @@ public final class WorldEconomy extends AbstractScheduledService {
      */
     @Override
     protected void runOneIteration() throws Exception {
-        if (trades.isEmpty() && shopPurchases.isEmpty() && guidePriceEdits.isEmpty() && prices.size() == lastPricesAmount) {
+        if (trades.isEmpty() && shopPurchases.isEmpty() && guidePriceEdits.isEmpty() &&
+                priceUpdates.isEmpty() && historyUpdates.isEmpty() && prices.size() == lastPricesAmount) {
             return;
         }
 

@@ -10,6 +10,7 @@ import game.item.teleport.SpadeDigSpot
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.TaverleyJailDoor
 import api.bot.action.BotTaverleyKeys
+import game.skill.agility.yanille.YanilleDungeon
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -702,11 +703,12 @@ enum class SubZone(
         parent = { SEERS_VILLAGE }),
 
     /**
-     * The ground-floor room of the chaos druid tower north of Ardougne, behind a door that is picked from outside.
+     * The ground-floor room of the chaos druid tower north of Ardougne, including the wine tables against its
+     * north and south walls. The outside door requires level 46 Thieving.
      */
     CHAOS_DRUID_TOWER(
         inside = Position(2563, 3356),
-        area = SimpleBoxArea.of(2561, 3355, 2564, 3357),
+        area = SimpleBoxArea.of(2561, 3354, 2564, 3358, 0),
         parent = { ARDOUGNE }),
 
     /**
@@ -717,6 +719,16 @@ enum class SubZone(
         inside = Position(2611, 9485),
         entrance = { Position(2606, 3078) },
         area = SimpleBoxArea.ofRadius(2595, 9475, 27, 26),
+        parent = { YANILLE }),
+
+    /**
+     * Wine in the eastern dungeon chamber, south-east of the sinister chest room. The northern stairs and
+     * level-40 ledge reach this side of the pipe without entering the level-49 chest room.
+     */
+    YANILLE_DUNGEON_ZAMORAK_WINE(
+        inside = Position(2575, 9501),
+        entrance = { Position(2569, 3121) },
+        area = SimpleBoxArea.of(2573, 9498, 2578, 9503, 0),
         parent = { YANILLE }),
 
     /**
@@ -1675,11 +1687,11 @@ enum class SubZone(
         parent = { FALADOR }),
 
     /**
-     * South-Ardougne Zamorak monks. Bounds cover the configured spawn positions and five-tile wandering.
+     * South-Ardougne Zamorak monks. Bounds cover the configured monks, five-tile wandering and wine spawns.
      */
     SOUTH_ARDOUGNE_ZAMORAK_MONKS(
         inside = Position(2465, 3248),
-        area = SimpleBoxArea.of(2449, 3233, 2482, 3253),
+        area = SimpleBoxArea.of(2449, 3232, 2482, 3253),
         parent = { ARDOUGNE }),
 
     /**
@@ -3059,6 +3071,14 @@ enum class SubZone(
                 CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones
             )
                 "the tower door needs level ${ChaosDruidTowerDoorAction.REQUIRED_LEVEL} Thieving" else null
+
+        YANILLE_DUNGEON_ZAMORAK_WINE -> when {
+            this in bot.subZones -> null
+            bot.agility.level < 40 -> "the northern Yanille Dungeon ledge needs level 40 Agility"
+            bot.hitpoints.level <= YanilleDungeon.fallDamage(bot) ->
+                "Hitpoints are too low to survive a Yanille Dungeon fall"
+            else -> null
+        }
 
         TAVERLEY_DUNGEON_ZAMORAK_MONKS, TAVERLY_BLACK_DEMONS, TAVERLY_HELLHOUND,
         TAVERLY_DUNGEON_BLUE_DRAGONS ->

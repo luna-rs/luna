@@ -58,7 +58,7 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
 
     /**
      * Gathers missing ranging-potion wine when the bot owns unfinished potions but cannot mix them yet.
-     * This is a Herblore supply activity; ordinary Magic training never selects the trip.
+     * This Herblore-owned trip continues into finished-potion mixing after collecting a real haul.
      */
     internal fun getIngredientGatheringScript(bot: Bot): TelegrabBotScript? {
         val potion = FinishedPotion.RANGING_POTION

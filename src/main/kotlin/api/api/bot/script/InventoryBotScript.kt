@@ -251,11 +251,13 @@ abstract class InventoryBotScript(
      * Unavailable targets fail without closing an interface or starting an interaction.
      * Optional output tracking also accepts newly produced items, including spells with beta-mode cost bypasses.
      * State-only activities can supply [progressCondition], such as clearing a dead farming patch with a reusable tool.
+     * [neutralCompletion] can settle a confirmed contested interaction without changing its production failure budget.
      * The callback starts normal gameplay; it must not directly create products or award experience.
      */
     protected suspend fun attemptProduction(
         inputId: Int, dexterityDelay: Boolean = true, available: Boolean = true, outputId: Int? = null,
         progressCondition: () -> Boolean = { false },
+        neutralCompletion: () -> Boolean = { false },
         start: suspend (amount: Int) -> Boolean
     ) {
         if (!isActionSafe()) return
@@ -265,11 +267,15 @@ abstract class InventoryBotScript(
         val started = available && withTimeoutOrNull(15_000) {
             handler.widgets.clickCloseInterface() && isActionSafe() && start(before)
         } == true
-        val progressed = started && waitFor(10.seconds) {
-            bot.inventory.computeAmountForId(inputId) < before ||
+        var progressed = false
+        var neutral = false
+        if (started) waitFor(10.seconds) {
+            progressed = bot.inventory.computeAmountForId(inputId) < before ||
                 (outputId != null && bot.inventory.computeAmountForId(outputId) > outputBefore) || progressCondition()
+            neutral = !progressed && neutralCompletion()
+            progressed || neutral
         }
-        if (progressed) failures = 0 else if (isActionSafe() && ++failures >= maxFailures) {
+        if (progressed) failures = 0 else if (!neutral && isActionSafe() && ++failures >= maxFailures) {
             val zone = attemptedZone
             if (zones.size <= 1 || zone == null) stop() else {
                 failedProductionZone = zone

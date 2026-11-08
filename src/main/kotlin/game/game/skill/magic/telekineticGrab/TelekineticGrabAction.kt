@@ -1,6 +1,7 @@
 package game.skill.magic.telekineticGrab
 
 import api.predef.*
+import engine.spawn.PersistentGroundItem
 import game.content.randomEvents.RandomEvents
 import game.content.treasureTrails.TreasureTrails
 import game.player.Messages
@@ -125,6 +126,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
                 } else if (!mob.inventory.hasSpaceFor(item)) {
                     mob.sendMessage(Messages.inventoryFull())
                 } else if (world.items.unregister(groundItem)) {
+                    if (groundItem is PersistentGroundItem) groundItem.setPickedUp(mob)
                     mob.inventory.add(item)
                     TreasureTrails.acquired(mob, item.id)
                 }

@@ -1,5 +1,9 @@
 package game.obj.resource
 
+import api.attr.Attr
+import api.attr.getValue
+import api.attr.setValue
+import api.bot.isRealBot
 import api.predef.*
 import engine.spawn.PersistentGroundItem
 import game.player.Sound
@@ -7,6 +11,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
+import io.luna.game.model.mob.bot.Bot
 
 /**
  * World-spawned Zamorak wine theft, using Lost City's burn, drain and temple guardian retaliation rules.
@@ -17,6 +22,16 @@ import io.luna.game.model.mob.block.Graphic
  * @author lare96
  */
 object ZamorakWine {
+
+    /**
+     * A remembered native theft penalty, shared by every wine source and restored with the bot's attributes.
+     */
+    private var Bot.learnedWineTheft by Attr.boolean().persist("bot_learned_zamorak_wine_theft")
+
+    /**
+     * Returns whether this bot has actually suffered the manual wine theft penalty.
+     */
+    fun learnedTheft(bot: Bot): Boolean = bot.learnedWineTheft
 
     /**
      * Searches the wine's surroundings on its own plane, covering the Falador temple's full monk group.
@@ -38,6 +53,8 @@ object ZamorakWine {
             groundItem.state != EntityState.ACTIVE || !plr.isAlive) {
             return false
         }
+        // A late duplicate AI click must not punish a bot that already learned. Human automation stays native.
+        if (plr.isRealBot() && plr.personality.isDumb && plr.learnedWineTheft) return true
         plr.sendMessage("STOP STEALING MY WINE! GAH!")
         plr.graphic(Graphic(78))
         plr.playSound(Sound.FLAMES_OF_ZAMORAK)
@@ -45,6 +62,7 @@ object ZamorakWine {
         for (skill in listOf(plr.attack, plr.strength, plr.defence, plr.ranged, plr.magic)) {
             skill.level -= 1 + skill.staticLevel * 5 / 100
         }
+        if (plr.isRealBot() && plr.personality.isDumb) plr.learnedWineTheft = true
         val guardians = world.locator.findNpcs(groundItem.position, GUARDIAN_RADIUS) {
             it.id in guardianIds && it.isAlive
         }

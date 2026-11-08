@@ -26,7 +26,7 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Creates bot scripts used to train Magic.
  *
- * Production selection is shared by training and profit; Telegrab gathering is restricted to profit selection.
+ * Production selection is shared by training and profit; ordinary training also considers wine Telegrab 25% of the time.
  * Owned unpowered orbs and spell costs enable obelisk charging first. Owned jewellery and spell costs
  * enable all existing enchantments next, at the normal safe processing hubs. Owned ores and spell costs
  * then enable superheating when both skill requirements are met. Owned normal bones and spell costs can prepare
@@ -57,6 +57,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
                 .filter { it.isEligible() }
             getBestActivity(bot, level, { it.type.level }, choices)?.let { return it }
         }
+        if (rand(0.25)) getTelegrabScript(bot, profit = false)?.let { return it }
         return getProductionScript(bot, level)
     }
 
@@ -78,13 +79,19 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             return it
         }
         if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, false, getDuration(bot))?.let { return it }
-        val telegrab = TelegrabBotScript(bot, TelegrabBotScript.WINE, true, getDuration(bot), TelegrabBotScript.wineZones(bot, profit = true))
-        if (telegrab.isEligible()) return telegrab
+        getTelegrabScript(bot, profit = true)?.let { return it }
         return getProductionScript(bot, level)
     }
 
     /**
-     * Retains the existing production and fallback order without selecting profit-only gathering in training.
+     * Runes are acquired by the inventory lifecycle after selection; profit alone requires a positive guide margin.
+     */
+    internal fun getTelegrabScript(bot: Bot, profit: Boolean): TelegrabBotScript? =
+        TelegrabBotScript(bot, TelegrabBotScript.WINE, profit, getDuration(bot), TelegrabBotScript.wineZones(bot, profit))
+            .takeIf { it.isEligible() }
+
+    /**
+     * Retains the existing production and fallback order after wine collection has been considered.
      */
     private fun getProductionScript(bot: Bot, level: Int): BotScript {
         getOrbScript(bot, level)?.let { return it }

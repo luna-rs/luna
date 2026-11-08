@@ -28,6 +28,7 @@ import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
+import game.bot.scripts.combat.WineTheftLesson
 import game.combat.npcHooks.giantMole.GiantMole
 import game.combat.npcHooks.chaosElemental.ChaosElementalAttack
 import game.combat.spells.IbanStaff
@@ -934,6 +935,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onPrepareTargeting(): Boolean {
+        if (WineTheftLesson.attempt(bot) { isRunning() && !forceBanking && isActionSafe() }) return false
         if (slayerTask == SlayerTaskType.ZYGOMITE && !refillFungicide()) {
             forceBanking = true
             bot.combat.target = null
