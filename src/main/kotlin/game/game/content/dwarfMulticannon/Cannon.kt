@@ -9,6 +9,7 @@ import game.content.dwarfMulticannon.DwarfMulticannon.DECAY_TICKS
 import game.content.dwarfMulticannon.DwarfMulticannon.cannonPosition
 import game.content.dwarfMulticannon.DwarfMulticannon.cannonStage
 import game.player.Sound
+import game.skill.slayer.SlayerLevels
 import io.luna.game.model.Direction
 import io.luna.game.model.LocalGraphic
 import io.luna.game.model.LocalProjectile
@@ -193,7 +194,7 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
         val reach = if (dir.isDiagonal) DIAGONAL_REACH else STRAIGHT_REACH
         for (index in reach.indices) {
             val search = centre.translate(dir.translateX * reach[index], dir.translateY * reach[index])
-            val target = hunt(search, SEARCH_RADIUS[index]) ?: continue
+            val target = hunt(plr, search, SEARCH_RADIUS[index]) ?: continue
             if (!world.collisionManager.raycast(centre, target.position)) {
                 continue
             }
@@ -207,11 +208,13 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
     }
 
     /**
-     * Finds the attackable NPC closest to [search], within [radius] and in sight of it.
+     * Finds the attackable NPC closest to [search], within [radius] and in sight of it. NPCs that [plr]'s Slayer
+     * level is too low to damage are skipped.
      */
-    private fun hunt(search: Position, radius: Int): Npc? {
+    private fun hunt(plr: Player, search: Position, radius: Int): Npc? {
         return world.locator.findNpcs(search, radius) {
-            it.combat.isAttackable && it.id !in IMMUNE && world.collisionManager.raycast(search, it.position)
+            it.combat.isAttackable && it.id !in IMMUNE && SlayerLevels.failureMessage(plr, it) == null &&
+                world.collisionManager.raycast(search, it.position)
         }.minByOrNull {
             val dx = it.position.x - search.x
             val dy = it.position.y - search.y
