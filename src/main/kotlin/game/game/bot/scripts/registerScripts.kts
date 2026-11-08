@@ -1,6 +1,8 @@
 package game.bot.scripts
 
 import game.bot.scripts.BarrowsBotScript.BarrowsData
+import game.bot.scripts.trading.BuyStoreBargainBotScript
+import game.bot.scripts.trading.BuyStoreBargainBotScript.Companion.BargainData
 
 import game.bot.scripts.skills.FarmingBotScript
 import game.bot.scripts.skills.FarmingBotScript.Companion.FarmingData
@@ -171,6 +173,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<BargainData>(BuyStoreBargainBotScript::class) { bot, data -> BuyStoreBargainBotScript(bot, data) }
     scriptManager.addScript<RechargeData>(RechargeTeleportSuppliesBotScript::class) { bot, data -> RechargeTeleportSuppliesBotScript(bot, data) }
     scriptManager.addScript<TeleOtherData>(TeleOtherBotScript::class) { bot, data -> TeleOtherBotScript(bot, data) }
     scriptManager.addScript<BarrowsData>(BarrowsBotScript::class) { bot, data -> BarrowsBotScript(bot, data) }

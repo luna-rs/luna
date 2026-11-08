@@ -740,6 +740,17 @@ public final class Shop {
     }
 
     /**
+     * Indicates whether a slot belongs to this shop's original catalogue, without exposing its mutable snapshot.
+     * Empty original slots contain sold-in stock and are not a source of unlimited restocking purchases.
+     *
+     * @param index The shop slot to inspect.
+     * @return Whether this slot was originally stocked.
+     */
+    public boolean isOriginallyStocked(int index) {
+        return index >= 0 && index < amountMap.length && amountMap[index].isPresent();
+    }
+
+    /**
      * @return Restock behavior configuration for this shop. {@code null} signifies that this shop will not restock items.
      */
     public RestockPolicy getRestockPolicy() {

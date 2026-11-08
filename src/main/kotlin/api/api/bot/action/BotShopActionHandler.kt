@@ -11,6 +11,8 @@ import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.Currency
+import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.dialogue.DialogueInterface
@@ -25,6 +27,30 @@ import kotlin.time.Duration.Companion.seconds
  * A [BotActionHandler] implementation for shop related actions.
  */
 class BotShopActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
+
+    /**
+     * Executes one price-protected purchase on the game thread through the native shop transaction.
+     * The expected overlay, access, quantity, space and current quote are checked without suspending before buying.
+     * Ordinary queued shop clicks retain their existing behavior; this action is for finite bargain purchases.
+     */
+    fun buyQuoted(shop: Shop, id: Int, amount: Int, maxTotalCost: Int): Boolean {
+        if (amount !in 1..100 || maxTotalCost < 1 || !ActionSafety.NON_COMBAT.allows(bot) ||
+            bot.isConnectedPlayer && !bot.isAutomationActive ||
+            shop.currency != Currency.COINS || !shop.botAccess.apply(bot) ||
+            bot.overlays[ShopInterface::class]?.shop !== shop) return false
+        val index = shop.items.computeIndexForId(id)
+        if (index < 0) return false
+        val item = shop.items[index] ?: return false
+        if (item.id != id || item.isDynamic || item.amount < amount ||
+            bot.inventory.computeAmountForId(id).toLong() + amount > Int.MAX_VALUE ||
+            !bot.inventory.hasSpaceFor(Item(id, amount))) return false
+        val quoted = shop.computeBuyValue(id, amount).orElse(-1)
+        val coins = bot.inventory.computeAmountForId(Currency.COINS.id)
+        if (quoted !in 1..maxTotalCost || coins < quoted) return false
+        val before = bot.inventory.computeAmountForId(id)
+        return shop.buy(bot, index, amount) && bot.inventory.computeAmountForId(id) == before + amount &&
+            bot.inventory.computeAmountForId(Currency.COINS.id) == coins - quoted
+    }
 
     /**
      * Attempts to purchase 1 of [id] from the currently open shop.

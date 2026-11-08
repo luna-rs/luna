@@ -4,11 +4,13 @@ import api.bot.action.trading.BotTradePurpose
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePrice
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript.ActionSafety
 import api.predef.*
 import api.bot.action.trading.BotMarketplace
 import api.predef.ext.*
 import game.bot.scripts.trading.BuyFromStoreBotScript
+import game.bot.scripts.trading.BuyStoreBargainBotScript
 import game.bot.scripts.trading.SellToStoreBotScript
 import game.bot.scripts.trading.TradeBotScript
 import engine.controllers.Controllers.inWilderness
@@ -61,6 +63,11 @@ object MerchantingCoordinator : BotCoordinator {
 
     override fun accept(bot: Bot) {
         if (bot.preferences.isMerchant) {
+            MerchantStoreBargains.poll(bot)?.let { deal ->
+                bot.scriptStack.push(BuyStoreBargainBotScript(bot, deal))
+                bot.scriptStack.pushTail(TradeBotScript(bot, BotTradePurpose.MERCHANT_SELL))
+                return
+            }
             val market = BotMarketplace.select(bot)
             val selling = sellingPurpose(bot)
             val canBuy = bot.totalItemAmount(995).toDouble() *
