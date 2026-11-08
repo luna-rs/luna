@@ -40,6 +40,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param slayerTask An optional rock crab Slayer task this session works on.
  * @param slayerMaster The master that assigned [slayerTask].
  * @param zones Supply-ready native crab beaches retained through saved sessions and ordinary zone rotation.
+ * @param magicOnly Whether this session rejects physical attacks and optional cannon use.
  * @author lare96
  */
 class RockCrabBotScript(bot: Bot,
@@ -48,11 +49,12 @@ class RockCrabBotScript(bot: Bot,
                         spell: CombatSpell? = null,
                         slayerTask: SlayerTaskType? = null,
                         slayerMaster: SlayerMaster? = null,
-                        zones: MutableList<SubZone> = mutableListOf(SubZone.ROCK_CRABS)) :
+                        zones: MutableList<SubZone> = mutableListOf(SubZone.ROCK_CRABS),
+                        magicOnly: Boolean = false) :
     NpcCombatScript(bot, duration, zones,
                     ImmutableSetMultimap.Builder<SubZone, String>().apply {
                         zones.forEach { put(it, NAME) }
-                    }.build(), purpose, spell, slayerTask, slayerMaster) {
+                    }.build(), purpose, spell, slayerTask, slayerMaster, magicOnly) {
 
     companion object {
 
@@ -90,7 +92,8 @@ class RockCrabBotScript(bot: Bot,
      * @param data The saved script data.
      */
     constructor(bot: Bot, data: NpcCombatData) : this(bot, data.duration, data.purpose, data.spell, data.slayerTask,
-                                                      data.slayerMaster, data.zones.filter { it in CAMPS }.toMutableList())
+                                                      data.slayerMaster, data.zones.filter { it in CAMPS }.toMutableList(),
+                                                      data.magicOnly)
 
     /**
      * The tile the bot trains from, or `null` if it hasn't picked one.

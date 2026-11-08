@@ -1,15 +1,18 @@
 package game.skill.magic.lowHighAlch
 
 import api.attr.Attr
+import api.bot.isRealBot
 import api.predef.*
 import api.predef.ext.*
 import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
+import game.bot.scripts.skills.AlchemyBotScript
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
@@ -45,6 +48,10 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
             if (!item.itemDef.isTradeable || itemValue == 0) {
                 mob.sendMessage("You cannot use alchemy on that item.")
                 return
+            }
+            if (mob is Bot && (mob.isRealBot() || mob.isAutomationActive)) {
+                val owner = mob.scriptStack.current() as? AlchemyBotScript
+                if (owner?.canCastNative(item.id, type) != true) return
             }
             mob.inventory.remove(inventoryIndex, Item(item.id))
             mob.inventory.removeAll(removeItems)

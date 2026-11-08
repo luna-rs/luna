@@ -12,6 +12,7 @@ import kotlin.math.roundToInt
 import api.bot.Suspendable.waitFor
 import api.combat.magic.CombatSpellHandler.resetAutocast
 import api.bot.script.BotScript.ActionSafety
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.bot.webwalk.plan.BankAccess
@@ -39,9 +40,13 @@ import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplat
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack
+import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.combat.state.CombatContext.COMBAT_TIMER_TICKS
 import io.luna.game.model.mob.combat.Weapon
 import kotlin.time.Duration.Companion.seconds
+import java.util.function.Predicate
 
 /**
  * Handles combat-related bot actions that are not part of the core combat engine itself.
@@ -58,6 +63,37 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * @author lare96
      */
     companion object {
+        private val MAGIC_ONLY_SESSION = Predicate<BotScript> { it is MagicOnlyCombat && it.magicOnly }
+
+        /**
+         * Enforces a Magic skill session at native attack execution, including paused parents and retaliation.
+         * Other sessions and human-controlled players retain their existing attack behavior.
+         */
+        @JvmStatic
+        fun permitsAttack(bot: Bot, attack: CombatAttack<*>): Boolean {
+            if (bot.isConnectedPlayer && !bot.isAutomationActive) return true
+            val current = bot.scriptStack.current()
+            val session: MagicOnlyCombat = if (current is MagicOnlyCombat && current.magicOnly &&
+                !current.isTerminated() && !current.isFinished()) current else
+                bot.scriptStack.findActiveMatching(MAGIC_ONLY_SESSION).orElse(null) as? MagicOnlyCombat ?: return true
+            return session.permitsMagicAttack(attack)
+        }
+
+        /**
+         * Rechecks native spell identity, current staff, casting state and real costs without consuming supplies.
+         * Magic training uses an offensive stance so a saved defensive staff style cannot train Defence.
+         */
+        internal fun isNativeMagicAttack(bot: Bot, attack: CombatAttack<*>): Boolean {
+            val definition = (attack as? PlayerMagicCombatAttack)?.spellEffect ?: return false
+            val magic = bot.combat.magic
+            return !bot.preferences.isSkiller && mayGainExperience(bot, SKILL_MAGIC) &&
+                definition != CombatSpellDefinition.NONE && definition.spellbook == bot.spellbook &&
+                canUseSpellbook(bot, definition.spellbook) && bot.magic.level >= definition.level &&
+                bot.combat.weapon.type == Weapon.STAFF && bot.combat.stance != CombatStance.DEFENSIVE &&
+                (magic.selectedSpell == definition || magic.isAutocasting && magic.autocastSpell == definition &&
+                    magic.canAutocast(definition)) && Magic.checkRequirements(bot, definition, true) != null
+        }
+
         /**
          * The minimum combat level for bots to select or cast Ancient Magicks.
          */

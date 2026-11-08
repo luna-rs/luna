@@ -1,6 +1,7 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
+import api.bot.script.VoidBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.coordinator.CombatCoordinator
@@ -22,44 +23,33 @@ import game.skill.magic.lowHighAlch.AlchemyType
 import game.skill.magic.superheatItem.SuperheatItemAction
 import game.skill.smithing.BarType
 import io.luna.game.model.mob.bot.Bot
+import io.luna.util.RandomUtils
 
 /**
  * Creates bot scripts used to train Magic.
  *
- * Production selection is shared by training and profit; ordinary training also considers wine Telegrab 25% of the time.
- * Owned unpowered orbs and spell costs enable obelisk charging first. Owned jewellery and spell costs
- * enable all existing enchantments next, at the normal safe processing hubs. Owned ores and spell costs
- * then enable superheating when both skill requirements are met. Owned normal bones and spell costs can prepare
- * bananas or peaches up to the food stock target at the same safe hubs. Eligible alchemy follows; splashing
- * remains the fallback. Production activities use the normal eligibility and personality rules.
- * Orb selection uses the existing level/personality policy and the regular spellbook; each script carries
- * its matching obelisk subzone and uses the shared travel and banking system.
- *
- * Training also has a 25% chance to consider owned city-teleport supplies before production. Supported safe
- * teleports use the normal level/personality selector; profit selection never spends runes on teleport training.
- * Eligible combat-level-60 bots with an owned Ancient staff and fifty casts strongly prefer combat Magic (95%).
- * Training and profit combat share the normal camp selection and combat preparation lifecycle.
+ * Weighted method selection gives alchemy and wine collection regular opportunities alongside supplied production.
+ * Non-skillers can also use the shared NPC camp preparation with an enforced Magic-only combat discipline.
+ * Missing alchemy and wine runes are prepared after selection; protected supplies are never alchemy targets.
+ * Unavailable methods are removed before another choice, so a missing recipe cannot starve the remaining methods.
+ * Training retains city teleports and TeleOther as lower-weight alternatives and splashing as a fallback.
+ * Profit selection excludes those rune-spending fallbacks and requires alchemy's positive net margin.
  *
  * @author lare96
  */
 object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
-    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        getIbanRechargeScript(bot)?.let { return it }
-        if (rand(0.15)) CombatCoordinator.salarinScript(bot, getDuration(bot))?.let {
-            zones += SubZone.YANILLE_DUNGEON_SALARIN
-            return it
-        }
-        if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, true, getDuration(bot))?.let { return it }
-        if (rand(0.25)) getTeleportScript(bot, level)?.let { return it }
-        if (rand(0.1)) {
-            val choices = TeleOtherType.entries.map { TeleOtherBotScript(bot, it, getDuration(bot)) }
-                .filter { it.isEligible() }
-            getBestActivity(bot, level, { it.type.level }, choices)?.let { return it }
-        }
-        if (rand(0.25)) getTelegrabScript(bot, profit = false)?.let { return it }
-        return getProductionScript(bot, level)
+    /**
+     * Distinct methods compete by weight instead of a fixed production priority chain.
+     *
+     * @author lare96
+     */
+    internal enum class Method {
+        COMBAT, ALCHEMY, WINE, ORBS, ENCHANTING, SUPERHEAT, BONES, TELEPORT, TELEOTHER
     }
+
+    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
+        selectScript(bot, level, profit = false)
 
     /**
      * Selects a safe city teleport from owned rune costs without changing the bot's equipped staff or spellbook.
@@ -72,16 +62,8 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
         return getBestActivity(bot, level, { it.spell.level }, options)
     }
 
-    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        getIbanRechargeScript(bot)?.let { return it }
-        if (rand(0.15)) CombatCoordinator.salarinScript(bot, getDuration(bot))?.let {
-            zones += SubZone.YANILLE_DUNGEON_SALARIN
-            return it
-        }
-        if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, false, getDuration(bot))?.let { return it }
-        getTelegrabScript(bot, profit = true)?.let { return it }
-        return getProductionScript(bot, level)
-    }
+    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
+        selectScript(bot, level, profit = true)
 
     /**
      * Runes are acquired by the inventory lifecycle after selection; profit alone requires a positive guide margin.
@@ -91,18 +73,51 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             .takeIf { it.isEligible() }
 
     /**
-     * Retains the existing production and fallback order after wine collection has been considered.
+     * Weights unlocked methods before their owned-input, account and location checks are resolved lazily.
+     * Alchemy and wine are intentional choices; food conversion cannot always displace them.
      */
-    private fun getProductionScript(bot: Bot, level: Int): BotScript {
-        getOrbScript(bot, level)?.let { return it }
-        getEnchantScript(bot, level)?.let { return it }
-        getSuperheatScript(bot, level)?.let { return it }
-        getBonesToFoodScript(bot, level)?.let { return it }
-        val alchemy = getAlchemyScript(bot, level)
-        if (alchemy != null) {
-            return alchemy
+    internal fun methodWeights(bot: Bot, level: Int, profit: Boolean): Map<Method, Double> = buildMap {
+        if (!bot.preferences.isSkiller) put(Method.COMBAT, if (profit) 2.0 else 4.0)
+        if (level >= AlchemyType.LOW.level) put(Method.ALCHEMY, 4.0)
+        if (level >= 33) put(Method.WINE, if (profit) 4.0 else 3.0)
+        if (level >= 56) put(Method.ORBS, 2.0)
+        if (level >= 7) put(Method.ENCHANTING, 1.0)
+        if (level >= SuperheatItemAction.LEVEL) put(Method.SUPERHEAT, 1.0)
+        if (level >= 15) put(Method.BONES, 1.0)
+        if (!profit) {
+            if (level >= 25) put(Method.TELEPORT, 1.0)
+            if (level >= 74) put(Method.TELEOTHER, 0.5)
         }
-        return SplashBotScript(bot, getDuration(bot))
+    }
+
+    /**
+     * Resolves at most one candidate per method, retaining each method's native eligibility checks.
+     * Expensive gear and reserve planning runs only when its method is actually drawn.
+     */
+    private fun selectScript(bot: Bot, level: Int, profit: Boolean): BotScript {
+        getIbanRechargeScript(bot)?.let { return it }
+        val remaining = methodWeights(bot, level, profit).toMutableMap()
+        while (remaining.isNotEmpty()) {
+            val method = RandomUtils.weightedRoll(remaining) ?: break
+            remaining.remove(method)
+            val script = when (method) {
+                Method.COMBAT -> CombatCoordinator.magicTrainingScript(bot, !profit, getDuration(bot))
+                Method.ALCHEMY -> getAlchemyScript(bot, level, profit)
+                Method.WINE -> getTelegrabScript(bot, profit)
+                Method.ORBS -> getOrbScript(bot, level)
+                Method.ENCHANTING -> getEnchantScript(bot, level)
+                Method.SUPERHEAT -> getSuperheatScript(bot, level)
+                Method.BONES -> getBonesToFoodScript(bot, level)
+                Method.TELEPORT -> getTeleportScript(bot, level)
+                Method.TELEOTHER -> {
+                    val choices = TeleOtherType.entries.map { TeleOtherBotScript(bot, it, getDuration(bot)) }
+                        .filter { it.isEligible() }
+                    getBestActivity(bot, level, { it.type.level }, choices)
+                }
+            }
+            if (script != null) return script
+        }
+        return if (profit) VoidBotScript(bot) else SplashBotScript(bot, getDuration(bot))
     }
 
     /**
@@ -184,17 +199,13 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * @param level The bot's current Magic level.
      * @return An alchemy script, or `null` when alchemy is unavailable.
      */
-    private fun getAlchemyScript(bot: Bot, level: Int): AlchemyBotScript? {
-        if (!AlchemyBotScript.hasAlchableItems(bot)) {
-            return null
-        }
-
+    internal fun getAlchemyScript(bot: Bot, level: Int, profit: Boolean = false): AlchemyBotScript? {
         val type = when {
             level >= AlchemyType.HIGH.level -> AlchemyType.HIGH
             level >= AlchemyType.LOW.level -> AlchemyType.LOW
             else -> return null
         }
 
-        return AlchemyBotScript(bot, type, getDuration(bot))
+        return AlchemyBotScript(bot, type, getDuration(bot), profit = profit).takeIf { it.isEligible() }
     }
 }

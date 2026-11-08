@@ -4,6 +4,7 @@ import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
 import api.bot.zone.SubZone
 import api.predef.SKILL_PRAYER
+import api.predef.SKILL_MAGIC
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.util.RandomUtils
@@ -75,6 +76,11 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         private const val PREFERENCE_WEIGHT = 0.50
 
         /**
+         * Gives eligible Magic training a larger share while retaining all other supported training choices.
+         */
+        private const val MAGIC_TRAINING_WEIGHT_MULTIPLIER = 2.0
+
+        /**
          * Attribute representing if this coordinator was last in profit or training mode.
          */
         var Bot.profitMode by Attr.boolean { false }
@@ -123,6 +129,8 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         for (skill in bot.preferences.skills) {
             weights.computeIfPresent(skill) { _, old -> old + PREFERENCE_WEIGHT }
         }
+
+        if (training) weights.computeIfPresent(SKILL_MAGIC) { _, old -> old * MAGIC_TRAINING_WEIGHT_MULTIPLIER }
 
         return weights
     }

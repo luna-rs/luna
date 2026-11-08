@@ -10,6 +10,7 @@ import io.luna.game.model.mob.combat.CombatAttackHistory;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
@@ -155,6 +156,10 @@ public abstract class CombatAttack<T extends Mob> {
      * will not be executed.
      */
     public final void apply() {
+        if (attacker instanceof Bot bot && !BotCombatActionHandler.permitsAttack(bot, this)) {
+            attacker.getCombat().setTarget(null);
+            return;
+        }
         if (!CombatRestriction.permits(attacker, victim)) {
             attacker.getCombat().setTarget(null);
             return;

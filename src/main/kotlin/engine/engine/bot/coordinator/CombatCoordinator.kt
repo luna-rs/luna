@@ -186,6 +186,19 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             ancientMagicLoadout(bot)?.let { createScript(bot, training, BotGearPurpose.MAGIC, it, duration) }
 
         /**
+         * Uses owned damage spells for Magic training without permitting another combat discipline.
+         * Spell selection, equipment, banking and rune procurement share the ordinary supplied combat path.
+         */
+        internal fun magicTrainingScript(bot: Bot, training: Boolean, duration: Duration): BotScript? {
+            if (bot.preferences.isSkiller || !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) ||
+                training && !BotCombatActionHandler.wantsToTrain(bot, SKILL_MAGIC)) return null
+            val loadout = listOf(Spellbook.REGULAR, Spellbook.ANCIENT).mapNotNull {
+                CombatLoadout.find(bot, BotGearPurpose.MAGIC, spellbook = it, minimumCasts = 1)
+            }.randomOrNull() ?: return null
+            return createScript(bot, training, BotGearPurpose.MAGIC, loadout, duration, magicOnly = true)
+        }
+
+        /**
          * Keeps Salarin's Strike-only loadout separate from general combat camps and tactical spell upgrades.
          */
         internal fun salarinScript(bot: Bot, duration: Duration): SalarinBotScript? =
@@ -197,7 +210,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
          * Builds the appropriate combat session from an already supplied discipline and its eligible camps.
          */
         private fun createScript(bot: Bot, training: Boolean, purpose: BotGearPurpose,
-                                 loadout: CombatLoadout, duration: Duration): BotScript? {
+                                 loadout: CombatLoadout, duration: Duration, magicOnly: Boolean = false): BotScript? {
             val candidates = eligibleCamps(combatReadiness(bot, purpose), training, purpose,
                 bot.itemTracker.contains(1540) &&
                     loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
@@ -206,7 +219,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 .filter { it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }.shuffled()
             if (candidates.firstOrNull()?.zone in RockCrabBotScript.CAMPS) {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
-                    zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList())
+                    zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList(),
+                    magicOnly = magicOnly)
             }
             val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
@@ -216,7 +230,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             val names = HashMultimap.create<SubZone, String>()
             selected.forEach { names.putAll(it.zone, it.names) }
             return NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
-                names, purpose, loadout.spell?.spell)
+                names, purpose, loadout.spell?.spell, magicOnly = magicOnly)
         }
     }
 

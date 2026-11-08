@@ -4,6 +4,7 @@ import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotCombatMagic
+import api.bot.action.MagicOnlyCombat
 import api.bot.action.PvmTactics
 import api.bot.action.BotPotionActionHandler
 import api.bot.Suspendable.delay
@@ -70,6 +71,7 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.combat.CombatAction
+import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.interact.InteractionPolicy
@@ -112,6 +114,7 @@ import kotlin.time.Duration.Companion.minutes
  * @property spell The combat spell selected for a Magic session, preserved when saving.
  * @property slayerTask Optional native assignment restricting this session to exact task NPC IDs.
  * @property slayerMaster The original assignee; an assignment change ends this combat session.
+ * @property magicOnly Whether every attack must remain a native spell throughout preparation and interruptions.
  * @author lare96
  */
 open class NpcCombatScript(bot: Bot,
@@ -121,11 +124,14 @@ open class NpcCombatScript(bot: Bot,
                            val purpose: BotGearPurpose = BotGearPurpose.MELEE,
                            private var spell: CombatSpell? = null,
                            private val slayerTask: SlayerTaskType? = null,
-                           private val slayerMaster: SlayerMaster? = null) :
+                           private val slayerMaster: SlayerMaster? = null,
+                           override val magicOnly: Boolean = false) :
     TargetingZonedBotScript<Npc>(bot, duration,
-        zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE }.toMutableList()), SocialBotScript {
+        zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE }.toMutableList()), SocialBotScript, MagicOnlyCombat {
 
     override val actionSafety = ActionSafety.COMBAT
+
+    override val allowsCombatResponse: Boolean get() = !magicOnly
 
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
     companion object {
@@ -382,6 +388,11 @@ open class NpcCombatScript(bot: Bot,
             var spell: CombatSpell? = null
 
             /**
+             * Magic skill sessions retain their attack restriction across logout and interruption.
+             */
+            var magicOnly: Boolean = false
+
+            /**
              * Optional native Slayer restriction; absent from legacy ordinary combat sessions.
              */
             var slayerTask: SlayerTaskType? = null
@@ -396,6 +407,7 @@ open class NpcCombatScript(bot: Bot,
                 slayerMaster = data.get("slayerMaster")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerMaster::valueOf)
                 purpose = data.get("purpose")?.asString?.let(BotGearPurpose::valueOf) ?: BotGearPurpose.MELEE
                 spell = data.get("spell")?.takeUnless { it.isJsonNull }?.asString?.let(CombatSpell::valueOf)
+                magicOnly = data.get("magicOnly")?.asBoolean ?: false
                 val builder = ImmutableSetMultimap.builder<SubZone, String>()
                 val savedNames = data.get("names")?.takeUnless { it.isJsonNull }?.asJsonObject
                 savedNames?.entrySet()?.forEach { (zone, npcs) ->
@@ -410,6 +422,7 @@ open class NpcCombatScript(bot: Bot,
                 slayerMaster?.let { data.addProperty("slayerMaster", it.name) }
                 data.addProperty("purpose", purpose.name)
                 spell?.let { data.addProperty("spell", it.name) }
+                if (magicOnly) data.addProperty("magicOnly", true)
                 val savedNames = JsonObject()
                 names.asMap().forEach { (zone, npcs) ->
                     savedNames.add(zone.name, GsonUtils.toJsonTree(npcs))
@@ -445,7 +458,8 @@ open class NpcCombatScript(bot: Bot,
                                                            (data as? NpcCombatData)?.purpose ?: BotGearPurpose.MELEE,
                                                            (data as? NpcCombatData)?.spell,
                                                            (data as? NpcCombatData)?.slayerTask,
-                                                           (data as? NpcCombatData)?.slayerMaster)
+                                                           (data as? NpcCombatData)?.slayerMaster,
+                                                           (data as? NpcCombatData)?.magicOnly ?: false)
 
     /**
      * Runtime identity rejects a replaced task even when its type and master happen to match.
@@ -571,6 +585,14 @@ open class NpcCombatScript(bot: Bot,
         // Gear selection and banking can suspend waiting for combat to end. Keep the normal
         // combat response available until this script is ready to handle an actual engagement.
         bot.reflex.isDisableCombatReflex = false
+        if (magicOnly) {
+            bot.combat.target = null
+            bot.combat.autoRetaliateTarget = null
+            bot.combat.setFirstAttack(null)
+            clearMagic()
+            if (purpose != BotGearPurpose.MAGIC || spell == null || bot.preferences.isSkiller ||
+                !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
+        }
         if (!assignmentActive()) return false
         if (!cannonPrepared && !CannonBotSupport.recover(bot)) return false
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
@@ -613,6 +635,12 @@ open class NpcCombatScript(bot: Bot,
         campBehavior.close()
         bot.reflex.isDisableCombatReflex = false
         tactics.stopAttending()
+        if (magicOnly) {
+            bot.combat.target = null
+            bot.combat.autoRetaliateTarget = null
+            bot.combat.setFirstAttack(null)
+            clearMagic()
+        }
         if (queenTrip && !bot.combat.inCombat()) bot.combat.prayers.deactivateAll()
         // A pause hands the fight to another script, which looks after the prayers from there.
         if (!queenTrip && !isPaused()) tactics.leaveFight()
@@ -800,7 +828,7 @@ open class NpcCombatScript(bot: Bot,
                 stop()
                 return
             }
-            cannonPrepared = slayerTask == null && CannonBotSupport.prepare(bot, originalZones, purpose)
+            cannonPrepared = !magicOnly && slayerTask == null && CannonBotSupport.prepare(bot, originalZones, purpose)
         }
         if (!wieldAtBank(weapon, ammo, thrown) ||
             (slayerTask == SlayerTaskType.ZYGOMITE && !refillFungicide()) || !configureCombat()) {
@@ -1146,6 +1174,7 @@ open class NpcCombatScript(bot: Bot,
         data.names = ImmutableSetMultimap.copyOf(names)
         data.purpose = purpose
         data.spell = spell
+        data.magicOnly = magicOnly
         data.slayerTask = slayerTask
         data.slayerMaster = slayerMaster
         return data
@@ -1315,6 +1344,17 @@ open class NpcCombatScript(bot: Bot,
      * Validates actual equipment, dragon protection and one attack's supplies before permitting attack clicks.
      */
     internal fun prepareCombat(): Boolean {
+        if (magicOnly && (purpose != BotGearPurpose.MAGIC || bot.preferences.isSkiller)) {
+            bot.combat.target = null
+            clearMagic()
+            stop()
+            return false
+        }
+        if (magicOnly && forceBanking) {
+            bot.combat.target = null
+            clearMagic()
+            return false
+        }
         if (purpose == BotGearPurpose.MAGIC && loadout?.spell?.spell == CombatSpell.IBAN_BLAST &&
             IbanStaff.remaining(bot) == 0) {
             clearMagic()
@@ -1357,9 +1397,24 @@ open class NpcCombatScript(bot: Bot,
             return false
         }
         val ready = configureCombat()
+        if (magicOnly && !ready) bot.combat.target = null
         // A missing weapon, ammunition or spell cost sends us to a non-combat bank operation.
         // Let the existing combat reflex take over if we are attacked during that preparation.
         bot.reflex.isDisableCombatReflex = ready
+        return ready
+    }
+
+    override fun permitsMagicAttack(attack: CombatAttack<*>): Boolean {
+        val selected = loadout
+        val ready = purpose == BotGearPurpose.MAGIC && !forceBanking && selected != null &&
+            selected.gear[Equipment.WEAPON] != null && selected.gear[Equipment.WEAPON] == bot.equipment.weapon?.id &&
+            BotCombatActionHandler.isNativeMagicAttack(bot, attack)
+        if (!ready) {
+            bot.combat.target = null
+            combatConfigured = false
+            clearMagic()
+            forceBanking = true
+        }
         return ready
     }
 
@@ -1402,6 +1457,11 @@ open class NpcCombatScript(bot: Bot,
                 return false
             }
             val definition = selected.spell ?: return false
+            if (magicOnly && bot.combat.stance == CombatStance.DEFENSIVE) {
+                val style = bot.combat.weapon.typeDef.styles.firstOrNull { it.stance != CombatStance.DEFENSIVE }
+                    ?: return false
+                bot.combat.weapon.changeStyle(style.button)
+            }
             if (bot.spellbook != definition.spellbook || bot.magic.level < definition.level ||
                 !BotCombatActionHandler.canUseSpellbook(bot, definition.spellbook)) {
                 clearMagic()

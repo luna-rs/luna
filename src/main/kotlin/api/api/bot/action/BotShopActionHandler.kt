@@ -29,6 +29,13 @@ import kotlin.time.Duration.Companion.seconds
 class BotShopActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
+     * One finite GP budget shared by every item in a guarded acquisition basket.
+     *
+     * @author lare96
+     */
+    private class PurchaseBudget(var remainingCoins: Int, val maximumUnitPrices: Map<Int, Long>)
+
+    /**
      * Executes one price-protected purchase on the game thread through the native shop transaction.
      * The expected overlay, access, quantity, space and current quote are checked without suspending before buying.
      * Ordinary queued shop clicks retain their existing behavior; this action is for finite bargain purchases.
@@ -186,7 +193,22 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * the returned ids meet their targets when the attempt ends. The whole basket shares one two-minute
      * deadline, including banking, travel and every purchase.
      */
-    suspend fun obtainWantedItems(amounts: Map<Int, Int>): Set<Int> {
+    suspend fun obtainWantedItems(amounts: Map<Int, Int>): Set<Int> = obtainWantedItems(amounts, null)
+
+    /**
+     * Obtains owned stock normally, then buys only from GP shops within one shared spending limit.
+     * Missing unit ceilings prohibit purchases of that item. Every native purchase rechecks the current quote
+     * after travel and executes synchronously within its total and unit ceilings, in batches of at most one hundred.
+     * Partial purchases remain owned; the ordinary unguarded acquisition API retains its existing behavior.
+     */
+    suspend fun obtainWantedItems(amounts: Map<Int, Int>, maximumCoins: Int,
+                                  maximumUnitPrices: Map<Int, Long>): Set<Int> {
+        require(maximumCoins >= 0)
+        require(maximumUnitPrices.values.all { it > 0L })
+        return obtainWantedItems(amounts, PurchaseBudget(maximumCoins, maximumUnitPrices.toMap()))
+    }
+
+    private suspend fun obtainWantedItems(amounts: Map<Int, Int>, budget: PurchaseBudget?): Set<Int> {
         require(amounts.values.all { it > 0 })
         val targets = amounts.toMap()
         fun acquired() = targets.filter { (id, amount) ->
@@ -197,7 +219,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             try {
                 for ((id, amount) in targets) {
                     if (!ActionSafety.NON_COMBAT.await(bot)) break
-                    acquireWantedItem(id, amount, targets.keys)
+                    acquireWantedItem(id, amount, targets.keys, budget)
                 }
             } finally {
                 bot.overlays.closeWindows()
@@ -209,7 +231,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     /**
      * Attempts one target while preserving the rest of the basket during banking.
      */
-    private suspend fun acquireWantedItem(id: Int, amount: Int, basket: Set<Int>): Boolean {
+    private suspend fun acquireWantedItem(id: Int, amount: Int, basket: Set<Int>, budget: PurchaseBudget?): Boolean {
         fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
         if (carried() >= amount) return true
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
@@ -224,6 +246,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             }
         }
         if (carried() >= amount) return true
+        if (budget != null) return acquireQuotedItem(id, amount, basket, budget)
         if (id == BotTaverleyKeys.DUSTY_KEY && amount == 1 && BotTaverleyKeys.obtain(bot, basket)) return true
         if (!ActionSafety.NON_COMBAT.allows(bot)) return false
         val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
@@ -281,6 +304,71 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             if (carried() >= amount) return true
         }
         return id == 1793 && acquireWoadLeaves(amount, basket)
+    }
+
+    /**
+     * Preserves the basket while staging only authorized GP, refreshing quotes after each suspension.
+     * Native quoted purchases cannot race another queued shop click between price validation and payment.
+     */
+    private suspend fun acquireQuotedItem(id: Int, amount: Int, basket: Set<Int>, budget: PurchaseBudget): Boolean {
+        val ceiling = budget.maximumUnitPrices[id] ?: return false
+        val coins = Currency.COINS.id
+        if (id == coins || budget.remainingCoins < 1) return false
+        fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
+        val shops = world.shops.values().filter {
+            it.currency == Currency.COINS && id in it.itemIds && it.botAccess.apply(bot)
+        }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
+        bot.actions.interruptWeak()
+        bot.overlays.closeWindows()
+        for (shop in shops) {
+            while (carried() < amount && budget.remainingCoins > 0) {
+                if (!ActionSafety.NON_COMBAT.await(bot)) return false
+                if (!shop.botAccess.apply(bot) || shop.items.computeAmountForId(id) < 1) break
+                val price = shop.computeBuyValue(id, 1).orElse(-1)
+                if (price < 1 || price.toLong() > ceiling || price > budget.remainingCoins) break
+                val held = bot.inventory.computeAmountForId(coins)
+                if (held.toLong() + bot.bank.computeAmountForId(coins) < price) break
+                if (held < price || !bot.inventory.hasSpaceFor(Item(id))) {
+                    if (!handler.banking.travelToBankOpen() || !ActionSafety.NON_COMBAT.await(bot)) break
+                    handler.banking.clickBankingMode(false)
+                    if (!bot.inventory.hasSpaceForAll(listOf(Item(id), Item(coins))) &&
+                        !handler.banking.depositInventory(basket + coins)) break
+                    if (!ActionSafety.NON_COMBAT.await(bot)) return false
+                    if (carried() >= amount) return true
+                    val wallet = minOf(budget.remainingCoins.toLong(),
+                        bot.inventory.computeAmountForId(coins).toLong() + bot.bank.computeAmountForId(coins))
+                    val missing = (wallet - bot.inventory.computeAmountForId(coins)).coerceAtLeast(0L).toInt()
+                    if (missing > 0 && !handler.banking.withdraw(Item(coins, missing))) break
+                }
+                if (!ActionSafety.NON_COMBAT.await(bot)) return false
+                bot.overlays.closeWindows()
+                if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) break
+                if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
+                bot.overlays.open(ShopInterface(shop))
+                val before = carried()
+                val maximum = minOf((amount - before).coerceAtLeast(0L),
+                    shop.items.computeAmountForId(id).toLong(), 100L).toInt()
+                val wallet = minOf(budget.remainingCoins, bot.inventory.computeAmountForId(coins))
+                var quantity = maximum
+                var quote = -1
+                while (quantity > 0) {
+                    quote = shop.computeBuyValue(id, quantity).orElse(-1)
+                    if (quote in 1..wallet &&
+                        quote.toLong() <= ceiling.coerceAtMost(Int.MAX_VALUE.toLong()) * quantity &&
+                        bot.inventory.hasSpaceFor(Item(id, quantity))) break
+                    quantity--
+                }
+                if (quantity < 1) break
+                val beforeCoins = bot.inventory.computeAmountForId(coins)
+                val bought = buyQuoted(shop, id, quantity, quote)
+                val spent = (beforeCoins - bot.inventory.computeAmountForId(coins)).coerceAtLeast(0)
+                budget.remainingCoins = (budget.remainingCoins - spent).coerceAtLeast(0)
+                if (!bought || carried() <= before) break
+                delay(1.seconds)
+            }
+            if (carried() >= amount) return true
+        }
+        return false
     }
 
     /**

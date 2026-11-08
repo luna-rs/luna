@@ -16,6 +16,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 /**
  * Manages the script buffer that controls a bot's queued behavior.
@@ -363,6 +364,23 @@ public final class BotScriptStack {
     public <T extends BotScript> Optional<T> findActive(Class<T> type) {
         return buffer.stream().filter(type::isInstance).filter(script -> !script.isTerminated() &&
                 !script.isFinished() && (script.isRunning() || script.isPaused())).map(type::cast).findFirst();
+    }
+
+    /**
+     * Finds the nearest running or paused owner matching a reusable predicate without copying the script buffer.
+     * Idle queued work and finished or terminated scripts cannot claim activity ownership.
+     *
+     * @param predicate The activity rule to inspect on the game thread.
+     * @return The nearest matching active owner, if present.
+     */
+    public Optional<BotScript> findActiveMatching(Predicate<BotScript> predicate) {
+        for (BotScript script : buffer) {
+            if (!script.isTerminated() && !script.isFinished() &&
+                    (script.isRunning() || script.isPaused()) && predicate.test(script)) {
+                return Optional.of(script);
+            }
+        }
+        return Optional.empty();
     }
 
     /**

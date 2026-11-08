@@ -2,6 +2,7 @@ package game.content.dwarfMulticannon
 
 import api.predef.*
 import api.predef.ext.*
+import api.bot.action.BotCombatActionHandler
 import engine.controllers.Controllers.inMultiArea
 import game.combat.npcHooks.giantMole.GiantMole
 import game.content.dwarfMulticannon.DwarfMulticannon.CANNONBALL
@@ -18,6 +19,7 @@ import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.task.Task
@@ -229,6 +231,8 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
         if (ammo < 1 || !canFireAt(plr, npc)) {
             return
         }
+        val attack = CannonAttack(plr, npc)
+        if (plr is Bot && !BotCombatActionHandler.permitsAttack(plr, attack)) return
         val flight = 35 + distanceTo(npc) * 5
         object : LocalProjectile.TargetBuilder(ctx) {
             override fun sourcePosition() = centre
@@ -246,7 +250,6 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
         ammo--
         world.locator.findPlayers(position, 10) { true }.forEach { it.playSound(Sound.MCANNON_FIRE) }
 
-        val attack = CannonAttack(plr, npc)
         val damage = attack.calculateDamage(npc)
         npc.combat.lastCombatWith = plr
         npc.combat.resetCombatTimer()

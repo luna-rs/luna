@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.MagicOnlyCombat
 import api.bot.Suspendable.naturalDelay
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript
@@ -24,7 +25,9 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.combat.Weapon
+import io.luna.game.model.mob.combat.attack.CombatAttack
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -37,9 +40,13 @@ import kotlin.time.Duration.Companion.seconds
 class SplashBotScript(
     bot: Bot,
     duration: Duration
-) : ZonedBotScript(bot, duration, SPLASH_ZONES.toMutableList()) {
+) : ZonedBotScript(bot, duration, SPLASH_ZONES.toMutableList()), MagicOnlyCombat {
 
     override val actionSafety = ActionSafety.COMBAT
+
+    override val magicOnly: Boolean = true
+
+    override val allowsCombatResponse: Boolean = false
 
     private data class RuneSetup(
         val spell: CombatSpellDefinition,
@@ -102,6 +109,7 @@ class SplashBotScript(
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        clearCombat()
         if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
         if (!handler.combat.switchSpellbook(Spellbook.REGULAR)) return false
         if (resumed && spell != null && usingStaff != null && splashEquipment != null) {
@@ -180,6 +188,11 @@ class SplashBotScript(
         }
 
         val availableSpell = resolveRuntimeSpell()
+        if (bot.combat.stance == CombatStance.DEFENSIVE) {
+            val style = bot.combat.weapon.typeDef.styles.firstOrNull { it.stance != CombatStance.DEFENSIVE }
+                ?: run { stop(); return }
+            bot.combat.weapon.changeStyle(style.button)
+        }
         if (availableSpell == null || !handler.combat.setAutocastSpell(availableSpell)) {
             bot.log("Could not configure a valid autocast spell after banking.")
             stop()
@@ -260,9 +273,31 @@ class SplashBotScript(
 
     override fun onPaused() {
         searchStartedAt = null
+        clearCombat()
     }
 
     override suspend fun finish() {
+        clearCombat()
+    }
+
+    override fun permitsMagicAttack(attack: CombatAttack<*>): Boolean {
+        val ready = usingStaff != null && usingStaff == bot.equipment.weapon?.id &&
+            bot.equipment.getBonus(MAGIC_ATTACK) <= MAX_SPLASH_MAGIC_BONUS &&
+            BotCombatActionHandler.isNativeMagicAttack(bot, attack)
+        if (!ready) {
+            clearCombat()
+            stop()
+        }
+        return ready
+    }
+
+    /**
+     * Stops inherited or interrupted combat so an empty autocast cannot fall through to a physical attack.
+     */
+    private fun clearCombat() {
+        bot.combat.target = null
+        bot.combat.autoRetaliateTarget = null
+        bot.combat.setFirstAttack(null)
         val magic = bot.combat.magic
         magic.isAutocasting = false
         magic.autocastSpell = CombatSpellDefinition.NONE
