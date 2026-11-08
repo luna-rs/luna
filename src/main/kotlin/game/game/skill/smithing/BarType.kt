@@ -9,12 +9,15 @@ import io.luna.game.model.item.Item
 /**
  * An enum representing a metal bar that can be made from a [SmeltAction].
  *
+ * @property xp The Smithing experience for each bar used at an anvil.
+ * @property smeltXp The Smithing experience for smelting one bar.
  * @author lare96
  */
-enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int, val oreRequired: Pair<Item, Item?>) {
+enum class BarType(val id: Int, val level: Int, val xp: Double, val smeltXp: Double, val widget: Int, val oreRequired: Pair<Item, Item?>) {
     BRONZE(id = 2349,
            level = 1,
            xp = 12.5,
+           smeltXp = 6.2,
            widget = 2405,
            oreRequired = Pair(
                item("Copper ore"),
@@ -23,6 +26,7 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
     IRON(id = 2351,
          level = 15,
          xp = 25.0,
+         smeltXp = 12.5,
          widget = 2406,
          oreRequired = Pair(
              item("Iron ore"),
@@ -31,6 +35,7 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
     STEEL(id = 2353,
           level = 30,
           xp = 37.5,
+          smeltXp = 17.5,
           widget = 2409,
           oreRequired = Pair(
               item("Iron ore"),
@@ -39,6 +44,7 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
     SILVER(id = 2355,
            level = 20,
            xp = 13.7,
+           smeltXp = 13.7,
            widget = 2407,
            oreRequired = Pair(
                item("Silver ore"),
@@ -47,6 +53,7 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
     GOLD(id = 2357,
          level = 40,
          xp = 22.5,
+         smeltXp = 22.5,
          widget = 2410,
          oreRequired = Pair(
              item("Gold ore"),
@@ -55,6 +62,7 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
     MITHRIL(id = 2359,
             level = 50,
             xp = 50.0,
+            smeltXp = 30.0,
             widget = 2411,
             oreRequired = Pair(
                 item("Mithril ore"),
@@ -63,6 +71,7 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
     ADAMANT(id = 2361,
             level = 70,
             xp = 62.5,
+            smeltXp = 37.5,
             widget = 2412,
             oreRequired = Pair(
                 item("Adamantite ore"),
@@ -71,6 +80,7 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
     RUNE(id = 2363,
          level = 85,
          xp = 75.0,
+         smeltXp = 50.0,
          widget = 2413,
          oreRequired = Pair(
              item("Runite ore"),

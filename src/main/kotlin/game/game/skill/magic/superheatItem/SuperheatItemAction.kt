@@ -97,7 +97,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         mob.animation(Animations.SUPERHEAT)
         mob.graphic(Graphic(148, 100))
         mob.playSound(Sound.SUPERHEAT_ALL)
-        mob.smithing.addExperience(barType.xp)
+        mob.smithing.addExperience(barType.smeltXp)
         mob.tabs.show(TabIndex.MAGIC)
         world.scheduleOnce(1) { RandomEvents.offerGeneral(mob) }
     }
