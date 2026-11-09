@@ -9,6 +9,7 @@ import api.bot.action.PkClanPolicy
 import api.bot.script.BotScript
 import api.bot.social.BotSocialInteractions
 import api.bot.script.BotScriptData
+import api.bot.script.recentEscape
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.predef.*
@@ -59,7 +60,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Restores the outing's remaining duration, solo decision and current destination without rerolling identity.
      */
     constructor(bot: Bot, data: PkData) : this(bot, data.duration, data.soloClanOuting) {
-        patrolDestination = data.patrolDestination?.takeIf { it.z == 0 && levelAt(it) > 0 && allowsHuntingAt(it) }
+        patrolDestination = data.patrolDestination?.takeIf { it.z == 0 && levelAt(it) > 0 &&
+            allowsHuntingAt(it) && bot.recentEscape?.avoids(it) != true }
     }
 
     override val actionSafety = ActionSafety.COMBAT
@@ -114,7 +116,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
                     PkArea.DEMONIC_RUINS.anchors)
                 else -> PkArea.ALL.map { it.anchors }
             }
-            val valid = groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 } }
+            val escape = bot.recentEscape
+            val valid = groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 && escape?.avoids(it) != true } }
                 .filter { it.isNotEmpty() }
             val hotspots = hotspotGroups(bot)
             if (hotspots.isEmpty()) return valid
@@ -146,7 +149,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
                     listOfNotNull(SubZone.WILDERNESS_AGILITY.entrance(bot)))
             }
             val minimumDepth = if (bot.preferences.pk?.purpose() == Purpose.CLAN) 30 else 1
-            return groups.map { group -> group.filter { it.z == 0 && levelAt(it) >= minimumDepth } }
+            val escape = bot.recentEscape
+            return groups.map { group -> group.filter { it.z == 0 && levelAt(it) >= minimumDepth && escape?.avoids(it) != true } }
                 .filter { it.isNotEmpty() }
         }
 
@@ -692,26 +696,27 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Travel is delegated to the shared walker.
      */
     internal fun patrolAnchors(): List<Position> {
-        return patrolGroups(bot).random()
+        return patrolGroups(bot).randomOrNull().orEmpty()
     }
 
     /**
      * Ordinary clan outings rally on their leader's actual position instead of chasing a distant shared goal.
      * Without an available patrol member, they wait at a stable clan rally point rather than roaming alone.
      */
-    internal fun selectPatrolDestination(): Position {
+    internal fun selectPatrolDestination(): Position? {
         if (isGroupOuting()) {
             val members = clan.patrolMembers()
             val leader = clan.patrolLeader(members)
-            if (leader !== bot) return leader.position
+            if (leader !== bot) return leader.position.takeUnless { bot.recentEscape?.avoids(it) == true }
             if (members.isEmpty()) {
                 val groups = hotspotGroups(bot).ifEmpty { patrolGroups(bot) }
+                if (groups.isEmpty()) return null
                 val capeIndex = ((clan.cape ?: 4315) - 4315) / 2
                 val anchors = groups[capeIndex % groups.size]
                 return anchors[capeIndex / groups.size % anchors.size]
             }
         }
-        return patrolAnchors().random()
+        return patrolAnchors().randomOrNull()
     }
 
     /**
@@ -757,6 +762,11 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     internal suspend fun walkHuntingRoute(destination: Position, radius: Int = 0,
                                          fallback: Boolean = true): Boolean {
+        if (bot.recentEscape?.avoids(destination) == true) {
+            patrolDestination = null
+            preparationState = PreparationState.LEAVING
+            return false
+        }
         huntingTravel = true
         huntingTravelInterrupted = false
         return try {
@@ -1035,7 +1045,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
             }
             if (members.any { !clan.near(it, PkClanPolicy.GROUP_RADIUS) }) return
             if (members.isEmpty()) {
-                val rally = selectPatrolDestination()
+                val rally = selectPatrolDestination() ?: run {
+                    preparationState = PreparationState.LEAVING
+                    return
+                }
                 patrolDestination = rally
                 if (bot.position.computeLongestDistance(rally) > PkClanPolicy.FOLLOW_RADIUS) {
                     walkWithClan(rally, PkClanPolicy.FOLLOW_RADIUS)
@@ -1048,7 +1061,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
             !bot.navigator.isActive &&
             bot.walking.isEmpty && bot.cycles >= nextPatrolCycle
         ) {
-            val anchor = patrolDestination ?: selectPatrolDestination().also { patrolDestination = it }
+            val anchor = patrolDestination ?: selectPatrolDestination()?.also { patrolDestination = it } ?: run {
+                preparationState = PreparationState.LEAVING
+                return
+            }
             bot.log("Travelling to PK patrol anchor=$anchor")
             val reached = if (isGroupOuting()) walkWithClan(anchor, 2) else
                 walkHuntingRoute(anchor)
@@ -1074,11 +1090,14 @@ class PkBotScript(bot: Bot, val duration: Duration,
     internal suspend fun enterWild(): Boolean {
         if (!combatPolicy.pkRiskBudget().withinBudget || !clan.wearingCape() || !clanCanHunt()) return false
         if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
-            val anchor = patrolDestination ?: when {
+            val anchor = patrolDestination?.takeUnless { bot.recentEscape?.avoids(it) == true } ?: when {
                 isGroupOuting() -> selectPatrolDestination()
-                isSkillSession -> patrolAnchors().random()
-                rand(2 of 3) -> hotspotGroups(bot).random().random()
-                else -> LOW_LEVEL_ANCHOR_POINTS.random()
+                isSkillSession -> patrolAnchors().randomOrNull()
+                rand(2 of 3) -> hotspotGroups(bot).randomOrNull()?.randomOrNull() ?: patrolAnchors().randomOrNull()
+                else -> LOW_LEVEL_ANCHOR_POINTS.filter { bot.recentEscape?.avoids(it) != true }.randomOrNull()
+            } ?: run {
+                preparationState = PreparationState.LEAVING
+                return false
             }
             patrolDestination = anchor
 

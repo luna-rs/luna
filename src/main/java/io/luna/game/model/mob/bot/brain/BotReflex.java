@@ -122,6 +122,10 @@ public final class BotReflex {
             return false;
         }
 
+        if (BotCombatActionHandler.respondToWitnessedPvp(bot)) {
+            return false;
+        }
+
         // Automatically respond to combat if we aren't already.
         if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
             if (bot.getScriptStack().current() != null && !bot.getScriptStack().current().getAllowsCombatResponse()) {

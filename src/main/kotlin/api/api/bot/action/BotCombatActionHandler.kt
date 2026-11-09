@@ -21,6 +21,7 @@ import io.luna.Luna
 import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.levelAt
+import game.bot.scripts.WitnessedPkEscapeBotScript
 import game.bot.scripts.combat.PkBotScript
 import game.skill.magic.Magic
 import game.skill.magic.Staff
@@ -58,24 +59,47 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     private val threatAssessment = BotCombatThreat(bot)
 
     /**
+     * Bounded transient witnessed-fight cues, consumed separately from this bot's personal combat state.
+     */
+    private val pvpAwareness = BotPvpAwareness(bot)
+
+    /**
      * Shared account-build policy for combat and incidental experience choices.
      *
      * @author lare96
      */
     companion object {
         private val MAGIC_ONLY_SESSION = Predicate<BotScript> { it is MagicOnlyCombat && it.magicOnly }
+        private val WITNESSED_ESCAPE_SESSION = Predicate<BotScript> { it is WitnessedPkEscapeBotScript }
 
         /**
-         * Enforces a Magic skill session at native attack execution, including paused parents and retaliation.
+         * Recognizes an escape owner before its first coroutine and while a custom reflex pauses it.
+         * Idle future work does not own escape, and finished or stopped owners cannot suppress later combat.
+         * Native combat may query this during bot construction before the script stack has been initialized.
+         */
+        @JvmStatic
+        fun hasWitnessedEscapeOwner(bot: Bot): Boolean {
+            if (bot.isConnectedPlayer && !bot.isAutomationActive) return false
+            val scripts = bot.scriptStack ?: return false
+            val current = scripts.current()
+            if (current is WitnessedPkEscapeBotScript && !current.isTerminated() && !current.isFinished()) return true
+            return scripts.findActiveMatching(WITNESSED_ESCAPE_SESSION).isPresent
+        }
+
+        /**
+         * Suppresses native launches throughout a witnessed escape, including before startup and reflex pauses.
+         * Otherwise enforces a Magic skill session, including paused parents and retaliation.
          * Other sessions and human-controlled players retain their existing attack behavior.
          */
         @JvmStatic
         fun permitsAttack(bot: Bot, attack: CombatAttack<*>): Boolean {
             if (bot.isConnectedPlayer && !bot.isAutomationActive) return true
-            val current = bot.scriptStack.current()
+            if (hasWitnessedEscapeOwner(bot)) return false
+            val scripts = bot.scriptStack ?: return true
+            val current = scripts.current()
             val session: MagicOnlyCombat = if (current is MagicOnlyCombat && current.magicOnly &&
                 !current.isTerminated() && !current.isFinished()) current else
-                bot.scriptStack.findActiveMatching(MAGIC_ONLY_SESSION).orElse(null) as? MagicOnlyCombat ?: return true
+                scripts.findActiveMatching(MAGIC_ONLY_SESSION).orElse(null) as? MagicOnlyCombat ?: return true
             return session.permitsMagicAttack(attack)
         }
 
@@ -187,20 +211,35 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         } else player.skullIcon != SkullIcon.NONE
 
         /**
-         * Delivers a fresh native PvP attack to nearby protection and clan observers before combat timers reset.
-         * Existing PvP cannot establish who started a fight. Prior NPC combat does not hide a new player aggressor;
-         * NPC attacks themselves do not call this hook.
+         * Delivers launched PvP danger cues before the fresh-initiator filter used by protection and clan observers.
+         * Existing PvP remains visible danger but cannot establish who started a fight. Prior NPC combat does not
+         * hide a new player aggressor; NPC attacks themselves do not call this hook.
          */
         @JvmStatic
         fun observePvpAttack(attacker: Player, victim: Player) {
-            if (attacker === victim ||
-                (attacker.combat.inCombat() && attacker.combat.lastCombatWith !is Npc) ||
-                (victim.combat.inCombat() && victim.combat.lastCombatWith !is Npc)) return
-            for (player in attacker.world.locator.findViewablePlayers(attacker)) {
+            if (attacker === victim) return
+            val fresh = !(attacker.combat.inCombat() && attacker.combat.lastCombatWith !is Npc) &&
+                !(victim.combat.inCombat() && victim.combat.lastCombatWith !is Npc)
+            val witnessedDanger = BotPvpAwareness.canWitnessAttack(attacker, victim)
+            if (!fresh && !witnessedDanger) return
+            val players = attacker.world.locator.findViewablePlayers(attacker)
+            if (witnessedDanger) {
+                BotPvpAwareness.notifyObservers(attacker, players) {
+                    it.actionHandler.combat.pvpAwareness.observeAttack(attacker, victim)
+                }
+            }
+            if (!fresh) return
+            for (player in players) {
                 val observer = player as? Bot ?: continue
                 observer.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.observeAttack(attacker, victim)
             }
         }
+
+        /**
+         * Consumes one coalesced witnessed attack at the safe bot update boundary, without polling nearby players.
+         */
+        @JvmStatic
+        fun respondToWitnessedPvp(bot: Bot): Boolean = bot.actionHandler.combat.pvpAwareness.respond()
 
         /**
          * Samples protection and clan sessions each game cycle, including while patrol travel is suspended.
@@ -546,6 +585,12 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
+     * Whether the canonical handler currently owns a native Wilderness escape, including a suspended walk.
+     */
+    var isFleeingWilderness = false
+        private set
+
+    /**
      * Uses native home teleport checks at Wilderness level 20 or below, unless teleblocked. Otherwise reuses the
      * existing web-walker to reach the safe Edgeville anchor, without bank access or forced zone teleportation.
      * Actual Wilderness membership determines success. Combat and wandering flags are restored on every exit,
@@ -555,12 +600,9 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         if (!bot.inWilderness()) return true
         fun active(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive
         if (!active()) return false
-        val previousDisabled = bot.combat.isDisabled
+        val previousDisabled = bot.combat.isExplicitlyDisabled
         val previousWandering = bot.isWandering
-        bot.walking.isRunning = true
-        bot.isWandering = false
-        bot.combat.target = null
-        bot.combat.isDisabled = true
+        val previouslyFleeing = isFleeingWilderness
         suspend fun tryHome(): Boolean {
             if (!active() || levelAt(bot.position) > 20 || bot.status.isTeleBlocked()) return false
             bot.output.sendCommand("home")
@@ -569,14 +611,20 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             return active() && !bot.inWilderness()
         }
         try {
+            isFleeingWilderness = true
+            bot.walking.isRunning = true
+            bot.isWandering = false
+            bot.combat.target = null
+            bot.combat.isDisabled = true
             if (tryHome()) return true
             if (!active()) return false
-            handler.webWalkTo(Zone.EDGEVILLE.anchor, bank = BankAccess.NONE)
+            handler.webWalkTo(Zone.EDGEVILLE.anchor, bank = BankAccess.NONE, fallback = false)
             if (!active()) return false
             return !bot.inWilderness() || tryHome()
         } finally {
             bot.combat.isDisabled = previousDisabled
             bot.isWandering = previousWandering
+            isFleeingWilderness = previouslyFleeing
         }
     }
 

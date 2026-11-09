@@ -6,6 +6,7 @@ import api.bot.Suspendable.delay
 import api.bot.action.PkRiskBudget
 import api.bot.webwalk.plan.BankAccess
 import api.bot.webwalk.walk.crossing.AbyssCrossing
+import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.combat.death.PlayerDeathItems
@@ -502,7 +503,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
      * Authorizes global Abyss entry only after this activity has prepared its carried pack and combat guards.
      */
     internal fun permitsAbyssEntry(): Boolean = viaAbyss && guardsInstalled && hasEssence() &&
-        journeySafe() && withinAbyssBudget()
+        bot.recentEscape?.avoids(SubZone.ABYSS_ENTRY_MAGE) != true && journeySafe() && withinAbyssBudget()
 
     override suspend fun beforeZoneWork(): Boolean {
         if (!viaAbyss) return false
@@ -516,6 +517,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
         if (!viaAbyss) return super.travelToWorkZone(zone, bank)
         if (zone.area.contains(bot.position)) return true
+        if (!inAbyss() && bot.recentEscape?.avoids(SubZone.ABYSS_ENTRY_MAGE) == true) return false
         val arrived = withTimeoutOrNull(180.seconds) {
             if (!journeySafe() || !withinAbyssBudget()) return@withTimeoutOrNull false
             // Always approach the mage through the configured travel system; never teleport directly into the Abyss.

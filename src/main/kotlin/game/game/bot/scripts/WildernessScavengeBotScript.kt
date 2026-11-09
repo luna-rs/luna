@@ -8,6 +8,7 @@ import api.bot.action.BotCombatActionHandler.Companion.isPkParticipant
 import api.bot.action.PkRiskBudget
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.script.recentEscape
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.Zone
 import api.combat.death.PlayerDeathItems
@@ -126,7 +127,8 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
      */
     internal fun allowsPosition(position: Position): Boolean = position.z == 0 && position.y in 3520..3966 &&
         levelAt(position) in 1..maximumDepth() &&
-        (introductory || bot.preferences.pk?.purpose() != Purpose.SKILL || position.regionId == EDGEVILLE_REGION)
+        (introductory || bot.preferences.pk?.purpose() != Purpose.SKILL || position.regionId == EDGEVILLE_REGION) &&
+        bot.recentEscape?.avoids(position) != true
 
     override fun allowsLoot(item: GroundItem): Boolean = collecting && !ending() &&
         bot.state == EntityState.ACTIVE && bot.healthPercent >= 50 && !bot.isLocked && !bot.combat.inCombat() &&
@@ -143,6 +145,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
      * Initial travel does not count, and roaming between anchors does not restart the quiet period.
      */
     fun observe(now: Long) {
+        if (bot.scriptStack.current() !== this) return
         if (!collecting || quietTimedOut || !allowsPosition(bot.position)) return
         if (quietSince == 0L) {
             val goal = destination ?: return
@@ -220,9 +223,13 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
         val now = System.currentTimeMillis()
         if (now >= nextEdgevilleCheck) {
             nextEdgevilleCheck = now + 2.minutes.inWholeMilliseconds
-            destination = edgevilleAnchors().random()
+            destination = edgevilleAnchors().filter(::allowsPosition).randomOrNull()
         }
-        val goal = destination?.takeIf(::allowsPosition) ?: chooseDestination().also { destination = it }
+        val goal = destination?.takeIf(::allowsPosition) ?: chooseDestination()?.also { destination = it } ?: run {
+            collecting = false
+            delay(10.seconds)
+            return false
+        }
         if (bot.position.isWithinDistance(goal, 3)) {
             observe(System.currentTimeMillis())
             destination = null
@@ -246,16 +253,16 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
      * Uses existing PK anchors instead of manufacturing walkable coordinates. Visible Edgeville activity
      * keeps searches local; a quiet area opens personality-bounded alternatives before the next return.
      */
-    private fun chooseDestination(): Position {
+    private fun chooseDestination(): Position? {
         val edgevilleActive = world.players.any {
             it !== bot && it.state == EntityState.ACTIVE && it.position.regionId == EDGEVILLE_REGION &&
                 levelAt(it.position) > 0 && (!it.isRealBot() || !it.preferences.scavenging.isIntroductory)
         }
         val roaming = if (introductory) PkArea.entries.flatMap { it.anchors }
             else PkBotScript.patrolGroups(bot).flatten()
-        val anchors = if (edgevilleActive) edgevilleAnchors() else roaming
-            .filter(::allowsPosition).ifEmpty { edgevilleAnchors() }
-        return anchors.random()
+        val anchors = (if (edgevilleActive) edgevilleAnchors() else roaming)
+            .filter(::allowsPosition).ifEmpty { edgevilleAnchors().filter(::allowsPosition) }
+        return anchors.randomOrNull()
     }
 
     /**

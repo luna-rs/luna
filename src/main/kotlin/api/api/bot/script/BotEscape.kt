@@ -7,12 +7,12 @@ import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * The last time a bot teleported home to get away from an attacker. Zoned scripts and the skilling factories read it
- * so the work the bot goes back to doesn't take it straight back to the same attacker.
+ * The last danger a bot left or tried to leave. Zoned scripts and the skilling factories read it so the work the bot
+ * goes back to doesn't take it straight back to the same attacker.
  *
- * @property position Where the bot was when the attacker went for it.
+ * @property position Where the bot was when it encountered the danger.
  * @property attacker The attacker, for the bot's log.
- * @property time When the bot teleported, in milliseconds.
+ * @property time When the escape was recorded, in milliseconds.
  * @property zone The zone the bot was working in or travelling to when it was attacked, if any.
  * @author lare96
  */
@@ -50,6 +50,13 @@ class BotEscape(val position: Position, val attacker: String, val time: Long, va
         val dy = maxOf(southWest.y - position.y, 0, position.y - northEast.y)
         return maxOf(dx, dy) <= AVOID_RADIUS
     }
+
+    /**
+     * Whether a destination is in the escaped zone or within [AVOID_RADIUS] tiles of the witnessed danger.
+     */
+    fun avoids(destination: Position, now: Long = System.currentTimeMillis()): Boolean = isRecent(now) &&
+        destination.z == position.z &&
+        (zone?.area?.contains(destination) == true || destination.isWithinDistance(position, AVOID_RADIUS))
 
     override fun toString() = "BotEscape(attacker=$attacker, position=$position, zone=$zone)"
 }

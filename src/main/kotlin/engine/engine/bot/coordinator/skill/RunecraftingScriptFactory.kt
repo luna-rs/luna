@@ -3,6 +3,7 @@ package engine.bot.coordinator.skill
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.script.VoidBotScript
+import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CraftRuneBotScript
@@ -57,7 +58,8 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
         val rune = selectRankedActivity(bot, scores.map { it.first }) ?: return VoidBotScript(bot)
         zones.clear()
         zones.add(rune.altar.zone)
-        val abyss = bot.health >= 30 && Food.values().any { it.heal >= 8 && bot.itemTracker.count(it.id) >= 4 } &&
+        val abyss = bot.recentEscape?.avoids(SubZone.ABYSS_ENTRY_MAGE) != true &&
+            bot.health >= 30 && Food.values().any { it.heal >= 8 && bot.itemTracker.count(it.id) >= 4 } &&
             rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5)
         return CraftRuneBotScript(bot, rune.altar, getDuration(bot), viaAbyss = abyss, profit = !training)
     }

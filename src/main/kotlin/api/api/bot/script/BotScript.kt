@@ -94,7 +94,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
      * an activity's retry budget. Cancellation remains cooperative and never blocks cleanup.
      * Shared suspendable pipelines recheck this after travel and before invoking activity hooks.
      */
-    protected suspend fun awaitActionSafety(safety: ActionSafety = actionSafety): Boolean = safety.await(bot)
+    protected open suspend fun awaitActionSafety(safety: ActionSafety = actionSafety): Boolean = safety.await(bot)
 
     /**
      * Item ids that [game.bot.scripts.LootItemReflexScript] leaves on the ground while this script runs. A script whose

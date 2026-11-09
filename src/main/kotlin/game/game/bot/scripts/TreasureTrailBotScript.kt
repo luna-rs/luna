@@ -12,6 +12,7 @@ import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.levelAt
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.script.recentEscape
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.Zone
 import api.predef.*
@@ -211,6 +212,7 @@ class TreasureTrailBotScript(bot: Bot, private val data: TrailData = TrailData()
      * Reuses existing navigation, with the registered parent zone's travel fallback when direct webwalking fails.
      */
     private suspend fun reach(position: Position): Boolean {
+        if (bot.recentEscape?.avoids(position) == true) return false
         if (levelAt(position) > 0 && !handler.combat.pkRiskBudget().withinBudget) return false
         if (!awaitActionSafety(ActionSafety.NON_COMBAT)) return false
         if (bot.position.isWithinDistance(position, 1)) return true
