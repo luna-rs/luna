@@ -104,8 +104,8 @@ abstract class InventoryBotScript(
                 super.load(data)
                 failures = data.get("failures")?.asInt ?: 0
                 bankFailures = data.get("bankFailures")?.asInt ?: 0
-                failedZone = data.get("failed_zone")?.takeUnless { it.isJsonNull }?.asString?.let(SubZone::valueOf)
-                failedZones = data.getAsJsonArray("failed_zones")?.map { SubZone.valueOf(it.asString) }?.toSet()
+                failedZone = data.get("failed_zone")?.takeUnless { it.isJsonNull }?.asString?.let(SubZone::fromSavedName)
+                failedZones = data.getAsJsonArray("failed_zones")?.mapNotNull { SubZone.fromSavedName(it.asString) }?.toSet()
                     ?: emptySet()
             }
             override fun save(data: JsonObject) {

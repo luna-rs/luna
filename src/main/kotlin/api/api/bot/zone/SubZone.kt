@@ -1885,15 +1885,6 @@ enum class SubZone(
         parent = { GNOME_STRONGHOLD }),
 
     /**
-     * Eight willows occupy the sealed northern Stronghold forest. This enum remains for saved sessions,
-     * but the revision377 area has no accessible entrance and is excluded from bot activities.
-     */
-    GNOME_STRONGHOLD_NORTH_WILLOWS(
-        inside = Position(2478, 3538),
-        area = SimpleBoxArea.of(2464, 3527, 2492, 3549),
-        parent = { GNOME_STRONGHOLD }),
-
-    /**
      * A maple grows south of Seers Village, west of the Party Room. The stand uses ordinary Seers travel and
      * banking.
      */
@@ -2998,6 +2989,13 @@ enum class SubZone(
     companion object {
 
         /**
+         * Reads a saved activity name, discarding the retired, inaccessible northern Stronghold willow forest.
+         * Other unknown names remain errors so malformed saved data is not silently accepted.
+         */
+        fun fromSavedName(name: String): SubZone? =
+            if (name == "GNOME_STRONGHOLD_NORTH_WILLOWS") null else valueOf(name)
+
+        /**
          * Maps every intersected map region to its subzones, including interior regions of large rectangles.
          *
          * This is used as a cheap pre-filter before checking exact tile containment. A bot only scans local subzones
@@ -3073,8 +3071,6 @@ enum class SubZone(
      * @return Why [bot] can't get in, or `null` if nothing stops it.
      */
     fun entryBlocker(bot: Bot): String? = when (this) {
-        GNOME_STRONGHOLD_NORTH_WILLOWS -> "the northern Stronghold willow forest has no accessible entrance"
-
         BRIMHAVEN_GREATER_DEMONS -> "the Ogre Enclave greater-demon cage has no accessible entrance"
 
         CHAOS_DRUID_TOWER, CHAOS_DRUID_TOWER_DUNGEON ->
