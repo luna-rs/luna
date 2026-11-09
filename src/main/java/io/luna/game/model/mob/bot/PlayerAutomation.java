@@ -2,7 +2,10 @@ package io.luna.game.model.mob.bot;
 
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
+import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
+import io.luna.net.msg.custom.CustomPacketCodec;
+import io.luna.net.msg.custom.CustomPacketRegistry;
 import io.luna.net.msg.in.*;
 
 import io.luna.game.model.mob.PlayerRights;
@@ -56,5 +59,22 @@ public final class PlayerAutomation {
                 reader instanceof ArrangeItemMessageReader || reader instanceof ContinueDialogueMessageReader ||
                 reader instanceof CloseInterfaceMessageReader || reader instanceof NumberInputMessageReader ||
                 reader instanceof TextInputMessageReader || reader instanceof CommandMessageReader;
+    }
+
+    /**
+     * Classifies command extensions with the same codec and schema used during message handling, without
+     * consuming their payload or changing player state. Only explicitly passive handlers leave automation running.
+     *
+     * @param reader The reader that will handle the message.
+     * @param message The unconsumed message.
+     * @return Whether the message should interrupt automation.
+     */
+    public static boolean interrupts(GameMessageReader<?> reader, GameMessage message) {
+        if (reader instanceof CommandMessageReader && CustomPacketCodec.isReserved(message)) {
+            return CustomPacketRegistry.INSTANCE.decode(message)
+                    .map(request -> !CustomPacketRegistry.INSTANCE.isPassive(request))
+                    .orElse(false);
+        }
+        return interrupts(reader);
     }
 }
