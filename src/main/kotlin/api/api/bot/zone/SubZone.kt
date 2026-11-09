@@ -2687,15 +2687,6 @@ enum class SubZone(
         parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
-     * Sealed greater-demon cage in the Ogre Enclave near Yanille. The legacy enum name is retained for saved
-     * sessions; this is not Brimhaven Dungeon and has no walking entrance for ordinary combat or loot trips.
-     */
-    BRIMHAVEN_GREATER_DEMONS(
-        inside = Position(2611, 9423),
-        area = SimpleBoxArea.of(2605, 9416, 2623, 9433),
-        parent = { YANILLE }),
-
-    /**
      * Entrana Dungeon's room containing two greater demons; the legacy enum name is retained for saved sessions.
      * Entry is one-way from Entrana, and its magic-door exit leads into deep Wilderness.
      */
@@ -2989,11 +2980,13 @@ enum class SubZone(
     companion object {
 
         /**
-         * Reads a saved activity name, discarding the retired, inaccessible northern Stronghold willow forest.
+         * Reads a saved activity name, discarding retired areas that have no accessible entrance.
          * Other unknown names remain errors so malformed saved data is not silently accepted.
          */
-        fun fromSavedName(name: String): SubZone? =
-            if (name == "GNOME_STRONGHOLD_NORTH_WILLOWS") null else valueOf(name)
+        fun fromSavedName(name: String): SubZone? = when (name) {
+            "GNOME_STRONGHOLD_NORTH_WILLOWS", "BRIMHAVEN_GREATER_DEMONS" -> null
+            else -> valueOf(name)
+        }
 
         /**
          * Maps every intersected map region to its subzones, including interior regions of large rectangles.
@@ -3071,8 +3064,6 @@ enum class SubZone(
      * @return Why [bot] can't get in, or `null` if nothing stops it.
      */
     fun entryBlocker(bot: Bot): String? = when (this) {
-        BRIMHAVEN_GREATER_DEMONS -> "the Ogre Enclave greater-demon cage has no accessible entrance"
-
         CHAOS_DRUID_TOWER, CHAOS_DRUID_TOWER_DUNGEON ->
             if (bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL &&
                 CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones

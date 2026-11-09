@@ -127,8 +127,7 @@ open class NpcCombatScript(bot: Bot,
                            private val slayerMaster: SlayerMaster? = null,
                            override val magicOnly: Boolean = false) :
     TargetingZonedBotScript<Npc>(bot, duration,
-        zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE || it == SubZone.BRIMHAVEN_GREATER_DEMONS }
-            .toMutableList()), SocialBotScript, MagicOnlyCombat {
+        zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE }.toMutableList()), SocialBotScript, MagicOnlyCombat {
 
     override val actionSafety = ActionSafety.COMBAT
 
@@ -411,8 +410,9 @@ open class NpcCombatScript(bot: Bot,
                 magicOnly = data.get("magicOnly")?.asBoolean ?: false
                 val builder = ImmutableSetMultimap.builder<SubZone, String>()
                 val savedNames = data.get("names")?.takeUnless { it.isJsonNull }?.asJsonObject
-                savedNames?.entrySet()?.forEach { (zone, npcs) ->
-                    npcs.asJsonArray.forEach { builder.put(SubZone.valueOf(zone), it.asString) }
+                savedNames?.entrySet()?.forEach { (zoneName, npcs) ->
+                    val zone = SubZone.fromSavedName(zoneName) ?: return@forEach
+                    npcs.asJsonArray.forEach { builder.put(zone, it.asString) }
                 }
                 names = builder.build()
             }
