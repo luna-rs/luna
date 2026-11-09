@@ -343,7 +343,7 @@ object BotTradeManager {
             for (id in catalogue) {
                 val definition = ItemDefinition.ALL.get(id).orElse(null) ?: continue
                 if (id == 995 || id == 0 || definition.isNoted || !definition.isTradeable) continue
-                val quote = pricing.buy(id, BotMerchantValuation.peekGuide(id), id in useful)
+                val quote = pricing.buy(id, BotMerchantValuation.peekGuide(id), id in useful, priceStrategy)
                 candidates += BotTradeItem(Item(id, Int.MAX_VALUE), quote.coerceAtLeast(1), purpose, bot)
             }
             return prioritizePurchases(bot, candidates)

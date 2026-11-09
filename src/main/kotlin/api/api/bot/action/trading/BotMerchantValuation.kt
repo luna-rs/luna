@@ -51,7 +51,7 @@ object BotMerchantValuation {
                                        private val nature: Long, private val fire: Long,
                                        private val shops: List<Shop>) {
         private val references = HashMap<Int, Long>()
-        private val bids = HashMap<Int, Long>()
+        private val bids = HashMap<Pair<Int, Boolean>, Long>()
         private val asks = HashMap<Int, Long>()
 
         /**
@@ -64,11 +64,15 @@ object BotMerchantValuation {
         }
 
         /**
-         * Retains the sampled maximum unit payment for each offered commodity.
+         * Retains separate personal-use and resale quotes for each offered commodity. Personal needs use
+         * the ordinary captured buying strategy; unrelated stock keeps the merchant's resale discount.
          */
-        fun buy(id: Int, guide: Long, useful: Boolean = false): Long = bids.getOrPut(id) {
-            bid(reference(id, guide), intelligence, greedy, BotEquipmentPreferences.isCosmetic(id),
-                BotEquipmentPreferences.likes(bot, id), BotEquipmentPreferences.prefers(bot, id), useful,
+        fun buy(id: Int, guide: Long, useful: Boolean = false,
+                strategy: BotTradePrice = BotTradePrice.EXACT): Long = bids.getOrPut(id to useful) {
+            val reference = reference(id, guide)
+            if (useful) strategy.applyBuy(reference).coerceAtLeast(1)
+            else bid(reference, intelligence, greedy, BotEquipmentPreferences.isCosmetic(id),
+                BotEquipmentPreferences.likes(bot, id), BotEquipmentPreferences.prefers(bot, id), false,
                 rand().nextDouble())
         }
 

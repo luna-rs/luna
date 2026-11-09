@@ -48,6 +48,12 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     val items = ItemContainer(28, ItemContainer.StackPolicy.STANDARD, 3415)
 
     /**
+     * Counts successful additions and removals by this participant, including edits that restore the same basket.
+     */
+    var revision = 0L
+        private set
+
+    /**
      * The opposing player's [OfferTradeInterface], resolved lazily.
      */
     val otherOffer by lazyVal {
@@ -273,6 +279,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      * @param plr The player whose offer was modified.
      */
     private fun resetAccept(plr: Player) {
+        revision++
         accepted = false
         otherOffer.accepted = false
         plr.sendText("", 3431)
