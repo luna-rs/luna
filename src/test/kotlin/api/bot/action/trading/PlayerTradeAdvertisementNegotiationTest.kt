@@ -11,6 +11,8 @@ import api.predef.scriptListeners
 import api.predef.scriptMatchers
 import api.predef.world
 import com.google.common.collect.Multimap
+import com.google.common.base.Stopwatch
+import com.google.common.base.Ticker
 import engine.trade.OfferTradeInterface
 import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.event.Event
@@ -31,17 +33,25 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.overlay.AbstractOverlaySet
 import io.luna.game.task.Task
+import io.luna.game.task.TaskState
 import io.luna.net.msg.out.PrivateChatMessageWriter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
+import io.luna.net.msg.out.GameChatboxMessageWriter
 import org.mockito.Mockito.*
+import org.mockito.MockedStatic
 import java.time.Instant
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
@@ -87,13 +97,33 @@ class PlayerTradeAdvertisementNegotiationTest {
     private var humanOffer = Item(314, 25)
     private var beforeNativeRequest: (() -> Unit)? = null
 
+    private lateinit var scope: TestScope
+    private lateinit var stopwatches: MockedStatic<Stopwatch>
+
+    private fun runTradeTest(block: suspend TestScope.() -> Unit) = runTest(timeout = 5.seconds) {
+        scope = this
+        block()
+    }
+
     @BeforeEach fun initialize() {
+        val ticker = object : Ticker() {
+            override fun read(): Long = if (::scope.isInitialized) scope.testScheduler.currentTime * 1_000_000L else 0L
+        }
+        stopwatches = mockStatic(Stopwatch::class.java, CALLS_REAL_METHODS)
+        stopwatches.`when`<Stopwatch> { Stopwatch.createStarted() }.thenAnswer { Stopwatch.createStarted(ticker) }
         fixture = AdvertisementRuntimeFixture()
         handlers = listOf("engine.trade.RequestTrade", "engine.trade.OfferItem", "engine.widget.EnterInput")
             .flatMap(::loadListeners)
         buttons = loadButtons()
         doAnswer {
-            runTask.invoke(it.getArgument<Task>(0))
+            val task = it.getArgument<Task>(0)
+            runTask.invoke(task)
+            scope.backgroundScope.launch {
+                while (task.state != TaskState.CANCELLED) {
+                    delay(task.delay * 600L)
+                    if (task.state != TaskState.CANCELLED) runTask.invoke(task)
+                }
+            }
             null
         }.`when`(world).schedule(any(Task::class.java))
     }
@@ -103,10 +133,11 @@ class PlayerTradeAdvertisementNegotiationTest {
         if (::seller.isInitialized) seller.overlays.closeWindows()
         doNothing().`when`(world).schedule(any(Task::class.java))
         fixture.close()
+        stopwatches.close()
     }
 
     @Test fun aPartialCoinPurchaseCompletesBothNativeScreensAndLeavesTheUnsoldStockAdvertised(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val context = prepare()
             val entry = context.entry
 
@@ -131,7 +162,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun backupItemsCanCompleteTheSamePartialTradeWhenTheBuyerHasNoCoins(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val context = prepare(barter = true)
             assertEquals(mapOf(556 to 3), context.plan!!.payment)
             assertEquals(25L, context.plan!!.cost)
@@ -150,9 +181,11 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun aDifferentCommodityDuringTheAcceptanceDelayRejectsTheTradeAndReturnsEscrow(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val context = prepare()
             val negotiation = async { attempt(context) }
+            runCurrent()
+            advanceTimeBy(2_400)
             runCurrent()
             val offer = seller.overlays[OfferTradeInterface::class]!!
             assertEquals(25, buyer.bot.overlays[OfferTradeInterface::class]!!.items.computeAmountForId(995))
@@ -177,7 +210,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun theFirstSentItemQuoteSurvivesALaterQuoteForAnotherItemOnADirectNativeTrade(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val entry = prepareRememberedOffers()
             val feathers = entry.offers.first()
             val flax = entry.offers.last()
@@ -196,7 +229,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun actualFlaxSelectsItsOwnSavedPriceInsteadOfTheEarlierFeatherQuote(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val entry = prepareRememberedOffers()
             entry.offers.forEach { communicate(entry, it) }
             humanOffer = Item(1779, 1)
@@ -212,7 +245,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun theMostRecentlyCommunicatedPriceForTheActualCommodityWinsWithoutDiscardingOtherItems(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val entry = prepareRememberedOffers(addLatestFeatherQuote = true)
             entry.offers.forEach { communicate(entry, it) }
             assertEquals(listOf(314, 1779, 314), fixture.market.rememberedOffers(buyer, seller)
@@ -229,7 +262,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun aQuoteThatExpiredBeforeTheNativeWindowOpensDoesNotReplaceOrdinaryTradePricing(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val entry = prepareRememberedOffers()
             communicate(entry, entry.offers.first())
             entry.expiresAt = Instant.EPOCH
@@ -245,7 +278,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun aQuoteExpiringAfterRequestSubmissionButBeforeTheNativeWindowOpensIsNotReused(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val entry = prepareRememberedOffers()
             communicate(entry, entry.offers.first())
             beforeNativeRequest = { entry.expiresAt = Instant.EPOCH }
@@ -260,11 +293,17 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun aSavedPriceBoundToAnAlreadyOpenTradeSurvivesExpiryDuringItsAcceptanceDelay(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val entry = prepareRememberedOffers()
             communicate(entry, entry.offers.first())
             val negotiation = async { directAttempt() }
             runCurrent()
+            val offerDeadline = testScheduler.currentTime + 10_000
+            while (negotiation.isActive && testScheduler.currentTime < offerDeadline &&
+                buyer.bot.overlays[OfferTradeInterface::class]?.items?.computeAmountForId(995) != 18) {
+                advanceTimeBy(600)
+                runCurrent()
+            }
             assertEquals(18, buyer.bot.overlays[OfferTradeInterface::class]!!.items.computeAmountForId(995))
 
             entry.expiresAt = Instant.EPOCH
@@ -279,7 +318,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun anUnfundableMatchingSavedQuoteDeclinesWithoutUsingAnOrdinaryReplacementOffer(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             val entry = prepareRememberedOffers()
             communicate(entry, entry.offers.first())
             assertTrue(buyer.bot.inventory.remove(Item(995, 100)))
@@ -297,7 +336,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
 
     @Test fun replacingNotesWithRawGoodsUpdatesTheSmallerQuantityNoticeOnceAndPaysOnlyForWhatFits(): Unit =
-        runTest(timeout = 5.seconds) {
+        runTradeTest {
             prepareNativeTrader(id = 1779, target = 500, coins = 1_000)
             assertTrue(seller.inventory.remove(Item(314, 100)))
             assertTrue(seller.inventory.add(Item(1779, 26)))
@@ -307,6 +346,8 @@ class PlayerTradeAdvertisementNegotiationTest {
             fixture.publish(seller, "selling 1000 flax 1 gp ea")
             val context = fixture.market.claim(buyer)!!
             val negotiation = async { attempt(context) }
+            runCurrent()
+            advanceTimeBy(2_400)
             runCurrent()
             val offer = seller.overlays[OfferTradeInterface::class]!!
             assertEquals(500, buyer.bot.overlays[OfferTradeInterface::class]!!.items.computeAmountForId(995))
@@ -321,8 +362,12 @@ class PlayerTradeAdvertisementNegotiationTest {
             assertEquals(27, seller.inventory.computeAmountForId(995))
             assertEquals(973, context.entry.remainingQuantity(context.offer))
             val name = itemDef(1779).name
-            verify(seller).sendMessage("@blu@${buyer.bot.username} wants up to 500 $name.@bla@")
-            verify(seller).sendMessage("@blu@${buyer.bot.username} wants up to 27 $name.@bla@")
+            val messages = ArgumentCaptor.forClass(GameChatboxMessageWriter::class.java)
+            verify(seller, atLeastOnce()).queue(messages.capture())
+            val quantities = messages.allValues.map { it.message.toString() }.filter { "wants up to" in it }
+            assertEquals(listOf(500, 27).map {
+                "${buyer.bot.username}:@blu@${buyer.bot.username} wants up to $it $name.@bla@:tradeinfo:"
+            }, quantities)
             verify(buyer.bot.output).clickButton(3546)
         }
 

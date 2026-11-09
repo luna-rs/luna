@@ -8,8 +8,7 @@ import io.luna.game.model.mob.PlayerPrivacy.PrivacyMode
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.bot.Bot
 import io.luna.net.msg.GameMessageWriter
-import io.luna.net.msg.out.PrivateChatMessageWriter
-import io.luna.util.StringUtils
+import io.luna.net.msg.out.GameChatboxMessageWriter
 import io.netty.buffer.Unpooled
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -19,7 +18,7 @@ import org.mockito.Mockito.*
 import java.util.Optional
 
 /**
- * Checks live-session privacy and packed counteroffer delivery without starting a world or network.
+ * Checks live-session privacy and complete trade-notice delivery without starting a world or network.
  *
  * @author lare96
  */
@@ -68,60 +67,41 @@ class PlayerTradeAdvertisementMessagesTest {
         verify(bot, never()).queue(any(GameMessageWriter::class.java))
     }
 
-    private fun queuedMessage(): PrivateChatMessageWriter {
-        val captured = ArgumentCaptor.forClass(PrivateChatMessageWriter::class.java)
+    private fun queuedMessage(): GameChatboxMessageWriter {
+        val captured = ArgumentCaptor.forClass(GameChatboxMessageWriter::class.java)
         verify(recipient, times(1)).queue(captured.capture())
         return captured.value
     }
 
-    private fun packetRights(writer: PrivateChatMessageWriter): Int {
-        val buffer = Unpooled.buffer()
-        try {
-            writer.write(recipient, buffer)
-            buffer.readLong()
-            buffer.readInt()
-            return buffer.readUnsignedByte().toInt()
-        } finally {
-            if (buffer.refCnt() > 0) buffer.release(buffer.refCnt())
-        }
-    }
-
-    @Test fun publicPrivateChatQueuesOneStandardMessageWithCopiedPriceText() {
+    @Test fun counterofferQueuesOneCompleteTradeNotice() {
         assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
-        val captured = ArgumentCaptor.forClass(PrivateChatMessageWriter::class.java)
-        verify(recipient, times(1)).queue(captured.capture())
         val buffer = Unpooled.buffer()
         try {
-            val packet = captured.value.write(recipient, buffer)
-            assertEquals(135, packet.opcode)
-            assertEquals(senderHash, buffer.readLong())
-            assertEquals(42, buffer.readInt())
-            assertEquals(PlayerRights.PLAYER.clientValue, buffer.readUnsignedByte().toInt())
-            val bytes = ByteArray(buffer.readableBytes())
-            buffer.readBytes(bytes)
-            assertEquals(text, StringUtils.unpackText(bytes).trimEnd())
+            val writer = queuedMessage()
+            assertEquals("merchant:@blu@merchant: $text@bla@:tradeinfo:", writer.message)
+            assertEquals(63, writer.write(recipient, buffer).opcode)
+            assertEquals(10, buffer.getUnsignedByte(buffer.writerIndex() - 1).toInt())
         } finally {
-            if (buffer.refCnt() > 0) buffer.release(buffer.refCnt())
+            buffer.release()
         }
     }
 
-    @Test fun friendsOnlyOffAndHiddenPrivateChatAlwaysDenyCounteroffers() {
-        for (mode in listOf(PrivacyMode.FRIENDS, PrivacyMode.OFF, PrivacyMode.HIDE)) {
+    @Test fun privateChatDoesNotControlTradeNotices() {
+        for (mode in PrivacyMode.values()) {
             `when`(recipient.privacyOptions).thenReturn(PlayerPrivacy(PrivacyMode.ON, mode, PrivacyMode.ON))
-
-            assertFalse(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text), mode.name)
+            assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text), mode.name)
         }
-        assertNoMessage()
+        verify(recipient, times(PrivacyMode.values().size)).queue(any(GameChatboxMessageWriter::class.java))
     }
 
-    @Test fun beingFriendsDoesNotBypassThePublicPrivateChatRequirement() {
-        recipientFriends += senderHash
-        senderFriends += recipientHash
-        `when`(recipient.privacyOptions).thenReturn(PlayerPrivacy(PrivacyMode.ON, PrivacyMode.FRIENDS, PrivacyMode.ON))
-
+    @Test fun tradePrivacyRequiresFriendshipOnlyWhenFriendsModeIsSelected() {
+        `when`(recipient.privacyOptions).thenReturn(PlayerPrivacy(PrivacyMode.ON, PrivacyMode.OFF, PrivacyMode.FRIENDS))
         assertFalse(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
-
-        assertNoMessage()
+        senderFriends += recipientHash
+        assertFalse(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
+        recipientFriends += senderHash
+        assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
+        queuedMessage()
         assertEquals(setOf(303L, recipientHash), senderFriends)
         assertEquals(setOf(404L, senderHash), recipientFriends)
     }
@@ -217,7 +197,7 @@ class PlayerTradeAdvertisementMessagesTest {
 
         assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, connected, text))
 
-        verify(connected, times(1)).queue(any(PrivateChatMessageWriter::class.java))
+        verify(connected, times(1)).queue(any(GameChatboxMessageWriter::class.java))
     }
 
     @Test fun selfAndSameAccountMessagesAreRejected() {
@@ -238,16 +218,16 @@ class PlayerTradeAdvertisementMessagesTest {
     @Test fun exactlyEightyCharactersAreAllowed() {
         assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, "a".repeat(80)))
 
-        verify(recipient, times(1)).queue(any(PrivateChatMessageWriter::class.java))
+        verify(recipient, times(1)).queue(any(GameChatboxMessageWriter::class.java))
     }
 
     @Test fun privacyIsRecheckedForEachImmediateDelivery() {
         assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
-        `when`(recipient.privacyOptions).thenReturn(PlayerPrivacy(PrivacyMode.ON, PrivacyMode.OFF, PrivacyMode.ON))
+        `when`(recipient.privacyOptions).thenReturn(PlayerPrivacy(PrivacyMode.ON, PrivacyMode.ON, PrivacyMode.OFF))
 
         assertFalse(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
 
-        verify(recipient, times(1)).queue(any(PrivateChatMessageWriter::class.java))
+        verify(recipient, times(1)).queue(any(GameChatboxMessageWriter::class.java))
     }
 
     @Test fun sendingDoesNotReadOrMutateFriendships() {
@@ -259,26 +239,4 @@ class PlayerTradeAdvertisementMessagesTest {
         assertEquals(setOf(404L), recipientFriends)
     }
 
-    @Test fun regularCounteroffersDoNotInheritTheRecipientsDeveloperCrown() {
-        `when`(recipient.rights).thenReturn(PlayerRights.DEVELOPER)
-
-        assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
-
-        assertEquals(0, packetRights(queuedMessage()))
-    }
-
-    @Test fun counteroffersUseTheSendersModeratorCrownForARegularRecipient() {
-        `when`(bot.rights).thenReturn(PlayerRights.MODERATOR)
-
-        assertTrue(PlayerTradeAdvertisementMessages.counteroffer(bot, recipient, text))
-
-        assertEquals(1, packetRights(queuedMessage()))
-    }
-
-    @Test fun legacyPrivateMessageConstructionDefaultsToNoSenderCrown() {
-        `when`(recipient.rights).thenReturn(PlayerRights.DEVELOPER)
-        val writer = PrivateChatMessageWriter(senderHash, byteArrayOf())
-
-        assertEquals(0, packetRights(writer))
-    }
 }

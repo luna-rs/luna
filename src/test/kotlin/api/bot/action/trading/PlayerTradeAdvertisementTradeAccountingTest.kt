@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
+import io.luna.net.msg.out.GameChatboxMessageWriter
 import org.mockito.Mockito.*
 
 /**
@@ -234,9 +236,11 @@ class PlayerTradeAdvertisementTradeAccountingTest {
         notify.invoke(buyer, context, maximum(buyer, context, mapOf(itemDef(1779).notedId.orElseThrow() to 1))!!)
         notify.invoke(buyer, context, rawMaximum)
 
-        verify(seller).sendMessage("@blu@${buyer.bot.username} wants up to 100 ${itemDef(1779).name}.@bla@")
-        verify(seller).sendMessage("@blu@${buyer.bot.username} wants up to 27 ${itemDef(1779).name}.@bla@")
-        verify(seller, times(2)).sendMessage(any())
+        val messages = ArgumentCaptor.forClass(GameChatboxMessageWriter::class.java)
+        verify(seller, times(2)).queue(messages.capture())
+        assertEquals(listOf(100, 27).map {
+            "${buyer.bot.username}:@blu@${buyer.bot.username} wants up to $it ${itemDef(1779).name}.@bla@:tradeinfo:"
+        }, messages.allValues.map { it.message })
         assertTrue(context.quantityShrinkNotified)
         assertEquals(27, context.lastNotifiedQuantity)
     }

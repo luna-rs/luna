@@ -1,14 +1,15 @@
 package api.bot.action
 
-import api.bot.SuspendableFuture
 import api.bot.script.InventoryProductionFixtures
 import api.bot.zone.SubZone
 import api.predef.world
 import io.luna.game.model.def.WidgetDefinition
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 import java.util.EnumSet
-import java.util.OptionalInt
 
 /**
  * Exercises bounded basket acquisition with real inventory and bank containers, without a live server.
@@ -50,17 +50,12 @@ class ObtainWantedItemsTest {
         doReturn(EnumSet.of(SubZone.HOME)).`when`(it).subZones
     }
 
-    private fun shop(bot: Bot, vararg ids: Int): Shop = mock(Shop::class.java, RETURNS_DEEP_STUBS).also { shop ->
-        `when`(shop.itemIds).thenReturn(ids.toSet())
-        `when`(shop.botAccess.apply(bot)).thenReturn(true)
-        `when`(shop.currency).thenReturn(Currency.COINS)
-        for (id in ids) {
-            `when`(shop.items.computeAmountForId(id)).thenReturn(1)
-            `when`(shop.computeBuyValue(id, 1)).thenReturn(OptionalInt.of(10))
+    private fun shop(bot: Bot, vararg ids: Int): Shop =
+        spy(Shop(world, "Basket fixture", RestockPolicy.DEFAULT, BuyPolicy.ALL, Currency.COINS, { true }, false)).also { shop ->
+            ids.forEach { check(shop.items.add(Item(it))) }
+            `when`(bot.overlays.player).thenReturn(bot)
+            `when`(bot.overlays.getOverlay(ShopInterface::class.java)).thenReturn(ShopInterface(shop))
         }
-        `when`(bot.overlays.player).thenReturn(bot)
-        `when`(bot.overlays.getOverlay(ShopInterface::class.java)).thenReturn(ShopInterface(shop))
-    }
 
     private suspend fun withdrawNormally(bot: Bot) {
         `when`(bot.actionHandler.banking.travelToBankOpen()).thenReturn(true)
@@ -100,18 +95,11 @@ class ObtainWantedItemsTest {
         val shop = shop(bot, 1755, 946)
         `when`(world.shops.values()).thenReturn(listOf(shop))
         val shopping = spy(BotShopActionHandler(bot, bot.actionHandler))
-        for (id in listOf(1755, 946)) {
-            doAnswer {
-                check(bot.inventory.remove(Item(995, 10)))
-                check(bot.inventory.add(Item(id)))
-                SuspendableFuture().signal(true)
-            }.`when`(shopping).buy1(id)
-        }
         assertEquals(setOf(1755, 946), shopping.obtainWantedItems(listOf(4151, 1755, 946)))
-        assertEquals(10, bot.inventory.computeAmountForId(995))
+        assertEquals(28, bot.inventory.computeAmountForId(995))
         assertEquals(setOf(1755, 946), shopping.obtainWantedItems(listOf(1755, 946)))
-        verify(shopping, times(1)).buy1(1755)
-        verify(shopping, times(1)).buy1(946)
+        verify(shop).buy(bot, 0, 1)
+        verify(shop).buy(bot, 1, 1)
     }
 
     @Test
@@ -143,11 +131,6 @@ class ObtainWantedItemsTest {
             true
         }
         val shopping = spy(BotShopActionHandler(bot, bot.actionHandler))
-        doAnswer {
-            check(bot.inventory.remove(Item(995, 10)))
-            check(bot.inventory.add(Item(946)))
-            SuspendableFuture().signal(true)
-        }.`when`(shopping).buy1(946)
         assertEquals(setOf(1755, 946), shopping.obtainWantedItems(listOf(1755, 946)))
         verify(bot.actionHandler.banking).depositInventory(setOf(1755, 946, 995))
         assertTrue(bot.inventory.contains(1755))
@@ -158,18 +141,12 @@ class ObtainWantedItemsTest {
         val bot = bot()
         InventoryProductionFixtures.inventory(bot, Item(995, 1_000))
         val shop = shop(bot, 556)
-        `when`(shop.items.computeAmountForId(556)).thenReturn(100)
-        `when`(shop.computeBuyValue(556, 100)).thenReturn(OptionalInt.of(100))
+        shop.items.set(0, Item(556, 100))
         `when`(world.shops.values()).thenReturn(listOf(shop))
         val shopping = spy(BotShopActionHandler(bot, bot.actionHandler))
-        doAnswer {
-            check(bot.inventory.remove(Item(995, 100)))
-            check(bot.inventory.add(Item(556, 100)))
-            SuspendableFuture().signal(true)
-        }.`when`(shopping).buy100(556)
         assertTrue(shopping.obtainWantedItem(556, 100))
         assertEquals(100, bot.inventory.computeAmountForId(556))
-        verify(shopping, times(1)).buy100(556)
+        verify(shop).buy(bot, 0, 100)
         verify(shopping, never()).buy1(556)
     }
 
@@ -180,8 +157,8 @@ class ObtainWantedItemsTest {
         val shop = shop(bot, 946)
         `when`(world.shops.values()).thenReturn(listOf(shop))
         val shopping = spy(BotShopActionHandler(bot, bot.actionHandler))
-        doReturn(SuspendableFuture().signal(true)).`when`(shopping).buy1(946)
+        doReturn(true).`when`(shopping).buyUpTo(shop, 946, 1, 20)
         assertEquals(setOf(1755), shopping.obtainWantedItems(listOf(1755, 946)))
-        verify(shopping, times(1)).buy1(946)
+        verify(shopping).buyUpTo(shop, 946, 1, 20)
     }
 }

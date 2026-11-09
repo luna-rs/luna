@@ -271,14 +271,14 @@ class PlayerTradeAdvertisementRuntimeAcceptanceTest {
         assertEquals(100, response.plan?.quantity)
     }
 
-    @Test fun privateChatRestrictionsExcludeCountersWithoutDisablingAcceptedAskingPrices() {
+    @Test fun privateChatRestrictionsDoNotExcludeTradeNoticeCounteroffers() {
         val seller = fixture.human(privateChat = PrivacyMode.OFF)
         val counter = fixture.trader(seller, maxUnit = 1)
         val accepting = fixture.trader(seller, maxUnit = 2)
         val entry = fixture.publish(seller, "selling 100 feathers 2 gp ea")
         val offer = entry.offers.single()
 
-        assertNull(counter.advertisementCandidate(fixture.market, entry, offer))
+        assertNotNull(counter.advertisementCandidate(fixture.market, entry, offer))
         assertNotNull(accepting.advertisementCandidate(fixture.market, entry, offer))
         assertFalse(fixture.market.hasPriority(counter))
         assertTrue(fixture.market.hasPriority(accepting))
@@ -286,18 +286,24 @@ class PlayerTradeAdvertisementRuntimeAcceptanceTest {
         verify(seller, never()).queue(any(GameMessageWriter::class.java))
     }
 
-    @Test fun counterEligibilityRechecksPublicPrivateChatWithoutRerollingItsQuote() {
+    @Test fun counterEligibilityRechecksTradePrivacyWithoutRerollingItsQuote() {
         val seller = fixture.human()
         val buyer = fixture.trader(seller, maxUnit = 1)
         fixture.publish(seller, "selling 100 feathers 2 gp ea")
         assertTrue(fixture.market.hasPriority(buyer))
 
         for (mode in listOf(PrivacyMode.OFF, PrivacyMode.FRIENDS)) {
-            `when`(seller.privacyOptions).thenReturn(PlayerPrivacy(PrivacyMode.ON, mode, PrivacyMode.ON))
+            `when`(seller.privacyOptions).thenReturn(PlayerPrivacy(PrivacyMode.ON, PrivacyMode.ON, mode))
             assertFalse(fixture.market.hasPriority(buyer), mode.name)
         }
         `when`(seller.privacyOptions).thenReturn(PlayerPrivacy())
-        assertTrue(fixture.market.hasPriority(buyer))
+        val previousTick = world.currentTick
+        `when`(world.currentTick).thenReturn(previousTick + 1)
+        try {
+            assertTrue(fixture.market.hasPriority(buyer))
+        } finally {
+            `when`(world.currentTick).thenReturn(previousTick)
+        }
     }
 
     @Test fun unknownSaleItemsAttractMerchantsButNotUncuriousOrdinaryBuyers() {
