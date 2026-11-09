@@ -37,7 +37,7 @@ object PlayerTradeAdvertisementPolicy {
 
     /**
      * A stable quote in the same price basis as the advertisement, or a normal unit bid for an unpriced sale.
-     * Counteroffers need a public-PM recipient; accepted and unpriced offers need only a trade request.
+     * Counteroffers and native trade requests follow the recipient's Trade/compete setting.
      *
      * @author lare96
      */

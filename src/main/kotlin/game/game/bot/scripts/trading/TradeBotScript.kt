@@ -34,7 +34,6 @@ import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerContextMenuOption.TRADE
-import io.luna.game.model.mob.PlayerPrivacy.PrivacyMode
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
@@ -682,8 +681,6 @@ class TradeBotScript(bot: Bot,
         if (demand.first <= 0) return null
         val pricing = remembered?.pricing ?: advertisementPricing(market, entry, advertised, id, demand.second)
             ?: return null
-        if (pricing.quote.counteroffer && remembered?.counterSent != true &&
-            entry.player.privacyOptions.privateChat != PrivacyMode.ON) return null
         val context = Opportunity(market, this, entry, advertised, pricing, null, allowance, guides, inspection,
             demand.second, remembered?.counterSent == true, remembered != null)
         context.communicated = remembered != null
@@ -710,6 +707,7 @@ class TradeBotScript(bot: Bot,
         val mine = bot.overlays[OfferTradeInterface::class]
         val theirs = other.overlays[OfferTradeInterface::class]
         val matching = mine?.other === other && theirs?.other === bot
+        if (!matching && !PlayerTradeAdvertisementMessages.allowsTrade(bot, other)) return false
         if (bot.overlays.hasWindow() && !((continuing || inAttempt) && matching)) return false
         if (other.overlays.hasWindow() && !matching) return false
         if (other.tradingWith != -1 && other.tradingWith != bot.index && !matching) return false
@@ -930,15 +928,16 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
-     * Explains a partial quantity only to the participant through the game's private system-message channel.
+     * Explains a partial quantity only to the participant, respecting their current Trade/compete setting.
      */
     private fun notifyAdvertisementQuantity(context: Opportunity, plan: PlayerTradeAdvertisementPayment.Plan) {
         val previous = context.lastNotifiedQuantity
         if (previous == null && context.offer.quantity?.let { plan.quantity >= it } == true) return
         if (previous != null && (plan.quantity >= previous || context.quantityShrinkNotified)) return
         val id = context.pricing?.itemId ?: return
-        context.entry.player.sendMessage("$ADVERTISEMENT_NOTICE_COLOR${bot.username} wants up to ${numF(plan.quantity)} " +
-                "${itemDef(id).name}.@bla@")
+        if (!PlayerTradeAdvertisementMessages.notice(bot, context.entry.player,
+                "$ADVERTISEMENT_NOTICE_COLOR${bot.username} wants up to ${numF(plan.quantity)} " +
+                        "${itemDef(id).name}.@bla@")) return
         context.quantityNotified = true
         context.lastNotifiedQuantity = plan.quantity
         if (previous != null) context.quantityShrinkNotified = true
