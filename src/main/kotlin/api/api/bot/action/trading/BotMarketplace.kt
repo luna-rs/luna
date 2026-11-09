@@ -167,10 +167,10 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
      */
     private fun occupiedPositions(bot: Bot): Set<Position> = buildSet {
         world.locator.findPlayers(occupancyCenter, occupancyRadius) {
-            it !== bot && it.state == EntityState.ACTIVE && contains(it.position)
+            it !== bot && it.state == EntityState.ACTIVE && this@BotMarketplace.contains(it.position)
         }.forEach { add(it.position) }
         world.locator.findNpcs(occupancyCenter, occupancyRadius) {
-            it.state == EntityState.ACTIVE && contains(it.position)
+            it.state == EntityState.ACTIVE && this@BotMarketplace.contains(it.position)
         }.forEach { add(it.position) }
     }
 
