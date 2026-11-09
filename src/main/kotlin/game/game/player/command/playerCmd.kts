@@ -10,7 +10,6 @@ import game.player.QuestJournalInterface
 import game.skill.magic.Magic.teleport
 import game.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
 import game.skill.magic.teleportSpells.TeleportStyle
-import io.luna.Luna
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
@@ -94,13 +93,4 @@ cmd("commands") {
 cmd("players") {
     plr.sendMessage("Real players online: ${world.players.count { it != null && !it.isRealBot() }}.")
     plr.sendMessage("Bots online: ${world.bots.onlineCount}.")
-}
-
-/**
- * A command that teleports the player home.
- */
-cmd("home") {
-    if (!plr.status.isTeleBlocked() && plr.teleportDelay.ready(2)) {
-        plr.teleport(Luna.settings().game().startingPosition(), TeleportStyle.REGULAR)
-    }
 }

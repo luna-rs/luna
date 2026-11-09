@@ -34,7 +34,6 @@ import game.item.degradable.jewellery.TeleportJewellery
 import game.obj.entrances.Entrance
 import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportSpell
-import io.luna.Luna
 import engine.bank.Banking
 import engine.obj.Hatch
 import engine.obj.LadderDestination
@@ -143,11 +142,6 @@ object WebWalkLiveGenerator {
      * The time of a teleport by jewellery, in ticks: the same cast, and a tick to rub the jewellery and choose where to go.
      */
     private const val JEWELLERY_TICKS = 7
-
-    /**
-     * The time of the home teleport, in ticks.
-     */
-    private const val HOME_TICKS = 7
 
     /**
      * The time to use a cave or dungeon entrance, in ticks, on top of the delay of the [Entrance]: a tick to click it, and
@@ -419,7 +413,6 @@ object WebWalkLiveGenerator {
         for (special in SpecialTeleport.entries) {
             add("item_${special.name.lowercase()}", TeleportKind.SPECIAL, special.name, null, special.destination, 10, 20)
         }
-        add("home", TeleportKind.HOME, null, null, Luna.settings().game().startingPosition(), HOME_TICKS)
         report.count("teleports", teleports.size)
         return teleports
     }

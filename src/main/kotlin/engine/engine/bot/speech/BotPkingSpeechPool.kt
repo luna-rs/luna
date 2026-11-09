@@ -2,6 +2,9 @@ package engine.bot.speech
 
 import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
 import io.luna.game.model.mob.bot.speech.BotSpeechPool
+import api.attr.Attr
+import api.predef.rand
+import io.luna.game.model.mob.bot.Bot
 import java.nio.file.Paths
 
 /**
@@ -18,6 +21,21 @@ import java.nio.file.Paths
  */
 object BotPkingSpeechPool :
     BotSpeechPool<PkingSpeech>(Paths.get("pking.jsonc"), PkingSpeech::class.java) {
+
+    /**
+     * The earliest time another PK line may be queued, across encounters and fight stages.
+     */
+    private var Bot.nextPkSpeechAt by Attr.obj { 0L }
+
+    /**
+     * Rolls a reduced social chance and spaces accepted lines by 45-90 seconds.
+     */
+    fun canSpeak(bot: Bot): Boolean {
+        val now = System.currentTimeMillis()
+        if (now < bot.nextPkSpeechAt || !rand(bot.personality.social / 4)) return false
+        bot.nextPkSpeechAt = now + rand(45, 90) * 1000L
+        return true
+    }
 
     /**
      * Enumerates player-killing speech categories.

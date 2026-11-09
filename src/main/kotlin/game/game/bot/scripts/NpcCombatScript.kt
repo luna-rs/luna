@@ -1288,8 +1288,8 @@ open class NpcCombatScript(bot: Bot,
         if (forceBanking) {
             bot.combat.target = null
             if (inChamber) {
-                // Use the same home command as ordinary bot escape; do not re-engage while waiting to leave.
-                bot.output.sendCommand("home")
+                // Use native travel to leave the chamber without re-engaging.
+                handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
                 if (waitFor(6.seconds) { bot.position.y < 9000 }) bot.combat.prayers.deactivateAll()
                 return true
             }

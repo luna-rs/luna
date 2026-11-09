@@ -17,7 +17,6 @@ import game.skill.herblore.grindIngredient.Ingredient
 import game.skill.herblore.makeUnfPotion.UnfPotion
 import game.skill.herblore.identifyHerb.Herb
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.SkillSet
 
 /**
  * Creates herb-identification and finished-potion sessions from the bot's owned supplies.
@@ -29,10 +28,6 @@ import io.luna.game.model.mob.SkillSet
  * selecting a profit activity does not guarantee a market margin.
  * Owned sinister keys can instead supply native chest herbs through a prepared Yanille Dungeon trip.
  *
- * Before either mode checks recipes or supplies, bots below permanent level three receive only the experience
- * needed to reach that level. This supplies the initial Herblore unlock while bot questing is unavailable.
- * Normal experience-change listeners handle the level-up; bots already at or above level three receive no XP.
- *
  * When no recipe is available, identification queues one herb-gathering trip toward a stable 100-200-guam
  * restocking goal. Its continuation processes smaller hauls too; an empty return ends without recursively gathering.
  *
@@ -40,20 +35,18 @@ import io.luna.game.model.mob.SkillSet
  */
 object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        val selectionLevel = ensureMinimumLevel(bot, level)
-        getProductionScript(bot, selectionLevel, true)?.let { return it }
+        getProductionScript(bot, level, true)?.let { return it }
         getIngredientGatheringScript(bot)?.let { return it }
         return IdentifyHerbBotScript(bot, Herb.GUAM_LEAF, getDuration(bot))
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        val selectionLevel = ensureMinimumLevel(bot, level)
         if (SinisterChestBotScript.ready(bot)) {
             zones += SubZone.YANILLE_DUNGEON_SINISTER_CHEST
             return SinisterChestBotScript(bot, getDuration(bot))
         }
-        return getProductionScript(bot, selectionLevel, false) ?: getIngredientGatheringScript(bot) ?:
-            getTrainingScript(bot, selectionLevel, zones)
+        return getProductionScript(bot, level, false) ?: getIngredientGatheringScript(bot) ?:
+            getTrainingScript(bot, level, zones)
     }
 
     /**
@@ -67,25 +60,6 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
         return TelegrabBotScript(bot, TelegrabBotScript.WINE, false, getDuration(bot), TelegrabBotScript.wineZones(bot),
             herbloreContinuation = true)
             .takeIf { it.isEligible() }
-    }
-
-    /**
-     * Supplies the XP missing from the level-three threshold before any recipe or stock checks.
-     *
-     * [io.luna.game.model.mob.Skill.addExperience] preserves normal skill-change events and uses an unscaled
-     * multiplier for bots. Existing XP is retained, and the check is idempotent after the first adjustment.
-     * The returned level accounts for callers that supplied the bot's level before the adjustment.
-     *
-     * @param bot The bot whose initial Herblore unlock is being supplied.
-     * @param level The level supplied by the coordinator before entering the factory.
-     * @return The selection level including any level gained from the adjustment.
-     */
-    private fun ensureMinimumLevel(bot: Bot, level: Int): Int {
-        val herblore = bot.herblore
-        if (herblore.staticLevel < Herb.GUAM_LEAF.level) {
-            herblore.addExperience(SkillSet.experienceForLevel(Herb.GUAM_LEAF.level) - herblore.experience)
-        }
-        return maxOf(level, herblore.staticLevel)
     }
 
     /**

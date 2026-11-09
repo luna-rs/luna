@@ -606,13 +606,13 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     }
 
     /**
-     * Uses native escape commands/checks and the existing Wilderness walker fallback, never direct player movement.
+     * Uses native travel and Wilderness escape routes, never direct player movement.
      */
     private suspend fun retreat(): Boolean = withTimeoutOrNull(30.seconds) {
         if (!awaitActionSafety(ActionSafety.COMBAT)) return@withTimeoutOrNull false
         if (bot.inWilderness()) return@withTimeoutOrNull handler.combat.fleeWilderness()
         if (inAbyss() || bot.combat.inCombat()) {
-            bot.output.sendCommand("home")
+            handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
             return@withTimeoutOrNull waitFor(10.seconds) {
                 !inAbyss() && !bot.inWilderness() && !bot.combat.inCombat()
             }

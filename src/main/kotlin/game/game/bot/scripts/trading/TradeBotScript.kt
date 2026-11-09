@@ -337,6 +337,30 @@ class TradeBotScript(bot: Bot,
             val transferable = minOf(entry.item.amount, bot.bank.computeAmountForId(id), capacity)
             if (transferable > 0) handler.banking.withdraw(Item(id, transferable))
         }
+        if (!refreshCarriedStock()) {
+            endSession("No useful trade stock could be prepared from the bank.")
+            return
+        }
+        bot.overlays.closeWindows()
+        if (browsing) {
+            prepared = true
+            forceBanking = false
+            return
+        }
+        val tile = reserveTradingSpot()
+        if (tile == null) {
+            deferTrading("The trading position became unavailable during banking.")
+            return
+        }
+        prepared = handler.webWalkTo(marketplace.parent) &&
+                handler.webWalkTo(tile) && bot.position == tile
+        if (!prepared) endSession("Could not return to an available marketplace tile.")
+    }
+
+    /**
+     * Refreshes tradeable carried stock and affordable wants without requiring another bank visit.
+     */
+    private fun refreshCarriedStock(): Boolean {
         val limits = quantities(offering.map { it.item }, true).toMutableMap()
         val stock = linkedMapOf<Int, Int>()
         for (item in bot.inventory.filterNotNull()) {
@@ -359,28 +383,13 @@ class TradeBotScript(bot: Bot,
                 BotTradeItem(Item(quote.item.id, amount), quote.price, quote.purpose, bot)
             })
             if (expected.isEmpty()) {
-                endSession("No wanted items are affordable with the withdrawn payment.")
-                return
+                return false
             }
         }
         if (stock.isEmpty()) {
-            endSession("No transferable trade stock could be withdrawn.")
-            return
+            return false
         }
-        bot.overlays.closeWindows()
-        if (browsing) {
-            prepared = true
-            forceBanking = false
-            return
-        }
-        val tile = reserveTradingSpot()
-        if (tile == null) {
-            deferTrading("The trading position became unavailable during banking.")
-            return
-        }
-        prepared = handler.webWalkTo(marketplace.parent) &&
-                handler.webWalkTo(tile) && bot.position == tile
-        if (!prepared) endSession("Could not return to an available marketplace tile.")
+        return true
     }
 
     override suspend fun finish() {
@@ -981,8 +990,12 @@ class TradeBotScript(bot: Bot,
             if (success) {
                 traded = true
                 prepared = false
-                forceBanking = true
-                bot.preferences.rebalanceWantedItems()
+                partnerSearch = null
+                if (computeOfferAndExpected()) {
+                    // Keep the market position while carried supplies can fund another exchange.
+                    prepared = refreshCarriedStock()
+                    forceBanking = !prepared || bot.inventory.computeRemainingSize() <= 1
+                }
             }
         } finally {
             if (!success) {

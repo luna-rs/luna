@@ -630,7 +630,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                     continue
                 }
                 val teleport = indexed.teleport
-                if (indexed.to != node && request.snapshot.meets(teleport.requirements, here)) {
+                if (teleport.kind != TeleportKind.HOME && indexed.to != node && request.snapshot.meets(teleport.requirements, here)) {
                     val penalty = when (teleport.kind) {
                         TeleportKind.SPELL -> costs.runePenalty
                         TeleportKind.JEWELLERY, TeleportKind.SPECIAL -> costs.chargePenalty

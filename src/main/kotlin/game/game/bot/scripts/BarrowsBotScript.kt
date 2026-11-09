@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import api.bot.zone.SubZone
+
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotCombatActionHandler
@@ -538,12 +540,12 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
     }
 
     /**
-     * Uses the same normal home command as other bot boss retreats; no progress, rewards or native locks are altered.
+     * Leaves through the web-walker using native routes or available teleports.
      */
     private suspend fun leaveUnderground(): Boolean {
         bot.combat.target = null
         clearMagic()
-        output.sendCommand("home")
+        handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
         return waitFor(8.seconds) { !BarrowsAreaListener.inside(bot.position) }
     }
 

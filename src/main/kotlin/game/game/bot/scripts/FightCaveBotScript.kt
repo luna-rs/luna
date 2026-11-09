@@ -134,7 +134,6 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
     private var jadPrayer = CombatPrayer.PROTECT_FROM_MAGIC
     private var observed: List<Pair<Npc, Int>> = emptyList()
     private var observedWave = -1
-    private var exitFailures = 0
     private var protectedUntil = -1L
     private var jadProtectedUntil = -1L
     private var mageProtectedUntil = -1L
@@ -311,8 +310,6 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
             }
         } == true
         if (left) return true
-        // Normal home command is the bounded fallback, with the controller forfeiting the run normally.
-        if (++exitFailures >= 3) output.sendCommand("home")
         delay(600)
         return cave == null
     }

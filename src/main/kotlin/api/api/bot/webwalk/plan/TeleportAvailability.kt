@@ -22,7 +22,6 @@ import io.luna.game.model.mob.bot.Bot
  *   items in the inventory, and equipment. The requirements are enforced in development mode too, although the game itself
  *   lets anyone cast anything for free there, so that bots plan the way they would on a real server.
  * - a teleport by jewellery if it carries a piece with a charge left, in its inventory or equipped (see [charges]).
- * - the home teleport always.
  *
  * Nothing can be used while teleblocked. Where a teleport can be used from, such as not deep in the wilderness, is the
  * requirements of its definition, which the planner checks.
@@ -57,7 +56,7 @@ object TeleportAvailability {
                     (charges[special.chargeKey] ?: 0) > 0 && (bot.inventory.computeRemainingSize() > 0 ||
                         special.pieces.keys.any { bot.inventory.contains(it) })
                 } == true
-                TeleportKind.HOME -> true
+                TeleportKind.HOME -> false
             }
             if (can) {
                 usable += teleport.id
@@ -93,7 +92,7 @@ object TeleportAvailability {
      *
      * A spell uses up what the game takes for it (see [Magic.spellCost]): its runes, apart from those that the staff of the
      * bot stands in for, the combination runes that stand in for some of them, and the other items it needs. Jewellery uses
-     * up one charge. The home teleport uses up nothing.
+     * up one charge. Legacy home definitions are unavailable.
      *
      * @param bot The bot.
      * @param teleport The teleport.

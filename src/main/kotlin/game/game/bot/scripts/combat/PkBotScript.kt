@@ -940,7 +940,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
     /**
      * Handles the bot's current combat state.
      *
-     * If the bot is attacked outside the Wilderness, it immediately teleports home. Wilderness NPC combat retains
+     * If the bot is attacked outside the Wilderness, it routes back to safety. Wilderness NPC combat retains
      * existing travel or takes an idle local retreat step. Wilderness player combat pushes a dedicated
      * [CombatBotScript] so the bot can fight back using combat-specific behaviour.
      *
@@ -956,8 +956,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
             )
 
             if (!bot.inWilderness()) {
-                bot.log("Bot is in combat outside wilderness. Sending home command.")
-                output.sendCommand("home")
+                bot.log("Bot is in combat outside wilderness. Routing to safety.")
+                handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
                 return true
             } else if (attacker is Npc) {
                 avoidNpcCombat(attacker)

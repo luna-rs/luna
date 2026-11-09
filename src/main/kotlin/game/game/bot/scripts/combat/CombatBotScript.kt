@@ -1,5 +1,9 @@
 package game.bot.scripts.combat
 
+import api.bot.webwalk.plan.BankAccess
+
+import api.bot.zone.SubZone
+
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotPotionActionHandler
 import api.bot.action.PkCombatSwitcher
@@ -352,8 +356,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 bot.combat.attack(focus)
                 delay(600.milliseconds)
 
-                // Twice as likely to say something when starting combat.
-                if (focus is Player && rand(bot.personality.social * 2)) {
+                // PK speech shares a cooldown across encounters and fight stages.
+                if (focus is Player && BotPkingSpeechPool.canSpeak(bot)) {
                     val text = BotPkingSpeechPool.take(bot,
                                                        if (rand(bot.personality.kindness)) PkingSpeech.POSITIVE_START
                                                        else PkingSpeech.NEGATIVE_START)
@@ -501,7 +505,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      */
     private fun talk() {
         // Less chance to talk while fighting.
-        if (focus is Player && rand(bot.personality.social / 2)) {
+        if (focus is Player && BotPkingSpeechPool.canSpeak(bot)) {
             val text =
                 BotPkingSpeechPool.take(bot, if (rand(bot.personality.kindness)) PkingSpeech.POSITIVE_FIGHTING else
                     PkingSpeech.NEGATIVE_FIGHTING)
@@ -658,9 +662,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                     focusSpawn = (threat as? Npc)?.spawnCount
                     return false
                 } else {
-                    bot.log("${stuck ?: "Nowhere to run from $threat"}, teleporting home.")
+                    bot.log("${stuck ?: "Nowhere to run from $threat"}, routing to safety.")
                     rememberEscape(threat)
-                    output.sendCommand("home")
+                    handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
                 }
             }
         }

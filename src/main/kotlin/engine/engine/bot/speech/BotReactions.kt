@@ -88,13 +88,13 @@ object BotReactions {
     fun reactToOtherDied(source: Mob?, died: Player) {
         if (source.isRealBot() && died.isRealBot() && died.inWilderness()) {
             val delay = 1..3
-            if(rand(source.personality.social)) {
+            if (BotPkingSpeechPool.canSpeak(source)) {
                 val sourceText =
                     BotPkingSpeechPool.take(source, if (rand(source.personality.kindness)) PkingSpeech.POSITIVE_END else
                         PkingSpeech.NEGATIVE_END)
                 source.speechStack.pushHead(BotSpeech(sourceText, rand(delay)))
             }
-            if (rand(died.personality.kindness)) {
+            if (BotPkingSpeechPool.canSpeak(died)) {
                 val diedText = BotPkingSpeechPool.take(died, PkingSpeech.POSITIVE_END)
                 died.speechStack.pushHead(BotSpeech(diedText, rand(delay)))
             }

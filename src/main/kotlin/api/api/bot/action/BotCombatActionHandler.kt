@@ -591,8 +591,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         private set
 
     /**
-     * Uses native home teleport checks at Wilderness level 20 or below, unless teleblocked. Otherwise reuses the
-     * existing web-walker to reach the safe Edgeville anchor, without bank access or forced zone teleportation.
+     * Uses the web-walker to reach the safe Edgeville anchor using walking or available native teleports,
+     * without bank access or forced zone teleportation.
      * Actual Wilderness membership determines success. Combat and wandering flags are restored on every exit,
      * including cancellation; native attacks stay disabled throughout a pending escape.
      */
@@ -603,24 +603,16 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         val previousDisabled = bot.combat.isExplicitlyDisabled
         val previousWandering = bot.isWandering
         val previouslyFleeing = isFleeingWilderness
-        suspend fun tryHome(): Boolean {
-            if (!active() || levelAt(bot.position) > 20 || bot.status.isTeleBlocked()) return false
-            bot.output.sendCommand("home")
-            if (active() && !bot.inWilderness()) return true
-            waitFor(10.seconds) { !active() || !bot.inWilderness() }
-            return active() && !bot.inWilderness()
-        }
         try {
             isFleeingWilderness = true
             bot.walking.isRunning = true
             bot.isWandering = false
             bot.combat.target = null
             bot.combat.isDisabled = true
-            if (tryHome()) return true
             if (!active()) return false
             handler.webWalkTo(Zone.EDGEVILLE.anchor, bank = BankAccess.NONE, fallback = false)
             if (!active()) return false
-            return !bot.inWilderness() || tryHome()
+            return !bot.inWilderness()
         } finally {
             bot.combat.isDisabled = previousDisabled
             bot.isWandering = previousWandering
@@ -631,7 +623,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     /**
      * Attempts to flee from the bot's current combat situation.
      *
-     * Wilderness combat uses the dedicated Wilderness escape behaviour. Non-Wilderness combat either teleports home
+     * Wilderness combat uses the dedicated Wilderness escape behaviour. Non-Wilderness combat either routes to safety
      * when critically low on health, or falls back to future reverse-pursuit movement logic.
      */
     suspend fun fleeCombat() {
@@ -641,7 +633,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         if (bot.inWilderness()) {
             handler.combat.fleeWilderness()
         } else if (bot.healthPercent < 15) {
-            bot.output.sendCommand("home")
+            handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
         } else {
             (opponent() ?: bot.combat.lastAttackReceived?.attacker)?.let { stepAwayFrom(it) }
         }

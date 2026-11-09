@@ -14,7 +14,7 @@ enum class Herb(val id: Int,
 
     GUAM_LEAF(id = 199,
               identified = 249,
-              level = 3,
+              level = 1,
               exp = 2.5),
     MARRENTILL(id = 201,
                identified = 251,

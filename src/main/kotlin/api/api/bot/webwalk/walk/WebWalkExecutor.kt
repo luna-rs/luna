@@ -303,11 +303,11 @@ class WebWalkExecutor(private val bot: Bot,
     }
 
     /**
-     * Teleports the bot, by casting a spell, using a piece of jewellery, or going home.
+     * Teleports the bot by casting a spell or using an owned teleport item.
      *
      * The teleport spells and jewellery are taken from the game, and so are the ways that they are used: a spell is cast by
-     * clicking its button, jewellery is rubbed and a destination is chosen from the dialogue that it opens, and going home
-     * is the `home` command. The jewellery is taken out of the equipment into the inventory if it is worn, as it is only
+     * clicking its button, jewellery is rubbed and a destination is chosen from the dialogue that it opens.
+     * The jewellery is taken out of the equipment into the inventory if it is worn, as it is only
      * rubbed from there.
      *
      * @return `null` if the bot arrived, or why it didn't.
@@ -321,7 +321,7 @@ class WebWalkExecutor(private val bot: Bot,
                 bot.output.clickButton(spell.button)
             }
 
-            TeleportKind.HOME -> bot.output.sendCommand("home")
+            TeleportKind.HOME -> return "the home command is no longer available"
             TeleportKind.SPECIAL -> {
                 val special = SpecialTeleport.named(teleport.key) ?: return "unknown native teleport item"
                 if (special.charges(bot) <= 0) return "no carried ${special.name.lowercase()} charge"
