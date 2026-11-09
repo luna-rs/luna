@@ -11,6 +11,7 @@ import api.bot.script.BotScriptData
 import api.bot.script.recentEscape
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.Zone
+import api.bot.zone.SubZone
 import api.combat.death.PlayerDeathItems
 import api.predef.*
 import com.google.gson.JsonObject
@@ -195,6 +196,15 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
                 return true
             }
         }
+        if (prepared && bot.inventory.isFull && withinRiskBudget() && !ending()) {
+            collecting = false
+            if (handler.banking.noteWildernessItems(handler.banking.wildernessLootIds(), canVisit = ::allowsPosition) {
+                    !isTerminated() && !isPaused() && !ending() && withinRiskBudget()
+                }) {
+                destination = null
+                return false
+            }
+        }
         if (!prepared || bot.inventory.isFull || !withinRiskBudget()) {
             collecting = false
             quietSince = 0L
@@ -273,7 +283,8 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
         collecting = false
         if (bot.inWilderness() || !ActionSafety.NON_COMBAT.allows(bot)) return false
         try {
-            if (!handler.banking.travelToBankOpen() || !ActionSafety.NON_COMBAT.allows(bot)) return false
+            if (!handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE) ||
+                !handler.banking.open(handler.banking.homeBank()) || !ActionSafety.NON_COMBAT.allows(bot)) return false
             if (!handler.banking.depositInventory() || !ActionSafety.NON_COMBAT.allows(bot)) return false
             if (!handler.equipment.unequipAll() || !ActionSafety.NON_COMBAT.allows(bot)) return false
             if (!handler.banking.depositInventory() || !ActionSafety.NON_COMBAT.allows(bot)) return false

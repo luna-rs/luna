@@ -8,11 +8,17 @@ import api.bot.webwalk.plan.BankAccess
 import api.bot.webwalk.walk.BankWithdrawal
 import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
+import api.bot.script.recentEscape
 import api.predef.*
 import api.predef.ext.*
 import engine.bank.Banking
+import engine.controllers.Controllers.inWilderness
+import game.npc.spawn.wilderness.WildernessCapeNoting
 import game.player.item.consume.food.Food
+import game.player.item.consume.potion.Potion
 import io.luna.game.model.Entity
+import io.luna.game.model.EntityState
+import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.item.Item
@@ -22,6 +28,7 @@ import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -90,6 +97,59 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      */
     fun homeBank(): GameObject {
         return homeBanks.random()
+    }
+
+    /**
+     * Loot that can be compressed without consuming food, potions or possible equipment switches.
+     * Activity owners exclude their additional required items before requesting an exchange.
+     */
+    fun wildernessLootIds(): Set<Int> = bot.inventory.filterNotNull().filter {
+        it.id !in Food.ID_TO_FOOD && it.id !in Potion.DOSE_TO_POTION &&
+            EquipmentDefinition.ALL[it.id].isEmpty && WildernessCapeNoting.noteId(it) != null
+    }.mapTo(HashSet()) { it.id }
+
+    /**
+     * Lets confident or PKer accounts free space through the native item-on-cape-seller interaction.
+     * Only caller-approved item types are exchanged. Travel, item use and confirmation are bounded and recheck
+     * safety and activity permission; failure leaves the caller's ordinary home-banking path available.
+     */
+    suspend fun noteWildernessItems(ids: Set<Int>, canVisit: (Position) -> Boolean = { true },
+                                   allowed: () -> Boolean = { true }): Boolean {
+        fun permitted() = allowed() && bot.state == EntityState.ACTIVE && bot.inWilderness() &&
+            (bot.personality.isConfident || bot.preferences.isPker) && ActionSafety.NON_COMBAT.allows(bot) &&
+            !bot.emotions.isNervousAboutHp && canVisit(bot.position)
+        if (ids.isEmpty() || !bot.inventory.isFull || !permitted()) return false
+        fun usefulIds() = ids.filter { id ->
+            val items = bot.inventory.filterNotNull().filter { it.id == id && !it.isDynamic }
+            val note = items.firstOrNull()?.let(WildernessCapeNoting::noteId)
+            note != null && (items.size > 1 || note in bot.inventory) &&
+                bot.inventory.computeAmountForId(note).toLong() + items.size <= Int.MAX_VALUE
+        }
+        if (usefulIds().isEmpty()) return false
+        val merchant = bot.world.locator.findNpcs(bot.position, 128) {
+            it.id in WildernessCapeNoting.NPC_IDS && it.position.z == bot.position.z && it.inWilderness() &&
+                it.state == EntityState.ACTIVE && it.isAlive && canVisit(it.position) &&
+                bot.recentEscape?.avoids(it.position) != true
+        }.minByOrNull { it.position.computeLongestDistance(bot.position) } ?: return false
+        fun merchantAvailable() = permitted() && merchant.state == EntityState.ACTIVE && merchant.isAlive &&
+            merchant.world === bot.world && bot.world.npcs[merchant.index] === merchant &&
+            canVisit(merchant.position) && bot.recentEscape?.avoids(merchant.position) != true
+        val beforeSpace = bot.inventory.computeRemainingSize()
+        return withTimeoutOrNull(45.seconds) {
+            bot.combat.target = null
+            if (!handler.interactions.approach(merchant, timeout = 30.seconds, allowOutOfView = true,
+                    canContinue = ::merchantAvailable)) return@withTimeoutOrNull false
+            for (id in usefulIds()) {
+                if (!merchantAvailable()) return@withTimeoutOrNull false
+                val item = bot.inventory.firstOrNull { it?.id == id && !it.isDynamic } ?: continue
+                val note = WildernessCapeNoting.noteId(item) ?: continue
+                val before = bot.inventory.computeAmountForId(note)
+                if (!handler.inventory.useItem(id).onNpc(merchant, ::merchantAvailable)) return@withTimeoutOrNull false
+                waitFor(3.seconds) { !merchantAvailable() || bot.inventory.computeAmountForId(note) > before }
+                if (!merchantAvailable() || bot.inventory.computeAmountForId(note) <= before) return@withTimeoutOrNull false
+            }
+            bot.inventory.computeRemainingSize() > beforeSpace
+        } == true
     }
 
     /**

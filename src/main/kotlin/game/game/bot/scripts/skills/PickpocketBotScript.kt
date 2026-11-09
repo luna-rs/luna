@@ -51,6 +51,8 @@ class PickpocketBotScript(
     // Move on if no eligible NPC can be selected, rather than waiting until the entire script expires.
     override val targetSearchTimeout: Duration = 180.seconds
 
+    override fun wildernessNotingItems(): Set<Int> = handler.banking.wildernessLootIds()
+
     companion object {
 
         /**

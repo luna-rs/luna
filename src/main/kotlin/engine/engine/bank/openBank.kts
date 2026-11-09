@@ -50,7 +50,19 @@ fun openDialogue(plr: Player, id: Int) {
         .npc(id, "Good day, how may I help you?")
         .options("I'd like to access my bank account, please.", { accessAccountDialogue(it) },
                  "What is this place?", { areaInfoDialogue(it, id) },
+                 "How can I save space with banknotes?", { banknoteInfoDialogue(it, id) },
                  "Didn't you used to be called the bank of Varrock?", { oldNameInfoDialogue(it, id) }).open()
+}
+
+/**
+ * Explains existing bank withdrawals and the cape merchants' Wilderness exchange.
+ */
+fun banknoteInfoDialogue(plr: Player, id: Int) {
+    plr.newDialogue()
+        .player("How can I save space with banknotes?")
+        .npc(id, "Deposit your items, then select Note in your bank", "before withdrawing them. Items with a banknote", "form stack together as notes in your inventory.")
+        .npc(id, "Wilderness team-cape sellers can also note items.", "Use an unnoted item on one to exchange all copies", "for free. Those notes stay with you and remain at risk.")
+        .open()
 }
 
 /**

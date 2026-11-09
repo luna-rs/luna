@@ -72,6 +72,8 @@ class FishBotScript(
     val gatherKarambwanBait: Boolean = false
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.fishing), SocialBotScript {
 
+    override fun wildernessNotingItems(): Set<Int> = selectedTool.fish.mapTo(HashSet()) { it.id }
+
     override fun ambientConversationTopic(): ConversationSpeech = ConversationSpeech.FISHING
 
     override fun canSocialize(): Boolean = canTalkWhileWorking()

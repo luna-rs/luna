@@ -8,6 +8,9 @@ import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Npc
+import io.luna.game.event.impl.UseItemEvent.ItemOnNpcEvent
+import io.luna.game.model.mob.interact.InteractionPolicy
 
 /**
  * The ten original Wilderness cape merchants. Their initials spell WILDERNESS, and each sells the five capes
@@ -17,6 +20,15 @@ import io.luna.game.model.mob.Player
  * Stock returns toward its original amount by one cape every 100 ticks, including excess capes sold by players.
  */
 val merchants = listOf("William", "Ian", "Larry", "Darren", "Edward", "Richard", "Neil", "Edmond", "Simon", "Sam")
+
+on(ItemOnNpcEvent::class, { _, target ->
+    if (target is Npc && target.id in WildernessCapeNoting.NPC_IDS) InteractionPolicy.STANDARD_SIZE
+    else InteractionPolicy.UNSPECIFIED
+}).filter {
+    targetNpc.id in WildernessCapeNoting.NPC_IDS
+}.then {
+    WildernessCapeNoting.note(plr, targetNpc, usedItemIndex, usedItemId)
+}
 
 merchants.forEachIndexed { index, name ->
     val npcId = 1778 + index
@@ -41,7 +53,7 @@ merchants.forEachIndexed { index, name ->
 
     npc1(npcId) {
         plr.newDialogue()
-            .npc(npcId, "Would you like to buy a Wilderness cape?")
+            .npc(npcId, "Would you like to buy a Wilderness cape?", "I can also note your items to save inventory space.")
             .then { offerCapes(it, npcId, shopName) }
             .open()
     }
@@ -57,6 +69,14 @@ fun offerCapes(player: Player, npcId: Int, shopName: String) {
                 .player("What's so special about your capes?")
                 .npc(npcId, "Matching capes help you recognise your team on the", "minimap and avoid attacking them by accident.")
                 .npc(npcId, "They're useful for travelling through the Wilderness", "with your friends. Would you like to see them?")
+                .then { plr -> offerCapes(plr, npcId, shopName) }
+                .open()
+        }, "Can you note my items?", {
+            it.newDialogue()
+                .player("Can you note my items?")
+                .npc(npcId, "Use an unnoted item on me and I'll exchange all", "ordinary copies of it for banknotes, free of charge.",
+                     "The item must have a banknote form.")
+                .npc(npcId, "The notes stay in your inventory, so they are still", "at risk in the Wilderness. I don't store your items.")
                 .then { plr -> offerCapes(plr, npcId, shopName) }
                 .open()
         }, "Yes please!", {

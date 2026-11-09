@@ -14,6 +14,7 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotEquipmentPreferences
+import engine.controllers.Controllers.inWilderness
 import io.luna.game.model.item.Equipment.AMMUNITION
 import io.luna.game.model.item.Equipment.WEAPON
 import game.player.item.consume.food.Food
@@ -492,6 +493,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     /**
+     * Activity outputs that may be noted while keeping the current tools and supplies usable.
+     */
+    protected open fun wildernessNotingItems(): Set<Int> = emptySet()
+
+    /**
      * Runs after the bot has opened a bank and deposited its inventory during a banking cycle.
      *
      * Subclasses can override this to withdraw tools, food, runes, ammo, potions, teleport items, or any other supplies
@@ -689,6 +695,15 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             return
         }
 
+        val wildernessTrip = bot.inWilderness()
+        if (!forceBanking && wildernessTrip &&
+            handler.banking.noteWildernessItems(wildernessNotingItems()) {
+                !isTerminated() && !isPaused() && !forceBanking
+            }) {
+            if (bankActionReady()) travelToZone(activeZone, BankAccess.NONE)
+            return
+        }
+        if (!isActionSafe() || isTerminated() || isPaused()) return
         if (!onBankRequested(false)) {
             bot.log(
                 "Banking request aborted by hook. inventoryFull=${bot.inventory.isFull}, " +
@@ -711,6 +726,16 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         forceBanking = true
         if (!awaitActionSafety()) return
         val parent = bankParent(activeZone)
+
+        if (wildernessTrip) {
+            cachedBank = null
+            if (!handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE)) {
+                bankAttemptFailed()
+                return
+            }
+            if (!bankActionReady()) return
+            cachedBank = handler.banking.homeBank()
+        }
 
         val bank = cachedBank
         if (bank != null && !bot.bank.isOpen) {

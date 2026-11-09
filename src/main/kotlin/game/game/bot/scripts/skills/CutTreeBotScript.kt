@@ -54,6 +54,9 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
                        val firemakingTarget: Int = 0) :
     SkillingBotScript<GameObject>(bot, duration, zones, bot.woodcutting), SocialBotScript {
 
+    override fun wildernessNotingItems(): Set<Int> =
+        if (firemakingTarget == 0) trees.mapTo(HashSet()) { it.logId } else emptySet()
+
     override fun ambientConversationTopic(): ConversationSpeech = ConversationSpeech.WOODCUTTING
 
     override fun canSocialize(): Boolean = canTalkWhileWorking()

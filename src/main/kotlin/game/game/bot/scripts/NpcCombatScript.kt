@@ -680,6 +680,9 @@ open class NpcCombatScript(bot: Bot,
         return options
     }
 
+    override fun wildernessNotingItems(): Set<Int> = handler.banking.wildernessLootIds() -
+        requiredSlayerItems.keys - travelTools(bot, originalZones).map { it.id }
+
     override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
         safespotCombat.release()
         campBehavior.close()

@@ -85,6 +85,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     override val crowdedSearchLimit = behavior.crowdedSearchLimit
     override val reuseTargetOptions = false
 
+    override fun wildernessNotingItems(): Set<Int> = ores.mapTo(HashSet()) { it.item }
+
     private var cluster: Position? = null
     private var surveyZone: SubZone? = null
     private var sites: List<MiningSites.Rock> = emptyList()

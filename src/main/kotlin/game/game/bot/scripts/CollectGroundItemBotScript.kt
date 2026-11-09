@@ -4,8 +4,8 @@ import api.bot.script.TargetingZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
+import api.predef.ext.totalItemAmount
 import com.google.gson.JsonObject
-import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.def.ItemDefinition
@@ -71,14 +71,22 @@ class CollectGroundItemBotScript(
 
     override val targetSearchTimeout = 2.minutes
 
+    override fun wildernessNotingItems(): Set<Int> = setOf(itemId)
+
     /**
      * Checks current ownership so other pickups and banking cannot restart or inflate the collection goal.
      */
-    private fun goalReached(): Boolean = bot.itemTracker.count(itemId) >= stockTarget
+    private fun goalReached(): Boolean = bot.totalItemAmount(itemId) >= stockTarget
+
+    /**
+     * A completed collection still deposits carried notes before handing over to the next activity.
+     */
+    private fun carryingResource(): Boolean = itemId in bot.inventory ||
+        itemDef(itemId).notedId.orElse(-1) in bot.inventory
 
     override suspend fun onInit(resumed: Boolean): Boolean =
         ItemDefinition.isIdValid(itemId) && stockTarget > 0 &&
-                (!goalReached() || bot.inventory.contains(itemId))
+                (!goalReached() || carryingResource())
 
     override suspend fun equipment() = null
 
@@ -86,7 +94,7 @@ class CollectGroundItemBotScript(
 
     override suspend fun beforeZoneWork(): Boolean {
         if (!goalReached()) return false
-        if (bot.inventory.contains(itemId)) {
+        if (carryingResource()) {
             forceBanking = true
             return false
         }
@@ -108,7 +116,7 @@ class CollectGroundItemBotScript(
 
     override suspend fun onAssignFocus(newFocus: GroundItem): Boolean {
         if (bot.inventory.isFull || goalReached()) {
-            forceBanking = true
+            if (goalReached()) forceBanking = true
             return false
         }
         return newFocus.id == itemId && newFocus.position in activeZone!!.area && handler.loot.canPickup(newFocus)

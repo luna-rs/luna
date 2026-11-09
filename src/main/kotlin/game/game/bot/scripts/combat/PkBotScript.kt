@@ -902,6 +902,16 @@ class PkBotScript(bot: Bot, val duration: Duration,
             return handler.combat.fleeWilderness()
         }
 
+        if (bot.inventory.isFull && !bot.combat.inCombat()) {
+            val noted = handler.banking.noteWildernessItems(handler.banking.wildernessLootIds(), canVisit = ::allowsHuntingAt) {
+                !isTerminated() && !isPaused() && System.currentTimeMillis() <= expireAt &&
+                    preparationState == PreparationState.READY && preparation.ready() &&
+                    combatPolicy.pkRiskBudget().withinBudget
+            }
+            if (!noted && bot.inventory.isFull) preparationState = PreparationState.RESTOCKING
+            return false
+        }
+
         if (checkCombat()) {
             bot.log("checkCombat handled current state.")
             delay(1.seconds, 3.seconds)
