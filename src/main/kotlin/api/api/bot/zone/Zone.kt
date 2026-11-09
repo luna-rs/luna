@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import engine.bank.Banking
-import io.luna.Luna
 import io.luna.game.model.Entity
 import io.luna.game.model.EntityType
 import io.luna.game.model.Locatable
@@ -166,7 +165,7 @@ enum class Zone(val price: Int,
                                    Position(3095, 3489, 0),
                                    Position(3095, 3491, 0))),
     VARROCK(price = 250,
-            anchor = Luna.settings().game().startingPosition(),
+            anchor = Position(3182, 3440),
             regions = setOf(12596, 12598, 12854, 13110, 12597, 12853, 13109, 13108, 12852),
             bankAnchors = listOf(Position(3186, 3436, 0),
                                  Position(3186, 3438, 0),

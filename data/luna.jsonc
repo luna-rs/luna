@@ -4,10 +4,10 @@
     "runtime_mode": "DEVELOPMENT",
     // Account names that always receive developer rights at login (case-insensitive).
     "developer_usernames": ["lare96", "hydrozoa", "the lining"],
-    // The default position new players are placed at when no saved position exists.
+    // The shared starting position for new players and bots, also used for death respawns and safety fallbacks.
     "starting_position": {
-      "x": 3182,
-      "y": 3440
+      "x": 3222,
+      "y": 3219
     },
     // Global multiplier applied to experience gained from skills and other XP sources.
     "experience_multiplier": 5.0,
