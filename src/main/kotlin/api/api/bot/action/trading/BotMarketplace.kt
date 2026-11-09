@@ -105,7 +105,7 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
      * Checks capacity without consuming a spot before a trading script starts.
      */
     fun hasAvailableTradingSpot(bot: Bot): Boolean {
-        val occupied = occupiedPositions(bot)
+        val occupied by lazy(LazyThreadSafetyMode.NONE) { occupiedPositions(bot) }
         return tradingSpots.hasSpace(tradingCandidates(), { it !in occupied }, ::activeTrader)
     }
 
@@ -113,7 +113,7 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
      * Reserves an exclusive, currently unoccupied trading tile until banking, pause, or completion releases it.
      */
     fun reserveTradingSpot(owner: BotScript): Position? {
-        val occupied = occupiedPositions(owner.bot)
+        val occupied by lazy(LazyThreadSafetyMode.NONE) { occupiedPositions(owner.bot) }
         return tradingSpots.claim(owner, tradingCandidates(), { it !in occupied }, ::activeTrader)
     }
 
@@ -150,15 +150,28 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
      * Revalidates real occupancy independently of collision geometry and outstanding reservations.
      */
     private fun unoccupied(position: Position, bot: Bot): Boolean =
-        world.players.none { it !== bot && it.state == EntityState.ACTIVE && it.position == position } &&
-                world.npcs.none { it.state == EntityState.ACTIVE && it.position == position }
+        world.locator.findPlayers(position, 0) { it !== bot && it.state == EntityState.ACTIVE }.isEmpty() &&
+                world.locator.findNpcs(position, 0) { it.state == EntityState.ACTIVE }.isEmpty()
 
     /**
-     * Captures occupancy once when inspecting a whole position pool.
+     * Bounds the chunk query to the market geometry, independently of the requesting bot's location.
+     */
+    private val occupancyCenter by lazy {
+        Position((tiles.minOf { it.x } + tiles.maxOf { it.x }) / 2,
+            (tiles.minOf { it.y } + tiles.maxOf { it.y }) / 2)
+    }
+    private val occupancyRadius by lazy { tiles.maxOf { it.computeLongestDistance(occupancyCenter) } }
+
+    /**
+     * Captures only active mobs inside this market, without scanning unrelated world populations.
      */
     private fun occupiedPositions(bot: Bot): Set<Position> = buildSet {
-        world.players.filter { it !== bot && it.state == EntityState.ACTIVE }.forEach { add(it.position) }
-        world.npcs.filter { it.state == EntityState.ACTIVE }.forEach { add(it.position) }
+        world.locator.findPlayers(occupancyCenter, occupancyRadius) {
+            it !== bot && it.state == EntityState.ACTIVE && contains(it.position)
+        }.forEach { add(it.position) }
+        world.locator.findNpcs(occupancyCenter, occupancyRadius) {
+            it.state == EntityState.ACTIVE && contains(it.position)
+        }.forEach { add(it.position) }
     }
 
     /**

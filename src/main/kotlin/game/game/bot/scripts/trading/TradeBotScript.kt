@@ -2,6 +2,7 @@ package game.bot.scripts.trading
 
 import api.bot.isRealBot
 
+import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.action.trading.*
 import api.bot.action.trading.BotTradeManager.tradeRequests
@@ -23,7 +24,6 @@ import engine.bot.gear.BotEquipmentPreferences
 import engine.trade.ConfirmTradeInterface
 import engine.trade.OfferTradeInterface
 import engine.trade.tradingWith
-import game.bot.scripts.IdleBotScript
 import io.luna.Luna
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -46,6 +46,7 @@ import io.luna.util.NumberUtils
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -71,6 +72,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * @param duration The maximum remaining duration of the marketplace session.
  * @param zone The candidate zones containing the marketplace.
  * @property purchaseDeadline Optional absolute deadline for a targeted supply visit; zero keeps ordinary waits.
+ * @property retryAt Earliest retry after deferring a visit, independent of hub capacity or intervening work.
  * @author lare96
  */
 class TradeBotScript(bot: Bot,
@@ -80,7 +82,8 @@ class TradeBotScript(bot: Bot,
                      zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone),
                      private val purchaseTarget: Item? = null,
                      private val purchasePrice: Long = 0,
-                     private val purchaseDeadline: Long = 0L) :
+                     private val purchaseDeadline: Long = 0L,
+                     private val retryAt: Long = 0L) :
     ZonedBotScript(bot, duration, zone) {
 
     companion object {
@@ -274,6 +277,9 @@ class TradeBotScript(bot: Bot,
         get() = purpose == BotTradePurpose.MERCHANT_SELL || purpose == BotTradePurpose.SELL && bot.preferences.isMerchant
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        val cooldown = retryAt - System.currentTimeMillis()
+        if (cooldown > 0L) delay(cooldown.milliseconds)
+        if (!awaitActionSafety()) return false
         if (purchaseExpired()) {
             endSession("Specific purchase deadline expired.")
             return false
@@ -399,16 +405,10 @@ class TradeBotScript(bot: Bot,
             val next = BotMarketplace.select(bot)
             val remaining = retryDuration ?: remainingDuration()
             if (remaining > Duration.ZERO) {
-                val otherWork = bot.scriptStack.scripts.any {
-                    it !== this && it !is TradeBotScript && !it.isFinished() && !it.isTerminated()
-                }
-                if (!otherWork && BotMarketplace.entries.none { it.hasAvailableTradingSpot(bot) }) {
-                    bot.scriptStack.softPushHead(IdleBotScript(bot, SubZone.HOME,
-                        System.currentTimeMillis() + rand(2, 5) * 60_000L))
-                }
                 bot.scriptStack.pushTail(TradeBotScript(bot, purpose, next, remaining,
                     purchaseTarget = purchaseTarget, purchasePrice = purchasePrice,
-                    purchaseDeadline = purchaseDeadline))
+                    purchaseDeadline = purchaseDeadline,
+                    retryAt = System.currentTimeMillis() + rand(2, 5) * 60_000L))
             }
             return
         }
