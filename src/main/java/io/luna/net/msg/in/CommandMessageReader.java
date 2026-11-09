@@ -1,14 +1,9 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.Event;
 import io.luna.game.event.impl.CommandEvent;
-import io.luna.game.event.impl.VoidEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.net.msg.custom.CustomPacketCodec;
-import io.luna.net.msg.custom.CustomPacketEvent;
-import io.luna.net.msg.custom.CustomPacketRegistry;
 import io.luna.util.logging.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +14,7 @@ import org.apache.logging.log4j.Logger;
  *
  * @author lare96
  */
-public final class CommandMessageReader extends GameMessageReader<Event> {
+public final class CommandMessageReader extends GameMessageReader<CommandEvent> {
 
     /**
      * An asynchronous logger that will handle command logs.
@@ -32,12 +27,7 @@ public final class CommandMessageReader extends GameMessageReader<Event> {
     private static final Level COMMANDS = FileOutputType.COMMANDS.getLevel();
 
     @Override
-    public Event decode(Player player, GameMessage msg) {
-        if (CustomPacketCodec.isReserved(msg)) {
-            return CustomPacketRegistry.INSTANCE.decode(msg)
-                    .<Event>map(request -> new CustomPacketEvent(player, request))
-                    .orElse(VoidEvent.INSTANCE);
-        }
+    public CommandEvent decode(Player player, GameMessage msg) {
         String string = msg.getPayload().getString().toLowerCase();
         int index = string.indexOf(' ');
         if (index == -1) {
@@ -49,11 +39,7 @@ public final class CommandMessageReader extends GameMessageReader<Event> {
     }
 
     @Override
-    public void handle(Player player, Event event) {
-        if (event instanceof CustomPacketEvent custom) {
-            CustomPacketRegistry.INSTANCE.dispatch(player, custom.getRequest());
-        } else if (event instanceof CommandEvent command) {
-            logger.log(COMMANDS, "{}: {}", player.getUsername(), command.getCompleteString());
-        }
+    public void handle(Player player, CommandEvent event) {
+        logger.log(COMMANDS, "{}: {}", player.getUsername(), event.getCompleteString());
     }
 }

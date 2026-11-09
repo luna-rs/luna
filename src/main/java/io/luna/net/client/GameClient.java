@@ -140,7 +140,7 @@ public class GameClient extends Client<GameMessage> {
                 }
                 if (!(this instanceof BotClient) &&
                         player instanceof Bot controller && controller.isAutomationActive() &&
-                        PlayerAutomation.interrupts(reader, msg)) {
+                        PlayerAutomation.interrupts(reader)) {
                     controller.stopAutomation();
                 }
                 reader.submitMessage(player, msg);
