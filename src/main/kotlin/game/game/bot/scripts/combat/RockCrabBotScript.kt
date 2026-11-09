@@ -115,8 +115,21 @@ class RockCrabBotScript(bot: Bot,
      */
     private var noticeAfter = rollNoticeAfter()
 
-    // Waiting out respawns and walking off to reset the crabs all happen without a target.
-    override val targetSearchTimeout: Duration = 15.minutes
+    /**
+     * Grants the long respawn/tolerance allowance only after reaching a crab in this zone.
+     * Unreachable beaches use the ordinary one-minute search budget.
+     */
+    private var campEstablished = false
+    override val targetSearchTimeout: Duration
+        get() = if (campEstablished) 15.minutes else 1.minutes
+
+    override suspend fun onNewActiveZone(lastZone: SubZone?) {
+        super.onNewActiveZone(lastZone)
+        spot = null
+        rocks = emptyList()
+        waiting = null
+        campEstablished = false
+    }
 
     override fun isLoot(item: GroundItem) = false
 
@@ -143,6 +156,7 @@ class RockCrabBotScript(bot: Bot,
         }
         val waking = options.filter { it.combat.target == bot }
         if (waking.isNotEmpty()) {
+            campEstablished = true
             waiting = null
             return waking.toMutableList()
         }
@@ -167,6 +181,7 @@ class RockCrabBotScript(bot: Bot,
 
         val sleeping = rocks.filter { it.state == EntityState.ACTIVE && RockCrabs.isDisguised(it) }
         if (sleeping.any { bot.isWithinDistance(it, 1) }) {
+            campEstablished = true
             // A crab that still minds us wakes the moment we step next to it.
             val (since, tile) = waiting ?: (System.currentTimeMillis() to bot.position).also { waiting = it }
             if (tile != bot.position) {

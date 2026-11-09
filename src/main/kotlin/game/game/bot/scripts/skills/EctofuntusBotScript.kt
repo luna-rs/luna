@@ -166,7 +166,6 @@ class EctofuntusBotScript(
     private var lastProgress = System.currentTimeMillis()
     private var previous: List<Any?>? = null
     private var poolAttempt = 0
-    override val allowsCombatResponse = false
     override fun allowsLoot(item: GroundItem): Boolean = false
 
     private fun valid(): Boolean = System.currentTimeMillis() < deadline && permitted(bot)
@@ -205,6 +204,12 @@ class EctofuntusBotScript(
             }
         }
         return valid() && supplies(bot, bone) != null
+    }
+
+    override suspend fun awaitActionSafety(safety: ActionSafety): Boolean {
+        val remaining = deadline - System.currentTimeMillis()
+        if (remaining <= 0L) return false
+        return withTimeoutOrNull(remaining) { super.awaitActionSafety(safety) } == true
     }
 
     override suspend fun init(resumed: Boolean): Boolean {
