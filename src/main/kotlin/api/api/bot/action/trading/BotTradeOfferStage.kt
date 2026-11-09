@@ -70,6 +70,20 @@ class BotTradeOfferStage(
             if (!validate()) return null
             bot.output.clickButton(3420)
             bot.log("Clicked accept button on offer interface, waiting for ${other.username}...")
+            val acknowledged = waitFor(2.seconds) {
+                ConfirmTradeInterface::class in bot.overlays || offerInterface.accepted ||
+                        bot.overlays[OfferTradeInterface::class] !== offerInterface || !validate()
+            }
+            val acceptedConfirmation = bot.overlays[ConfirmTradeInterface::class]
+            if (acceptedConfirmation?.offer === offerInterface) {
+                offered = true
+                return BotTradeConfirmStage(bot, other, this)
+            }
+            if (!acknowledged || bot.overlays[OfferTradeInterface::class] !== offerInterface || !validate() ||
+                !offerInterface.accepted) {
+                offered = false
+                return null
+            }
             offered = true
 
             val changed = waitFor(OFFER_WAIT_SECONDS.seconds) {

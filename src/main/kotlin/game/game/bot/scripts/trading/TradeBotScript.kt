@@ -1197,6 +1197,7 @@ class TradeBotScript(bot: Bot,
     private suspend fun negotiateAdvertisement(offer: BotTradeOfferStage, context: Opportunity): Boolean {
         val timer = Stopwatch.createStarted()
         val timing = BotTradeOfferTiming()
+        val feedback = BotTradeFeedback(bot, context.entry.player)
         val seen = HashMap<Pair<Map<Int, Int>, Map<Int, Int>>, Int>()
         var previous: Pair<Map<Int, Int>, Map<Int, Int>>? = null
         var rounds = 0
@@ -1219,7 +1220,18 @@ class TradeBotScript(bot: Bot,
                 if (visits > 2) return false
             }
             val plan = advertisementPlan(context, receiving, mine)
-            if (plan == null && (context.pricing != null || receiving.isNotEmpty())) return false
+            if (plan == null && (context.pricing != null || receiving.isNotEmpty())) {
+                val id = context.pricing?.itemId
+                val received = quantities(theirs, true)
+                val message = if (id != null && received.isNotEmpty() && (received.size != 1 || id !in received))
+                    "I'm only buying ${tradeItemName(id)} in this trade. Please remove the other items."
+                else "I can't buy that offer with my available money or space. Try fewer items or bank notes."
+                feedback.send(message, revision)
+                waitFor(2.seconds) {
+                    bot.overlays[OfferTradeInterface::class] !== screen || screen.otherOffer.revision != revision
+                }
+                continue
+            }
             context.plan = plan
             if (!announceAdvertisement(context)) return false
             if (plan != null) {
@@ -1240,9 +1252,18 @@ class TradeBotScript(bot: Bot,
             val id = context.pricing?.itemId
             val valid = plan != null && id != null && own.isNotEmpty() && normalized.size == 1 &&
                     normalized[id] == plan.quantity
-            if (valid && finishTradeWith(offer, own, receiving) {
-                    bot.inventory.hasSpaceForAll(theirs) && context.entry.player.inventory.hasSpaceForAll(mine)
-                }) {
+            val adjustment = when {
+                plan != null && id != null && (normalized[id] ?: 0) > plan.quantity ->
+                    "I can buy ${numF(plan.quantity)} ${tradeItemName(id)}. Remove " +
+                            "${numF(normalized.getValue(id) - plan.quantity)} from your offer."
+                receiving.isEmpty() && plan != null && id != null ->
+                    "I'm buying up to ${numF(plan.quantity)} ${tradeItemName(id)}. Please add your offer."
+                receiving.isEmpty() -> "Please add the item you're selling so I can make an offer."
+                else -> tradeSpaceAdjustment(context.entry.player, own, receiving)
+            }
+            if (adjustment != null) feedback.send(adjustment, revision)
+            if (valid && adjustment == null) feedback.send("My offer is ready. Please review it and accept.", revision)
+            if (valid && adjustment == null && finishTradeWith(offer, own, receiving)) {
                 val completed = plan ?: return false
                 completeAdvertisement(context, completed)
                 return true
@@ -1272,6 +1293,7 @@ class TradeBotScript(bot: Bot,
         val guidePrices = HashMap<Int, Long>()
         val timer = Stopwatch.createStarted()
         val timing = if (other.isRealBot()) null else BotTradeOfferTiming()
+        val feedback = BotTradeFeedback(bot, other)
         val seen = HashMap<Pair<Map<Int, Int>, Map<Int, Int>>, Int>()
         var lastState: Pair<Map<Int, Int>, Map<Int, Int>>? = null
         var rounds = 0
@@ -1323,7 +1345,16 @@ class TradeBotScript(bot: Bot,
             val valid = own.isNotEmpty() && receiving.isNotEmpty() &&
                     if (exchange != null) receiving == exchange.second
                     else humanTarget(receiving, guidePrices) == own && hasUsefulReturn(receiving, guidePrices)
-            if (valid && finishTradeWith(offer, own, receiving)) return true
+            val adjustment = if (exchange == null) humanTradeAdjustment(other, own, receiving, guidePrices) else null
+            if (adjustment != null) feedback.send(adjustment, revision)
+            if (valid && adjustment == null) {
+                feedback.send("My offer is ready. Please review it and accept.", revision)
+                if (finishTradeWith(offer, own, receiving)) return true
+                if (bot.overlays[OfferTradeInterface::class] === screen && !screen.accepted &&
+                    screen.otherOffer.revision == revision) {
+                    feedback.send("I couldn't accept that offer. Please adjust the quantity or reopen the trade.", revision)
+                }
+            }
             if (bot.overlays[OfferTradeInterface::class] !== screen) return false
             waitFor(2.seconds) {
                 bot.overlays[OfferTradeInterface::class] !== screen ||
@@ -1333,6 +1364,66 @@ class TradeBotScript(bot: Bot,
         bot.log("Trade negotiation expired or stopped making progress.")
         return false
     }
+
+    /**
+     * Explains the next player action using this attempt's actual desired quantities and stable quotes.
+     */
+    private fun humanTradeAdjustment(other: Player, own: Map<Int, Int>, receiving: Map<Int, Int>,
+                                      guidePrices: MutableMap<Int, Long>): String? {
+        if (receiving.isEmpty()) {
+            return if (buying) {
+                val wanted = expected.firstOrNull() ?: return "Please offer an item I can buy."
+                "I'm buying up to ${numF(wanted.item.amount)} ${tradeItemName(wanted.item.id)}. Please add your offer."
+            } else "I'm selling my displayed stock. Please offer coins or useful items."
+        }
+        if (buying) {
+            val received = quantities(receiving.toItems(), true)
+            val demand = effectiveExpected(receiving)
+            val wanted = quantities(demand.map { it.item }, true)
+            if (purpose == BotTradePurpose.BUY && received.size != 1) {
+                val id = demand.firstOrNull { it.item.id in received }?.item?.id ?: expected.firstOrNull()?.item?.id
+                return if (id == null) "Please offer one type of item at a time."
+                else "Please offer only ${tradeItemName(id)} for this trade and remove the other items."
+            }
+            val unwanted = received.keys.firstOrNull { (wanted[it] ?: 0) <= 0 }
+            if (unwanted != null) {
+                val id = expected.firstOrNull()?.item?.id
+                return if (id == null) "I can't buy ${tradeItemName(unwanted)} in this trade. Please remove it."
+                else "I can't buy ${tradeItemName(unwanted)} in this trade. Please offer ${tradeItemName(id)} instead."
+            }
+            val excessive = received.entries.firstOrNull { it.value > (wanted[it.key] ?: 0) }
+            if (excessive != null) {
+                val amount = wanted.getValue(excessive.key)
+                return "I can buy up to ${numF(amount)} ${tradeItemName(excessive.key)}. " +
+                        "Remove ${numF(excessive.value - amount)} from your offer."
+            }
+            if (own.isEmpty()) return "I can't pay for that quantity with my carried stock. Please try a different quantity."
+        } else if (own.isEmpty()) {
+            val minimum = offering.filter { carriedOffer.keys.any { id -> unnotedId(id) == it.item.id } }
+                .minByOrNull { it.price }
+            return if (receivedValue(receiving, guidePrices) <= 0 || minimum == null)
+                "I can't use that payment. Please offer coins or items I need."
+            else "I need at least ${numF(minimum.price)} gp in value for one ${tradeItemName(minimum.item.id)}. " +
+                    "Please increase your offer."
+        }
+        return tradeSpaceAdjustment(other, own, receiving)
+    }
+
+    /**
+     * Both native acceptance checks must have space after offered stock has left the inventories.
+     */
+    private fun tradeSpaceAdjustment(other: Player, own: Map<Int, Int>, receiving: Map<Int, Int>): String? = when {
+        !other.inventory.hasSpaceForAll(own.toItems()) ->
+            "You don't have room for my offer. Reduce your offer for a smaller trade, or free some inventory space."
+        !bot.inventory.hasSpaceForAll(receiving.toItems()) ->
+            "I don't have room for those items. Please offer bank notes or fewer items."
+        else -> null
+    }
+
+    /**
+     * Keeps complete quantity instructions short enough for the client's directed trade-notice packet.
+     */
+    private fun tradeItemName(id: Int): String = itemDef(unnotedId(id)).name.take(40)
 
     /**
      * Waits for the player's initial opportunity or a quiet period after their latest native offer edit.
@@ -1607,7 +1698,10 @@ class TradeBotScript(bot: Bot,
         val original = bot.overlays[OfferTradeInterface::class] ?: return false
         val ownRevision = original.revision
         val otherRevision = original.otherOffer.revision
-        fun unchanged() = original.revision == ownRevision && original.otherOffer.revision == otherRevision && validate()
+        val mine = own.toItems()
+        val theirs = receiving.toItems()
+        fun unchanged() = original.revision == ownRevision && original.otherOffer.revision == otherRevision &&
+                bot.inventory.hasSpaceForAll(theirs) && offer.other.inventory.hasSpaceForAll(mine) && validate()
         val confirm = offer.offerAndAwait {
             quantities(offer.getTradeItems()) == own && quantities(offer.getOtherTradeItems()) == receiving && unchanged()
         } ?: return false
