@@ -51,6 +51,38 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
     AL_KHARID(Zone.AL_KHARID, SubZone.AL_KHARID_MARKETPLACE,
         setOf(SKILL_CRAFTING, SKILL_COOKING, SKILL_SMITHING, SKILL_MAGIC), listOf(
             SimpleBoxArea.ofRadius(3269, 3161, 9, 13)
+        )),
+    DRAYNOR(Zone.DRAYNOR, SubZone.DRAYNOR_MARKETPLACE,
+        setOf(SKILL_FLETCHING, SKILL_CRAFTING, SKILL_COOKING), listOf(
+            SimpleBoxArea.of(3078, 3247, 3086, 3253)
+        )),
+    FALADOR_PARK(Zone.FALADOR, SubZone.FALADOR_PARK_MARKETPLACE,
+        emptySet(), listOf(
+            SimpleBoxArea.of(2991, 3372, 3003, 3389)
+        )),
+    YANILLE(Zone.YANILLE, SubZone.YANILLE_MARKETPLACE,
+        setOf(SKILL_MAGIC, SKILL_HERBLORE, SKILL_CRAFTING, SKILL_FLETCHING), listOf(
+            SimpleBoxArea.of(2605, 3099, 2616, 3104)
+        )),
+    CATHERBY(Zone.CATHERBY, SubZone.CATHERBY_MARKETPLACE,
+        setOf(SKILL_COOKING, SKILL_FLETCHING, SKILL_CRAFTING), listOf(
+            SimpleBoxArea.of(2804, 3433, 2817, 3437)
+        )),
+    ARDOUGNE(Zone.ARDOUGNE, SubZone.ARDOUGNE_MARKETPLACE,
+        setOf(SKILL_CRAFTING, SKILL_HERBLORE, SKILL_MAGIC), listOf(
+            SimpleBoxArea.of(2653, 3296, 2671, 3313)
+        )),
+    CANIFIS(Zone.CANIFIS, SubZone.CANIFIS_MARKETPLACE,
+        setOf(SKILL_HERBLORE, SKILL_CRAFTING, SKILL_MAGIC, SKILL_PRAYER), listOf(
+            SimpleBoxArea.of(3503, 3484, 3512, 3490)
+        )),
+    SHILO_VILLAGE(Zone.SHILO_VILLAGE, SubZone.SHILO_VILLAGE_MARKETPLACE,
+        setOf(SKILL_CRAFTING, SKILL_FLETCHING, SKILL_COOKING), listOf(
+            SimpleBoxArea.of(2845, 2959, 2858, 2963)
+        )),
+    GNOME_STRONGHOLD(Zone.GNOME_STRONGHOLD, SubZone.GNOME_STRONGHOLD_MARKETPLACE,
+        setOf(SKILL_FLETCHING, SKILL_CRAFTING, SKILL_HERBLORE), listOf(
+            SimpleBoxArea.of(2436, 3420, 2446, 3432)
         ));
 
     companion object {
@@ -88,7 +120,11 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
         get() = when (this) {
             VARROCK -> 50
             EDGEVILLE, AL_KHARID -> 32
-            SEERS_VILLAGE -> 24
+            SEERS_VILLAGE, GNOME_STRONGHOLD -> 24
+            FALADOR_PARK, ARDOUGNE -> 32
+            YANILLE -> 16
+            DRAYNOR, CATHERBY, SHILO_VILLAGE -> 12
+            CANIFIS -> 8
         }
 
     /**

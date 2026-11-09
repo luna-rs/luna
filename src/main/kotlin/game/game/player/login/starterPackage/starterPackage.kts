@@ -21,6 +21,15 @@ val inventoryStarter = listOf(
     item("Shortbow"))
 
 /**
+ * Basic skilling tools for new human players.
+ */
+val playerStarterTools = listOf(
+    item("Bronze axe"),
+    item("Tinderbox"),
+    item("Bronze pickaxe"),
+    item("Small fishing net"))
+
+/**
  * Equipment starter items.
  */
 val equipmentStarter = listOf(
@@ -74,6 +83,8 @@ fun firstLogin(plr: Player) {
     plr.equipment.addAll(equipmentStarter)
     if (plr.isBot) {
         addBotItems(plr)
+    } else {
+        plr.inventory.addAll(playerStarterTools)
     }
     plr.overlays.open(DesignPlayerInterface())
     plr.firstLogin = false

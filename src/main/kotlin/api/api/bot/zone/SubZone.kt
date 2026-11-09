@@ -287,8 +287,8 @@ enum class SubZone(
 
     /**
      * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
-     * enclosing footprints retain nearby banking/resource memberships. Al Kharid uses a local bank-market arrival
-     * because its town travel anchor is outside the marketplace.
+     * enclosing footprints retain nearby banking/resource memberships. Markets outside their town travel
+     * anchor use a local inside point after arriving in the parent zone.
      */
     VARROCK_MARKETPLACE(
         inside = VARROCK.anchor,
@@ -303,6 +303,31 @@ enum class SubZone(
         inside = Position(3272, 3167),
 
         area = SimpleBoxArea.ofRadius(3269, 3161, 9, 13), parent = { AL_KHARID }),
+
+    DRAYNOR_MARKETPLACE(
+        inside = Position(3082, 3250),
+        area = SimpleBoxArea.of(3078, 3247, 3086, 3253), parent = { Zone.DRAYNOR }),
+    FALADOR_PARK_MARKETPLACE(
+        inside = Position(2997, 3380),
+        area = SimpleBoxArea.of(2991, 3372, 3003, 3389), parent = { Zone.FALADOR }),
+    YANILLE_MARKETPLACE(
+        inside = Position(2610, 3101),
+        area = SimpleBoxArea.of(2605, 3099, 2616, 3104), parent = { Zone.YANILLE }),
+    CATHERBY_MARKETPLACE(
+        inside = Position(2810, 3435),
+        area = SimpleBoxArea.of(2804, 3433, 2817, 3437), parent = { Zone.CATHERBY }),
+    ARDOUGNE_MARKETPLACE(
+        inside = Position(2662, 3304),
+        area = SimpleBoxArea.of(2653, 3296, 2671, 3313), parent = { Zone.ARDOUGNE }),
+    CANIFIS_MARKETPLACE(
+        inside = Position(3507, 3487),
+        area = SimpleBoxArea.of(3503, 3484, 3512, 3490), parent = { Zone.CANIFIS }),
+    SHILO_VILLAGE_MARKETPLACE(
+        inside = Position(2851, 2961),
+        area = SimpleBoxArea.of(2845, 2959, 2858, 2963), parent = { Zone.SHILO_VILLAGE }),
+    GNOME_STRONGHOLD_MARKETPLACE(
+        inside = Position(2441, 3426),
+        area = SimpleBoxArea.of(2436, 3420, 2446, 3432), parent = { Zone.GNOME_STRONGHOLD }),
 
     /**
      * Native Party Room floor and balloon footprint, using Seers Village travel and banking fallback.

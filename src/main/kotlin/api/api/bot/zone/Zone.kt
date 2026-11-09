@@ -120,12 +120,14 @@ enum class Zone(val price: Int,
                       regions = setOf(9777, 10033)),
 
     /**
-     * Canifis footprint derived from the supplied main-town rectangle. The anchor is user supplied;
-     * bank anchors are intentionally empty. Travel costs the supplied 5,000 GP fee.
+     * Canifis footprint derived from the supplied main-town rectangle, with four native bank booths
+     * southeast of the town centre. Travel costs the supplied 5,000 GP fee.
      */
     CANIFIS(price = 5000,
             anchor = Position(3494, 3473),
-            regions = SimpleBoxArea.ofRadius(3473, 3461, 47, 57).touchedRegions),
+            regions = SimpleBoxArea.ofRadius(3473, 3461, 47, 57).touchedRegions,
+            bankAnchors = listOf(Position(3513, 3479), Position(3513, 3480),
+                                 Position(3513, 3481), Position(3513, 3482))),
 
 
     /**
