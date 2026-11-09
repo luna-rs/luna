@@ -5,6 +5,7 @@ import api.bot.action.trading.PlayerTradeAdvertisementPayment.Plan
 import api.bot.action.trading.PlayerTradeAdvertisementPolicy.Profile
 import api.bot.action.trading.PlayerTradeAdvertisementPolicy.Quote
 import api.predef.rand
+import api.predef.world
 import engine.bot.speech.BotChatHandler
 import engine.bot.speech.BotChatMessage
 import engine.bot.speech.BotItemNames
@@ -82,6 +83,13 @@ internal class PlayerTradeAdvertisementMarket(
                           val counterSent: Boolean)
 
     /**
+     * Retains selection identity and immutable terms without retaining a mutable funding or payment plan.
+     *
+     * @author lare96
+     */
+    private data class Selected(val script: TradeBotScript, val offer: PlayerTradeAdvertisement)
+
+    /**
      * Bounded audience and quote memory for one live advertisement identity.
      *
      * @author lare96
@@ -90,6 +98,16 @@ internal class PlayerTradeAdvertisementMarket(
         val audience = ArrayList<Bot>()
         val quotes = IdentityHashMap<Bot, MutableMap<Pair<PlayerTradeAdvertisement, Int>, Pricing?>>()
         val sent = IdentityHashMap<Bot, LinkedHashMap<PlayerTradeAdvertisement, Opportunity>>()
+        var selectionTick = Long.MIN_VALUE
+        var selected: Selected? = null
+
+        /**
+         * Structural advertisement changes begin a fresh round without changing stable quotes or tie samples.
+         */
+        fun invalidateSelection() {
+            selectionTick = Long.MIN_VALUE
+            selected = null
+        }
     }
 
     private val heard = LinkedHashMap<PlayerTradeAdvertisementRegistry.Entry, Heard>()
@@ -105,7 +123,10 @@ internal class PlayerTradeAdvertisementMarket(
         if (entry != null) {
             val memory = heard.getOrPut(entry) { Heard(sample()) }
             for (bot in message.hearers) {
-                if (memory.audience.none { it === bot }) memory.audience += bot
+                if (memory.audience.none { it === bot }) {
+                    memory.audience += bot
+                    memory.invalidateSelection()
+                }
             }
         }
         return true
@@ -134,6 +155,7 @@ internal class PlayerTradeAdvertisementMarket(
     fun claim(script: TradeBotScript): Opportunity? {
         val opportunity = chooseFor(script) ?: return null
         opportunity.response = registry.claim(opportunity.entry, script.bot, opportunity.offer) ?: return null
+        heard[opportunity.entry]?.invalidateSelection()
         return opportunity
     }
 
@@ -172,27 +194,51 @@ internal class PlayerTradeAdvertisementMarket(
      * Accounts the exact completed delivery without extending the advertisement or releasing its active response.
      */
     fun completed(opportunity: Opportunity, quantity: Int) {
-        opportunity.response?.let { registry.recordCompleted(it, mapOf(opportunity.offer to quantity)) }
+        opportunity.response?.let {
+            if (registry.recordCompleted(it, mapOf(opportunity.offer to quantity))) {
+                heard[opportunity.entry]?.invalidateSelection()
+            }
+        }
     }
 
     /**
      * Releases only this attempt's token; its communicated price remains available until the advertisement expires.
      */
     fun release(opportunity: Opportunity) {
-        opportunity.response?.let(registry::release)
+        opportunity.response?.let {
+            if (registry.release(it)) heard[opportunity.entry]?.invalidateSelection()
+        }
     }
 
     /**
      * Uses publication order between players and item clauses, with accepting buyers ahead of all counteroffers.
+     * Unchanged audiences share one complete selection pass per game tick, including a cached no-match result.
+     * Readiness changes can wait at most until the next tick (normally 600 ms); new listeners and response/stock
+     * changes invalidate immediately. A selected participant always rebuilds its live deal before a claim.
      */
     private fun chooseFor(script: TradeBotScript): Opportunity? {
         if (!script.bot.isRealBot()) return null
         prune()
+        val currentTick = world.currentTick
         for (entry in registry.availableFor(script.bot)) {
             val memory = heard[entry] ?: continue
             if (memory.audience.none { it === script.bot }) continue
-            val winner = winner(entry, memory) ?: continue
-            if (winner.script === script) return winner
+            var fresh: Opportunity? = null
+            if (memory.selectionTick != currentTick) {
+                fresh = winner(entry, memory)
+                memory.selected = fresh?.let { Selected(it.script, it.offer) }
+                memory.selectionTick = currentTick
+            }
+            val selected = memory.selected ?: continue
+            if (selected.script !== script) continue
+            // Rebuild physical funding, demand and readiness on every winning poll; no saved plan is reused.
+            val current = fresh ?: if (script.bot.scriptStack.current() === script &&
+                !entry.wasAttempted(script.bot, selected.offer)) {
+                script.advertisementCandidate(this, entry, selected.offer, allowPendingBotApproach = true)
+            } else null
+            if (current != null) return current
+            // Do not repeat an audience-wide scan for a stale winner in the same unchanged tick.
+            memory.selected = null
         }
         return null
     }
