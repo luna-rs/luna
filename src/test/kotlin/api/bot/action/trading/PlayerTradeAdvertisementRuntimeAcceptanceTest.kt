@@ -51,6 +51,7 @@ internal class AdvertisementRuntimeFixture(marketOverride: PlayerTradeAdvertisem
     private val previousLocator = world.locator
     private val locator = mock(WorldLocator::class.java)
     private val previousPlayers = LinkedHashMap<Long, Optional<Player>>()
+    private val previousNamedPlayers = LinkedHashMap<String, Optional<Player>>()
     private val flax = ItemDefinition.ALL.retrieve(1779)
     private val previousFlaxNote = flax.notedId
     private val suppliedFlaxNote = ItemDefinition.ALL.get(1780).isEmpty
@@ -166,10 +167,13 @@ internal class AdvertisementRuntimeFixture(marketOverride: PlayerTradeAdvertisem
 
     private fun register(player: Player) {
         val hash = nextHash++
+        val name = "player$hash"
         previousPlayers[hash] = world.getPlayer(hash)
+        previousNamedPlayers[name] = world.getPlayer(name)
         `when`(player.usernameHash).thenReturn(hash)
-        `when`(player.username).thenReturn("player$hash")
+        `when`(player.username).thenReturn(name)
         `when`(world.getPlayer(hash)).thenReturn(Optional.of(player))
+        `when`(world.getPlayer(name)).thenReturn(Optional.of(player))
     }
 
     override fun close() {
@@ -177,6 +181,9 @@ internal class AdvertisementRuntimeFixture(marketOverride: PlayerTradeAdvertisem
         for ((hash, player) in previousPlayers) {
             world.getPlayer(hash).orElse(null)?.let(market.registry::remove)
             `when`(world.getPlayer(hash)).thenReturn(player)
+        }
+        for ((name, player) in previousNamedPlayers) {
+            `when`(world.getPlayer(name)).thenReturn(player)
         }
         ItemDefinition::class.java.getDeclaredField("notedId").apply {
             isAccessible = true

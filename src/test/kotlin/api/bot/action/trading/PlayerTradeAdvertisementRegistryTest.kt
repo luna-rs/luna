@@ -26,8 +26,12 @@ class PlayerTradeAdvertisementRegistryTest {
     private var now = Instant.EPOCH
     private val registry = PlayerTradeAdvertisementRegistry { now }
     private val seller = mock(Player::class.java)
-    private val firstBuyer = mock(Bot::class.java)
-    private val secondBuyer = mock(Bot::class.java)
+    private val firstBuyer = mock(Bot::class.java).also {
+        `when`(it.usernameHash).thenReturn(101L)
+    }
+    private val secondBuyer = mock(Bot::class.java).also {
+        `when`(it.usernameHash).thenReturn(202L)
+    }
 
     private fun offer(name: String = "flax", ids: Set<Int> = setOf(1779), quantity: Int? = 100,
                       coins: Long? = 25L, basis: PriceBasis = PriceBasis.EACH): PlayerTradeAdvertisement =
