@@ -6,6 +6,7 @@ import api.bot.script.ReflexBotScript
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
 import api.predef.ext.*
+import game.bot.scripts.skills.MineBotScript
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import game.skill.fletching.attachArrow.Arrow
@@ -23,8 +24,8 @@ import kotlin.math.roundToInt
 /**
  * A [ReflexBotScript] that collects wanted, valuable, and death-related ground items.
  *
- * Death items are attempted first, followed by wanted items and general loot. The minimum loot value depends on
- * combat level, skill progress, time played, personality, and the bot's current emotions.
+ * Death items are attempted first, followed by nearby public ore during profit Mining, wanted items and general loot.
+ * The minimum general loot value depends on combat level, skill progress, time played, personality and emotions.
  *
  * Low-value junk may be dropped to make room for non-junk loot. Wanted items and items selected for pickup are
  * protected from dropping. Junk pickups must fit without dropping other items to prevent repeated exchanges.
@@ -45,6 +46,11 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
          * How long, in ticks, the bot leaves an item alone after failing to pick it up.
          */
         const val FAILED_PICKUP_TICKS = 100
+
+        private const val PROFIT_ORE_RADIUS = 8
+        private const val PROFIT_ORE_SCAN_TICKS = 5
+        private const val PROFIT_ORE_CANDIDATES = 32
+        private const val PROFIT_ORE_PICKUPS = 8
 
         /**
          * Item types eligible for dropping when their value is below the bot's loot threshold.
@@ -116,7 +122,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
     private var minimumLootValue = 1
 
     /**
-     * Ground items selected for pickup, ordered by death recovery, wanted-item status, and general value.
+     * Ground items selected for pickup, ordered by death recovery, profit ore, wanted-item status and general value.
      */
     private val valuableItems = ArrayList<GroundItem>()
     
@@ -139,8 +145,20 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
      */
     private val failedPickups = HashMap<GroundItem, Long>()
 
+    /**
+     * The selected work context is captured before the reflex pauses Mining and clears its active zone.
+     */
+    private var profitMiner: MineBotScript? = null
+    private var profitOreContext: MineBotScript.ProfitOrePickupContext? = null
+    private val profitOreItems = HashSet<GroundItem>()
+    private var nextProfitOreScan = 0L
+    private var profitOreCursor = 0
+
     override fun shouldReact(): Boolean {
         valuableItems.clear()
+        profitOreItems.clear()
+        profitMiner = null
+        profitOreContext = null
 
         // A locked or busy bot can't pick anything up yet.
         if (bot.health < 1 || !ActionSafety.COMBAT.allows(bot)) {
@@ -166,6 +184,11 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                 }
 
                 val groundItem = iterator.next()
+                val profitOre = groundItem in profitOreItems
+                if (profitOre && !allowsProfitOrePickup(groundItem)) {
+                    iterator.remove()
+                    continue
+                }
                 if (bot.scriptStack.current()?.allowsLoot(groundItem) == false) {
                     iterator.remove()
                     continue
@@ -178,6 +201,11 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
 
                 val item = groundItem.toItem()
                 if (!bot.inventory.hasSpaceFor(item)) {
+                    // Opportunistic ore uses only available space; it never discards the miner's supplies.
+                    if (profitOre) {
+                        iterator.remove()
+                        continue
+                    }
                     if (item.id in ALL_JUNK || droppedJunk) {
                         continue
                     }
@@ -196,7 +224,11 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                     continue
                 }
 
-                val collected = handler.loot.pickup(groundItem)
+                val collected = if (profitOre) {
+                    handler.loot.pickup(groundItem) { allowsProfitOrePickup(groundItem) }
+                } else {
+                    handler.loot.pickup(groundItem)
+                }
                 if (groundItem.state != EntityState.ACTIVE) {
                     bot.deathItems.remove(groundItem)
                     iterator.remove()
@@ -230,6 +262,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
     private fun findValuableItems() {
         val now = bot.world.currentTick
         failedPickups.entries.removeIf { (groundItem, until) -> until <= now || groundItem.state != EntityState.ACTIVE }
+        findProfitOre(now)
         for (groundItem in bot.viewableItems) {
             // The pickup refuses an item the bot can't see, such as one beyond its viewing distance.
             if (groundItem.state != EntityState.ACTIVE ||
@@ -260,7 +293,66 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
 
         val ordered = handler.loot.ordered(valuableItems)
         valuableItems.clear()
-        valuableItems.addAll(ordered)
+        if (profitOreItems.isEmpty()) {
+            valuableItems.addAll(ordered)
+        } else {
+            valuableItems.addAll(ordered.filter { it in bot.deathItems })
+            valuableItems.addAll(profitOreItems.sortedBy { bot.position.computeLongestDistance(it.position) })
+            valuableItems.addAll(ordered.filterNot { it in bot.deathItems })
+        }
+    }
+
+    /**
+     * Discovers public ore absent from the bot's private-drop tracking without applying general loot valuations.
+     * The native locator visits only nearby chunks. A rotating window limits live context and capacity checks to
+     * 32 eligible drops per scan, and at most eight pickups are retained. Cheap spatial traversal still depends on
+     * the number of drops in those chunks; neither a world scan nor an unbounded result list is introduced.
+     */
+    private fun findProfitOre(now: Long) {
+        val miner = bot.scriptStack.current() as? MineBotScript ?: return
+        if (!miner.profitMining || now < nextProfitOreScan || !ActionSafety.NON_COMBAT.allows(bot)) return
+        val context = miner.profitOrePickupContext() ?: return
+        nextProfitOreScan = now + PROFIT_ORE_SCAN_TICKS
+        profitMiner = miner
+        profitOreContext = context
+
+        var eligible = 0
+        var checked = 0
+        val start = profitOreCursor
+        val found = bot.world.locator.findItems(bot, PROFIT_ORE_RADIUS) { item ->
+            if (item.state != EntityState.ACTIVE || !item.view.isGlobal || item in bot.viewableItems) {
+                false
+            } else {
+                val ore = MineBotScript.profitPickupOre(item.id)
+                if (ore == null || ore.level < context.ore.level) {
+                    false
+                } else {
+                    val index = eligible++
+                    if (index < start || checked >= PROFIT_ORE_CANDIDATES ||
+                        profitOreItems.size >= PROFIT_ORE_PICKUPS) {
+                        false
+                    } else {
+                        checked++
+                        item.id !in ignored && item !in failedPickups &&
+                                allowsProfitOrePickup(item) && profitOreItems.add(item)
+                    }
+                }
+            }
+        }
+        // Advancing even when nothing qualifies prevents an unreachable or full early pile from hiding later ore.
+        profitOreCursor = if (start + checked >= eligible) 0 else start + checked
+        profitOreItems.retainAll(found)
+    }
+
+    /**
+     * Revalidates the captured owner and work site throughout the native approach and pickup click.
+     */
+    private fun allowsProfitOrePickup(item: GroundItem): Boolean {
+        val miner = profitMiner ?: return false
+        val context = profitOreContext ?: return false
+        return ActionSafety.NON_COMBAT.allows(bot) && item.id !in ignored &&
+                item.isWithinDistance(bot, PROFIT_ORE_RADIUS) && miner.canPickupProfitOre(context, item) &&
+                handler.loot.canPickup(item)
     }
 
     /**

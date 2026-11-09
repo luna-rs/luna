@@ -27,6 +27,7 @@ import game.skill.mining.Ore
 import game.skill.mining.Pickaxe
 import game.content.randomEvents.MiningRandomEvents
 import game.bot.scripts.RandomEventReflexScript
+import game.bot.scripts.LootItemReflexScript
 import game.skill.mining.mineOre.MineOreAction
 import game.content.miningGuild.MiningGuild
 import game.content.coalTrucks.CoalTrucks
@@ -59,11 +60,12 @@ import kotlin.time.Duration.Companion.seconds
  * @param zones The candidate zones this script may operate in.
  * @param preferredOres Preferred ores; other configured ores are fallbacks, ordered by their Mining requirement.
  * @param powerMining Whether this is an iron-training session that may discard ore through normal drop clicks.
+ * @param profitMining Whether this session collects resources for profit and may collect nearby public ore.
  *
  * @author lare96
  */
 class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: MutableList<SubZone>,
-                    preferredOres: Set<Ore> = ores, powerMining: Boolean = false) :
+                    preferredOres: Set<Ore> = ores, powerMining: Boolean = false, val profitMining: Boolean = false) :
     SkillingBotScript<GameObject>(bot, duration, zones, bot.mining), SocialBotScript {
 
     /** Other configured ores are fallbacks, ordered from the highest requirement down. */
@@ -94,6 +96,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     private var dropFailures = 0
     private var attemptedRock: GameObject? = null
     private var attemptExperience = 0.0
+    private var profitOreContext: ProfitOrePickupContext? = null
     private val coalTrucks = CoalTruckMining(bot, handler) { !isTerminated() && !isPaused() }
 
     /**
@@ -105,6 +108,59 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
 
     internal val miningZone: SubZone? get() = activeZone
 
+    /**
+     * The actual ore and work zone interrupted by an opportunistic ore pickup. Neither changes when the targeting
+     * layer clears its focus and active zone during a reflex pause.
+     *
+     * @author lare96
+     */
+    internal class ProfitOrePickupContext(val zone: SubZone, val ore: Ore)
+
+    /**
+     * Captures the native mining action before the reflex pauses it. Between swings, the last successfully started
+     * rock supplies the ore; configured preferences and the bot's maximum Mining level do not determine its tier.
+     */
+    internal fun profitOrePickupContext(): ProfitOrePickupContext? {
+        if (!profitMining || powerMining || duration <= Duration.ZERO || forceBanking || coalTrucks.haulPending ||
+            bot.state != EntityState.ACTIVE || bot.scriptStack.current() !== this ||
+            bot.isConnectedPlayer && !bot.isAutomationActive || !isActionSafe() || bot.combat.target != null ||
+            !isRunning() && !isPaused()) return null
+        val reflex = bot.reflex.activeReflex
+        if (reflex != null && reflex !is LootItemReflexScript) return null
+        val zone = activeZone ?: interruptedZone?.takeIf { isPaused() } ?: return null
+        if (!inProfitWorkArea(zone, bot.position) ||
+            zone == SubZone.MINING_GUILD && bot.mining.level < MiningGuild.REQUIRED_LEVEL ||
+            zone == SubZone.CRAFTING_GUILD_MINE && !CraftingGuild.canEnter(bot)) return null
+        val action = bot.actions.first(MineOreAction::class.java)
+        if (action != null) {
+            if (action.ore !in ores || !inProfitWorkArea(zone, action.rockObj.position)) return null
+            rememberProfitOre(zone, action.ore)
+        }
+        return profitOreContext?.takeIf { it.zone == zone }
+    }
+
+    /**
+     * Rechecks the captured work context and a public ordinary ore after movement or another suspension. Mining
+     * requirements apply to rocks, so a higher-tier ground item needs no Mining level or pickaxe check here.
+     */
+    internal fun canPickupProfitOre(context: ProfitOrePickupContext, item: GroundItem): Boolean {
+        if (profitOrePickupContext() !== context || item.state != EntityState.ACTIVE || !item.view.isGlobal ||
+            !item.isVisibleTo(bot) || !inProfitWorkArea(context.zone, item.position)) return false
+        val ore = profitPickupOre(item.id) ?: return false
+        return ore.level >= context.ore.level
+    }
+
+    private fun rememberProfitOre(zone: SubZone, ore: Ore) {
+        if (!profitMining) {
+            profitOreContext = null
+        } else if (profitOreContext?.let { it.zone == zone && it.ore == ore } != true) {
+            profitOreContext = ProfitOrePickupContext(zone, ore)
+        }
+    }
+
+    private fun inProfitWorkArea(zone: SubZone, position: Position): Boolean = zone.area.contains(position) &&
+        (zone == SubZone.MINING_GUILD || !SubZone.MINING_GUILD.area.contains(position))
+
     override fun canSocialize(): Boolean = canTalkWhileWorking()
 
     override fun canTalkWhileWorking(): Boolean = !forceBanking && !bot.inventory.isFull &&
@@ -112,6 +168,16 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         duration > Duration.ZERO && cluster != null && activeZone?.area?.contains(bot.position) == true
 
     companion object {
+
+        private val ordinaryProfitOres = setOf(Ore.COPPER, Ore.TIN, Ore.IRON, Ore.SILVER, Ore.COAL,
+            Ore.GOLD, Ore.MITHRIL, Ore.ADAMANT, Ore.RUNE)
+        private val profitOresByItem = ordinaryProfitOres.associateBy { it.item }
+
+        /**
+         * Resolves ordinary ore and its native noted variant, excluding essence, gems and special rock materials.
+         */
+        internal fun profitPickupOre(itemId: Int): Ore? = profitOresByItem[itemId] ?:
+            profitOresByItem[itemDef(itemId).unnotedId.orElse(itemId)]
 
         /**
          * Serializable data used to save and restore a [MineBotScript].
@@ -127,6 +193,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
             var ores = emptySet<Ore>()
             var preferredOres = emptySet<Ore>()
             var powerMining = false
+            var profitMining = false
             var coalTruckHaulPending = false
             var coalTruckRetryAt = 0L
 
@@ -138,6 +205,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
                     loadEnumSet("preferredOres", data) { Ore.valueOf(it) }.intersect(ores).ifEmpty { ores }
                 else ores
                 powerMining = data.get("powerMining")?.asBoolean ?: false
+                profitMining = data.get("profitMining")?.asBoolean ?: false
                 coalTruckHaulPending = data.get("coalTruckHaulPending")?.asBoolean ?: false
                 coalTruckRetryAt = data.get("coalTruckRetryAt")?.asLong ?: 0L
             }
@@ -147,6 +215,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
                 saveEnumSet("ores", data, ores)
                 saveEnumSet("preferredOres", data, preferredOres)
                 data.addProperty("powerMining", powerMining)
+                data.addProperty("profitMining", profitMining)
                 data.addProperty("coalTruckHaulPending", coalTruckHaulPending)
                 data.addProperty("coalTruckRetryAt", coalTruckRetryAt)
             }
@@ -159,7 +228,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
      * @param bot The bot running this script.
      * @param data The saved Mining script data to restore from.
      */
-    constructor(bot: Bot, data: MineData) : this(bot, data.ores, data.duration, data.zones, data.preferredOres, data.powerMining) {
+    constructor(bot: Bot, data: MineData) : this(bot, data.ores, data.duration, data.zones, data.preferredOres,
+        data.powerMining, data.profitMining) {
         coalTrucks.haulPending = data.coalTruckHaulPending
         coalTrucks.retryAt = data.coalTruckRetryAt
     }
@@ -208,6 +278,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     }
 
     private fun resetSearch() {
+        profitOreContext = null
         cluster = null
         surveyed.clear()
         startingSitePending = true
@@ -220,6 +291,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     override suspend fun handleFullInventory(): Boolean {
         if (!powerMining && activeZone == SubZone.COAL_TRUCKS_MINE && Ore.COAL in ores) {
             BotConversations.cancel(bot)
+            profitOreContext = null
             val handled = coalTrucks.handleFullInventory()
             if (!SubZone.COAL_TRUCKS_MINE.area.contains(bot.position)) resetSearch()
             return handled
@@ -343,6 +415,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
 
     override suspend fun beforeLeavingZone(): Boolean {
         BotConversations.cancel(bot)
+        profitOreContext = null
         // Leaving from inside the mine with time left means the rock search gave up, not the session ending.
         val zone = activeZone
         if (zone != null && duration > Duration.ZERO && !forceBanking && zone.area.contains(bot.position)) {
@@ -418,6 +491,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         val started = clicked && (bot.actions.first(MineOreAction::class.java)?.rockObj === target ||
                 MiningRandomEvents.continuation(bot, target) != null || bot.mining.experience > experience)
         if (started) {
+            activeZone?.let { rememberProfitOre(it, Ore.ROCK_MAP.getValue(target.id)) }
             cluster = target.position
             behavior.settle()
             attemptedRock = target
@@ -493,6 +567,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         data.ores = ores
         data.preferredOres = preferredOres
         data.powerMining = powerMining
+        data.profitMining = profitMining
         data.coalTruckHaulPending = coalTrucks.haulPending
         data.coalTruckRetryAt = coalTrucks.retryAt
         data.duration = duration
