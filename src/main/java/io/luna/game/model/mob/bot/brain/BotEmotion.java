@@ -163,12 +163,14 @@ public final class BotEmotion {
     /**
      * Adds a temporary emotional trigger.
      * <p>
-     * The trigger will modify future checks for its emotion until it expires. Expired triggers are removed lazily
-     * when that emotion is checked.
+     * The trigger will modify future checks for its emotion until it expires. Expired triggers across all emotions
+     * are removed when a trigger is added; checks also remove expired triggers for the emotion being queried.
      *
      * @param trigger The trigger to add.
      */
     public void add(EmotionalTrigger trigger) {
+        Instant now = Instant.now();
+        triggerMap.values().removeIf(existing -> now.isAfter(existing.expire));
         // Something was triggering to our bot :(
         triggerMap.put(trigger.type, trigger);
     }
