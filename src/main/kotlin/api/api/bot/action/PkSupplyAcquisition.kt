@@ -14,6 +14,7 @@ import io.luna.game.model.def.AmmoDefinition
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
@@ -112,19 +113,20 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
         if (!handler.banking.travelToBankOpen() || !safe() || !handler.banking.depositInventory() || !safe()) return false
         val candidates = bot.bank.filterNotNull().filter { !protectedItem(it, reserved) }
             .map { it.id }.distinct().sortedByDescending { id ->
-                val price = shopsForSale(id).maxOfOrNull { it.computeSellValue(id, 1).coerceAtLeast(0) } ?: 0
+                val price = shopsForSale(id).maxOfOrNull { it.computeSellValue(saleId(it, id), 1).coerceAtLeast(0) } ?: 0
                 price.toLong() * bot.bank.computeAmountForId(id)
             }.take(16)
         var actions = 0
         for (id in candidates) {
             val failed = HashSet<Shop>()
             while (safe() && coins() < target && actions < 120) {
-                val shop = shopsForSale(id).filter { it !in failed }.maxByOrNull { it.computeSellValue(id, 1) } ?: break
+                val shop = shopsForSale(id).filter { it !in failed }.maxByOrNull { it.computeSellValue(saleId(it, id), 1) } ?: break
                 if (!handler.banking.travelToBankOpen() || !safe() || !handler.banking.depositInventory() || !safe()) return false
-                handler.banking.clickBankingMode(false)
-                val quote = shop.computeSellValue(id, 1).coerceAtLeast(1)
+                val saleId = saleId(shop, id)
+                handler.banking.clickBankingMode(saleId != id)
+                val quote = shop.computeSellValue(saleId, 1).coerceAtLeast(1)
                 val needed = ((target - coins() + quote - 1) / quote).coerceIn(1L, Int.MAX_VALUE.toLong()).toInt()
-                val capacity = if (Item(id).itemDef.isStackable) needed else 27
+                val capacity = if (Item(saleId).itemDef.isStackable) needed else 27
                 val amount = minOf(needed, capacity, bot.bank.computeAmountForId(id))
                 if (amount < 1 || !handler.banking.withdraw(Item(id, amount)) || !safe()) break
                 if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
@@ -133,29 +135,31 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
                 bot.overlays.open(ShopInterface(shop))
                 var progressed = false
                 while (safe() && coins() < target && actions < 120 &&
-                    bot.overlays[ShopInterface::class]?.shop === shop && shop.botAccess.apply(bot) && shop.computeCanSell(id)) {
-                    val held = bot.inventory.computeAmountForId(id)
+                    bot.overlays[ShopInterface::class]?.shop === shop && shop.botAccess.apply(bot) && shop.computeCanSell(saleId)) {
+                    val held = bot.inventory.computeAmountForId(saleId)
                     if (held < 1 || protectedItem(Item(id), reserved)) break
-                    val unit = shop.computeSellValue(id, 1)
+                    val unit = shop.computeSellValue(saleId, 1)
                     if (unit <= 0) break
                     val deficit = target - coins()
                     val batch = when {
-                        held >= 10 && shop.computeSellValue(id, 10).toLong() in 1L..deficit -> 10
-                        held >= 5 && shop.computeSellValue(id, 5).toLong() in 1L..deficit -> 5
+                        shop.computeSellValue(saleId, minOf(100, held)).toLong() in 1L..deficit -> 100
+                        held >= 10 && shop.computeSellValue(saleId, 10).toLong() in 1L..deficit -> 10
+                        held >= 5 && shop.computeSellValue(saleId, 5).toLong() in 1L..deficit -> 5
                         else -> 1
                     }
                     val before = coins()
                     actions++
                     val success = when (batch) {
-                        10 -> handler.shop.sell10(id)
-                        5 -> handler.shop.sell5(id)
-                        else -> handler.shop.sell1(id)
+                        100 -> handler.shop.sell100(saleId)
+                        10 -> handler.shop.sell10(saleId)
+                        5 -> handler.shop.sell5(saleId)
+                        else -> handler.shop.sell1(saleId)
                     }.await()
-                    if (!success || coins() <= before || bot.inventory.computeAmountForId(id) >= held) break
+                    if (!success || coins() <= before || bot.inventory.computeAmountForId(saleId) >= held) break
                     progressed = true
                 }
                 if (coins() >= target) return true
-                if (bot.inventory.computeAmountForId(id) > 0 || !progressed) failed += shop
+                if (bot.inventory.computeAmountForId(saleId) > 0 || !progressed) failed += shop
                 if (!progressed) break
             }
             if (coins() >= target) return true
@@ -164,8 +168,16 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
     }
 
     private fun shopsForSale(id: Int): List<Shop> = bot.world.shops.values().filter {
-        it.currency == Currency.COINS && it.botAccess.apply(bot) && it.computeCanSell(id) &&
-            it.computeSellValue(id, 1) > 0
+        it.currency == Currency.COINS && it.botAccess.apply(bot) && it.computeCanSell(saleId(it, id)) &&
+            it.items.hasSpaceFor(Item(saleId(it, id))) && it.computeSellValue(saleId(it, id), 1) > 0
+    }
+
+    /**
+     * Uses notes for general-store funding while preserving specialty-shop stock forms.
+     */
+    private fun saleId(shop: Shop, id: Int): Int {
+        val definition = Item(id).itemDef
+        return if (shop.buyPolicy == BuyPolicy.ALL && !definition.isStackable) definition.notedId.orElse(id) else id
     }
 
     private fun coins(): Long = bot.inventory.computeAmountForId(995).toLong() + bot.bank.computeAmountForId(995)

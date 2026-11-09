@@ -11,6 +11,7 @@ import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
@@ -95,6 +96,11 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     fun sell10(id: Int) = sell(id, 10)
 
     /**
+     * Attempts to sell up to 100 of [id] to the currently open shop.
+     */
+    fun sell100(id: Int) = sell(id, 100)
+
+    /**
      * Attempts to purchase either 1, 5, 10, or 100 of an item.
      */
     private fun buy(id: Int, amount: Int): SuspendableFuture {
@@ -136,12 +142,18 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     }
 
     /**
-     * Attempts to sell either 1, 5, or 10 of an item.
+     * Attempts to sell either 1, 5, 10, or 100 of an item.
      */
     private fun sell(id: Int, amount: Int): SuspendableFuture {
         if (bot.preferences.isMerchant) return SuspendableFutureFailed
         // Check if a shop is open.
         val shopInterface = bot.overlays[ShopInterface::class] ?: return SuspendableFutureFailed
+
+        val definition = itemDef(id)
+        if (shopInterface.shop.buyPolicy == BuyPolicy.ALL && !definition.isStackable && definition.notedId.isPresent) {
+            bot.log("I need to withdraw ${itemName(id)} as notes before selling here.")
+            return SuspendableFutureFailed
+        }
 
         bot.log("Selling $amount of ${itemName(id)}.")
         val inventoryIndex = bot.inventory.computeIndexForId(id)
@@ -160,6 +172,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             1 -> bot.output.sendItemWidgetClick(2, inventoryIndex, 3823, id)
             5 -> bot.output.sendItemWidgetClick(3, inventoryIndex, 3823, id)
             10 -> bot.output.sendItemWidgetClick(4, inventoryIndex, 3823, id)
+            100 -> bot.output.sendItemWidgetClick(5, inventoryIndex, 3823, id)
             else -> throw IllegalStateException("Invalid amount.")
         }
         val soldItemCond = SuspendableCondition { bot.inventory.computeAmountForId(id) < amountBefore }

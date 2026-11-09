@@ -52,7 +52,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             val failedShops = HashSet<Shop>()
 
             while (remaining > 0) {
-                if (shopsFor(id).none { it !in failedShops }) {
+                if (shopsFor(sales.saleId(id)).none { it !in failedShops }) {
                     break
                 }
                 val available = minOf(remaining, sellableAmount(id))
@@ -66,10 +66,11 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
                     return true
                 }
                 sales.refreshRetention()
-                handler.banking.clickBankingMode(false)
+                val saleId = sales.saleId(id)
+                handler.banking.clickBankingMode(saleId != id)
                 // Withdrawal selects by id and cannot safely choose a normal item from mixed dynamic stock.
                 if (bot.bank.any { it != null && it.id == id && it.isDynamic }) break
-                val capacity = if (itemDef(id).isStackable) Int.MAX_VALUE else
+                val capacity = if (itemDef(saleId).isStackable) Int.MAX_VALUE else
                     (bot.inventory.computeRemainingSize() - 1).coerceAtLeast(0)
                 val amount = minOf(available, sellableAmount(id), bot.bank.computeAmountForId(id), capacity)
                 if (amount < 1 || !handler.banking.withdraw(Item(id, amount))) {
@@ -79,20 +80,20 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
                     return true
                 }
 
-                val before = bot.inventory.computeAmountForId(id)
-                for (shop in shopsFor(id).filterNot { it in failedShops }.shuffled()) {
+                val before = bot.inventory.computeAmountForId(saleId)
+                for (shop in shopsFor(saleId).filterNot { it in failedShops }.shuffled()) {
                     if (!openShop(shop)) {
                         failedShops += shop
                         continue
                     }
-                    remaining -= sellItem(shop, id, remaining)
-                    if (bot.inventory.computeAmountForId(id) < 1 || remaining < 1 || sellableAmount(id) < 1) {
+                    remaining -= sellItem(shop, saleId, remaining)
+                    if (bot.inventory.computeAmountForId(saleId) < 1 || remaining < 1 || sellableAmount(id) < 1) {
                         break
                     }
                     // This shop stopped accepting the item; try another instead of repeating failed clicks.
                     failedShops += shop
                 }
-                if (bot.inventory.computeAmountForId(id) >= before) {
+                if (bot.inventory.computeAmountForId(saleId) >= before) {
                     break
                 }
             }
@@ -106,7 +107,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     internal fun saleCandidates(): List<Item> {
         if (bot.preferences.isMerchant) return emptyList()
         return BotTradeManager.computeOfferItems(bot, BotTradePrice.EXACT, BotTradePurpose.SELL)
-            .filter { shopsFor(it.item.id).isNotEmpty() }
+            .filter { shopsFor(sales.saleId(it.item.id)).isNotEmpty() }
             .sortedByDescending { it.totalPrice() }.map { it.item }
     }
 
@@ -128,7 +129,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      *
      * Continues while the correct shop is open, the bot remains at home, and the shop still
      * authorizes the bot and accepts the item. Each transaction rechecks the current inventory
-     * quantity and retained stock before choosing a Sell-1, Sell-5, or Sell-10 action.
+     * quantity and retained stock before choosing a Sell-100 action or a smaller action for restricted quantities.
      *
      * Successful sales are counted using the actual inventory decrease. Processing stops when
      * an action fails, makes no progress, or the shop is no longer eligible.

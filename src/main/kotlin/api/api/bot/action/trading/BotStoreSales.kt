@@ -10,6 +10,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
@@ -54,6 +55,16 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
     }
 
     /**
+     * Prefers bank notes when an accessible shop accepts them, otherwise keeps the ordinary item form.
+     */
+    fun saleId(id: Int): Int {
+        val definition = ItemDefinition.ALL.retrieve(id)
+        if (definition.isStackable) return id
+        val noted = definition.notedId.orElse(id)
+        return if (noted != id && shopsFor(noted).isNotEmpty()) noted else id
+    }
+
+    /**
      * Counts actual transferable surplus using the current batch's equipment and the latest supply reservations.
      */
     fun sellableAmount(id: Int): Int {
@@ -73,10 +84,13 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
     }
 
     /**
-     * Finds accepting GP shops with current stock capacity. Native selling remains authoritative after suspension.
+     * Finds accepting GP shops with current stock capacity. General stores receive notes for noteable items.
+     * Native selling remains authoritative after suspension.
      */
     fun shopsFor(id: Int): List<Shop> = world.shops.values().filter {
         it.currency == Currency.COINS && it.botAccess.apply(bot) && it.computeCanSell(id) &&
+            (it.buyPolicy != BuyPolicy.ALL || ItemDefinition.ALL.retrieve(id).isStackable ||
+                ItemDefinition.ALL.retrieve(id).notedId.isEmpty) &&
             it.items.hasSpaceFor(Item(id))
     }
 
@@ -108,12 +122,15 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
             bot.overlays[ShopInterface::class]?.shop === shop && SubZone.HOME in bot.subZones &&
             shop.botAccess.apply(bot) && shop.computeCanSell(id) && shop.items.hasSpaceFor(Item(id))) {
             if (bot.inventory.any { it != null && it.id == id && it.isDynamic }) break
-            val available = minOf(maxAmount - sold, sellableAmount(id), bot.inventory.computeAmountForId(id))
+            val baseId = ItemDefinition.ALL.retrieve(id).unnotedId.orElse(id)
+            val held = bot.inventory.computeAmountForId(id)
+            val available = minOf(maxAmount - sold, sellableAmount(baseId), held)
             if (available < 1 || !bot.inventory.hasSpaceFor(Item(995))) break
             val before = bot.inventory.computeAmountForId(id)
             actions++
             beforeAction()
             val success = when {
+                available >= minOf(100, held) -> handler.shop.sell100(id)
                 available >= 10 -> handler.shop.sell10(id)
                 available >= 5 -> handler.shop.sell5(id)
                 else -> handler.shop.sell1(id)

@@ -218,7 +218,7 @@ object BotBankSpace {
             sales.refreshRetention()
             val reserve = retainedStock(bot)
             val candidates = candidates(bot.bank.filterNotNull(), reserve, protectedIds + failedIds,
-                { world.economy.getPrice(it) }, { sales.shopsFor(it).isNotEmpty() })
+                { world.economy.getPrice(it) }, { sales.shopsFor(sales.saleId(it)).isNotEmpty() })
                 .filter { it.item.amount <= (authorizedRemaining[it.item.id] ?: Int.MAX_VALUE) }
                 .sortedBy { if (it.item.id in authorizedRemaining) 0 else 1 }
             var space = bot.inventory.computeRemainingSize() - proceedsSlot
@@ -232,19 +232,21 @@ object BotBankSpace {
                 if (space < 1) break
                 val id = candidate.item.id
                 val quote = maxOf(authorizedPrice[id] ?: 0L, candidate.value / candidate.item.amount)
-                val batchCapacity = if (candidate.item.itemDef.isStackable) candidate.item.amount else space
+                val saleId = sales.saleId(id)
+                val stackable = ItemDefinition.ALL.retrieve(saleId).isStackable
+                val batchCapacity = if (stackable) candidate.item.amount else space
                 val remainingTrips = MAX_BANK_TRIPS - trip
                 if (candidate.item.amount > batchCapacity && batch.isNotEmpty()) continue
                 if (!canCompleteStack(candidate.item.amount, batchCapacity, remainingTrips,
                         MAX_SALE_ACTIONS - saleActions) ||
                     valueUsed + plannedValue + quote * candidate.item.amount > MAX_SESSION_VALUE) continue
-                val amount = if (candidate.item.itemDef.isStackable) candidate.item.amount else minOf(candidate.item.amount, space)
+                val amount = if (stackable) candidate.item.amount else minOf(candidate.item.amount, space)
                 val batchValue = quote * amount
                 if (valueUsed + plannedValue + batchValue > MAX_SESSION_VALUE ||
-                    plannedUnits + amount > (MAX_SALE_ACTIONS - saleActions) * 10L) continue
+                    plannedUnits + amount > (MAX_SALE_ACTIONS - saleActions) * 100L) continue
                 authorizedRemaining.putIfAbsent(id, candidate.item.amount)
                 authorizedPrice[id] = quote
-                val slots = if (candidate.item.itemDef.isStackable) 1 else amount
+                val slots = if (stackable) 1 else amount
                 batch += Candidate(candidate.item.withAmount(amount), batchValue, slots)
                 plannedValue += batchValue
                 plannedUnits += amount
@@ -257,34 +259,36 @@ object BotBankSpace {
                 return false
             }
 
-            val withdrawn = ArrayList<Candidate>()
+            val withdrawn = ArrayList<Pair<Candidate, Int>>()
             for (candidate in batch) {
                 if (!safe(bot) || !bot.bank.isOpen) return false
                 val id = candidate.item.id
                 if ((retainedStock(bot)[id] ?: 0) > 0 || id in protectedIds ||
                     bot.bank.computeNonDynamicAmountForId(id) != authorizedRemaining[id]) continue
+                val saleId = sales.saleId(id)
+                handler.banking.clickBankingMode(saleId != id)
                 val bankBefore = bot.bank.computeNonDynamicAmountForId(id)
-                val before = bot.inventory.computeAmountForId(id)
-                bot.attributes()[state.attr].stagedIds += id
+                val before = bot.inventory.computeAmountForId(saleId)
+                bot.attributes()[state.attr].stagedIds += saleId
                 if (!handler.banking.withdraw(candidate.item)) { failedIds += id; continue }
-                withdrawn += candidate
+                withdrawn += candidate to saleId
                 if (bot.bank.computeNonDynamicAmountForId(id) != bankBefore - candidate.item.amount ||
-                    bot.inventory.computeAmountForId(id).toLong() - before != candidate.item.amount.toLong()) {
+                    bot.inventory.computeAmountForId(saleId).toLong() - before != candidate.item.amount.toLong()) {
                     failedIds += id
                     break
                 }
             }
             if (withdrawn.isEmpty() || !sales.travelHome()) return false
-            for (candidate in withdrawn) {
+            for ((candidate, saleId) in withdrawn) {
                 val id = candidate.item.id
                 val rejected = failedShops.getOrPut(id) { HashSet() }
-                val ownedBefore = bot.inventory.computeAmountForId(id)
-                for (shop in sales.shopsFor(id).filterNot { it in rejected }) {
+                val ownedBefore = bot.inventory.computeAmountForId(saleId)
+                for (shop in sales.shopsFor(saleId).filterNot { it in rejected }) {
                     if (!safe(bot) || saleActions >= MAX_SALE_ACTIONS) break
                     if (!sales.openShop(shop)) { rejected += shop; continue }
                     val quote = authorizedPrice.getValue(id)
-                    if (valueUsed + quote * bot.inventory.computeAmountForId(id) > MAX_SESSION_VALUE) break
-                    val sold = sales.sellItem(shop, id, candidate.item.amount, MAX_SALE_ACTIONS - saleActions,
+                    if (valueUsed + quote * bot.inventory.computeAmountForId(saleId) > MAX_SESSION_VALUE) break
+                    val sold = sales.sellItem(shop, saleId, candidate.item.amount, MAX_SALE_ACTIONS - saleActions,
                         canContinue = {
                             safe(bot) && saleActions < MAX_SALE_ACTIONS && id !in protectedIds &&
                                 (retainedStock(bot)[id] ?: 0) == 0
@@ -292,22 +296,22 @@ object BotBankSpace {
                     if (sold > 0) {
                         valueUsed += quote * sold
                         authorizedRemaining[id] = (authorizedRemaining.getValue(id) - sold).coerceAtLeast(0)
-                        if (!bot.inventory.contains(id)) {
-                            bot.attributes()[state.attr].stagedIds -= id
+                        if (!bot.inventory.contains(saleId)) {
+                            bot.attributes()[state.attr].stagedIds -= saleId
                             if (!bot.bank.contains(id)) recordDisposal(bot, id)
                         }
-                        if (!bot.inventory.contains(id)) break
+                        if (!bot.inventory.contains(saleId)) break
                     }
                     rejected += shop
                 }
-                if (bot.inventory.computeAmountForId(id) >= ownedBefore || bot.inventory.contains(id)) failedIds += id
+                if (bot.inventory.computeAmountForId(saleId) >= ownedBefore || bot.inventory.contains(saleId)) failedIds += id
             }
 
             // Restore unsold selected goods first, while the slots their withdrawal released are still reserved.
             if (!safe(bot) || !handler.banking.travelToBankOpen() || !safe(bot)) return false
-            for (candidate in withdrawn) {
-                if (!bot.inventory.contains(candidate.item.id)) continue
-                if (!handler.banking.depositAll(candidate.item.id) || bot.inventory.contains(candidate.item.id)) return false
+            for ((_, saleId) in withdrawn) {
+                if (!bot.inventory.contains(saleId)) continue
+                if (!handler.banking.depositAll(saleId) || bot.inventory.contains(saleId)) return false
             }
             if (!mergeDeposits(bot, handler, except)) return false
             if (deposited(bot, except) && bot.bank.computeRemainingSize() >= targetFreeSlots) return true
@@ -354,7 +358,7 @@ object BotBankSpace {
     internal fun canCompleteStack(amount: Int, batchCapacity: Int, trips: Int, actions: Int): Boolean {
         if (amount < 1 || batchCapacity < 1 || trips < 1 || actions < 1) return false
         if (amount.toLong() > batchCapacity.toLong() * trips) return false
-        fun clicks(units: Int): Long = units / 10L + units % 10 / 5 + units % 5
+        fun clicks(units: Int): Long = (units + 99L) / 100L
         val fullBatches = amount / batchCapacity
         val remainder = amount % batchCapacity
         return fullBatches * clicks(batchCapacity) + clicks(remainder) <= actions
