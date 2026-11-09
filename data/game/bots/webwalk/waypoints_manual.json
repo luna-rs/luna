@@ -33,6 +33,16 @@
     { "id": "varrock_sewers_manhole_corridor", "pos": [3243, 9874, 0] },
     { "id": "edgeville_dungeon_gate_corridor", "pos": [3117, 9911, 0] },
     { "id": "mage_training_arena_south_corridor", "pos": [3335, 3263, 0] },
-    { "id": "death_plateau_north_of_stile", "pos": [2817, 3580, 0] }
+    { "id": "death_plateau_north_of_stile", "pos": [2817, 3580, 0] },
+    { "id": "keldagrim_east_market_bridge", "pos": [2886, 10204, 1] },
+    { "id": "keldagrim_west_market_bridge", "pos": [2873, 10207, 1] },
+    { "id": "underground_pass_south_east_walkway", "pos": [2157, 4730, 1] },
+    { "id": "underground_pass_south_walkway", "pos": [2141, 4732, 1] },
+    { "id": "underground_pass_south_west_walkway", "pos": [2125, 4731, 1] },
+    { "id": "underground_pass_inner_east_bend", "pos": [2160, 4674, 1] },
+    { "id": "underground_pass_inner_south_bend", "pos": [2153, 4683, 1] },
+    { "id": "underground_pass_inner_west_walkway", "pos": [2140, 4686, 1] },
+    { "id": "underground_pass_outer_west_walkway", "pos": [2116, 4699, 1] },
+    { "id": "underground_pass_outer_south_west_bend", "pos": [2116, 4715, 1] }
   ]
 }

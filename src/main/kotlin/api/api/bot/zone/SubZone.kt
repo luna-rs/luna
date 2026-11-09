@@ -2652,6 +2652,15 @@ enum class SubZone(
         parent = { TIRANNWN }),
 
     /**
+     * The lower-cavern camp containing Niloof, Klank and Kamen beside the Temple of Light passage.
+     * This is a named travel stop; their quest dialogue and services retain their own content handlers.
+     */
+    UNDERGROUND_PASS_DWARF_CAMP(
+        inside = Position(2324, 9801),
+        area = SimpleBoxArea.of(2309, 9796, 2331, 9810),
+        parent = { TIRANNWN }),
+
+    /**
      * Deep-Wilderness ground west of Rogues' Castle containing the native Chaos Elemental spawn. The footprint
      * includes its local roam and Confusion landings; supplied profit outings retain ordinary Wilderness risk.
      */
@@ -2687,13 +2696,13 @@ enum class SubZone(
         parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
-     * Southern ground-floor Brimhaven Dungeon room with four greater demons. This armed combat and Slayer camp
-     * reuses Saniboch's paid entrance and the dungeon's native axe passages, avoiding Entrana's equipment search.
+     * Sealed greater-demon cage in the Ogre Enclave near Yanille. The legacy enum name is retained for saved
+     * sessions; this is not Brimhaven Dungeon and has no walking entrance for ordinary combat or loot trips.
      */
     BRIMHAVEN_GREATER_DEMONS(
         inside = Position(2611, 9423),
         area = SimpleBoxArea.of(2605, 9416, 2623, 9433),
-        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
+        parent = { YANILLE }),
 
     /**
      * Entrana Dungeon's room containing two greater demons; the legacy enum name is retained for saved sessions.
@@ -3065,6 +3074,8 @@ enum class SubZone(
      */
     fun entryBlocker(bot: Bot): String? = when (this) {
         GNOME_STRONGHOLD_NORTH_WILLOWS -> "the northern Stronghold willow forest has no accessible entrance"
+
+        BRIMHAVEN_GREATER_DEMONS -> "the Ogre Enclave greater-demon cage has no accessible entrance"
 
         CHAOS_DRUID_TOWER, CHAOS_DRUID_TOWER_DUNGEON ->
             if (bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL &&

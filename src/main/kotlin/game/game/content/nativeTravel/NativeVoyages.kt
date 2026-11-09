@@ -25,10 +25,10 @@ import io.luna.net.msg.out.WidgetItemModelMessageWriter
 import java.util.OptionalInt
 
 /**
- * Journeys through the native sailors, Pirate Pete and the Ape Atoll flight crew. The 377 map, widget and
+ * Journeys through the native sailors, dwarven boatmen, Pirate Pete and the Ape Atoll flight crew. The 377 map, widget and
  * sequence assets are preserved. Ape Atoll landings and presentation follow Lost City's historical
  * reconstruction; other safe shore landings, dialogue and unrecovered journey delays are reconstructed.
- * Both menu options share admission and travel, while bots use the ordinary conversation.
+ * Available menu options share admission and travel, while bots use the ordinary conversation.
  *
  * @author lare96
  */
@@ -58,13 +58,15 @@ object NativeVoyages {
     /**
      * Departure anchors identify the native actors, including the island Pete's upper walkway.
      * Every destination is a nearby walkable tile checked against the selected 377 cache.
+     * Keldagrim's repeat boat journeys use reconstructed shore landings and delays; the quest's first arrival is separate.
+     * Actors with only Talk-to in the native cache do not receive a quick-travel interaction.
      *
      * @author lare96
      */
     enum class Route(val npcId: Int, val departure: Position, val destination: Position,
                      val ticks: Int, val question: String, val shipSequence: Int = -1,
                      val presentation: Presentation = if (shipSequence >= 0) Presentation.SHIP else Presentation.UNCONSCIOUS,
-                     val gliderFlight: Int = -1, val arrivalMessage: String? = null) {
+                     val gliderFlight: Int = -1, val arrivalMessage: String? = null, val quickTravel: Boolean = true) {
         TO_MISCELLANIA(1304, Position(2629, 3693), Position(2581, 3846), 7,
             "Would you like to sail to Miscellania? There's no charge.", 1372),
         TO_RELLEKKA(1385, Position(2581, 3847), Position(2629, 3692), 5,
@@ -84,7 +86,11 @@ object NativeVoyages {
         TO_APE_ATOLL(1419, Position(2891, 2724), Position(2802, 2707), 6,
             "Would you like me to take you to Ape Atoll?", presentation = Presentation.ROWBOAT),
         FROM_APE_ATOLL(1419, Position(2803, 2707), Position(2894, 2726), 6,
-            "Would you like me to take you back to Crash Island?", presentation = Presentation.ROWBOAT)
+            "Would you like me to take you back to Crash Island?", presentation = Presentation.ROWBOAT),
+        TO_KELDAGRIM(2205, Position(2842, 10129), Position(2887, 10227), 6,
+            "Would you like to travel to Keldagrim?", presentation = Presentation.ROWBOAT, quickTravel = false),
+        FROM_KELDAGRIM(2206, Position(2888, 10227), Position(2841, 10129), 6,
+            "Would you like to return to the entrance cavern?", presentation = Presentation.ROWBOAT, quickTravel = false)
     }
 
     fun route(npc: Npc): Route? = Route.entries.firstOrNull {
@@ -118,6 +124,8 @@ object NativeVoyages {
         // The temporary Rum Deal waiver does not change Fever Spider combat requirements.
         // TODO: Restore Monkey Madness admission when its quest progression is implemented.
         // The temporary admission uses the powered hangar and ordinary repeat journeys without quest state or rewards.
+        // TODO: Restore The Giant Dwarf's first-arrival sequence when its quest progression is implemented.
+        // Keldagrim currently offers the ordinary repeat boat journey without starting or completing the quest.
         val journey = Journey(player, npc, route)
         player.submitAction(journey)
         return !journey.isFinished

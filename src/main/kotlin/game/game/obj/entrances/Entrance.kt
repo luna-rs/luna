@@ -262,6 +262,21 @@ enum class Entrance(val id: Int,
     REGICIDE_CAVE_IN(id = 4006, landing = tile(2314, 9624)),
     REGICIDE_CAVE_OUT(id = 4007, landing = tile(2312, 3216)),
 
+    // The skull doors between the staff-recharging well and the raised main Underground Pass cavern.
+    // TODO Restore the unicorn horn/paladin badges admission once Underground Pass quest state exists.
+    // The reverse trip is always available; neither direction creates quest progress or rewards.
+    UNDERGROUND_PASS_SKULL_DOOR_LEFT(id = 3220, landing = EntranceLanding { from ->
+        if (from.y < 6400) Position(2370, 9719) else Position(2173, 4725, 1)
+    }),
+    UNDERGROUND_PASS_SKULL_DOOR_RIGHT(id = 3221, landing = UNDERGROUND_PASS_SKULL_DOOR_LEFT.landing),
+
+    // Repeat visits use Regicide's separate temple copy. Its native door models match the main cavern temple
+    // at offset (+128, -64); reconstruct the door transition without spawning Iban or advancing either quest.
+    // TODO Restore the quest-stage choice of temple copy when Underground Pass and Regicide are implemented.
+    UNDERGROUND_PASS_TEMPLE_RIGHT(id = 3333, landing = EntranceLanding { from ->
+        if (from.x < 2050) Position(2145, 4648, 1) else Position(2013, 4712, 1)
+    }, useFrom = listOf(Position(2014, 4712, 1), Position(2145, 4648, 1))),
+
     // Baxtorian Falls, out of the Waterfall Dungeon.
     WATERFALL_DUNGEON_OUT(id = 2000, landing = tile(2511, 3463), message = "You exit the dungeon."),
 

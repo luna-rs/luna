@@ -127,7 +127,8 @@ open class NpcCombatScript(bot: Bot,
                            private val slayerMaster: SlayerMaster? = null,
                            override val magicOnly: Boolean = false) :
     TargetingZonedBotScript<Npc>(bot, duration,
-        zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE }.toMutableList()), SocialBotScript, MagicOnlyCombat {
+        zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE || it == SubZone.BRIMHAVEN_GREATER_DEMONS }
+            .toMutableList()), SocialBotScript, MagicOnlyCombat {
 
     override val actionSafety = ActionSafety.COMBAT
 
@@ -204,7 +205,7 @@ open class NpcCombatScript(bot: Bot,
         private val BRIMHAVEN_ZONES = setOf(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, SubZone.BRIMHAVEN_RED,
             SubZone.BRIMHAVEN_METAL, SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH, SubZone.BRIMHAVEN_MOSS_GIANTS_WEST,
             SubZone.BRIMHAVEN_MOSS_GIANTS_CENTRAL, SubZone.BRIMHAVEN_MOSS_GIANTS_PASSAGE,
-            SubZone.BRIMHAVEN_MOSS_GIANTS_NORTH, SubZone.BRIMHAVEN_GREATER_DEMONS)
+            SubZone.BRIMHAVEN_MOSS_GIANTS_NORTH)
 
         /**
          * Physical tools for entering a camp, excluding return-only travel from a camp already occupied.

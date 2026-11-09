@@ -46,7 +46,8 @@ object NativeAgilityShortcutSpec {
                 { if (it.second.z == from.z) 0 else 1 },
                 { from.computeLongestDistance(it.second) }))!!
             Passage(obj.first, obj.second, from, to, shortcut.requiredLevel(from),
-                cost(shortcut), damage(shortcut), shortcut.rope)
+                cost(shortcut), damage(shortcut), shortcut.rope,
+                damagePercent = damagePercent(shortcut))
         }
     } + SteppingStones.ROWS.flatMap { row ->
         listOf(false, true).map { reverse ->
@@ -94,12 +95,20 @@ object NativeAgilityShortcutSpec {
     }
 
     private fun damage(shortcut: AgilityShortcut): Int = when (shortcut) {
+        AgilityShortcut.UNDERGROUND_PASS_SOUTH_BRIDGE, AgilityShortcut.UNDERGROUND_PASS_MIDDLE_BRIDGE,
+        AgilityShortcut.UNDERGROUND_PASS_WEST_BRIDGE -> 4
         AgilityShortcut.ARDOUGNE_LOG, AgilityShortcut.FREMENNIK_LOG -> 6
         AgilityShortcut.TROLLHEIM_EASY, AgilityShortcut.TROLLHEIM_MEDIUM,
         AgilityShortcut.TROLLHEIM_ADVANCED, AgilityShortcut.COSMIC_WALL_MEDIUM,
         AgilityShortcut.COSMIC_WALL_ADVANCED_NORTH, AgilityShortcut.COSMIC_WALL_ADVANCED_SOUTH -> 4
         AgilityShortcut.TROLLHEIM_HARD, AgilityShortcut.FREMENNIK_BLADES_EAST,
         AgilityShortcut.FREMENNIK_BLADES_WEST -> 3
+        else -> 0
+    }
+
+    private fun damagePercent(shortcut: AgilityShortcut): Int = when (shortcut) {
+        AgilityShortcut.UNDERGROUND_PASS_SOUTH_BRIDGE, AgilityShortcut.UNDERGROUND_PASS_MIDDLE_BRIDGE,
+        AgilityShortcut.UNDERGROUND_PASS_WEST_BRIDGE -> 25
         else -> 0
     }
 }

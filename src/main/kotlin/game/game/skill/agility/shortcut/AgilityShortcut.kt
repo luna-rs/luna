@@ -241,6 +241,18 @@ enum class AgilityShortcut(val level: Int,
                      listOf(Position(2511, 3092), Position(2511, 3096)), oneWay = true,
                      crossing = { plr, _, to, rope -> ShortcutMoves.swing(plr, to, rope, ShortcutMoves.SKILLFULLY) }),
 
+    UNDERGROUND_PASS_SOUTH_BRIDGE(0, 0.0, listOf(3255 to Position(2161, 4654, 1)),
+        listOf(Position(2161, 4653, 1), Position(2161, 4657, 1)),
+        crossing = { plr, from, to, _ -> ShortcutMoves.undergroundPassBridge(plr, from, to) }),
+
+    UNDERGROUND_PASS_MIDDLE_BRIDGE(0, 0.0, listOf(3254 to Position(2162, 4663, 1)),
+        listOf(Position(2162, 4662, 1), Position(2162, 4666, 1)),
+        crossing = { plr, from, to, _ -> ShortcutMoves.undergroundPassBridge(plr, from, to) }),
+
+    UNDERGROUND_PASS_WEST_BRIDGE(0, 0.0, listOf(3255 to Position(2121, 4686, 1)),
+        listOf(Position(2120, 4686, 1), Position(2124, 4686, 1)),
+        crossing = { plr, from, to, _ -> ShortcutMoves.undergroundPassBridge(plr, from, to) }),
+
     // TODO Once In Aid of the Myreque is added, only players who have entered Burgh de Rott through its gate can jump
     //  the low fence.
     BURGH_DE_ROTT_FENCE(25, 0.0, listOf(12776 to Position(3474, 3221)),

@@ -6,7 +6,9 @@ import game.skill.Skills
 import game.skill.agility.Agility
 import game.skill.agility.AgilityAction
 import game.skill.agility.AgilityStep
+import game.skill.agility.AgilitySound
 import game.skill.agility.AgilityWalk
+import game.player.Sound
 import io.luna.game.action.DeathInterruptible
 import io.luna.game.model.EntityState
 import io.luna.game.model.LocalGraphic
@@ -382,6 +384,30 @@ internal object ShortcutMoves {
                     plr.sendMessage("You scramble out of the muddy water.")
                     plr.agility.addExperience(1.0)
                 }
+            }
+        }
+    }
+
+    /**
+     * Crosses a collapsed Underground Pass bridge using its native roll and lower-cavern fall landings.
+     * The recovered traversal gives no experience and deals a quarter of current health plus four on a fall.
+     */
+    fun undergroundPassBridge(plr: Player, from: Position, to: Position): AgilityAction {
+        val message = "You attempt to walk over the remaining bridge..."
+        val pause = AgilityStep(from, 2, jump = true)
+        if (keepsFooting(plr.agility.level, 90, 300)) {
+            return AgilityAction(plr, listOf(pause,
+                AgilityStep(to, 3, animation = 807, moveStart = 38, moveEnd = 67,
+                    sounds = listOf(AgilitySound(Sound.JUMP_NO_LAND)))), message,
+                endMessage = "... you manage to cross safely.", valid = { active(plr) && plr.position == from })
+        }
+        val landing = if (rand(0, 1) == 0) Position(2335, 9821) else Position(2333, 9866)
+        return object : AgilityAction(plr, listOf(pause, AgilityStep(landing, 1, jump = true,
+            sounds = listOf(AgilitySound(Sound.FALL_LAND)))), message,
+            endMessage = "... but you slip and tumble into the darkness.",
+            valid = { active(plr) && plr.position == from }), ShortcutFall {
+            init {
+                onSuccess = { plr.damage(plr.health / 4 + 4) }
             }
         }
     }
