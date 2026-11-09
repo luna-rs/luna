@@ -37,14 +37,43 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     private class PurchaseBudget(var remainingCoins: Int, val maximumUnitPrices: Map<Int, Long>)
 
     /**
-     * Executes one price-protected purchase on the game thread through the native shop transaction.
+     * Executes one price-protected GP purchase on the game thread through the native shop transaction.
      * The expected overlay, access, quantity, space and current quote are checked without suspending before buying.
      * Ordinary queued shop clicks retain their existing behavior; this action is for finite bargain purchases.
      */
-    fun buyQuoted(shop: Shop, id: Int, amount: Int, maxTotalCost: Int): Boolean {
+    fun buyQuoted(shop: Shop, id: Int, amount: Int, maxTotalCost: Int): Boolean =
+        shop.currency == Currency.COINS && buyExact(shop, id, amount, maxTotalCost)
+
+    /**
+     * Buys the largest affordable batch of up to one hundred within the caller's quantity and spending limits.
+     * Stock, capacity and the exact price are checked in the same game-thread operation as payment, so restocking
+     * cannot turn a partial batch into an oversized purchase. Successful purchases yield before the next batch.
+     */
+    suspend fun buyUpTo(shop: Shop, id: Int, maxAmount: Int, maxTotalCost: Int): Boolean {
+        val wallet = minOf(maxTotalCost, bot.inventory.computeAmountForId(shop.currency.id))
+        if (maxAmount < 1 || wallet < 1) return false
+        val capacity = if (itemDef(id).isStackable) Int.MAX_VALUE else bot.inventory.computeRemainingSize()
+        var quantity = minOf(100, maxAmount, shop.items.computeAmountForId(id), capacity,
+            Int.MAX_VALUE - bot.inventory.computeAmountForId(id))
+        while (quantity > 0) {
+            val quote = shop.computeBuyValue(id, quantity).orElse(-1)
+            if (quote in 1..wallet && bot.inventory.hasSpaceFor(Item(id, quantity))) {
+                val bought = buyExact(shop, id, quantity, quote)
+                if (bought) delay(1.seconds)
+                return bought
+            }
+            quantity--
+        }
+        return false
+    }
+
+    /**
+     * Applies an exact quantity and currency ceiling to one native shop transaction without suspending.
+     */
+    private fun buyExact(shop: Shop, id: Int, amount: Int, maxTotalCost: Int): Boolean {
         if (amount !in 1..100 || maxTotalCost < 1 || !ActionSafety.NON_COMBAT.allows(bot) ||
             bot.isConnectedPlayer && !bot.isAutomationActive ||
-            shop.currency != Currency.COINS || !shop.botAccess.apply(bot) ||
+            !shop.botAccess.apply(bot) ||
             bot.overlays[ShopInterface::class]?.shop !== shop) return false
         val index = shop.items.computeIndexForId(id)
         if (index < 0) return false
@@ -53,11 +82,12 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             bot.inventory.computeAmountForId(id).toLong() + amount > Int.MAX_VALUE ||
             !bot.inventory.hasSpaceFor(Item(id, amount))) return false
         val quoted = shop.computeBuyValue(id, amount).orElse(-1)
-        val coins = bot.inventory.computeAmountForId(Currency.COINS.id)
+        val currency = shop.currency.id
+        val coins = bot.inventory.computeAmountForId(currency)
         if (quoted !in 1..maxTotalCost || coins < quoted) return false
         val before = bot.inventory.computeAmountForId(id)
         return shop.buy(bot, index, amount) && bot.inventory.computeAmountForId(id) == before + amount &&
-            bot.inventory.computeAmountForId(Currency.COINS.id) == coins - quoted
+            bot.inventory.computeAmountForId(currency) == coins - quoted
     }
 
     /**
@@ -302,16 +332,9 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                 val before = carried()
                 val remaining = amount - before
                 if (remaining <= 0) return true
-                val buy = when {
-                    remaining >= 100 && shop.items.computeAmountForId(id) >= 100 &&
-                        shop.computeBuyValue(id, 100).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy100(id)
-                    remaining >= 10 && shop.items.computeAmountForId(id) >= 10 &&
-                        shop.computeBuyValue(id, 10).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy10(id)
-                    remaining >= 5 && shop.items.computeAmountForId(id) >= 5 &&
-                        shop.computeBuyValue(id, 5).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy5(id)
-                    else -> buy1(id)
-                }
-                if (bot.overlays[ShopInterface::class]?.shop !== shop || !buy.await() ||
+                val bought = buyUpTo(shop, id, remaining.coerceAtMost(100L).toInt(),
+                    bot.inventory.computeAmountForId(currency))
+                if (bot.overlays[ShopInterface::class]?.shop !== shop || !bought ||
                     carried() <= before) break
             }
             if (carried() >= amount) return true

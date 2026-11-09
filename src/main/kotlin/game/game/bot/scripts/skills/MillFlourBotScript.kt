@@ -281,11 +281,8 @@ class MillFlourBotScript(
             while (bot.inventory.computeAmountForId(FlourMill.POT) < wanted) {
                 val before = bot.inventory.computeAmountForId(FlourMill.POT)
                 val left = wanted - before
-                val bought = when {
-                    left >= 10 -> handler.shop.buy10(FlourMill.POT).await()
-                    left >= 5 -> handler.shop.buy5(FlourMill.POT).await()
-                    else -> handler.shop.buy1(FlourMill.POT).await()
-                }
+                val bought = handler.shop.buyUpTo(shop, FlourMill.POT, left,
+                    bot.inventory.computeAmountForId(COINS))
                 if (!bought || bot.inventory.computeAmountForId(FlourMill.POT) <= before) break
             }
         }

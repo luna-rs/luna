@@ -409,25 +409,10 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 break
             }
 
-            // Use the largest supported click that fits the remaining target and stock and whose current dynamic
-            // price stays inside the remaining budget.
-            val amount = purchaseAmount(
-                shop = shop,
-                id = id,
-                maxAmount = minOf(stock, remainingAmount),
-                budget = remainingBudget
-            ) ?: break
-
             val coinsBefore = bot.inventory.computeAmountForId(COINS_ID)
             val itemsBefore = bot.inventory.computeAmountForId(id)
 
-            val bought = when (amount) {
-                100 -> handler.shop.buy100(id).await()
-                10 -> handler.shop.buy10(id).await()
-                5 -> handler.shop.buy5(id).await()
-                1 -> handler.shop.buy1(id).await()
-                else -> error("Unsupported shop purchase amount: $amount")
-            }
+            val bought = handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget)
 
             val coinsAfter = bot.inventory.computeAmountForId(COINS_ID)
             val itemsAfter = bot.inventory.computeAmountForId(id)
@@ -435,8 +420,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             val acquired = itemsAfter - itemsBefore
             val spent = coinsBefore - coinsAfter
 
-            // The shop handler already waits for an inventory increase. Keep these checks anyway so a future handler
-            // change, stale stock, or failed transaction can never create a tight purchase loop.
+            // Verify actual progress so a failed transaction cannot create a tight purchase loop.
             if (!bought || acquired < 1 || spent < 1) {
                 break
             }
@@ -447,29 +431,6 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         }
 
         return totalSpent
-    }
-
-    /**
-     * Selects the largest supported shop purchase whose exact dynamic price fits inside [budget].
-     */
-    private fun purchaseAmount(
-        shop: Shop,
-        id: Int,
-        maxAmount: Int,
-        budget: Int
-    ): Int? {
-        for (amount in intArrayOf(100, 10, 5, 1)) {
-            if (amount > maxAmount) {
-                continue
-            }
-
-            val price = shop.computeBuyValue(id, amount).orElse(Int.MAX_VALUE)
-            if (price <= budget) {
-                return amount
-            }
-        }
-
-        return null
     }
 
     /**
