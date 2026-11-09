@@ -89,8 +89,16 @@ class BotTradeRequestHandler(private val clock: () -> Instant = { Instant.now() 
     /**
      * Removes requests that have reached the pending-request lifetime.
      */
-    private fun discardExpired() {
+    internal fun discardExpired() {
+        if (requests.isEmpty()) return
         val oldest = clock().minusSeconds(10)
         requests.entries.removeIf { !it.value.isAfter(oldest) }
+    }
+
+    /**
+     * Releases requester sessions when the receiving bot leaves the world.
+     */
+    internal fun clear() {
+        requests.clear()
     }
 }

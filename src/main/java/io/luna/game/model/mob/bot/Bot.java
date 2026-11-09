@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot;
 
 import api.bot.action.BotActionHandler;
+import api.bot.action.trading.BotTradeManager;
 import api.bot.script.AbstractBotScript;
 import api.bot.script.BotScript;
 import api.bot.zone.SubZone;
@@ -542,6 +543,7 @@ public final class Bot extends Player {
 
     @Override
     protected void onInactive() {
+        BotTradeManager.clearTradeRequests(this);
         if (connectedPlayer) stopAutomation();
         super.onInactive();
         scriptStack.shutdown();
@@ -657,6 +659,7 @@ public final class Bot extends Player {
     public void process() {
         if (connectedPlayer) {
             try {
+                BotTradeManager.discardExpiredTradeRequests(this);
                 if (getClient().isPendingLogout() || getRights() != PlayerRights.DEVELOPER || !isAlive()) {
                     stopAutomation();
                 }
@@ -675,6 +678,7 @@ public final class Bot extends Player {
             return;
         }
         try {
+            BotTradeManager.discardExpiredTradeRequests(this);
             if (preferences.getScavenging().isIntroductory()) {
                 preferences.getScavenging().advance(getTimePlayed().toMillis());
                 if (getCombatLevel() != 3) preferences.getScavenging().completeIntroduction();

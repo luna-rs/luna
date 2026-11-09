@@ -70,8 +70,36 @@ object BotTradeManager {
     /** The configured advertisement cooldown range for bots that love merchanting. */
     internal val STRONG_MERCHANT_COOLDOWN = 1..2
 
-    /** The trade-request handler associated with each bot. */
-    val Bot.tradeRequests by Attr.obj { BotTradeRequestHandler() }
+    /**
+     * The lazy handler attribute, also used to check for existing requests without creating a handler.
+     */
+    private val tradeRequestsAttribute = Attr.obj { BotTradeRequestHandler() }
+
+    /**
+     * The trade-request handler associated with each bot.
+     */
+    val Bot.tradeRequests by tradeRequestsAttribute
+
+    /**
+     * Expires requests on the receiving bot's game-thread tick, even while its script is not polling trades.
+     * Bots that have never received or checked a request retain no handler.
+     */
+    @JvmStatic
+    fun discardExpiredTradeRequests(bot: Bot) {
+        val attributes = bot.attributes()
+        val attribute = tradeRequestsAttribute.attr
+        if (attributes.has(attribute)) attributes[attribute].discardExpired()
+    }
+
+    /**
+     * Releases incoming requester sessions on logout without creating an unused handler.
+     */
+    @JvmStatic
+    fun clearTradeRequests(bot: Bot) {
+        val attributes = bot.attributes()
+        val attribute = tradeRequestsAttribute.attr
+        if (attributes.has(attribute)) attributes[attribute].clear()
+    }
 
     /**
      * Creates a chat advertisement for the specified trade purpose.
