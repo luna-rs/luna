@@ -34,6 +34,7 @@ internal class BotMarketplaceSpotPool<Owner : Any, Spot : Any>(
             if (available(spot)) return spot
             release(owner)
         }
+        if (leases.size >= capacity) return null
         repeat(rotation.size) {
             val spot = rotation.removeFirst()
             if (available(spot)) {
@@ -50,7 +51,7 @@ internal class BotMarketplaceSpotPool<Owner : Any, Spot : Any>(
      */
     fun hasSpace(candidates: List<Spot>, available: (Spot) -> Boolean, active: (Owner) -> Boolean): Boolean {
         refresh(candidates, active)
-        return rotation.any(available)
+        return leases.size < capacity && rotation.any(available)
     }
 
     /**

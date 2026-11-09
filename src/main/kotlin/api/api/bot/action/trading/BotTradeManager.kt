@@ -401,7 +401,7 @@ object BotTradeManager {
      * @param id The normalized item id to count.
      * @return The available quantity, capped to the maximum item amount.
      */
-    private fun transferableAmount(bot: Bot, id: Int): Int {
+    internal fun transferableAmount(bot: Bot, id: Int): Int {
         return (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
             .filter { !it.isDynamic && itemDef(it.id).unnotedId.orElse(it.id) == id }
             .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()

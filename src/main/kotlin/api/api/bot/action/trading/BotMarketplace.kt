@@ -86,7 +86,7 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
      */
     val tradingCapacity: Int
         get() = when (this) {
-            VARROCK -> 48
+            VARROCK -> 50
             EDGEVILLE, AL_KHARID -> 32
             SEERS_VILLAGE -> 24
         }
