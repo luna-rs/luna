@@ -50,7 +50,8 @@ public final class BotContextInjectorManager {
     private final List<InjectableEvent> pendingDispatch = new ArrayList<>();
 
     /**
-     * Dispatches all {@link InjectableEvent}s in {@link #pendingDispatch} to this bot.
+     * Dispatches all {@link InjectableEvent}s in {@link #pendingDispatch} to this bot while it has a human observer.
+     * Human presence is read from the existing local-human view without a world or chunk scan.
      * <p>
      * For each event, the spatial context is checked:
      * <ul>
@@ -64,6 +65,9 @@ public final class BotContextInjectorManager {
      * @param bot The bot receiving the event injection pass.
      */
     public void injectEvents(Bot bot) {
+        if (bot.getLocalHumans().isEmpty()) {
+            return;
+        }
         for (InjectableEvent event : pendingDispatch) {
             Locatable locatable = event.contextLocatable(bot);
             if (locatable == null || locatable.equals(bot)) {
