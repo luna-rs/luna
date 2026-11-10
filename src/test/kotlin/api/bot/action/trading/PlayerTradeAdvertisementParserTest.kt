@@ -229,11 +229,19 @@ class PlayerTradeAdvertisementParserTest {
         }
     }
 
-    @Test fun ignoresBuyingAdvertisementsAndOrdinaryConversation() {
-        for (message in listOf("buying flax 25 gp ea", "wtb flax 25 gp ea", "b: flax 25 gp ea",
-            "price check flax", "who is selling flax?", "I saw someone selling flax 25 gp ea",
+    @Test fun ignoresOrdinaryConversation() {
+        for (message in listOf("price check flax", "who is selling flax?", "I saw someone selling flax 25 gp ea",
             "not selling flax", "hello", "selling", "")) {
             assertTrue(parser.parse(message).isEmpty(), message)
+        }
+    }
+
+    @Test fun buyingShorthandRetainsThePlayersDirectionAndExactCommodity() {
+        for (message in listOf("buying flax 25 gp ea", "wtb flax 25 gp ea", "b: flax 25 gp ea")) {
+            val offer = parser.parse(message).single()
+            assertEquals(PlayerTradeAdvertisement.Direction.BUY, offer.direction)
+            assertEquals(setOf(1779), offer.itemIds)
+            assertEquals(25L, offer.price?.coins)
         }
     }
 

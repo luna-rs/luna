@@ -88,6 +88,17 @@ class BotPurchaseBudgetTest {
     }
 
     @Test
+    fun urgentActivityToolPrecedesBulkSuppliesDuringPurchaseSelection() {
+        `when`(bot.woodcutting.staticLevel).thenReturn(99)
+        `when`(bot.preferences.isSkiller).thenReturn(true)
+        BotTradeIntentions.recordSupplies(bot, listOf(Item(1359)), tools = setOf(1359), stockTarget = 1)
+
+        val selected = BotTradeManager.prioritizePurchases(bot, listOf(quote(436, 100, 1), quote(1359, 1, 10_000)))
+
+        assertEquals(1359, selected.first().item.id)
+    }
+
+    @Test
     fun usableNeedsPrecedeUnusableUpgradesUntilRequirementsAreMet() {
         val id = 7158
         val equipment = EquipmentDefinition.ALL.retrieve(id)

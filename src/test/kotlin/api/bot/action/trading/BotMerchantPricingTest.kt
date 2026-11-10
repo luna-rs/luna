@@ -64,8 +64,8 @@ class BotMerchantPricingTest {
 
     @Test
     fun unrelatedStockRetainsTheMerchantDiscountAndOneCoinMinimum() {
-        assertTrue(snapshot().buy(1511, 101) in 10L..40L)
-        assertEquals(1L, snapshot().buy(1511, 1))
+        assertTrue(snapshot().buy(1123, 101) in 10L..40L)
+        assertEquals(1L, snapshot().buy(1123, 1))
     }
 
     @Test

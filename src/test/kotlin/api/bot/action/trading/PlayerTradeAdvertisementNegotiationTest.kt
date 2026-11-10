@@ -161,24 +161,95 @@ class PlayerTradeAdvertisementNegotiationTest {
             verify(seller, never()).queue(any(PrivateChatMessageWriter::class.java))
         }
 
-    @Test fun backupItemsCanCompleteTheSamePartialTradeWhenTheBuyerHasNoCoins(): Unit =
+    @Test fun backupItemsCannotStartAHumanPurchaseWhenTheBuyerHasNoCoins(): Unit =
         runTradeTest {
-            val context = prepare(barter = true)
-            assertEquals(mapOf(556 to 3), context.plan!!.payment)
-            assertEquals(25L, context.plan!!.cost)
-            assertEquals(30L, context.plan!!.paidValue)
+            prepareNativeTrader(coins = 0)
+            InventoryProductionFixtures.inventory(buyer.bot, Item(556, 3))
+            fixture.set(buyer, "carriedOffer", mapOf(556 to 3))
+            fixture.publish(seller, "selling 100 feathers 1 gp ea")
+            assertNull(fixture.market.claim(buyer))
+            attempt(null)
+            assertEquals(3, buyer.bot.inventory.computeAmountForId(556))
+            assertEquals(100, seller.inventory.computeAmountForId(314))
+            verify(buyer.bot.output, never()).sendPlayerInteraction(TRADE.index, seller)
+        }
+
+    @Test fun limitedCashCompletesANativePurchaseWithoutAddingBarterStock(): Unit = runTradeTest {
+        prepareNativeTrader(coins = 10)
+        InventoryProductionFixtures.inventory(buyer.bot, Item(556, 3))
+        fixture.set(buyer, "carriedOffer", mapOf(995 to 10, 556 to 3))
+        fixture.set(buyer, "offering", listOf(
+            BotTradeItem(Item(995, 10), 1, BotTradePurpose.BUY, buyer.bot),
+            BotTradeItem(Item(556, 3), 10, BotTradePurpose.BUY, buyer.bot)))
+        humanOffer = Item(314, 10)
+        fixture.publish(seller, "selling 100 feathers 1 gp ea")
+        val context = fixture.market.claim(buyer)!!
+        assertEquals(mapOf(995 to 10), context.plan!!.payment)
+
+        attempt(context)
+
+        assertTrue(context.completed)
+        assertEquals(10, buyer.bot.inventory.computeAmountForId(314))
+        assertEquals(3, buyer.bot.inventory.computeAmountForId(556))
+        assertEquals(0, seller.inventory.computeAmountForId(556))
+        assertEquals(10, seller.inventory.computeAmountForId(995))
+        verify(buyer.bot.output).clickButton(3546)
+    }
+
+    @Test fun anExplicitBuyingMessageLetsACashlessBotSellForGoldThroughBothNativeScreens(): Unit = runTradeTest {
+        val context = prepareNativeSale(Item(995, 25))
+
+        attempt(context)
+
+        assertTrue(context.completed)
+        assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+        assertEquals(25, buyer.bot.inventory.computeAmountForId(995))
+        assertEquals(125, seller.inventory.computeAmountForId(314))
+        assertEquals(0, seller.inventory.computeAmountForId(995))
+        assertNull(fixture.market.registry.find(seller))
+        verify(buyer.bot.output).clickButton(3420)
+        verify(buyer.bot.output).clickButton(3546)
+    }
+
+    @Test fun anExplicitBuyingMessageLetsACashlessBotAcceptItemPaymentThroughBothNativeScreens(): Unit = runTradeTest {
+        val previous = world.economy.getPrice(1779)
+        `when`(world.economy.getPrice(1779)).thenReturn(25L)
+        try {
+            val context = prepareNativeSale(Item(1779, 1))
 
             attempt(context)
 
             assertTrue(context.completed)
-            assertEquals(25, buyer.bot.inventory.computeAmountForId(314))
-            assertEquals(0, buyer.bot.inventory.computeAmountForId(556))
-            assertEquals(3, seller.inventory.computeAmountForId(556))
-            assertEquals(0, seller.inventory.computeAmountForId(995))
-            assertEquals(75, context.entry.remainingQuantity(context.offer))
-            verify(buyer.bot.output).clickButton(3420)
+            assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+            assertEquals(1, buyer.bot.inventory.computeAmountForId(1779))
+            assertEquals(125, seller.inventory.computeAmountForId(314))
+            assertEquals(0, seller.inventory.computeAmountForId(1779))
+            assertEquals(0, buyer.bot.inventory.computeAmountForId(995))
             verify(buyer.bot.output).clickButton(3546)
+        } finally {
+            `when`(world.economy.getPrice(1779)).thenReturn(previous)
         }
+    }
+
+    @Test fun aPlayersDirectRequestUsesTheirCurrentBuyingMessageWithoutRequiringBotGold(): Unit = runTradeTest {
+        fixture.close()
+        fixture = AdvertisementRuntimeFixture(PlayerTradeAdvertisementMarket.live)
+        prepareNativeTrader(coins = 0)
+        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 30))
+        fixture.set(buyer, "carriedOffer", mapOf(314 to 30))
+        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 30), 1, BotTradePurpose.SELL, buyer.bot)))
+        humanOffer = Item(995, 25)
+        check(seller.inventory.add(humanOffer))
+        fixture.publish(seller, "buying 25 feathers 1 gp ea")
+
+        directAttempt()
+
+        assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+        assertEquals(25, buyer.bot.inventory.computeAmountForId(995))
+        assertEquals(125, seller.inventory.computeAmountForId(314))
+        assertNull(fixture.market.registry.find(seller))
+        verify(buyer.bot.output).clickButton(3546)
+    }
 
     @Test fun aDifferentCommodityDuringTheAcceptanceDelayRejectsTheTradeAndReturnsEscrow(): Unit =
         runTradeTest {
@@ -382,6 +453,19 @@ class PlayerTradeAdvertisementNegotiationTest {
             guides[556] = 10L
         }
         fixture.publish(seller, "selling 100 feathers 1 gp ea")
+        return fixture.market.claim(buyer)!!
+    }
+
+    private fun prepareNativeSale(payment: Item): Opportunity {
+        prepareNativeTrader(coins = 0)
+        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 30))
+        fixture.set(buyer, "carriedOffer", mapOf(314 to 30))
+        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 30), 1, BotTradePurpose.SELL, buyer.bot)))
+        humanOffer = payment
+        if (seller.inventory.computeAmountForId(payment.id) < payment.amount) {
+            check(seller.inventory.add(payment))
+        }
+        fixture.publish(seller, "buying 25 feathers 1 gp ea")
         return fixture.market.claim(buyer)!!
     }
 

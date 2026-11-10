@@ -83,10 +83,10 @@ class BotMerchantSaleTest {
 
         val offers = BotTradeManager.computeOfferItems(bot, priceStrategy, BotTradePurpose.SELL)
 
-        assertEquals((555..561).toList(), offers.map { it.item.id })
+        assertEquals((554..560).toList(), offers.map { it.item.id })
         assertTrue(offers.all { it.item.amount == 100 && it.totalPrice() > 1_000 })
-        assertEquals(2_200, offers.first().totalPrice())
-        assertEquals(2_800, offers.last().totalPrice())
+        assertEquals(2_100, offers.first().totalPrice())
+        assertEquals(2_700, offers.last().totalPrice())
     }
 
     @Test
@@ -95,7 +95,7 @@ class BotMerchantSaleTest {
 
         val offers = BotTradeManager.computeOfferItems(bot, priceStrategy, BotTradePurpose.MERCHANT_SELL)
 
-        assertEquals((555..561).toList(), offers.map { it.item.id })
+        assertEquals((554..560).toList(), offers.map { it.item.id })
         assertTrue(offers.all { it.item.amount == 100 && it.totalPrice() > 1_000 })
     }
 
@@ -114,7 +114,7 @@ class BotMerchantSaleTest {
         mockStatic(Luna::class.java, CALLS_REAL_METHODS).use { luna ->
             luna.`when`<LunaSettings> { Luna.settings() }.thenReturn(settings)
 
-            for ((bots, selectedIds) in listOf(configuredBots to listOf(560, 561),
+            for ((bots, selectedIds) in listOf(configuredBots to listOf(559, 560),
                 thresholdBots to listOf(559, 560, 561))) {
                 doReturn(bots).`when`(settings).bots()
                 for (purpose in listOf(BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL)) {
