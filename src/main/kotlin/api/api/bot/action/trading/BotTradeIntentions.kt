@@ -121,6 +121,7 @@ object BotTradeIntentions {
             BotEquipmentPreferences.fashionCandidates(bot) else emptyList()
         for (id in gear) {
             if (bot.totalItemAmount(id) > 0 || !bot.canUseWantedItem(id)) continue
+            if (BotTradeBuyingPolicy.satisfiedEquipment(bot, id)) continue
             val cosmetic = BotEquipmentPreferences.isCosmetic(id)
             val urgentUpgrade = id in progression &&
                 bot.preferences.getWantedItem(id)?.priority == WantedItemPriority.URGENT
@@ -222,6 +223,25 @@ object BotTradeIntentions {
      * Rechecks newly requested supplies during a suspended sale without rebuilding every equipment layout.
      */
     fun supplyTarget(bot: Bot, id: Int): Int = supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0
+
+    /**
+     * Resolves one explicitly recorded activity input without rebuilding the equipment shopping catalogue.
+     * Player-sale admission uses this alongside broader default wishes, preserving temporary concrete needs.
+     */
+    fun supplyDemand(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): WantedItemDefinition? {
+        val plan = bot.attributes()[plans.attr][id]?.takeIf { it.expires > now }
+        var minimum = plan?.minimum ?: 0
+        var target = plan?.target ?: 0
+        val upgrade = bot.attributes()[toolUpgrades.attr][id]
+        if (upgrade != null && upgrade.expires > now && upgrade.satisfying.none { bot.totalItemAmount(it) > 0 }) {
+            minimum = maxOf(minimum, 1)
+            target = maxOf(target, 1)
+        }
+        val owned = bot.totalItemAmount(id)
+        if (target <= owned || !bot.canUseWantedItem(id)) return null
+        return definition(id, minimum, target,
+            if (owned < minimum) WantedItemPriority.URGENT else WantedItemPriority.STANDARD)
+    }
 
     /**
      * Combines independent supply sources without reducing either source's minimum or stock target.

@@ -9,7 +9,6 @@ import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
-import kotlin.math.ceil
 import kotlin.math.floor
 
 /**
@@ -66,15 +65,13 @@ object BotMerchantValuation {
 
         /**
          * Retains separate personal-use and resale quotes for each offered commodity. Personal needs use
-         * the ordinary captured buying strategy; liquid stock gets a modest margin and niche stock a resale discount.
+         * the ordinary captured buying strategy; all resale stock receives seventy-five to ninety percent of reference.
          */
         fun buy(id: Int, guide: Long, useful: Boolean = false,
                 strategy: BotTradePrice = BotTradePrice.EXACT): Long = bids.getOrPut(id to useful) {
             val reference = reference(id, guide)
             if (useful) strategy.applyBuy(reference).coerceAtLeast(1)
-            else bid(reference, intelligence, greedy, BotEquipmentPreferences.isCosmetic(id),
-                BotEquipmentPreferences.likes(bot, id), BotEquipmentPreferences.prefers(bot, id), false,
-                rand().nextDouble(), marketLiquidity(id))
+            else resaleBid(reference, intelligence, greedy, rand().nextDouble())
         }
 
         /**
@@ -112,7 +109,7 @@ object BotMerchantValuation {
     }
 
     /**
-     * Quotes every tradeable item, protecting useful stock and cosmetics from resale discounts.
+     * Quotes tradeable resale stock or a separately identified personal requirement.
      */
     fun buy(bot: Bot, id: Int, guide: Long, useful: Boolean = false): Long = snapshot(bot).buy(id, guide, useful)
 
@@ -151,33 +148,25 @@ object BotMerchantValuation {
     fun sell(bot: Bot, id: Int, guide: Long, strategy: BotTradePrice): Long = snapshot(bot).sell(id, guide, strategy)
 
     /**
-     * Computes an explicit quote from a captured emotional state and random sample. Useful items and cosmetics
-     * retain at least their reference value, while personal temptation can still raise the bid above it.
-     * Liquid stock receives 75 to 95 percent of its reference instead of the speculative resale discount.
-     * Rounding those bids upward keeps cheap supplies within the same maximum discount at whole-coin resolution.
+     * Quotes every resale category at seventy-five to ninety percent of reference. Personality and one captured
+     * sample vary the margin, while integer arithmetic preserves bounds for large prices without floating overflow.
+     * For reference values below four coins, the nearest positive whole-coin quote may exceed ninety percent.
      */
-    internal fun bid(reference: Long, intelligence: Double, greedy: Boolean, cosmetic: Boolean,
-                     liked: Boolean, preferred: Boolean, useful: Boolean, sample: Double,
-                     liquidity: Double = 0.0): Long {
-        val judgment = intelligence.coerceIn(0.0, 1.0)
-        val roll = sample.coerceIn(0.0, 1.0)
-        val fraction = when {
-            cosmetic -> {
-                val taste = if (preferred) 0.25 else if (liked) 0.12 else 0.0
-                val temptation = (1.0 - judgment) * (0.35 + taste + if (greedy) 0.35 else 0.0)
-                0.45 + roll * 0.20 + taste * (1.0 - judgment * 0.5) + temptation
-            }
-            useful -> 0.45 + roll * 0.25 + (1.0 - judgment) * 0.10
-            else -> (0.20 + roll * 0.30 - judgment * 0.10 - if (greedy) 0.05 else 0.0)
-                .coerceIn(0.10, 0.50)
-        }
-        if (cosmetic || useful) return scaled(reference, fraction.coerceAtLeast(1.0))
-        val market = 0.82 + roll * 0.13 - judgment * 0.05 - if (greedy) 0.02 else 0.0
-        val confidence = liquidity.coerceIn(0.0, 1.0)
-        val multiplier = fraction + (market - fraction) * confidence
-        return if (confidence > 0.0) ceil(reference.coerceAtLeast(1).toDouble() * multiplier).toLong().coerceAtLeast(1)
-            else scaled(reference, multiplier)
+    internal fun resaleBid(reference: Long, intelligence: Double, greedy: Boolean, sample: Double): Long {
+        val value = reference.coerceAtLeast(1)
+        val basisPoints = (8_000 + sample.coerceIn(0.0, 1.0) * 1_000 -
+                intelligence.coerceIn(0.0, 1.0) * 300 - if (greedy) 200 else 0).toInt().coerceIn(7_500, 9_000)
+        val minimum = percentage(value, 7_500, true)
+        val maximum = maxOf(minimum, percentage(value, 9_000, false))
+        return percentage(value, basisPoints, true).coerceIn(minimum, maximum)
     }
+
+    /**
+     * Multiplies by a bounded basis-point fraction without overflowing the signed long range.
+     */
+    private fun percentage(value: Long, basisPoints: Int, roundUp: Boolean): Long =
+        value / 10_000 * basisPoints +
+                (value % 10_000 * basisPoints + if (roundUp) 9_999 else 0) / 10_000
 
     /**
      * Allows careful collectors to bargain while foolish or greedy collectors overpay for favorite pieces.

@@ -14,6 +14,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import java.time.Instant
+import java.util.Collections
 import java.util.IdentityHashMap
 
 /**
@@ -28,7 +29,10 @@ internal class PlayerTradeAdvertisementMarket(
     private val clock: () -> Instant = { Instant.now() },
     internal val registry: PlayerTradeAdvertisementRegistry = PlayerTradeAdvertisementRegistry(clock),
     private val parser: PlayerTradeAdvertisementParser = PlayerTradeAdvertisementParser(BotItemNames::resolve),
-    private val sample: () -> Double = { rand().nextDouble() }
+    private val sample: () -> Double = { rand().nextDouble() },
+    private val reactiveBuyer: (Bot, Player) -> TradeBotScript? = { bot, seller ->
+        TradeBotScript.playerSaleBuyer(bot, seller)
+    }
 ) : BotChatHandler {
 
     /**
@@ -97,10 +101,12 @@ internal class PlayerTradeAdvertisementMarket(
      */
     private class Heard(val tieSample: Double) {
         val audience = ArrayList<Bot>()
+        val membership: MutableSet<Bot> = Collections.newSetFromMap(IdentityHashMap())
         val quotes = IdentityHashMap<Bot, MutableMap<Pair<PlayerTradeAdvertisement, Int>, Pricing?>>()
         val sent = IdentityHashMap<Bot, LinkedHashMap<PlayerTradeAdvertisement, Opportunity>>()
         var selectionTick = Long.MIN_VALUE
         var selected: Selected? = null
+        var reactiveDispatchTick = Long.MIN_VALUE
 
         /**
          * Structural advertisement changes begin a fresh round without changing stable quotes or tie samples.
@@ -125,13 +131,46 @@ internal class PlayerTradeAdvertisementMarket(
             val memory = heard.getOrPut(entry) { Heard(sample()) }
             pruneBuyers(memory)
             for (bot in message.hearers) {
-                if (isCurrentBuyer(bot) && memory.audience.none { it === bot }) {
+                if (isCurrentBuyer(bot) && memory.membership.add(bot)) {
                     memory.audience += bot
                     memory.invalidateSelection()
                 }
             }
+            dispatchReactive(entry, memory)
         }
         return true
+    }
+
+    /**
+     * Lets an otherwise occupied nearby bot take one bounded, carried-cash buying visit. Only human messages
+     * create previews; ordinary trader polls never create scripts or inspect workers throughout the world.
+     * One seller's existing response blocks further dispatch, including repeated advertisements in later ticks.
+     */
+    private fun dispatchReactive(entry: PlayerTradeAdvertisementRegistry.Entry, memory: Heard) {
+        if (entry.offers.none { it.direction == PlayerTradeAdvertisement.Direction.SELL } ||
+            !registry.isAvailable(entry)) return
+        val tick = world.currentTick
+        if (memory.reactiveDispatchTick == tick) return
+        memory.reactiveDispatchTick = tick
+        val previews = IdentityHashMap<Bot, TradeBotScript>()
+        for (buyer in memory.audience) {
+            if (buyer.scriptStack.current() !is TradeBotScript && isCurrentBuyer(buyer) &&
+                entry.hasUntriedOffer(buyer)) {
+                reactiveBuyer(buyer, entry.player)?.let { previews[buyer] = it }
+            }
+        }
+        if (previews.isEmpty()) return
+        val opportunity = winner(entry, memory, previews) ?: return
+        memory.selectionTick = tick
+        memory.selected = Selected(opportunity.script, opportunity.offer)
+        if (previews[opportunity.script.bot] !== opportunity.script) return
+        opportunity.response = registry.claim(entry, opportunity.script.bot, opportunity.offer) ?: return
+        var started = false
+        try {
+            started = opportunity.script.beginPlayerSale(opportunity)
+        } finally {
+            if (!started) release(opportunity)
+        }
     }
 
     /**
@@ -201,7 +240,7 @@ internal class PlayerTradeAdvertisementMarket(
     fun directPurchase(script: TradeBotScript, player: Player): Opportunity? {
         prune()
         val entry = registry.find(player) ?: return null
-        if (heard[entry]?.audience?.none { it === script.bot } != false) return null
+        if (heard[entry]?.membership?.contains(script.bot) != true) return null
         val remembered = rememberedOffers(script, player)
         for (offer in entry.availableOffers) {
             if (offer.direction != PlayerTradeAdvertisement.Direction.BUY) continue
@@ -253,12 +292,13 @@ internal class PlayerTradeAdvertisementMarket(
      * changes invalidate immediately. A selected participant always rebuilds its live deal before a claim.
      */
     private fun chooseFor(script: TradeBotScript): Opportunity? {
-        if (!script.bot.isRealBot()) return null
+        if (heard.isEmpty() || !script.bot.isRealBot()) return null
         prune()
+        if (heard.isEmpty()) return null
         val currentTick = world.currentTick
         for (entry in registry.availableFor(script.bot)) {
             val memory = heard[entry] ?: continue
-            if (memory.audience.none { it === script.bot }) continue
+            if (script.bot !in memory.membership) continue
             var fresh: Opportunity? = null
             if (memory.selectionTick != currentTick) {
                 fresh = winner(entry, memory)
@@ -282,11 +322,12 @@ internal class PlayerTradeAdvertisementMarket(
     /**
      * Never compares quantities or prices across unrelated commodities. Unknown terms are an inspection fallback.
      */
-    private fun winner(entry: PlayerTradeAdvertisementRegistry.Entry, memory: Heard): Opportunity? {
+    private fun winner(entry: PlayerTradeAdvertisementRegistry.Entry, memory: Heard,
+                       previews: Map<Bot, TradeBotScript> = emptyMap()): Opportunity? {
         val groups = entry.availableOffers.map { offer ->
             memory.audience.mapNotNull { buyer ->
                 if (entry.wasAttempted(buyer, offer)) null else
-                    (buyer.scriptStack.current() as? TradeBotScript)
+                    ((buyer.scriptStack.current() as? TradeBotScript) ?: previews[buyer])
                         ?.advertisementCandidate(this, entry, offer, allowPendingBotApproach = true)
             }
         }
@@ -315,7 +356,12 @@ internal class PlayerTradeAdvertisementMarket(
      * Unrefreshed advertisements retain their existing expiry cleanup.
      */
     private fun pruneBuyers(memory: Heard) {
-        val removed = memory.audience.removeIf { !isCurrentBuyer(it) }
+        val removed = memory.audience.removeIf {
+            if (isCurrentBuyer(it)) false else {
+                memory.membership.remove(it)
+                true
+            }
+        }
         memory.quotes.keys.removeIf { !isCurrentBuyer(it) }
         memory.sent.keys.removeIf { !isCurrentBuyer(it) }
         if (removed || memory.selected?.let { !isCurrentBuyer(it.script.bot) } == true) {

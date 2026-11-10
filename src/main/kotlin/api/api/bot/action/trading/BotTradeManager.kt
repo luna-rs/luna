@@ -345,8 +345,8 @@ object BotTradeManager {
      *
      * Normal buying uses deliberate activity, progression, and cosmetic intentions. Merchant buying quotes
      * a bounded catalogue of common and preferred stock against guide and net alchemy values. Actual offered
-     * items receive a complete resale quote lazily, with strong discounts for unwanted stock and personal
-     * temptation for cosmetics, even when absent from this catalogue.
+     * items receive a complete resale quote lazily within the merchant's advertised specialty, even when absent
+     * from this catalogue. Genuine personal requirements remain independent of the account's resale specialty.
      * Merchant demand uses [Int.MAX_VALUE] to mark unrestricted quantities.
      *
      * [computeExpected] caps these candidates to available payment. Partner stock is checked during negotiation.
@@ -362,18 +362,27 @@ object BotTradeManager {
             throw IllegalStateException("Must be a valid BUY based purpose.")
         } else if (purpose == BotTradePurpose.MERCHANT_BUY) {
             val candidates = ArrayList<BotTradeItem>()
-            val useful = BotTradeIntentions.purchases(bot).mapTo(HashSet()) { it.id }
-            val cosmetics = BotEquipmentPreferences.cosmeticIds().asSequence()
+            val useful = BotTradeIntentions.purchases(bot).associateBy { it.id }
+            val specialty = BotMerchantSpecialty.forBot(bot)
+            val cosmetics = if (specialty == BotMerchantSpecialty.GENERAL ||
+                specialty == BotMerchantSpecialty.EQUIPMENT) BotEquipmentPreferences.cosmeticIds().asSequence()
                 .filter { ItemDefinition.ALL.get(it).map { definition -> definition.isTradeable && !definition.isNoted }.orElse(false) }
                 .sortedWith(compareByDescending<Int> { BotEquipmentPreferences.prefers(bot, it) }
                     .thenByDescending { BotTradeSelection.popularity(it) }).take(32).toList()
-            val catalogue = (marketCatalogue() + useful.take(64) + cosmetics + listOf(314, 1511, 436, 526)).distinct()
+            else emptyList()
+            val catalogue = (marketCatalogue() + useful.keys.take(64) + cosmetics + specialty.catalogue).distinct()
             val pricing = BotMerchantValuation.snapshot(bot, includeShops = false)
             for (id in catalogue) {
                 val definition = ItemDefinition.ALL.get(id).orElse(null) ?: continue
                 if (id == 995 || id == 0 || definition.isNoted || !definition.isTradeable) continue
+                val resale = BotMerchantSpecialty.accepts(bot, id)
+                if (id !in useful && !resale) continue
+                val quantity = if (resale) Int.MAX_VALUE else useful[id]?.let {
+                    (it.target.toLong() - bot.totalItemAmount(id)).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+                } ?: 0
+                if (quantity <= 0) continue
                 val quote = pricing.buy(id, BotMerchantValuation.peekGuide(id), id in useful, priceStrategy)
-                candidates += BotTradeItem(Item(id, Int.MAX_VALUE), quote.coerceAtLeast(1), purpose, bot)
+                candidates += BotTradeItem(Item(id, quantity), quote.coerceAtLeast(1), purpose, bot)
             }
             return prioritizePurchases(bot, candidates)
         }

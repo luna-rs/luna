@@ -160,6 +160,14 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
     }
 
     /**
+     * Checks one seller's current response slot without building a list of unrelated advertisements.
+     */
+    internal fun isAvailable(entry: Entry): Boolean {
+        return entry.expiresAt.isAfter(clock()) && entries[entry.player] === entry &&
+                entry.hasRemainingOffers && entry.player !in responses
+    }
+
+    /**
      * Lists unclaimed advertisements with a remaining offer this buyer has not tried. The marketplace checks
      * eligibility and valuation before claiming; reading never reserves a player or changes another buyer's priority.
      */

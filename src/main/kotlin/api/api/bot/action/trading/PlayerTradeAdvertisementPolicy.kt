@@ -91,14 +91,15 @@ object PlayerTradeAdvertisementPolicy {
     /**
      * Accepts explicit affordable terms or computes one lower counteroffer without exceeding the bot's valuation.
      * An asking price above the limit is countered at the normal buying limit. An affordable ask may be discounted by
-     * five to ten percent, or ten to twenty-five percent for merchants and greedy buyers. Whole-coin counteroffers
-     * round upward so they never exceed the sampled discount. A one-coin offer cannot be haggled below one coin.
+     * five to ten percent, or ten to twenty-five percent for greedy ordinary buyers. Merchants retain their already
+     * discounted resale bid without another haggle. Whole-coin counteroffers round upward so they never exceed
+     * the sampled discount. A one-coin offer cannot be haggled below one coin.
      *
      * @param maximumUnitPrice The bot's captured normal buying price for this exact commodity.
      * @return A quote, or `null` for an unavailable commodity valuation or terms needing broad-buyer inspection.
      */
     fun quote(offer: PlayerTradeAdvertisement, maximumUnitPrice: Long, profile: Profile,
-              haggleRoll: Double, discountRoll: Double, liquidMarket: Boolean = false): Quote? {
+              haggleRoll: Double, discountRoll: Double): Quote? {
         requireSample(haggleRoll)
         requireSample(discountRoll)
         if (maximumUnitPrice <= 0 || offer.requiresInspection) return null
@@ -113,7 +114,7 @@ object PlayerTradeAdvertisementPolicy {
             // This branch proves the positive ceiling fits below a representable advertised amount.
             return Quote(Price(ceiling.longValueExact(), asking.basis), true)
         }
-        if (profile.merchant && liquidMarket || haggleRoll >= haggleChance(profile)) return Quote(asking, false)
+        if (profile.merchant || haggleRoll >= haggleChance(profile)) return Quote(asking, false)
         val bargain = profile.merchant || profile.greedy
         val minimum = BigDecimal.valueOf(if (bargain) 10L else 5L, 2)
         val spread = BigDecimal.valueOf(if (bargain) 15L else 5L, 2)

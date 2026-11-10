@@ -31,6 +31,12 @@ class BotItemTracker(val plr: Player) : ItemTracker() {
          * Each bot maintains its own instance through the attribute system.
          */
         val Bot.itemTracker by Attr.obj { HashMultiset.create<Int>() }
+
+        /**
+         * Invalidates derived ownership indexes only when observed container quantities change.
+         */
+        var Bot.itemOwnershipRevision by Attr.long()
+            private set
     }
 
     /**
@@ -40,15 +46,25 @@ class BotItemTracker(val plr: Player) : ItemTracker() {
 
     override fun add(newItem: Item) {
         if (active) {
-            val tracker = (plr as? Bot)?.itemTracker ?: return
+            val bot = plr as? Bot ?: return
+            val tracker = bot.itemTracker
             // A total across containers can pass Int.MAX_VALUE, and the multiset throws past it.
-            tracker.add(newItem.id, minOf(newItem.amount, Int.MAX_VALUE - tracker.count(newItem.id)))
+            val added = minOf(newItem.amount, Int.MAX_VALUE - tracker.count(newItem.id))
+            if (added > 0) {
+                tracker.add(newItem.id, added)
+                bot.itemOwnershipRevision++
+            }
         }
     }
 
     override fun remove(oldItem: Item) {
         if (active) {
-            (plr as? Bot)?.itemTracker?.remove(oldItem.id, oldItem.amount)
+            val bot = plr as? Bot ?: return
+            val tracker = bot.itemTracker
+            if (oldItem.amount > 0 && tracker.count(oldItem.id) > 0) {
+                tracker.remove(oldItem.id, oldItem.amount)
+                bot.itemOwnershipRevision++
+            }
         }
     }
 }
