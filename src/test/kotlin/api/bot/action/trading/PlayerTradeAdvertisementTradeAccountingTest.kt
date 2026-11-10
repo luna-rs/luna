@@ -207,7 +207,11 @@ class PlayerTradeAdvertisementTradeAccountingTest {
 
     @Test fun anExistingIncomingStackLimitsThePurchaseBeforeItsNativeIntegerQuantityWouldOverflow() {
         val seller = fixture.human()
-        val buyer = fixture.trader(seller, coins = 1_000, purpose = BotTradePurpose.MERCHANT_BUY, specific = false)
+        val buyer = generateSequence {
+            fixture.trader(seller, coins = 1_000, purpose = BotTradePurpose.MERCHANT_BUY, specific = false)
+        }.onEach { fixture.audience.remove(it.bot) }.take(100)
+            .first { BotMerchantSpecialty.forBot(it.bot) == BotMerchantSpecialty.GENERAL }
+        fixture.audience += buyer.bot
         InventoryProductionFixtures.inventory(buyer.bot, Item(314, Int.MAX_VALUE - 5))
         fixture.publish(seller, "selling 100 feathers 1 gp ea")
 

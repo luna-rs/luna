@@ -112,10 +112,10 @@ class PlayerTradeCashAndBuyingTest {
         val offer = PlayerTradeAdvertisement("flax", setOf(1779), 100,
             PlayerTradeAdvertisement.Price(90, PlayerTradeAdvertisement.PriceBasis.EACH))
         val profile = PlayerTradeAdvertisementPolicy.Profile(merchant = true)
-        val quote = PlayerTradeAdvertisementPolicy.quote(offer, 100, profile, 0.0, 1.0, liquidMarket = true)!!
+        val quote = PlayerTradeAdvertisementPolicy.quote(offer, 100, profile, 0.0, 1.0)!!
         assertEquals(90L, quote.price.coins)
         assertFalse(quote.counteroffer)
-        val counter = PlayerTradeAdvertisementPolicy.quote(offer, 80, profile, 0.0, 1.0, liquidMarket = true)!!
+        val counter = PlayerTradeAdvertisementPolicy.quote(offer, 80, profile, 0.0, 1.0)!!
         assertEquals(80L, counter.price.coins)
         assertTrue(counter.counteroffer)
     }

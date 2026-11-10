@@ -160,8 +160,8 @@ class PlayerTradeAdvertisementPolicyTest {
         assertTrue(quote.counteroffer)
     }
 
-    @Test fun merchantOrGreedyDiscountEndpointsAreTenAndTwentyFivePercent() {
-        for (profile in listOf(merchant, greedy, Profile(merchant = true, greedy = true))) {
+    @Test fun greedyOrdinaryDiscountEndpointsAreTenAndTwentyFivePercent() {
+        for (profile in listOf(greedy)) {
             val small = PlayerTradeAdvertisementPolicy.quote(offer(), 1_000, profile, 0.0, 0.0)!!
             val large = PlayerTradeAdvertisementPolicy.quote(offer(), 1_000, profile, 0.0, 1.0)!!
 
@@ -172,10 +172,20 @@ class PlayerTradeAdvertisementPolicyTest {
         }
     }
 
+    @Test fun merchantsDoNotDiscountTheirAlreadyCapturedResaleBidAgain() {
+        for (profile in listOf(merchant, Profile(merchant = true, greedy = true))) {
+            for (sample in listOf(0.0, 0.5, 1.0)) {
+                val quote = PlayerTradeAdvertisementPolicy.quote(offer(), 1_000, profile, 0.0, sample)!!
+                assertEquals(1_000L, quote.price.coins)
+                assertFalse(quote.counteroffer)
+            }
+        }
+    }
+
     @Test fun roundsCounterMoneyUpToAvoidDiscountingBeyondTheChosenPercentage() {
         val ordinarySmall = PlayerTradeAdvertisementPolicy.quote(offer(coins = 25), 25, ordinary, 0.0, 0.0)!!
         val ordinaryLarge = PlayerTradeAdvertisementPolicy.quote(offer(coins = 25), 25, ordinary, 0.0, 1.0)!!
-        val merchantLarge = PlayerTradeAdvertisementPolicy.quote(offer(coins = 25), 25, merchant, 0.0, 1.0)!!
+        val merchantLarge = PlayerTradeAdvertisementPolicy.quote(offer(coins = 25), 25, greedy, 0.0, 1.0)!!
 
         assertEquals(24L, ordinarySmall.price.coins)
         assertEquals(23L, ordinaryLarge.price.coins)
@@ -288,7 +298,7 @@ class PlayerTradeAdvertisementPolicyTest {
         val ordinaryQuote = PlayerTradeAdvertisementPolicy.quote(advertisement, Long.MAX_VALUE,
             ordinary, 0.0, 0.0)!!
         val merchantQuote = PlayerTradeAdvertisementPolicy.quote(advertisement, Long.MAX_VALUE,
-            merchant, 0.0, 1.0)!!
+            greedy, 0.0, 1.0)!!
 
         assertEquals(8_762_203_435_012_037_017L, ordinaryQuote.price.coins)
         assertEquals(6_917_529_027_641_081_856L, merchantQuote.price.coins)

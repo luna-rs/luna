@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 
 /**
- * Verifies merchant resale discounts follow actual liquidity rather than a blanket liquidation bid.
+ * Verifies liquidity classification remains independent of the bounded merchant resale price range.
  *
  * @author lare96
  */
@@ -33,9 +33,9 @@ class BotMerchantLiquidityTest {
             for (intelligence in listOf(0.0, 0.5, 1.0)) {
                 for (greedy in listOf(false, true)) {
                     for (sample in listOf(0.0, 0.5, 1.0)) {
-                        val bid = BotMerchantValuation.bid(1_000, intelligence, greedy, false,
-                            false, false, false, sample, liquidity)
-                        assertTrue(bid in 750L..951L, "Unexpected liquid bid $bid")
+                        assertEquals(1.0, liquidity)
+                        val bid = BotMerchantValuation.resaleBid(1_000, intelligence, greedy, sample)
+                        assertTrue(bid in 750L..900L, "Unexpected liquid bid $bid")
                     }
                 }
             }
@@ -44,20 +44,18 @@ class BotMerchantLiquidityTest {
 
     @Test
     fun cheapSuppliesKeepTheDiscountWithinOneQuarterAtCoinResolution() {
-        assertEquals(4L, BotMerchantValuation.bid(5, 1.0, true, false,
-            false, false, false, 0.0, 1.0))
+        assertEquals(4L, BotMerchantValuation.resaleBid(5, 1.0, true, 0.0))
     }
 
     @Test
-    fun sparseNonSupplyHistoryRetainsResaleRiskWhileProtectionGrowsMonotonically() {
-        val bids = listOf(-1L, 0, 25, 284, 500, 1_000, Long.MAX_VALUE).map { samples ->
-            BotMerchantValuation.bid(10_000, 1.0, true, false, false, false, false,
-                0.0, BotMerchantValuation.liquidity(samples, false))
+    fun sparseNonSupplyHistoryDoesNotUndercutTheResaleFloor() {
+        val confidence = listOf(-1L, 0, 25, 284, 500, 1_000, Long.MAX_VALUE).map { samples ->
+            BotMerchantValuation.liquidity(samples, false)
         }
-        assertEquals(bids.sorted(), bids)
-        assertEquals(bids[0], bids[1])
-        assertTrue(bids[2] < 2_000)
-        assertEquals(bids[bids.lastIndex - 1], bids.last())
+        assertEquals(confidence.sorted(), confidence)
+        assertEquals(0.0, confidence.first())
+        assertEquals(1.0, confidence.last())
+        assertEquals(7_500L, BotMerchantValuation.resaleBid(10_000, 1.0, true, 0.0))
     }
 
     @Test
@@ -72,12 +70,12 @@ class BotMerchantLiquidityTest {
             assertTrue(BotMerchantValuation.liquidMarket(314))
             assertFalse(BotMerchantValuation.liquidMarket(1123))
             val quote = BotMerchantValuation.Quotes(bot, 1.0, true, 0, 1, 1, emptyList())
-            assertTrue(quote.buy(314, 100) in 75L..100L)
-            assertTrue(quote.buy(1123, 10_000) < 5_000)
+            assertTrue(quote.buy(314, 100) in 75L..90L)
+            assertTrue(quote.buy(1123, 10_000) in 7_500L..9_000L)
             prices[1123] = ItemPriceData(1123, 10_000.0, 10_000.0, 1_000, 0)
             assertTrue(BotMerchantValuation.liquidMarket(1123))
             val established = BotMerchantValuation.Quotes(bot, 1.0, true, 0, 1, 1, emptyList())
-            assertTrue(established.buy(1123, 10_000) >= 7_500)
+            assertTrue(established.buy(1123, 10_000) in 7_500L..9_000L)
         } finally {
             `when`(world.economy).thenReturn(originalEconomy)
         }

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
 /**
- * Verifies merchant purchase quotes protect wanted stock and cosmetic equipment.
+ * Verifies merchant resale prices share one bounded margin while personal purchases retain separate valuations.
  *
  * @author lare96
  */
@@ -41,47 +41,64 @@ class BotMerchantPricingTest {
     }
 
     @Test
-    fun cosmeticsReceiveGuidePriceEvenWithoutAPersonalWantedEntry() {
+    fun cosmeticResaleStockReceivesTheSameMarginAsOtherTradeableStock() {
         assertFalse(bot.preferences.hasWantedItem(1038))
-        assertEquals(1_000L, snapshot().buy(1038, 1_000))
+        assertTrue(snapshot().buy(1038, 1_000) in 750L..900L)
     }
 
     @Test
-    fun protectedBidsHoldAcrossJudgmentMoodAndRandomExtremes() {
+    fun resaleBidsStayWithinTheRangeAcrossJudgmentMoodAndRandomExtremes() {
         for (intelligence in listOf(0.0, 0.5, 1.0)) {
             for (greedy in listOf(false, true)) {
                 for (sample in listOf(0.0, 0.5, 1.0)) {
-                    assertTrue(BotMerchantValuation.bid(1_000, intelligence, greedy, false,
-                        false, false, true, sample) >= 1_000)
-                    assertTrue(BotMerchantValuation.bid(1_000, intelligence, greedy, true,
-                        false, false, false, sample) >= 1_000)
+                    assertTrue(BotMerchantValuation.resaleBid(1_000, intelligence, greedy, sample) in 750L..900L)
                 }
             }
         }
-        assertTrue(BotMerchantValuation.bid(1_000, 0.0, true, true,
-            true, true, false, 1.0) > 1_000)
+        assertEquals(750L, BotMerchantValuation.resaleBid(1_000, 1.0, true, 0.0))
+        assertEquals(900L, BotMerchantValuation.resaleBid(1_000, 0.0, false, 1.0))
     }
 
     @Test
     fun unrelatedStockRetainsTheMerchantDiscountAndOneCoinMinimum() {
-        assertTrue(snapshot().buy(1123, 101) in 10L..40L)
+        assertTrue(snapshot().buy(1123, 101) in 76L..90L)
         assertEquals(1L, snapshot().buy(1123, 1))
     }
 
     @Test
-    fun mixedOffersAddEachItemsOwnQuoteWithoutDiscountingWantedOrCosmeticItems() {
+    fun mixedOffersAddEachItemsOwnQuoteWithSeparatePersonalAndResaleValuation() {
         val quote = snapshot()
         val prices = mapOf(314 to quote.buy(314, 100, useful = true),
             1038 to quote.buy(1038, 1_000), 1511 to quote.buy(1511, 101))
-        assertEquals(1_200L + 3 * prices.getValue(1511),
+        assertEquals(200L + prices.getValue(1038) + 3 * prices.getValue(1511),
             TradeBasket.value(mapOf(314 to 2, 1038 to 1, 1511 to 3), prices))
     }
 
     @Test
-    fun protectedCosmeticQuotesStayWithinTheAvailableBudget() {
+    fun cosmeticResaleQuotesStayWithinTheAvailableBudget() {
         val affordable = affordableCosmetics(2_500).single()
-        assertEquals(2, affordable.item.amount)
-        assertEquals(1_000L, affordable.price)
-        assertTrue(affordableCosmetics(999).isEmpty())
+        assertTrue(affordable.item.amount in 2..3)
+        assertTrue(affordable.price in 750L..900L)
+        assertTrue(affordable.totalPrice() <= 2_500)
+        assertTrue(affordableCosmetics(749).isEmpty())
+    }
+
+    @Test
+    fun repeatedItemQuotesUseOneCapturedResaleBid() {
+        val quote = snapshot()
+        val first = quote.buy(1123, 10_000)
+        repeat(1_000) { assertEquals(first, quote.buy(1123, 99_999)) }
+        assertEquals(10_000L, quote.buy(1123, 10_000, useful = true))
+    }
+
+    @Test
+    fun maximumRepresentableReferenceKeepsItsMarginWithoutOverflow() {
+        val minimum = java.math.BigInteger.valueOf(Long.MAX_VALUE).multiply(java.math.BigInteger.valueOf(75))
+            .add(java.math.BigInteger.valueOf(99)).divide(java.math.BigInteger.valueOf(100)).longValueExact()
+        val maximum = java.math.BigInteger.valueOf(Long.MAX_VALUE).multiply(java.math.BigInteger.valueOf(90))
+            .divide(java.math.BigInteger.valueOf(100)).longValueExact()
+        for (sample in listOf(0.0, 0.5, 1.0)) {
+            assertTrue(BotMerchantValuation.resaleBid(Long.MAX_VALUE, 0.5, false, sample) in minimum..maximum)
+        }
     }
 }
