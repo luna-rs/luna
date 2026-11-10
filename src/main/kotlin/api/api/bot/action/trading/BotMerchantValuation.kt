@@ -9,6 +9,7 @@ import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
+import kotlin.math.ceil
 import kotlin.math.floor
 
 /**
@@ -65,7 +66,7 @@ object BotMerchantValuation {
 
         /**
          * Retains separate personal-use and resale quotes for each offered commodity. Personal needs use
-         * the ordinary captured buying strategy; unrelated stock keeps the merchant's resale discount.
+         * the ordinary captured buying strategy; liquid stock gets a modest margin and niche stock a resale discount.
          */
         fun buy(id: Int, guide: Long, useful: Boolean = false,
                 strategy: BotTradePrice = BotTradePrice.EXACT): Long = bids.getOrPut(id to useful) {
@@ -73,7 +74,7 @@ object BotMerchantValuation {
             if (useful) strategy.applyBuy(reference).coerceAtLeast(1)
             else bid(reference, intelligence, greedy, BotEquipmentPreferences.isCosmetic(id),
                 BotEquipmentPreferences.likes(bot, id), BotEquipmentPreferences.prefers(bot, id), false,
-                rand().nextDouble())
+                rand().nextDouble(), marketLiquidity(id))
         }
 
         /**
@@ -116,6 +117,27 @@ object BotMerchantValuation {
     fun buy(bot: Bot, id: Int, guide: Long, useful: Boolean = false): Long = snapshot(bot).buy(id, guide, useful)
 
     /**
+     * Recognizes common supplies and established markets from actual samples, independently of popularity seeds.
+     * Notes use their unnoted commodity's history. Sparse non-supply markets gain protection gradually.
+     */
+    fun marketLiquidity(id: Int): Double {
+        val base = itemDef(id).unnotedId.orElse(id)
+        val samples = world.economy.prices[base]?.samples ?: 0L
+        return liquidity(samples, BotTradeSelection.supplyPriority(base) > 0)
+    }
+
+    /**
+     * Identifies markets whose advertised prices should not receive another merchant bargaining discount.
+     */
+    fun liquidMarket(id: Int): Boolean = marketLiquidity(id) >= 1.0
+
+    /**
+     * Treats supplies as readily resalable and gives other items full protection after 1,000 observed samples.
+     */
+    internal fun liquidity(samples: Long, supply: Boolean): Double =
+        if (supply) 1.0 else (samples.coerceAtLeast(0L).toDouble() / 1_000.0).coerceAtMost(1.0)
+
+    /**
      * Prices a personal cosmetic purchase without applying a merchant's resale discount.
      */
     fun cosmeticBuy(bot: Bot, id: Int, guide: Long): Long = cosmeticBid(
@@ -131,9 +153,12 @@ object BotMerchantValuation {
     /**
      * Computes an explicit quote from a captured emotional state and random sample. Useful items and cosmetics
      * retain at least their reference value, while personal temptation can still raise the bid above it.
+     * Liquid stock receives 75 to 95 percent of its reference instead of the speculative resale discount.
+     * Rounding those bids upward keeps cheap supplies within the same maximum discount at whole-coin resolution.
      */
     internal fun bid(reference: Long, intelligence: Double, greedy: Boolean, cosmetic: Boolean,
-                     liked: Boolean, preferred: Boolean, useful: Boolean, sample: Double): Long {
+                     liked: Boolean, preferred: Boolean, useful: Boolean, sample: Double,
+                     liquidity: Double = 0.0): Long {
         val judgment = intelligence.coerceIn(0.0, 1.0)
         val roll = sample.coerceIn(0.0, 1.0)
         val fraction = when {
@@ -146,7 +171,12 @@ object BotMerchantValuation {
             else -> (0.20 + roll * 0.30 - judgment * 0.10 - if (greedy) 0.05 else 0.0)
                 .coerceIn(0.10, 0.50)
         }
-        return scaled(reference, if (cosmetic || useful) fraction.coerceAtLeast(1.0) else fraction)
+        if (cosmetic || useful) return scaled(reference, fraction.coerceAtLeast(1.0))
+        val market = 0.82 + roll * 0.13 - judgment * 0.05 - if (greedy) 0.02 else 0.0
+        val confidence = liquidity.coerceIn(0.0, 1.0)
+        val multiplier = fraction + (market - fraction) * confidence
+        return if (confidence > 0.0) ceil(reference.coerceAtLeast(1).toDouble() * multiplier).toLong().coerceAtLeast(1)
+            else scaled(reference, multiplier)
     }
 
     /**

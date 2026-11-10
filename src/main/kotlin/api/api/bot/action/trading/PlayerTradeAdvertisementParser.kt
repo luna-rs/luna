@@ -2,11 +2,12 @@ package api.bot.action.trading
 
 import api.bot.action.trading.PlayerTradeAdvertisement.Price
 import api.bot.action.trading.PlayerTradeAdvertisement.PriceBasis
+import api.bot.action.trading.PlayerTradeAdvertisement.Direction
 import java.math.BigDecimal
 import java.util.Locale
 
 /**
- * Reads public selling advertisements once, leaving buyer selection and live trade validation to the marketplace.
+ * Reads public buying and selling advertisements once, leaving live trade validation to the marketplace.
  *
  * Each separated clause carries its own quantity and price. Only explicit unit or total wording establishes a price
  * basis; a bare amount remains unclear. Name lookup is injected so parsing does not require a running world or cache.
@@ -58,38 +59,42 @@ class PlayerTradeAdvertisementParser(private val resolveItems: (String) -> IntAr
     fun parseAdvertisement(text: String): List<PlayerTradeAdvertisement>? {
         if (text.length > MAX_MESSAGE_LENGTH || text.any { it == '\n' || it == '\r' }) return null
         val normalized = text.lowercase(Locale.ROOT).trim().replace(SPACES, " ")
-        val prefix = SELLING.find(normalized) ?: return null
-        return normalized.substring(prefix.range.last + 1).split(SEPARATORS).flatMap(::parseOffers)
+        val direction = if (SELLING.containsMatchIn(normalized)) Direction.SELL else Direction.BUY
+        val prefix = (if (direction == Direction.SELL) SELLING else BUYING).find(normalized) ?: return null
+        return normalized.substring(prefix.range.last + 1).split(SEPARATORS).flatMap { parseOffers(it, direction) }
     }
 
     /**
      * Prefers complete resolved names before interpreting conjunctions as separate offers. A long name such as
      * "pestle and mortar" stays intact even when another sale follows it in the same clause.
      */
-    private fun parseOffers(clause: String): List<PlayerTradeAdvertisement> {
+    private fun parseOffers(clause: String, direction: Direction): List<PlayerTradeAdvertisement> {
         val text = clause.trim()
-        if (BUYING.containsMatchIn(text)) return emptyList()
-        val whole = parseClause(text)
+        val opposite = if (direction == Direction.SELL) BUYING else SELLING
+        if (opposite.containsMatchIn(text)) return emptyList()
+        val whole = parseClause(text, direction)
         if (whole?.itemIds?.isNotEmpty() == true) return listOf(whole)
         val separators = CONJUNCTIONS.findAll(text).toList()
         for (separator in separators.asReversed()) {
-            val first = parseClause(text.substring(0, separator.range.first))
+            val first = parseClause(text.substring(0, separator.range.first), direction)
             if (first?.itemIds?.isNotEmpty() == true) {
-                return listOf(first) + parseOffers(text.substring(separator.range.last + 1))
+                return listOf(first) + parseOffers(text.substring(separator.range.last + 1), direction)
             }
         }
         val first = separators.firstOrNull() ?: return listOfNotNull(whole)
-        return listOfNotNull(parseClause(text.substring(0, first.range.first))) +
-                parseOffers(text.substring(first.range.last + 1))
+        return listOfNotNull(parseClause(text.substring(0, first.range.first), direction)) +
+                parseOffers(text.substring(first.range.last + 1), direction)
     }
 
     /**
      * Extracts one item's terms without taking dose, charge or equipment numbers out of a resolved item name.
      */
-    private fun parseClause(clause: String): PlayerTradeAdvertisement? {
+    private fun parseClause(clause: String, direction: Direction): PlayerTradeAdvertisement? {
         var name = clause.trim()
-        if (name.isEmpty() || BUYING.containsMatchIn(name)) return null
-        SELLING.find(name)?.let { name = name.substring(it.range.last + 1).trim() }
+        val opposite = if (direction == Direction.SELL) BUYING else SELLING
+        val prefix = if (direction == Direction.SELL) SELLING else BUYING
+        if (name.isEmpty() || opposite.containsMatchIn(name)) return null
+        prefix.find(name)?.let { name = name.substring(it.range.last + 1).trim() }
 
         var price: Price? = null
         val explicit = EXPLICIT_PRICE.matchEntire(name)
@@ -122,7 +127,7 @@ class PlayerTradeAdvertisementParser(private val resolveItems: (String) -> IntAr
             }
         }
         if (name.none { it.isLetter() } || NUMBER.matches(name)) return null
-        return PlayerTradeAdvertisement(name, ids?.toSet().orEmpty(), quantity, price)
+        return PlayerTradeAdvertisement(name, ids?.toSet().orEmpty(), quantity, price, direction)
     }
 
     /**

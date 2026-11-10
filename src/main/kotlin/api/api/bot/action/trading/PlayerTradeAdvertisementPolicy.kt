@@ -98,7 +98,7 @@ object PlayerTradeAdvertisementPolicy {
      * @return A quote, or `null` for an unavailable commodity valuation or terms needing broad-buyer inspection.
      */
     fun quote(offer: PlayerTradeAdvertisement, maximumUnitPrice: Long, profile: Profile,
-              haggleRoll: Double, discountRoll: Double): Quote? {
+              haggleRoll: Double, discountRoll: Double, liquidMarket: Boolean = false): Quote? {
         requireSample(haggleRoll)
         requireSample(discountRoll)
         if (maximumUnitPrice <= 0 || offer.requiresInspection) return null
@@ -113,7 +113,7 @@ object PlayerTradeAdvertisementPolicy {
             // This branch proves the positive ceiling fits below a representable advertised amount.
             return Quote(Price(ceiling.longValueExact(), asking.basis), true)
         }
-        if (haggleRoll >= haggleChance(profile)) return Quote(asking, false)
+        if (profile.merchant && liquidMarket || haggleRoll >= haggleChance(profile)) return Quote(asking, false)
         val bargain = profile.merchant || profile.greedy
         val minimum = BigDecimal.valueOf(if (bargain) 10L else 5L, 2)
         val spread = BigDecimal.valueOf(if (bargain) 15L else 5L, 2)
@@ -123,6 +123,25 @@ object PlayerTradeAdvertisementPolicy {
             .setScale(0, RoundingMode.CEILING).longValueExact()
         return if (counter > 0 && counter < asking.coins) Quote(Price(counter, asking.basis), true)
             else Quote(asking, false)
+    }
+
+    /**
+     * Honors an explicit buyer's price when it covers the carried stock's asking price. A lower bid receives
+     * one stable unit-price counteroffer; unpriced buying messages use the bot's existing asking price.
+     */
+    fun saleQuote(offer: PlayerTradeAdvertisement, minimumUnitPrice: Long): Quote? {
+        if (offer.direction != PlayerTradeAdvertisement.Direction.BUY || offer.itemIds.size != 1 ||
+            minimumUnitPrice <= 0) return null
+        val bid = offer.price
+        if (bid == null) return Quote(Price(minimumUnitPrice, PriceBasis.EACH), false)
+        val units = when (bid.basis) {
+            PriceBasis.EACH -> 1
+            PriceBasis.TOTAL -> offer.quantity ?: return null
+            PriceBasis.UNCLEAR -> return null
+        }
+        val minimum = BigInteger.valueOf(minimumUnitPrice).multiply(BigInteger.valueOf(units.toLong()))
+        return if (BigInteger.valueOf(bid.coins) >= minimum) Quote(bid, false)
+        else Quote(Price(minimumUnitPrice, PriceBasis.EACH), true)
     }
 
     /**

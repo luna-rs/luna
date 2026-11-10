@@ -59,8 +59,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Buyers carry coins and eligible surplus payment stock; sellers carry noted sale stock when possible.
  * Bot-to-bot exchanges use the seller's asking
  * prices when they fit the buyer's limits, so both participants independently calculate the same exchange.
- * Human sellers are paid for wanted quantities at the bot's advertised buying prices. Human buyers may pay in
- * coins, priced tradeable items, or both, valued at guide prices for this trade attempt.
+ * Human sellers receive only carried coins for affordable wanted quantities. Bots offer items to a human only
+ * for the exact commodity in that player's buying advertisement; those buyers may pay with coins or items.
  *
  * Negotiations apply quantity differences against explicit target baskets. Empty exchanges, unsuccessful item
  * movements, repeated offer cycles, and expired waits decline the trade. Both screens are checked against the
@@ -640,7 +640,7 @@ class TradeBotScript(bot: Bot,
         val candidates = if (buying) wants else offers
         // Preserve the buyer's budget allocation order; sellers favor stock with a current market match.
         val selected = if (purpose == BotTradePurpose.SELL && !merchantSelling || browsing && purpose == BotTradePurpose.BUY) {
-            prioritizeMarketItems(candidates.sortedByDescending(::stackValue), offers, traders).take(1)
+            prioritizeMarketItems(candidates, offers, traders).take(1)
         } else candidates
         offering = if (buying) offers else selected
         expected = if (purpose == BotTradePurpose.BUY) selected.take(1) else if (buying) selected
@@ -763,12 +763,6 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
-     * Compares entire stack values without clipping them to the coin item's integer quantity limit.
-     */
-    private fun stackValue(quote: BotTradeItem): Long =
-        TradeBasket.value(mapOf(quote.item.id to quote.item.amount), mapOf(quote.item.id to quote.price))
-
-    /**
      * Prepares a current advertised purchase without claiming the player or sending a message.
      * Pending bot approaches may inspect their own higher-priority opportunity before yielding.
      */
@@ -782,6 +776,9 @@ class TradeBotScript(bot: Bot,
         if (!advertisementReady(entry.player, allowPendingBotApproach, continuing = remembered != null)) return null
         val remaining = entry.remainingQuantity(advertised)
         if (remaining == 0) return null
+        if (advertised.direction == PlayerTradeAdvertisement.Direction.BUY) {
+            return advertisedSaleCandidate(market, entry, advertised, remembered, offered, receiving)
+        }
         val allowance = preparedAdvertisementFunding()
         val physical = currentAdvertisementFunding(allowance, offered)
         val funding = quantities(physical.toItems(), true)
@@ -807,6 +804,53 @@ class TradeBotScript(bot: Bot,
         context.plan = advertisementPaymentPlan(context, minOf(demand.first, remaining ?: Int.MAX_VALUE),
             funding, receiving, offered) ?: return null
         return context
+    }
+
+    /**
+     * Offers only the exact requested commodity from this trip's transferable surplus. The player's buying
+     * message is the sole cashless exception, and never causes a bank withdrawal or a guessed item variant.
+     */
+    private fun advertisedSaleCandidate(market: PlayerTradeAdvertisementMarket,
+                                        entry: PlayerTradeAdvertisementRegistry.Entry,
+                                        advertised: PlayerTradeAdvertisement,
+                                        remembered: PlayerTradeAdvertisementMarket.Remembered?,
+                                        offered: Collection<Item>, receiving: Map<Int, Int>): Opportunity? {
+        val id = advertised.itemIds.singleOrNull() ?: return null
+        if (id == COINS || !itemDef(id).isTradeable) return null
+        val allowance = carriedOffer.filterKeys { unnotedId(it) == id }
+        if (currentAdvertisementFunding(allowance, offered).isEmpty()) return null
+        val ask = offering.firstOrNull { unnotedId(it.item.id) == id }?.price ?: return null
+        val pricing = remembered?.pricing ?: market.pricing(entry, bot, advertised, id) {
+            PlayerTradeAdvertisementPolicy.saleQuote(advertised, ask)?.let {
+                Pricing(id, ask, it, advertisementProfile)
+            }
+        } ?: return null
+        val context = Opportunity(market, this, entry, advertised, pricing, null, allowance,
+            mapOf(id to ask), false, false, remembered?.counterSent == true, remembered != null)
+        context.communicated = remembered?.pricing != null
+        context.plan = advertisedSalePlan(context, receiving, offered) ?: return null
+        return context
+    }
+
+    /**
+     * Bounds an explicit sale by remaining requested quantity, current carried goods, and the human's payment
+     * value. Before payment appears the bot displays its available quantity at the captured asking terms.
+     */
+    private fun advertisedSalePlan(context: Opportunity, receiving: Map<Int, Int>,
+                                   offered: Collection<Item>): PlayerTradeAdvertisementPayment.Plan? {
+        val pricing = context.pricing ?: return null
+        val physical = currentAdvertisementFunding(context.allowance, offered)
+        val stock = quantities(physical.toItems(), true)
+        val available = minOf(stock[pricing.itemId] ?: 0,
+            context.entry.remainingQuantity(context.offer) ?: Int.MAX_VALUE)
+        if (available <= 0) return null
+        val budget = if (receiving.isEmpty()) Long.MAX_VALUE else receivedValue(receiving, context.receivedPrices)
+        val quantity = PlayerTradeAdvertisementPayment.affordableQuantity(context.offer, pricing.quote, available, budget)
+        if (quantity <= 0) return null
+        val cost = PlayerTradeAdvertisementPayment.cost(context.offer, pricing.quote, quantity) ?: return null
+        val payment = carriedQuantities(mapOf(pricing.itemId to quantity), physical)
+        if (payment.isEmpty()) return null
+        return PlayerTradeAdvertisementPayment.Plan(quantity, payment, cost, cost)
     }
 
     /**
@@ -842,19 +886,14 @@ class TradeBotScript(bot: Bot,
      */
     private fun preparedAdvertisementFunding(): Map<Int, Int> {
         advertisementFunding?.let { return it }
-        val selected = if (buying) carriedOffer else {
-            val normalized = quantities(carriedOffer.toItems(), true)
+        val selected = if (buying) carriedOffer.filterKeys { it == COINS } else {
             val profile = advertisementProfile
             val fraction = BotTradeIntentions.spendingFraction(profile.intelligence, profile.greedy, profile.merchant)
-            val stock = normalized.filterKeys { it != COINS }.map { (id, amount) ->
-                BotTradeItem(Item(id, amount), guideForAdvertisement(id), BotTradePurpose.BUY, bot)
-            }
-            val budgeted = BotTradeManager.spendingStock(stock, fraction).associate { it.item.id to it.item.amount }
-                .toMutableMap()
-            val coins = BigDecimal.valueOf((normalized[COINS] ?: 0).toLong()).multiply(BigDecimal.valueOf(fraction))
+            val held = bot.inventory.filterNotNull().asSequence().filter { it.id == COINS && !it.isDynamic }
+                .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong())
+            val coins = BigDecimal.valueOf(held).multiply(BigDecimal.valueOf(fraction))
                 .setScale(0, RoundingMode.FLOOR).toInt()
-            if (coins > 0) budgeted[COINS] = coins
-            carriedQuantities(budgeted)
+            if (coins > 0) mapOf(COINS to coins) else emptyMap()
         }
         advertisementFunding = selected.toMap()
         if (curiosityRemaining == null) {
@@ -912,7 +951,8 @@ class TradeBotScript(bot: Bot,
                 else -> resolveTradePrice().applyBuy(guide)
             }
             PlayerTradeAdvertisementPolicy.quote(concreteAdvertisement(advertised, id), maximum, profile,
-                rand().nextDouble(), rand().nextDouble())?.let { Pricing(id, maximum, it, profile) }
+                rand().nextDouble(), rand().nextDouble(), BotMerchantValuation.liquidMarket(id))
+                ?.let { Pricing(id, maximum, it, profile) }
         }
 
     /**
@@ -938,11 +978,15 @@ class TradeBotScript(bot: Bot,
      * Runs an advertised or ordinary trade through the same request, offer and confirmation lifecycle.
      */
     private suspend fun attemptTrade(other: Player, advertised: Opportunity?) {
+        val direct = if (advertised == null && !other.isRealBot())
+            PlayerTradeAdvertisementMarket.live.directPurchase(this, other) else null
+        if (direct != null && !direct.market.claimDirectPurchase(direct)) return
+        if (!other.isRealBot() && advertised == null && direct == null && (!buying || humanPaymentStock().isEmpty())) return
         negotiating = true
         pendingPartner = other
         var success = false
         var yieldedToPlayer = false
-        var advertisement = advertised
+        var advertisement = advertised ?: direct
         try {
             advertisementTrade = advertisement
             val existing = bot.overlays[OfferTradeInterface::class]
@@ -959,8 +1003,8 @@ class TradeBotScript(bot: Bot,
                         }
                     }, canContinue = { advertisementApproachAlive(context) })
                 } else request.sendAndAwait {
-                    val proceed = !other.isRealBot() ||
-                            !hasHumanRequest() && !PlayerTradeAdvertisementMarket.live.hasPriority(this)
+                    val proceed = if (!other.isRealBot()) buying && humanPaymentStock().isNotEmpty()
+                        else !hasHumanRequest() && !PlayerTradeAdvertisementMarket.live.hasPriority(this)
                     if (!proceed) yieldedToPlayer = true
                     proceed
                 }
@@ -1022,6 +1066,9 @@ class TradeBotScript(bot: Bot,
         val current = context.response?.let(registry::isCurrent)
             ?: (context.continuation && registry.find(context.entry.player) === context.entry)
         if (!current || !advertisementReady(context.entry.player, continuing = true, inAttempt = true)) return false
+        if (context.offer.direction == PlayerTradeAdvertisement.Direction.BUY) {
+            return advertisedSalePlan(context, emptyMap(), emptyList()) != null
+        }
         val held = quantities(currentAdvertisementFunding(context.allowance).toItems(), true)
         val value = TradeBasket.value(held, context.paymentPrices)
         val pricing = context.pricing ?: return value > 0
@@ -1084,6 +1131,9 @@ class TradeBotScript(bot: Bot,
 
     private fun advertisementPlan(context: Opportunity, receiving: Map<Int, Int>, offered: Collection<Item>,
                                   maximum: Boolean): PlayerTradeAdvertisementPayment.Plan? {
+        if (context.offer.direction == PlayerTradeAdvertisement.Direction.BUY) {
+            return advertisedSalePlan(context, if (maximum) emptyMap() else receiving, offered)
+        }
         val received = quantities(receiving.toItems(), true)
         val id = if (received.isEmpty()) context.pricing?.itemId else received.keys.singleOrNull()
         if (id == null || id == COINS || context.pricing?.let { it.itemId != id } == true ||
@@ -1123,8 +1173,8 @@ class TradeBotScript(bot: Bot,
         val stackable = available.filter { itemDef(it.first).isStackable }.sumOf { it.second.toLong() }
         var limit = minOf(wanted.toLong(), available.sumOf { it.second.toLong() }).toInt()
         repeat(bot.inventory.capacity() + 1) {
-            val plan = PlayerTradeAdvertisementPayment.plan(concreteAdvertisement(context.offer, pricing.itemId),
-                pricing.quote, pricing.maximumUnitPrice, pricing.profile, limit, funding, context.paymentPrices,
+            val plan = PlayerTradeAdvertisementPayment.cashPlan(concreteAdvertisement(context.offer, pricing.itemId),
+                pricing.quote, pricing.maximumUnitPrice, limit, funding[COINS] ?: 0,
                 if (context.unexpected) curiosityRemaining ?: 0 else Long.MAX_VALUE) ?: return null
             val projected = projectedAdvertisementInventory(context, plan.payment, offered) ?: return null
             var remaining = plan.quantity
@@ -1208,6 +1258,9 @@ class TradeBotScript(bot: Bot,
      * The normal stage finisher still validates both participants and baskets on both acceptance screens.
      */
     private suspend fun negotiateAdvertisement(offer: BotTradeOfferStage, context: Opportunity): Boolean {
+        if (context.offer.direction == PlayerTradeAdvertisement.Direction.BUY) {
+            return negotiateAdvertisedSale(offer, context)
+        }
         val timer = Stopwatch.createStarted()
         val timing = BotTradeOfferTiming()
         val feedback = BotTradeFeedback(bot, context.entry.player)
@@ -1288,6 +1341,76 @@ class TradeBotScript(bot: Bot,
             }
         }
         bot.log("Advertised purchase expired or stopped making progress.")
+        return false
+    }
+
+    /**
+     * Sells one explicitly requested commodity, accepting coins or valued tradeable items. Target changes and
+     * both acceptance screens use the captured price and current physical goods, including already offered notes.
+     */
+    private suspend fun negotiateAdvertisedSale(offer: BotTradeOfferStage, context: Opportunity): Boolean {
+        val timer = Stopwatch.createStarted()
+        val timing = BotTradeOfferTiming()
+        val feedback = BotTradeFeedback(bot, context.entry.player)
+        val seen = HashMap<Pair<Map<Int, Int>, Map<Int, Int>>, Int>()
+        var previous: Pair<Map<Int, Int>, Map<Int, Int>>? = null
+        var rounds = 0
+        while (timer.elapsed().seconds < BotTradeManager.OFFER_WAIT_SECONDS && rounds < MAX_NEGOTIATION_ROUNDS) {
+            val screen = bot.overlays[OfferTradeInterface::class] ?: return false
+            if (screen.other !== context.entry.player) return false
+            if (!awaitPlayerOffer(screen, timer, timing)) continue
+            val revision = screen.otherOffer.revision
+            val mine = offer.getTradeItems()
+            val theirs = offer.getOtherTradeItems()
+            if (theirs.any { it.isDynamic || !it.itemDef.isTradeable }) return false
+            val own = quantities(mine)
+            val receiving = quantities(theirs)
+            val state = own to receiving
+            if (state != previous) {
+                previous = state
+                rounds++
+                val visits = (seen[state] ?: 0) + 1
+                seen[state] = visits
+                if (visits > 2) return false
+            }
+            val plan = advertisedSalePlan(context, receiving, mine)
+            if (plan == null) {
+                feedback.send("Your payment doesn't cover one item. Please offer more coins or useful items.", revision)
+                waitFor(2.seconds) {
+                    bot.overlays[OfferTradeInterface::class] !== screen || screen.otherOffer.revision != revision
+                }
+                continue
+            }
+            context.plan = plan
+            if (!announceAdvertisement(context)) return false
+            val target = plan.payment
+            if (own != target) {
+                if (!applyTarget(offer, target) { screen.otherOffer.revision == revision }) {
+                    if (bot.overlays[OfferTradeInterface::class] === screen &&
+                        screen.otherOffer.revision != revision) continue
+                    return false
+                }
+                continue
+            }
+            val adjustment = if (receiving.isEmpty()) "Please offer coins or items for the stock you asked to buy."
+                else tradeSpaceAdjustment(context.entry.player, own, receiving)
+            if (adjustment != null) feedback.send(adjustment, revision)
+            else {
+                feedback.send("My offer is ready. Please review it and accept.", revision)
+                if (finishTradeWith(offer, own, receiving) {
+                    advertisedSalePlan(context, receiving, mine)?.payment == own
+                }) {
+                    completeAdvertisement(context, plan)
+                    return true
+                }
+            }
+            if (bot.overlays[OfferTradeInterface::class] !== screen) return false
+            waitFor(2.seconds) {
+                bot.overlays[OfferTradeInterface::class] !== screen || quantities(offer.getTradeItems()) != own ||
+                    quantities(offer.getOtherTradeItems()) != receiving
+            }
+        }
+        bot.log("Advertised sale expired or stopped making progress.")
         return false
     }
 
@@ -1391,7 +1514,7 @@ class TradeBotScript(bot: Bot,
         }
         if (buying) {
             val received = quantities(receiving.toItems(), true)
-            val demand = effectiveExpected(receiving)
+            val demand = humanPurchaseDemand(receiving)
             val wanted = quantities(demand.map { it.item }, true)
             if (purpose == BotTradePurpose.BUY && received.size != 1) {
                 val id = demand.firstOrNull { it.item.id in received }?.item?.id ?: expected.firstOrNull()?.item?.id
@@ -1531,10 +1654,12 @@ class TradeBotScript(bot: Bot,
         return if (buying) paid to goods else goods to paid
     }
 
-    /** Computes the outgoing target for a human offer using stable per-attempt guide prices for barter. */
+    /**
+     * Computes an affordable coin-only payment for a human seller.
+     */
     private fun humanTarget(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Map<Int, Int> {
         if (buying) {
-            val demand = effectiveExpected(receiving)
+            val demand = humanPurchaseDemand(receiving)
             val wanted = quantities(demand.map { it.item }, true)
             val received = quantities(receiving.toItems(), true)
             val useful = received.mapValues { (id, amount) -> minOf(amount, wanted[id] ?: 0) }
@@ -1549,19 +1674,11 @@ class TradeBotScript(bot: Bot,
                 })
                 if (normalValue > Long.MAX_VALUE - resaleValue) Long.MAX_VALUE else normalValue + resaleValue
             } else TradeBasket.value(selected, unitPrices)
-            val payment = quantities(carriedOffer.toItems(), true)
-            val paymentPrices = prices(offering)
+            val payment = quantities(humanPaymentStock().toItems(), true)
             val coins = minOf(budget, (payment[COINS] ?: 0).toLong()).toInt()
-            val offered = TradeBasket.select(payment.filterKeys { it != COINS }, paymentPrices, budget - coins)
-                .toMutableMap()
-            if (coins > 0) offered[COINS] = coins
-            return carriedQuantities(offered)
+            return if (coins > 0) mapOf(COINS to coins) else emptyMap()
         }
-        val stock = humanSaleStock()
-        if (receiving.isEmpty()) return stock
-        val budget = receivedValue(receiving, guidePrices)
-        return carriedQuantities(TradeBasket.select(quantities(stock.toItems(), true), prices(offering), budget,
-            salePriority()))
+        return emptyMap()
     }
 
     /**
@@ -1572,10 +1689,10 @@ class TradeBotScript(bot: Bot,
 
     /** Ensures ordinary exchanges receive useful stock or payment, even when scrutiny is permissive. */
     private fun hasUsefulReturn(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Boolean {
-        if (!buying) return receivedValue(receiving, guidePrices) > 0
+        if (!buying) return false
         val received = quantities(receiving.toItems(), true)
         if (purpose == BotTradePurpose.BUY && received.size != 1) return false
-        val wanted = quantities(effectiveExpected(receiving).map { it.item }, true)
+        val wanted = quantities(humanPurchaseDemand(receiving).map { it.item }, true)
         // Do not pay for extras beyond wanted stock or accept unrelated items in place of the advertised purchase.
         return received.isNotEmpty() && received.all { (id, amount) -> amount <= (wanted[id] ?: 0) }
     }
@@ -1636,9 +1753,20 @@ class TradeBotScript(bot: Bot,
         merchantValuation ?: BotMerchantValuation.snapshot(bot).also { merchantValuation = it }
 
     /**
-     * Human offers can buy any carried sale stock, using the same priority as other exchanges.
+     * Caps direct player purchases to the original coin allowance and gold still held or already offered.
      */
-    private fun humanSaleStock(): Map<Int, Int> = carriedOffer
+    private fun humanPaymentStock(): Map<Int, Int> = currentAdvertisementFunding(
+        carriedOffer.filterKeys { it == COINS },
+        bot.overlays[OfferTradeInterface::class]?.items?.filterNotNull().orEmpty())
+
+    /**
+     * Human sellers never inherit the larger budget supplied by bot-to-bot barter stock.
+     */
+    private fun humanPurchaseDemand(receiving: Map<Int, Int>): List<BotTradeItem> {
+        val coins = humanPaymentStock()[COINS] ?: return emptyList()
+        val payment = listOf(BotTradeItem(Item(COINS, coins), 1, purpose, bot))
+        return BotTradeManager.affordablePurchases(effectiveExpected(receiving, mapOf(COINS to coins)), payment)
+    }
 
     /**
      * Values personal needs at normal buying quotes and surplus payment at resale quotes, with coins worth one coin.
@@ -1746,7 +1874,8 @@ class TradeBotScript(bot: Bot,
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
-        if (!other.isRealBot()) return true
+        if (!other.isRealBot()) return buying && humanPaymentStock().isNotEmpty() ||
+                PlayerTradeAdvertisementMarket.live.directPurchase(this, other) != null
         val script = other.scriptStack.current() as? TradeBotScript ?: return false
         if (script.negotiating && other.tradingWith != bot.index && existing?.other !== bot) return false
         if (other.tradingWith != -1 && other.tradingWith != bot.index && existing?.other !== bot) return false

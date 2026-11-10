@@ -77,7 +77,8 @@ internal object PlayerTradeAdvertisementSelection {
         if (left.quote.counteroffer) {
             val priceOrder = BigInteger.valueOf(left.quote.price.coins).multiply(denominator(right))
                 .compareTo(BigInteger.valueOf(right.quote.price.coins).multiply(denominator(left)))
-            if (priceOrder != 0) return priceOrder
+            if (priceOrder != 0) return if (left.offer.direction == PlayerTradeAdvertisement.Direction.BUY)
+                -priceOrder else priceOrder
         }
         return left.plan.quantity.compareTo(right.plan.quantity)
     }

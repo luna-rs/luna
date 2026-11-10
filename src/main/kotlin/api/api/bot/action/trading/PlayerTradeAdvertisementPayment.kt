@@ -28,6 +28,14 @@ object PlayerTradeAdvertisementPayment {
     data class Plan(val quantity: Int, val payment: Map<Int, Int>, val cost: Long, val paidValue: Long)
 
     /**
+     * Pays a player's sale only with the bot's carried coins. Surplus stock cannot enlarge the purchase or
+     * substitute for missing gold; the ordinary exact-price and lot-rounding rules remain shared.
+     */
+    fun cashPlan(offer: PlayerTradeAdvertisement, quote: Quote, maximumUnitPrice: Long, wanted: Int,
+                 coins: Int, spendingLimit: Long = Long.MAX_VALUE): Plan? =
+        plan(offer, quote, maximumUnitPrice, Profile(), wanted, mapOf(COINS to coins), mapOf(COINS to 1L), spendingLimit)
+
+    /**
      * One eligible carried payment commodity, using normalized ids and a fixed positive guide value.
      *
      * @author lare96

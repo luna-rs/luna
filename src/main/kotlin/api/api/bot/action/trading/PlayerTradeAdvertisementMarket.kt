@@ -70,6 +70,7 @@ internal class PlayerTradeAdvertisementMarket(
         var quantityShrinkNotified = false
         var communicated = false
         var completed = false
+        val receivedPrices = HashMap<Int, Long>()
     }
 
     /**
@@ -191,6 +192,38 @@ internal class PlayerTradeAdvertisementMarket(
         return heard[entry]?.sent?.get(script.bot)?.values?.map {
             Remembered(entry, it.offer, it.pricing, it.counterSent)
         }.orEmpty()
+    }
+
+    /**
+     * Matches a player's own request to their current explicit buying message. Cashless bots may respond only
+     * with that exact commodity; unrelated carried stock and unknown item groups never create an exception.
+     */
+    fun directPurchase(script: TradeBotScript, player: Player): Opportunity? {
+        prune()
+        val entry = registry.find(player) ?: return null
+        if (heard[entry]?.audience?.none { it === script.bot } != false) return null
+        val remembered = rememberedOffers(script, player)
+        for (offer in entry.availableOffers) {
+            if (offer.direction != PlayerTradeAdvertisement.Direction.BUY) continue
+            val previous = remembered.lastOrNull { it.offer == offer }
+            if (entry.wasAttempted(script.bot, offer) && previous == null) continue
+            val context = script.advertisementCandidate(this, entry, offer,
+                allowPendingBotApproach = true,
+                remembered = previous ?: Remembered(entry, offer, null, false)) ?: continue
+            return context
+        }
+        return null
+    }
+
+    /**
+     * Reserves a direct buying-message response only after the matching native request has been chosen.
+     */
+    fun claimDirectPurchase(opportunity: Opportunity): Boolean {
+        opportunity.response = if (opportunity.entry.wasAttempted(opportunity.script.bot, opportunity.offer))
+            registry.resume(opportunity.entry, opportunity.script.bot)
+        else registry.claim(opportunity.entry, opportunity.script.bot, opportunity.offer)
+        if (opportunity.response != null) heard[opportunity.entry]?.invalidateSelection()
+        return opportunity.response != null
     }
 
     /**

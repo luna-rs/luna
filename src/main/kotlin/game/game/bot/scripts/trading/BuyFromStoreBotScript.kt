@@ -1,6 +1,7 @@
 package game.bot.scripts.trading
 
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotTradeSelection
 import api.bot.script.DynamicBotScript
 import api.bot.zone.SubZone
 import api.predef.*
@@ -49,16 +50,17 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
     }
 
     /**
-     * Random purchase ordering that favors valuable items without excluding inexpensive alternatives.
+     * Random purchase ordering that favours established supplies and explicit acquisition priorities.
      *
      * @author lare96
      */
     internal object ShopPurchaseSelection {
 
         /**
-         * Square-root scaling keeps expensive items attractive without letting their raw GP value dominate.
+         * Square-root scaling softens observed popularity without making expensive niche items more desirable.
          */
-        fun weight(price: Double, priority: Int): Double = sqrt(price.coerceAtLeast(1.0)) * (1 + priority.coerceAtLeast(0))
+        fun weight(popularity: Double, priority: Int): Double =
+            sqrt(1.0 + popularity.coerceAtLeast(0.0)) * (1 + priority.coerceAtLeast(0))
 
         /**
          * Exponential races produce a weighted shuffle without replacement; equal weights are a uniform shuffle.
@@ -210,18 +212,21 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         val candidates = BotTradeIntentions.purchases(bot)
             .filterNot { it.id in blocked || it.id == COINS_ID }
             .filter { wanted -> shopsFor(shops, wanted.id).any { canBuyOne(it, wanted.id, budget) } }
-        return ShopPurchaseSelection.order(candidates) { shoppingWeight(it.id) }
-            .sortedWith(compareByDescending<WantedItemDefinition> { it.priority.level }
+        val ordered = ShopPurchaseSelection.order(candidates) { shoppingWeight(it.id) }
+        return BotTradeSelection.supplyOrder(ordered) { BotTradeSelection.supplyPriority(it.id) }
+            .sortedWith(compareByDescending<WantedItemDefinition> {
+                it.priority == WantedItemDefinition.WantedItemPriority.URGENT
+            }
                 .thenByDescending { bot.canUseWantedItem(it.id) }).firstOrNull()
     }
 
     /**
-     * Uses current economy value and the bot's wanted priority as measures of desirability.
+     * Uses observed popularity and the bot's wanted priority as measures of desirability.
      */
     private fun shoppingWeight(id: Int): Double {
         val wanted = bot.preferences.getWantedItem(id) ?: WantedItemDefinition.DEFAULT.get(id).orElse(null)
         val priority = wanted?.priority?.level ?: WantedItemDefinition.DEFAULT_PRIORITY.level
-        return ShopPurchaseSelection.weight(world.economy.getRealPrice(id), priority)
+        return ShopPurchaseSelection.weight(BotTradeSelection.popularity(id), priority)
     }
 
     /**
@@ -297,10 +302,13 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                     .map { it.id }.distinct()
             }
             .filterValues { it.isNotEmpty() }
-        // Weight shops by their most desirable affordable item, so cheap-only shops do not hide coveted stock.
-        val shop = ShopPurchaseSelection.order(candidates.keys.toList()) { candidate ->
-            candidates.getValue(candidate).maxOf { shoppingWeight(it) }
+        // Choose the desired affordable stock before its shop, retaining the supply category decision below.
+        val stock = candidates.flatMap { (shop, ids) -> ids.map { shop to it } }
+        val opening = BotTradeSelection.supplyOrder(
+            ShopPurchaseSelection.order(stock) { shoppingWeight(it.second) }) {
+            BotTradeSelection.supplyPriority(it.second)
         }.firstOrNull() ?: return 0
+        val shop = opening.first
 
         if (!openShop(shop)) {
             return 0
@@ -328,7 +336,10 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             else -> 1
         }
 
-        val selectedItems = ShopPurchaseSelection.order(stockIds) { shoppingWeight(it) }.take(itemCount)
+        val remaining = ShopPurchaseSelection.order(stockIds.filter { it != opening.second }) { shoppingWeight(it) }
+        val selectedItems = (listOf(opening.second) + BotTradeSelection.supplyOrder(remaining) {
+            BotTradeSelection.supplyPriority(it)
+        }).take(itemCount)
 
         var remainingBudget = budget
         var totalSpent = 0

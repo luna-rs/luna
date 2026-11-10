@@ -8,6 +8,8 @@ import com.google.common.math.IntMath
 import engine.bot.gear.BotEquipmentPreferences
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.ItemDefinition
+import io.luna.game.model.def.WantedItemDefinition
+import io.luna.game.model.def.WantedItemDefinition.WantedItemPriority
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.economy.WorldEconomy
 import io.luna.game.model.mob.bot.Bot
@@ -153,7 +155,7 @@ object BotTradeManager {
      * For buying purposes, the result contains transferable coins and eligible surplus items used as payment.
      * For selling purposes, candidates are selected using the normal or merchant selling rules.
      * Merchant selling, including ordinary surplus sales by merchant accounts, uses the configured sale stack
-     * limit and minimum stack value, ordered by recorded samples after selecting by stack value.
+     * limit and minimum stack value, favouring common supplies and recorded trading history.
      * Nonstackable stock without a noted form contributes one item per batch.
      * The returned items are not reserved, and their actual transferable amounts must be checked later.
      *
@@ -326,17 +328,16 @@ object BotTradeManager {
 
 
     /**
-     * Protects concrete urgent supplies before fashion purchases, then uses personal taste and market history.
-     * Merchant opportunities favour cosmetics independently of historical wanted-item ownership targets.
+     * Protects explicit urgent personal requirements, then favours common supplies and market history.
+     * Equipment upgrades and cosmetic opportunities remain eligible without overriding bulk supply selection.
      */
     internal fun prioritizePurchases(bot: Bot, candidates: List<BotTradeItem>): List<BotTradeItem> {
         val intentions = BotTradeIntentions.purchases(bot).associateBy { it.id }
         return BotTradeSelection.order(candidates)
             .sortedWith(compareByDescending<BotTradeItem> {
-                if (it.purpose == BotTradePurpose.BUY) intentions[it.item.id]?.priority?.level ?: 0 else 0
-            }.thenByDescending { BotEquipmentPreferences.prefers(bot, it.item.id) }
-                .thenByDescending { BotEquipmentPreferences.isCosmetic(it.item.id) }
-                .thenByDescending { bot.canUseWantedItem(it.item.id) })
+                it.purpose == BotTradePurpose.BUY &&
+                    intentions[it.item.id]?.priority == WantedItemPriority.URGENT
+            }.thenByDescending { bot.canUseWantedItem(it.item.id) })
     }
 
     /**
@@ -407,15 +408,22 @@ object BotTradeManager {
     }
 
     /**
-     * Shares a bounded popular shortlist across bots without creating price records for the item catalogue.
+     * Shares a bounded popular shortlist with dedicated skilling and combat supply places across bots,
+     * without creating price records. An economy dominated by old equipment samples cannot exclude supplies.
      * Arbitrary offered items receive lazy quotes in the trading script, independently of this shortlist.
      */
     private fun marketCatalogue(): List<Int> {
         val economy = world.economy
         val now = System.nanoTime()
         if (catalogueEconomy !== economy || now - catalogueUpdatedAt >= 30_000_000_000L) {
-            popularCatalogue = economy.prices.values.asSequence().filter { it.price > 0 }
-                .sortedByDescending { it.samples }.take(64).map { it.id }.toList()
+            val observed = economy.prices.values.asSequence().filter { it.price > 0 }.map { it.id }.toList()
+            val supplies = WantedItemDefinition.DEFAULT.asSequence()
+                .filter { BotTradeSelection.supplyPriority(it.id) > 0 }.map { it.id }.toList()
+            val available = (observed + supplies).distinct().sortedWith(
+                compareByDescending<Int> { BotTradeSelection.popularity(it) }.thenBy { it })
+            popularCatalogue = available.filter { BotTradeSelection.supplyPriority(it) == 2 }.take(48) +
+                available.filter { BotTradeSelection.supplyPriority(it) == 1 }.take(16) +
+                available.filter { BotTradeSelection.supplyPriority(it) == 0 }.take(16)
             catalogueEconomy = economy
             catalogueUpdatedAt = now
         }

@@ -1,7 +1,7 @@
 package api.bot.action.trading
 
 /**
- * One sale described in a player's public advertisement, before any buyer or payment is chosen.
+ * One purchase or sale described in a player's public advertisement, before a response is chosen.
  *
  * Item ids are unnoted commodities supplied by the name resolver. An empty or grouped result requires a broad buyer
  * to inspect the actual trade; it never selects an arbitrary variant. Missing quantity means unspecified stock.
@@ -11,7 +11,18 @@ package api.bot.action.trading
 data class PlayerTradeAdvertisement(val itemName: String,
                                     val itemIds: Set<Int>,
                                     val quantity: Int?,
-                                    val price: Price?) {
+                                    val price: Price?,
+                                    val direction: Direction = Direction.SELL) {
+
+    /**
+     * The player's side of the advertised exchange.
+     *
+     * @author lare96
+     */
+    enum class Direction {
+        BUY,
+        SELL
+    }
 
     /**
      * How the advertised coins relate to the goods. Unclear wording must not become an implicit unit price.

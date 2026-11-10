@@ -117,7 +117,8 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
      * @author lare96
      */
     private data class Terms(val itemIds: Set<Int>, val unknownName: String?, val quantity: Int?,
-                             val price: PlayerTradeAdvertisement.Price?)
+                             val price: PlayerTradeAdvertisement.Price?,
+                             val direction: PlayerTradeAdvertisement.Direction)
 
     private val entries = LinkedHashMap<Player, Entry>()
     private val responses = HashMap<Player, Response>()
@@ -248,7 +249,7 @@ class PlayerTradeAdvertisementRegistry(private val clock: () -> Instant = { Inst
      */
     private fun terms(offer: PlayerTradeAdvertisement): Terms = Terms(offer.itemIds,
         if (offer.itemIds.isEmpty()) offer.itemName.lowercase(Locale.ROOT).trim().replace(spaces, " ") else null,
-        offer.quantity, offer.price)
+        offer.quantity, offer.price, offer.direction)
 
     /**
      * Expires advertisements only; response ownership ends in the responding script's cleanup.
