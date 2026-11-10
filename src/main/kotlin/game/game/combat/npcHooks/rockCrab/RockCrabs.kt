@@ -47,7 +47,7 @@ object RockCrabs {
      * Wakes or puts back to sleep every rock crab that needs it. Called once per tick.
      */
     fun process() {
-        for (npc in world.npcs) {
+        for (npc in world.npcs.byBaseNpcIds(DISGUISES.keys)) {
             if (npc.state == EntityState.ACTIVE && isRockCrab(npc)) {
                 process(npc)
             }

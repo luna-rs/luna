@@ -44,7 +44,7 @@ object Spinolyps {
      */
     fun process() {
         states.keys.removeIf { it.state != EntityState.ACTIVE }
-        for (npc in world.npcs) {
+        for (npc in world.npcs.byBaseNpcIds(allForms)) {
             if (npc.state != EntityState.ACTIVE || npc.baseId !in allForms || !npc.isAlive) continue
             process(npc, world.currentTick)
         }

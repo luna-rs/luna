@@ -59,7 +59,7 @@ useItem(Zygomites.FUNGICIDE).onItem(Zygomites.EMPTY_SPRAY) {
 
 on(ServerLaunchEvent::class) {
     world.schedule(1) {
-        for (npc in world.npcs) if (npc.state == EntityState.ACTIVE && npc.id in Zygomites.FORMS) {
+        for (npc in world.npcs.byCurrentNpcIds(Zygomites.FORMS.keys)) if (npc.state == EntityState.ACTIVE && npc.id in Zygomites.FORMS) {
             npc.navigator.cancel()
             npc.walking.clear()
             npc.walking.isLocked = true

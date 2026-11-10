@@ -230,6 +230,7 @@ public class Npc extends Mob {
             world.getCollisionManager().updateEntity(this, true);
         }
         definition = nextDefinition;
+        if (getIndex() != -1) world.getNpcs().refreshNpcId(this);
         if (resizeCollision) {
             world.getCollisionManager().updateEntity(this, false);
         }
@@ -326,6 +327,7 @@ public class Npc extends Mob {
         setLastDirection(Direction.SOUTH);
 
         definition = NpcDefinition.ALL.retrieve(id);
+        if (getIndex() != -1) world.getNpcs().refreshNpcId(this);
         combatDefinition = NpcCombatDefinition.ALL.get(id);
         transformId = -1;
         setSkills();

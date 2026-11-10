@@ -88,7 +88,7 @@ object MorttonShades {
      * Processes the existing NPC collection once per world tick, without per-NPC recurring tasks.
      */
     fun process() {
-        for (npc in world.npcs) process(npc)
+        for (npc in world.npcs.byBaseNpcIds(FORMS.keys)) process(npc)
     }
 
     /**

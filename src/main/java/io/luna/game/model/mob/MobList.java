@@ -7,12 +7,16 @@ import io.luna.game.model.World;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
@@ -100,6 +104,67 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
+     * A live, index-ordered view of one requested NPC family. Only matching slot numbers are retained.
+     *
+     * @author lare96
+     */
+    private final class NpcView implements Iterable<E> {
+
+        private final Set<Integer> ids;
+        private final boolean baseIds;
+        private final BitSet members = new BitSet(capacity());
+
+        private NpcView(Set<Integer> ids, boolean baseIds) {
+            this.ids = Set.copyOf(ids);
+            this.baseIds = baseIds;
+            for (E mob : MobList.this) {
+                update(mob.getIndex(), mob);
+            }
+        }
+
+        private void update(int index, Mob mob) {
+            members.set(index, mob instanceof Npc npc &&
+                    ids.contains(baseIds ? npc.getBaseId() : npc.getId()));
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return new Iterator<>() {
+                private int curr;
+                private int prev = -1;
+
+                private boolean advance() {
+                    int next = members.nextSetBit(curr);
+                    curr = next < 0 ? capacity() : next;
+                    return next >= 0;
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return curr < capacity() && advance();
+                }
+
+                @Override
+                public E next() {
+                    if (!advance()) {
+                        throw new NoSuchElementException("No more NPCs in this view.");
+                    }
+                    E mob = get(curr);
+                    prev = curr++;
+                    return mob;
+                }
+
+                @Override
+                public void remove() {
+                    checkState(prev != -1, "remove() may only be invoked once after next()");
+                    MobList.this.remove(get(prev));
+                    prev = -1;
+                }
+            };
+        }
+    }
+
+    /**
      * The world that owns this list.
      */
     private final World world;
@@ -113,6 +178,12 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * Pool of free indexes. Implemented as a FIFO to reduce index fragmentation.
      */
     private final Queue<Integer> indexPool;
+
+    /**
+     * Requested NPC families, built once and maintained as occupied slots and current forms change.
+     */
+    private final Map<Set<Integer>, NpcView> baseNpcViews = new HashMap<>();
+    private final Map<Set<Integer>, NpcView> currentNpcViews = new HashMap<>();
 
     /**
      * Number of active mobs.
@@ -140,6 +211,56 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     @Override
     public Iterator<E> iterator() {
         return new MobListIterator();
+    }
+
+    /**
+     * Returns a cached, live view matching immutable NPC spawn IDs, in the normal list's index order.
+     * Inactive NPCs awaiting respawn remain included; callers retain their ordinary state and life checks.
+     * View creation and iteration belong to the game thread. The requested IDs are copied on first use.
+     *
+     * @param ids The base NPC definitions to include.
+     * @return The live NPC view.
+     */
+    public Iterable<E> byBaseNpcIds(Set<Integer> ids) {
+        NpcView view = baseNpcViews.get(ids);
+        if (view == null) {
+            view = new NpcView(ids, true);
+            baseNpcViews.put(view.ids, view);
+        }
+        return view;
+    }
+
+    /**
+     * Returns a cached, live view matching current NPC forms, in the normal list's index order.
+     * Transformations and respawns refresh membership without replacing the view or its iterators.
+     * View creation and iteration belong to the game thread. The requested IDs are copied on first use.
+     *
+     * @param ids The current NPC definitions to include.
+     * @return The live NPC view.
+     */
+    public Iterable<E> byCurrentNpcIds(Set<Integer> ids) {
+        NpcView view = currentNpcViews.get(ids);
+        if (view == null) {
+            view = new NpcView(ids, false);
+            currentNpcViews.put(view.ids, view);
+        }
+        return view;
+    }
+
+    /**
+     * Updates current-form views immediately after a registered NPC's definition changes. Game-thread only.
+     * Removed NPCs cannot change a replacement's membership when their old slot is reused.
+     *
+     * @param npc The NPC whose current definition changed.
+     */
+    public void refreshNpcId(Npc npc) {
+        int index = npc.getIndex();
+        if (index < 0 || get(index) != npc) {
+            return;
+        }
+        for (NpcView view : currentNpcViews.values()) {
+            view.update(index, npc);
+        }
     }
 
     /**
@@ -224,6 +345,12 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         }
         mobs[index] = mob;
         mob.setIndex(index);
+        for (NpcView view : baseNpcViews.values()) {
+            view.update(index, mob);
+        }
+        for (NpcView view : currentNpcViews.values()) {
+            view.update(index, mob);
+        }
         size++;
 
         // Update state & world ownership.
@@ -257,6 +384,12 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         if (mob.getIndex() != -1) {
             indexPool.add(mob.getIndex());
             mobs[mob.getIndex()] = null;
+            for (NpcView view : baseNpcViews.values()) {
+                view.members.clear(mob.getIndex());
+            }
+            for (NpcView view : currentNpcViews.values()) {
+                view.members.clear(mob.getIndex());
+            }
             mob.setIndex(-1);
             size--;
         }
