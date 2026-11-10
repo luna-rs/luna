@@ -10,7 +10,7 @@ import io.luna.game.model.item.shop.RestockPolicy
  * The bot general store containing utility items such as keys that a bot may need.
  */
 ShopHandler.create("Bot General Store") {
-    buy = BuyPolicy.ALL
+    buy = BuyPolicy.NONE
     restock = RestockPolicy.FAST
     currency = Currency.COINS
 
