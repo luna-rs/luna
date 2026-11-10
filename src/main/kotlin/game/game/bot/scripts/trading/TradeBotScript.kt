@@ -1237,7 +1237,7 @@ class TradeBotScript(bot: Bot,
                 val id = context.pricing?.itemId
                 val received = quantities(theirs, true)
                 val message = if (id != null && received.isNotEmpty() && (received.size != 1 || id !in received))
-                    "I'm only buying ${tradeItemName(id)} in this trade. Please remove the other items."
+                    buyingCommodityAdjustment(id, received)
                 else "I can't buy that offer with my available money or space. Try fewer items or bank notes."
                 feedback.send(message, revision)
                 waitFor(2.seconds) {
@@ -1396,7 +1396,7 @@ class TradeBotScript(bot: Bot,
             if (purpose == BotTradePurpose.BUY && received.size != 1) {
                 val id = demand.firstOrNull { it.item.id in received }?.item?.id ?: expected.firstOrNull()?.item?.id
                 return if (id == null) "Please offer one type of item at a time."
-                else "Please offer only ${tradeItemName(id)} for this trade and remove the other items."
+                else buyingCommodityAdjustment(id, received)
             }
             val unwanted = received.keys.firstOrNull { (wanted[it] ?: 0) <= 0 }
             if (unwanted != null) {
@@ -1420,6 +1420,19 @@ class TradeBotScript(bot: Bot,
                     "Please increase your offer."
         }
         return tradeSpaceAdjustment(other, own, receiving)
+    }
+
+    /**
+     * Acknowledges matching stock before asking the player to remove unrelated commodities.
+     * Quantities include both bank notes and ordinary items under the same base id.
+     */
+    private fun buyingCommodityAdjustment(id: Int, received: Map<Int, Int>): String {
+        val amount = received[id] ?: 0
+        val name = tradeItemName(id)
+        val notes = itemDef(id).notedId.isPresent
+        return if (amount > 0)
+            "I count ${numF(amount)} $name${if (notes) ", including notes" else ""}. Remove the other item types."
+        else "Please offer $name${if (notes) " or its bank notes" else ""}, and remove the other item types."
     }
 
     /**
