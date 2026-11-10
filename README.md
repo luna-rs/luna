@@ -1,12 +1,12 @@
-# Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
-Luna is an open source, high-performance, RuneScape server for the #377 protocol. It combines classic 2006-style gameplay 
+# Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/cpqFaHMdv9) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
+Luna is a high-performance RuneScape server for the #377 protocol. It combines classic 2006-style gameplay 
 with **autonomous player bots** that train, trade, fight, and progress alongside you.
 
 <p align="center">
-<a href="https://luna2006.rs/"><img src="data/resources/play-luna-2006.png" alt="Play Luna 2006" width="320" height="88" border="0"></a>
+<a href="https://luna2006.rs/"><img src="data/res   ources/play-luna-2006.png" alt="Play Luna 2006" width="320" height="88" border="0"></a>
 </p>
 
-**Luna 2006** is a closed-source, actively hosted, tasteful 2006-era custom experience based on this project. Come see the 
+**Luna 2006** is an actively hosted 2006-era experience based on this project. Come see the 
 gameplay for yourself!
 
 - 5x experience for players, 1x experience for bots
@@ -27,11 +27,11 @@ To get started, visit the [wiki](https://github.com/luna-rs/luna/wiki) and follo
 # Follow our development
 
 - [Benchmarks](https://github.com/luna-rs/luna/tree/master/data/benchmarks) 
-- [Follow updates, get help, or contribute (Discord)](https://discord.gg/bqkGY7cmVX)
+- [Join the Discord](https://discord.gg/cpqFaHMdv9)
 
-<!--# Support us
+# Support our development
 
-[donation link here]-->
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/P4E72AFFM3)
 
 # Thanks
 - blakeman8192 
