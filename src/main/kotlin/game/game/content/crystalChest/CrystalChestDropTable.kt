@@ -31,26 +31,26 @@ object CrystalChestDropTable : DropTable() {
      */
     val SPINACH_ROLL_TABLE = DropTableHandler.createList {
         noted {
-            "Spinach roll" x 1 chance (1 of 4)
+            "Spinach roll" x 1 chance ALWAYS
         }
-        "Coins" x 2_000 chance (1 of 4)
+        "Coins" x 2_000 chance ALWAYS
     }
 
     /**
      * The runes table.
      */
     val RUNE_TABLE = DropTableHandler.createList {
-        "Air rune" x 50 chance (1 of 10)
-        "Water rune" x 50 chance (1 of 10)
-        "Earth rune" x 50 chance (1 of 10)
-        "Fire rune" x 50 chance (1 of 10)
-        "Body rune" x 50 chance (1 of 10)
-        "Mind rune" x 50 chance (1 of 10)
-        "Chaos rune" x 10 chance (1 of 10)
-        "Death rune" x 10 chance (1 of 10)
-        "Cosmic rune" x 10 chance (1 of 10)
-        "Nature rune" x 10 chance (1 of 10)
-        "Law rune" x 10 chance (1 of 10)
+        "Air rune" x 50 chance ALWAYS
+        "Water rune" x 50 chance ALWAYS
+        "Earth rune" x 50 chance ALWAYS
+        "Fire rune" x 50 chance ALWAYS
+        "Body rune" x 50 chance ALWAYS
+        "Mind rune" x 50 chance ALWAYS
+        "Chaos rune" x 10 chance ALWAYS
+        "Death rune" x 10 chance ALWAYS
+        "Cosmic rune" x 10 chance ALWAYS
+        "Nature rune" x 10 chance ALWAYS
+        "Law rune" x 10 chance ALWAYS
     }
 
     /**
@@ -58,8 +58,8 @@ object CrystalChestDropTable : DropTable() {
      */
     val GEM_TABLE = DropTableHandler.createList {
         noted {
-            "Ruby" x 2 chance (1 of 10)
-            "Diamond" x 2 chance (1 of 10)
+            "Ruby" x 2 chance ALWAYS
+            "Diamond" x 2 chance ALWAYS
         }
     }
 
@@ -68,7 +68,7 @@ object CrystalChestDropTable : DropTable() {
      */
     val RUNITE_BAR_TABLE = DropTableHandler.createList {
         noted {
-            "Runite bar" x 3 chance (1 of 10)
+            "Runite bar" x 3 chance ALWAYS
         }
     }
 
@@ -77,10 +77,10 @@ object CrystalChestDropTable : DropTable() {
      */
     val CRYSTAL_KEY_TABLE = DropTableHandler.createList {
         noted {
-            985 x 1 chance (1 of 25) // Crystal key half.
-            987 x 1 chance (1 of 25) // Crystal key half.
+            985 x 1 chance (1 of 2) // Crystal key half.
+            987 x 1 chance (1 of 2) // Crystal key half.
         }
-        "Coins" x 750 chance (1 of 13)
+        "Coins" x 750 chance ALWAYS
     }
 
     /**
@@ -88,7 +88,7 @@ object CrystalChestDropTable : DropTable() {
      */
     val IRON_ORE_TABLE = DropTableHandler.createList {
         noted {
-            "Iron ore" x 150 chance (1 of 12)
+            "Iron ore" x 150 chance ALWAYS
         }
     }
 
@@ -97,7 +97,7 @@ object CrystalChestDropTable : DropTable() {
      */
     val COAL_TABLE = DropTableHandler.createList {
         noted {
-            "Coal" x 100 chance (1 of 12)
+            "Coal" x 100 chance ALWAYS
         }
     }
 
@@ -106,9 +106,9 @@ object CrystalChestDropTable : DropTable() {
      */
     val RAW_SWORDFISH_TABLE = DropTableHandler.createList {
         noted {
-            "Raw swordfish" x 5 chance (1 of 16)
+            "Raw swordfish" x 5 chance ALWAYS
         }
-        "Coins" x 1000 chance (1 of 16)
+        "Coins" x 1000 chance ALWAYS
     }
 
     /**
@@ -116,7 +116,7 @@ object CrystalChestDropTable : DropTable() {
      */
     val ADAMANT_SQ_SHIELD_TABLE = DropTableHandler.createList {
         noted {
-            "Adamant sq shield" x 1 chance (1 of 64)
+            "Adamant sq shield" x 1 chance ALWAYS
         }
     }
 
@@ -127,12 +127,12 @@ object CrystalChestDropTable : DropTable() {
         DropTableHandler.createList {
             noted {
                 if (it == null) { // No player, we just need a list of all possible items.
-                    "Rune platelegs" x 1 chance (1 of 128)
-                    "Rune plateskirt" x 1 chance (1 of 128)
+                    "Rune platelegs" x 1 chance ALWAYS
+                    "Rune plateskirt" x 1 chance ALWAYS
                 } else if (it.appearance.isMale) { // Male, so drop normal legs.
-                    "Rune platelegs" x 1 chance (1 of 128)
+                    "Rune platelegs" x 1 chance ALWAYS
                 } else if (it.appearance.isFemale) { // Female, so drop a skirt.
-                    "Rune plateskirt" x 1 chance (1 of 128)
+                    "Rune plateskirt" x 1 chance ALWAYS
                 }
             }
         }
@@ -154,7 +154,7 @@ object CrystalChestDropTable : DropTable() {
                 (10 of 128) to COAL_TABLE,
                 (8 of 128) to RAW_SWORDFISH_TABLE,
                 (2 of 128) to ADAMANT_SQ_SHIELD_TABLE,
-                (2 of 128) to RUNE_LEGS_OR_SKIRT_TABLE(plr)).apply {
+                (1 of 128) to RUNE_LEGS_OR_SKIRT_TABLE(plr)).apply {
                 if (!plr.equipment.contains(2572)) { // Create nothing slots if we don't have ROW.
                     add((17 of 128) to DropTableHandler.createList { nothing(1 of 7) })
                 }
