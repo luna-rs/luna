@@ -225,6 +225,28 @@ object BotTradeIntentions {
     fun supplyTarget(bot: Bot, id: Int): Int = supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0
 
     /**
+     * Reads one live sale reserve without copying or pruning the entire activity-supply map.
+     * Tool upgrades preserve the same owned replacement and fallback as ordinary supply planning; only the small
+     * tool-family map is inspected, and unrelated families require no ownership lookups. Selection and trade-stage
+     * checks use this read to notice new working requirements even when no item container has changed.
+     */
+    internal fun saleSupplyTarget(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Int {
+        val attributes = bot.attributes()
+        val plan = attributes[plans.attr][id]
+        var target = if (plan != null && plan.expires > now) plan.target else 0
+        val upgrades = attributes[toolUpgrades.attr]
+        if (upgrades.isEmpty()) return target
+        for ((requested, upgrade) in upgrades) {
+            if (upgrade.expires <= now ||
+                id != requested && id !in upgrade.satisfying && id != upgrade.fallback) continue
+            val owned = upgrade.satisfying.firstOrNull { bot.totalItemAmount(it) > 0 }
+            if (id == (owned ?: requested) ||
+                owned == null && id == upgrade.fallback && bot.totalItemAmount(id) > 0) target = maxOf(target, 1)
+        }
+        return target
+    }
+
+    /**
      * Resolves one explicitly recorded activity input without rebuilding the equipment shopping catalogue.
      * Player-sale admission uses this alongside broader default wishes, preserving temporary concrete needs.
      */
