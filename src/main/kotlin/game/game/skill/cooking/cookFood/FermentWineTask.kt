@@ -4,6 +4,8 @@ import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
+import api.bot.isRealBot
+import engine.bot.economy.BotProductionMetrics
 import game.skill.cooking.prepareFood.IncompleteFood
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.DynamicItem
@@ -44,6 +46,7 @@ class FermentWineTask(val plr: Player) : Task(false, 1) {
                 // retain the dynamic wine and retry on the next tick.
                 if (container.add(Item(1993))) {
                     container[index] = null
+                    if (plr.isRealBot()) BotProductionMetrics.recordConversion(1995, 1L, 1993, 1L)
                     plr.cooking.addExperience(IncompleteFood.UNFERMENTED_WINE.exp)
                     return false
                 }

@@ -29,13 +29,17 @@ public final class ItemPriceData {
     private static final double BASE_PRICE_MOVEMENT_STRENGTH = 1.0;
 
     /**
-     * The maximum amount of historical sample data used when calculating movement resistance.
+     * The maximum effective historical weight used when calculating movement resistance.
      * <p>
-     * The lifetime {@link #samples} value may continue growing beyond this value, but movement resistance treats the
-     * item as having at most this many samples. This prevents old or heavily traded items from becoming practically
-     * impossible to move in price.
+     * Lifetime samples remain available for popularity and persistence. Once this bounded prior is reached, new
+     * observations form an exponentially weighted moving estimate instead of fighting an ever-growing lifetime prior.
      */
-    private static final long MAX_SAMPLES = 1_000_000_000L;
+    private static final double MAX_RECENT_HISTORY_WEIGHT = 256.0;
+
+    /**
+     * Caps one transaction's movement influence without discarding its real lifetime sample count.
+     */
+    private static final long MAX_TRANSACTION_MOVEMENT_SAMPLES = 32L;
 
     /**
      * Computes the starting economy guide price for an item.
@@ -182,7 +186,7 @@ public final class ItemPriceData {
     public ItemPriceData setPrice(double newPrice, long additionalSamples) {
         checkPrice(id, newPrice);
         checkState(additionalSamples >= 0, "<additionalSamples> cannot be below 0.");
-        return new ItemPriceData(id, newPrice, price, samples + additionalSamples, samples);
+        return new ItemPriceData(id, newPrice, price, addSamples(additionalSamples), samples);
     }
 
     /**
@@ -210,9 +214,9 @@ public final class ItemPriceData {
             boolean stackable = ItemDefinition.ALL.retrieve(id).isStackable();
             int minimumPrice = stackable ? Luna.settings().economy().minimumStackablePrice() :
                     Luna.settings().economy().minimumPrice();
-            double newPrice = Math.max(minimumPrice, calculatedPrice);
+            double newPrice = Math.min(Integer.MAX_VALUE, Math.max(minimumPrice, calculatedPrice));
             newPrice = price + (newPrice - price) * type.getMovementMultiplier();
-            return new ItemPriceData(id, newPrice, price, samples + effectiveSamples, samples);
+            return new ItemPriceData(id, newPrice, price, addSamples(effectiveSamples), samples);
         }
         return this;
     }
@@ -270,13 +274,14 @@ public final class ItemPriceData {
      * Calculates the percentage strength used to move this item's guide price.
      * <p>
      * Movement strength is calculated by comparing the new effective sample count against this item's historical
-     * sample weight. Historical samples are square-rooted, so prices become more stable over time without becoming
-     * permanently frozen.
+     * sample weight. Historical resistance is bounded so recent completed exchanges can replace stale valuations;
+     * transaction influence is independently bounded so a single huge stack cannot supply unlimited confidence.
      * <p>
      * The resistance formula is:
      * <pre>
-     * historicalWeight = sqrt(min(currentSamples, MAX_SAMPLES)) * (250.0 * priceMovementResistance)
-     * rawStrength = additionalSamples / (historicalWeight + additionalSamples)
+     * historicalWeight = min(sqrt(currentSamples) * 250.0, 256.0) * priceMovementResistance
+     * recentSamples = min(additionalSamples, 32)
+     * rawStrength = recentSamples / (historicalWeight + recentSamples)
      * </pre>
      * The returned value is capped by {@code maximumPriceMovement}.
      *
@@ -285,12 +290,17 @@ public final class ItemPriceData {
      * @return The final movement strength, capped by the configured maximum price movement.
      */
     private double calculateMovementStrength(long additionalSamples, long currentSamples) {
-        if (currentSamples > MAX_SAMPLES) {
-            currentSamples = MAX_SAMPLES;
-        }
-        double historicalWeight = Math.max(Math.sqrt(currentSamples) *
-                (250.0 * Luna.settings().economy().priceMovementResistance()), 0.0);
-        double rawStrength = additionalSamples / (historicalWeight + additionalSamples);
+        double historicalWeight = Math.max(Math.min(Math.sqrt(Math.max(0L, currentSamples)) * 250.0,
+                MAX_RECENT_HISTORY_WEIGHT) * Luna.settings().economy().priceMovementResistance(), 0.0);
+        long recentSamples = Math.min(additionalSamples, MAX_TRANSACTION_MOVEMENT_SAMPLES);
+        double rawStrength = recentSamples / (historicalWeight + recentSamples);
         return Math.min(Luna.settings().economy().maximumPriceMovement(), rawStrength);
+    }
+
+    /**
+     * Preserves monotonic lifetime counters when an exceptionally old economy reaches the storage limit.
+     */
+    private long addSamples(long additionalSamples) {
+        return additionalSamples > Long.MAX_VALUE - samples ? Long.MAX_VALUE : samples + additionalSamples;
     }
 }

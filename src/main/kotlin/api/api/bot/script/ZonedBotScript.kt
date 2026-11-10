@@ -331,6 +331,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     final override fun paused() {
+        if (this is InventoryBotScript) pausePlannedProduction()
         bot.log("Pausing script. Clearing cached bank and active zone.")
 
         interruptedZone = activeZone ?: travelZone

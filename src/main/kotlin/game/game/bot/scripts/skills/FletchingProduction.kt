@@ -43,6 +43,7 @@ internal object FletchingProduction {
         return FletchAmmunitionBotScript(bot, next, duration).takeIf { it.isEligible() }
     }
 
-    private fun canContinue(bot: Bot, duration: Duration): Boolean = duration > Duration.ZERO &&
+    private fun canContinue(bot: Bot, duration: Duration): Boolean =
+        (bot.scriptStack.current() as? InventoryBotScript)?.productionPlan == null && duration > Duration.ZERO &&
         (bot.profitMode || BotCombatActionHandler.wantsToTrain(bot, SKILL_FLETCHING))
 }

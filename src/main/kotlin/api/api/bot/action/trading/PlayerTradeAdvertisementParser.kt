@@ -15,7 +15,10 @@ import java.util.Locale
  *
  * @author lare96
  */
-class PlayerTradeAdvertisementParser(private val resolveItems: (String) -> IntArray?) {
+class PlayerTradeAdvertisementParser(private val resolveItems: (String) -> IntArray?,
+                                    private val resolveEquipmentRequests: (String) -> Map<Int, String>?) {
+
+    constructor(resolveItems: (String) -> IntArray?) : this(resolveItems, PlayerTradeEquipmentRequests.live::resolve)
 
     /**
      * Bounded sale syntax and exact numeric tokens used by the parser.
@@ -25,6 +28,8 @@ class PlayerTradeAdvertisementParser(private val resolveItems: (String) -> IntAr
     companion object {
 
         private const val MAX_MESSAGE_LENGTH = 256
+        private const val MAX_ADVERTISEMENT_OFFERS = 64
+        private const val MAX_EQUIPMENT_REQUEST_ITEMS = 32
         private const val NUMBER_TOKEN = "[+-]?(?:\\d[\\d,.]*|\\.\\d+)[km]?"
         private const val CURRENCY = "(?:gp|g|coins?)"
         private const val EACH = "(?:ea\\.?|each|per\\s+(?:item|unit|piece)|/\\s*(?:ea|each|item))"
@@ -61,7 +66,30 @@ class PlayerTradeAdvertisementParser(private val resolveItems: (String) -> IntAr
         val normalized = text.lowercase(Locale.ROOT).trim().replace(SPACES, " ")
         val direction = if (SELLING.containsMatchIn(normalized)) Direction.SELL else Direction.BUY
         val prefix = (if (direction == Direction.SELL) SELLING else BUYING).find(normalized) ?: return null
-        return normalized.substring(prefix.range.last + 1).split(SEPARATORS).flatMap { parseOffers(it, direction) }
+        val result = ArrayList<PlayerTradeAdvertisement>()
+        for (clause in normalized.substring(prefix.range.last + 1).split(SEPARATORS)) {
+            for (offer in parseOffers(clause, direction)) {
+                val expanded = expandEquipmentRequest(offer)
+                if (result.size + expanded.size > MAX_ADVERTISEMENT_OFFERS) return emptyList()
+                result += expanded
+            }
+        }
+        return result
+    }
+
+    /**
+     * Makes a material category an explicit list of independently priced items rather than guessing a full set.
+     * A quantity applies to each named commodity. A category total or unclear price cannot be copied into several
+     * independent purchases. Sales and already resolved exact names or nicknames retain their existing semantics.
+     */
+    private fun expandEquipmentRequest(offer: PlayerTradeAdvertisement): List<PlayerTradeAdvertisement> {
+        if (offer.direction != Direction.BUY || offer.itemIds.isNotEmpty()) return listOf(offer)
+        val members = resolveEquipmentRequests(offer.itemName) ?: return listOf(offer)
+        if (members.size > MAX_EQUIPMENT_REQUEST_ITEMS) return emptyList()
+        if (offer.price != null && offer.price.basis != PriceBasis.EACH) return emptyList()
+        return members.map { (id, name) ->
+            offer.copy(itemName = name, itemIds = setOf(id), quantity = offer.quantity ?: 1)
+        }
     }
 
     /**

@@ -51,14 +51,22 @@ class SmithBarBotScript(
      * Recreates a smithing script from saved zone and duration data. Newer snapshots also restore retry counters
      * and retired work sites; older zone-only snapshots retain their original defaults.
      *
-     * This constructor does not restore a fixed [selectedItems], so the script will choose a smithable item from the
-     * bot's available bars when it initializes.
+     * A finite production goal restores its exact native output. Legacy sessions without a goal continue choosing
+     * a smithable item from the bot's available bars.
      *
      * @param bot The bot running this script.
      * @param data The saved zone and duration data.
      */
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, mutableListOf(), data.duration, data.zones) {
-        if (data is InventoryScriptData) restoreInventoryState(data)
+        if (data is InventoryScriptData) {
+            restoreInventoryState(data)
+            data.productionPlan?.let { plan ->
+                val output = plan.recipe.products.keys.singleOrNull()
+                val fixed = output?.let { id -> SmithingTable.ID_TO_TABLE[id]?.items?.firstOrNull { it.item.id == id } }
+                require(fixed != null) { "A saved smithing goal must retain its native recipe." }
+                selectedItems += fixed
+            }
+        }
     }
 
     /**

@@ -48,9 +48,11 @@ class FillWaterBotScript(
     val target: Int,
     duration: Duration,
     val source: Source = Source.WATER,
-    zones: MutableList<SubZone> = source.zones.toMutableList()
+    zones: MutableList<SubZone> = source.zones.toMutableList(),
+    private val goalDeadline: Long = 0L
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
+    override val ownedSuppliesOnly = true
     /**
      * Supported native resources and their default processing areas. A bucket can be filled with any of
      * these resources; saved source identity prevents a resumed task from selecting the wrong product.
@@ -83,17 +85,20 @@ class FillWaterBotScript(
              * Native resource identity. Older water snapshots omit this field and retain water behavior.
              */
             var source = Source.WATER
+            var goalDeadline = 0L
             override fun load(data: JsonObject) {
                 super.load(data)
                 empty = data.get("empty").asInt
                 target = data.get("target").asInt
                 source = data.get("source")?.asString?.let(Source::valueOf) ?: Source.WATER
+                goalDeadline = data.get("goal_deadline")?.asLong ?: 0L
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("empty", empty)
                 data.addProperty("target", target)
                 data.addProperty("source", source.name)
+                data.addProperty("goal_deadline", goalDeadline)
             }
         }
     }
@@ -107,9 +112,14 @@ class FillWaterBotScript(
     /**
      * Restores source identity, container, total stock target, zones and retry budgets.
      */
-    constructor(bot: Bot, data: FillWaterData) : this(bot, data.empty, data.target, data.duration, data.source, data.zones) {
+    constructor(bot: Bot, data: FillWaterData) : this(bot, data.empty, data.target, data.duration, data.source,
+        data.zones, data.goalDeadline) {
         restoreInventoryState(data)
     }
+
+    private fun beforeDeadline(): Boolean = goalDeadline == 0L || System.currentTimeMillis() < goalDeadline
+
+    override suspend fun beforeInventoryInit(): Boolean = beforeDeadline()
 
     /**
      * Remaining filled stock needed across inventory and bank.
@@ -125,12 +135,12 @@ class FillWaterBotScript(
     }.filter { it.amount > 0 }
 
     override fun withdraw(): List<Item> {
-        if (remaining() == 0) { stop(); return emptyList() }
+        if (!beforeDeadline() || remaining() == 0) { stop(); return emptyList() }
         return productionWithdraw(listOf(Item(empty)), requestMissing = false)
     }
 
     override fun bankWithdraw(): List<Item> {
-        if (remaining() == 0) {
+        if (!beforeDeadline() || remaining() == 0) {
             stop()
             return emptyList()
         }
@@ -140,6 +150,7 @@ class FillWaterBotScript(
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(empty in bot.inventory)
 
     override suspend fun onExecuteInZone(): Boolean {
+        if (!beforeDeadline()) { stop(); return true }
         if (!isActionSafe()) return true
         if (remaining() == 0) { stop(); return true }
         if (empty !in bot.inventory) { forceBanking = true; return true }
@@ -167,6 +178,7 @@ class FillWaterBotScript(
         it.source = source
         it.empty = empty
         it.target = target
+        it.goalDeadline = goalDeadline
         saveInventoryState(it)
     }
 }

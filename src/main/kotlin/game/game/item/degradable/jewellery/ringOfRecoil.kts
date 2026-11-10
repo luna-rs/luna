@@ -2,6 +2,7 @@ package game.item.degradable.jewellery
 
 import api.predef.*
 import api.combat.npc.NpcCombatHandler
+import engine.bot.economy.BotConsumableDemand
 import game.item.degradable.DegradableEquipmentHandler
 import game.item.degradable.DegradableEquipmentHandler.ringOfRecoilCharges
 import io.luna.game.event.impl.CombatDamageReceivedEvent
@@ -29,6 +30,7 @@ on(CombatDamageReceivedEvent::class) {
             plr.equipment[Equipment.RING] = null
             plr.sendMessage("Your Ring of Recoil shatters.")
             plr.ringOfRecoilCharges = DegradableEquipmentHandler.RING_OF_RECOIL_CHARGES
+            BotConsumableDemand.depleted(plr, 2550)
         }
     }
 }

@@ -31,6 +31,8 @@ internal object HerbloreProduction {
      */
     suspend fun prepare(bot: Bot, primary: Int, consumable: Int): Boolean {
         if (!BotScript.ActionSafety.NON_COMBAT.allows(bot) || owned(bot, primary) < 1) return false
+        if ((bot.scriptStack.current() as? InventoryBotScript)?.productionPlan != null)
+            return owned(bot, consumable) > 0L
         // Shop acquisition targets carried stock. Leave one slot for currency instead of requesting
         // an impossible carried quantity of non-stackable ingredients.
         val quantity = minOf(owned(bot, primary), (bot.inventory.capacity() - 1).coerceAtLeast(1).toLong()).toInt()
@@ -43,18 +45,22 @@ internal object HerbloreProduction {
     }
 
     fun afterIdentify(bot: Bot, herb: Herb, duration: Duration): BotScript? {
+        if ((bot.scriptStack.current() as? InventoryBotScript)?.productionPlan != null) return null
         if (duration <= Duration.ZERO) return null
         val potion = UnfPotion.HERB_TO_UNF[herb.identified] ?: return null
         return MakeUnfPotionBotScript(bot, potion, duration).takeIf { it.isEligible() }
     }
 
     fun afterUnfinished(bot: Bot, potion: UnfPotion, duration: Duration): BotScript? =
-        finished(bot, duration) { it.unf == potion.id }
+        if ((bot.scriptStack.current() as? InventoryBotScript)?.productionPlan != null) null
+        else finished(bot, duration) { it.unf == potion.id }
 
     fun afterGrinding(bot: Bot, ingredient: Ingredient, duration: Duration): BotScript? =
-        finished(bot, duration) { it.secondary == ingredient.newId }
+        if ((bot.scriptStack.current() as? InventoryBotScript)?.productionPlan != null) null
+        else finished(bot, duration) { it.secondary == ingredient.newId }
 
     fun afterFinished(bot: Bot, potion: FinishedPotion, duration: Duration): BotScript? {
+        if ((bot.scriptStack.current() as? InventoryBotScript)?.productionPlan != null) return null
         if (duration <= Duration.ZERO) return null
         // A completed batch may have used a small pre-existing secondary stock. Continue the remaining
         // primary stock, but a failed acquisition or production attempt cannot enter this handoff.

@@ -1,8 +1,10 @@
 package game.skill.firemaking
 
 import api.predef.*
+import api.bot.isRealBot
 import api.predef.ext.*
 import game.player.Sound
+import engine.bot.economy.BotProductionMetrics
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.item.GroundItem
@@ -72,6 +74,7 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
      */
     private fun light() {
         if (logGroundItem != null && world.removeItem(logGroundItem!!)) {
+            if (mob.isRealBot()) BotProductionMetrics.recordSink(log.id)
             val firePosition = mob.position
             mob.playSound(Sound.FIRE_LIT)
             mob.firemaking.addExperience(log.exp)

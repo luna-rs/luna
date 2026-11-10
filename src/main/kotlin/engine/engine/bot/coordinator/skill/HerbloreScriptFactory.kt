@@ -34,6 +34,15 @@ import io.luna.game.model.mob.bot.Bot
  * @author lare96
  */
 object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
+    /**
+     * Preserves native gathering opportunities justified by owned keys or unfinished ranging potions. Ingredient
+     * collection spends only already-owned runes; subsequent mixing receives a new finite economic quote.
+     */
+    internal fun getOwnedGatheringScript(bot: Bot, training: Boolean): BotScript? {
+        if (!training && SinisterChestBotScript.ready(bot)) return SinisterChestBotScript(bot, getDuration(bot))
+        return getIngredientGatheringScript(bot, ownedRunesOnly = true)
+    }
+
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         getProductionScript(bot, level, true)?.let { return it }
         getIngredientGatheringScript(bot)?.let { return it }
@@ -53,12 +62,12 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
      * Gathers missing ranging-potion wine when the bot owns unfinished potions but cannot mix them yet.
      * This Herblore-owned trip continues into finished-potion mixing after collecting a real haul.
      */
-    internal fun getIngredientGatheringScript(bot: Bot): TelegrabBotScript? {
+    internal fun getIngredientGatheringScript(bot: Bot, ownedRunesOnly: Boolean = false): TelegrabBotScript? {
         val potion = FinishedPotion.RANGING_POTION
         if (bot.herblore.staticLevel < potion.level || bot.itemTracker.count(potion.unf) < 1 ||
             bot.itemTracker.count(potion.secondary) > 0) return null
         return TelegrabBotScript(bot, TelegrabBotScript.WINE, false, getDuration(bot), TelegrabBotScript.wineZones(bot),
-            herbloreContinuation = true)
+            herbloreContinuation = true, ownedRunesOnly = ownedRunesOnly)
             .takeIf { it.isEligible() }
     }
 

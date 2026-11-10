@@ -57,6 +57,12 @@ import api.predef.rand
  */
 object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
 
+    /**
+     * Retains the mill's existing non-training role using one captured batch of real grain and pots only.
+     */
+    internal fun getOwnedMillingScript(bot: Bot): MillFlourBotScript? =
+        MillFlourBotScript.ownedSession(bot, getDuration(bot))
+
     override fun getTrainingScript(
         bot: Bot,
         level: Int,

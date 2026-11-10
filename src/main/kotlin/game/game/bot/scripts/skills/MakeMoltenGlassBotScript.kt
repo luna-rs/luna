@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
+import api.bot.script.ProductionPlan
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
@@ -122,14 +123,23 @@ class MakeMoltenGlassBotScript(
      * Queues up to fourteen buckets of sand through native filling, then returns to activity selection.
      */
     private fun queueSandPreparation(): Boolean {
-        if (!isActionSafe() || productionRetriesExhausted() || !canPrepareSand()) return false
+        if (!isActionSafe() || productionRetriesExhausted() || bot.crafting.staticLevel < requiredLevel ||
+            productionPlan == null && !canPrepareSand()) return false
         val ash = bot.bank.computeAmountForId(SODA_ASH).toLong() + bot.inventory.computeAmountForId(SODA_ASH)
         val buckets = bot.bank.computeAmountForId(EMPTY_BUCKET).toLong() + bot.inventory.computeAmountForId(EMPTY_BUCKET)
+        productionPlan?.let { plan ->
+            val fill = plannedFilling(bot, plan, EMPTY_BUCKET, BUCKET_OF_SAND, minOf(ash, buckets),
+                remainingDuration(), Source.SAND) ?: return false
+            bot.scriptStack.pushHead(fill)
+            return true
+        }
         bot.scriptStack.softPushHead(FillWaterBotScript(bot, EMPTY_BUCKET, minOf(14L, ash, buckets).toInt(),
             duration, Source.SAND))
         stop()
         return true
     }
+
+    override fun prepareMissingPlannedSupplies(plan: ProductionPlan): Boolean = queueSandPreparation()
 
     /**
      * Returns up to fourteen balanced input pairs from bank stock, or an empty batch if either input is absent.

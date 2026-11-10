@@ -2,6 +2,7 @@ package api.bot.action.trading
 
 import api.attr.Attr
 import api.bot.action.CombatLoadout
+import api.bot.script.ProductionPlan
 import api.predef.ext.allSuitableFood
 import api.predef.ext.canUseWantedItem
 import api.predef.ext.totalItemAmount
@@ -39,6 +40,81 @@ object BotTradeIntentions {
     private data class SupplyPlan(val minimum: Int, val target: Int, val expires: Long)
 
     private val plans = Attr.map<Int, SupplyPlan>()
+
+    private var Bot.productionPlan by Attr.nullableObj(ProductionPlan::class)
+    private var Bot.productionOwner by Attr.nullableObj(Any::class)
+
+    /**
+     * Hard purchase limits shared by a finite production goal and every shop or native trade filling it.
+     * Target means total ordinary ownership, matching the existing wanted-item and trade-target APIs.
+     *
+     * @author lare96
+     */
+    data class ProductionPurchaseLimit(val target: Int, val maximumUnitPrice: Long,
+                                       val maximumCoins: Long, val expires: Long, val identity: Any)
+
+    /**
+     * Publishes the selected goal without expanding it into the broad default wanted-item catalogue.
+     */
+    fun recordProductionPlan(bot: Bot, plan: ProductionPlan, owner: Any = plan) {
+        bot.productionPlan = plan
+        bot.productionOwner = owner
+    }
+
+    /**
+     * Releases only the exact owner, so finishing an older paused script cannot clear a newer goal.
+     */
+    fun clearProductionPlan(bot: Bot, plan: ProductionPlan, owner: Any = plan) {
+        if (bot.productionPlan === plan && bot.productionOwner === owner) {
+            bot.productionPlan = null
+            bot.productionOwner = null
+        }
+    }
+
+    /**
+     * Reads one bounded production limit without rebuilding gear, supply, shop or world indexes.
+     */
+    fun productionLimit(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): ProductionPurchaseLimit? {
+        val plan = activeProductionPlan(bot, now) ?: return null
+        val target = productionTarget(plan, id)
+        if (target < 1) return null
+        return ProductionPurchaseLimit(target, plan.maximumUnitPrices.getValue(id), plan.remainingCoins,
+            plan.deadline, bot.productionOwner ?: plan)
+    }
+
+    /**
+     * Debits an actual confirmed GP payment once, keeping all inputs on the same finite allowance.
+     */
+    fun recordProductionPurchase(bot: Bot, id: Int, coins: Long, identity: Any? = null) {
+        require(coins >= 0L)
+        val plan = bot.productionPlan ?: return
+        if (identity != null && (bot.productionOwner ?: plan) !== identity) return
+        if (id in plan.maximumUnitPrices) plan.recordSpending(coins)
+    }
+
+    private fun activeProductionPlan(bot: Bot, now: Long): ProductionPlan? {
+        val plan = bot.productionPlan ?: return null
+        if (plan.deadline <= now || plan.remainingOperations < 1 && !plan.hasNextStage()) {
+            bot.productionPlan = null
+            bot.productionOwner = null
+            return null
+        }
+        return plan
+    }
+
+    private fun productionTarget(plan: ProductionPlan, id: Int): Int = plan.target(id)
+
+    /**
+     * Enumerates only concrete bounded activity and tool requests for production's dependency graph.
+     * No equipment catalogue, item definitions, bank, players or shops are scanned to find these ids.
+     */
+    fun supplyDemandIds(bot: Bot, now: Long = System.currentTimeMillis()): Set<Int> = buildSet {
+        addAll(livePlans(bot, now).keys)
+        val upgrades = bot.attributes()[toolUpgrades.attr]
+        upgrades.entries.removeIf { it.value.expires <= now }
+        addAll(upgrades.keys)
+        activeProductionPlan(bot, now)?.let { addAll(it.targets().keys) }
+    }
 
     /**
      * A one-copy upgrade and the already validated tools that make its purchase unnecessary.
@@ -225,6 +301,29 @@ object BotTradeIntentions {
     fun supplyTarget(bot: Bot, id: Int): Int = supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0
 
     /**
+     * Reads one live sale reserve without copying or pruning the entire activity-supply map.
+     * Tool upgrades preserve the same owned replacement and fallback as ordinary supply planning; only the small
+     * tool-family map is inspected, and unrelated families require no ownership lookups. Selection and trade-stage
+     * checks use this read to notice new working requirements even when no item container has changed.
+     */
+    internal fun saleSupplyTarget(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Int {
+        val attributes = bot.attributes()
+        val plan = attributes[plans.attr][id]
+        var target = maxOf(if (plan != null && plan.expires > now) plan.target else 0,
+            activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0)
+        val upgrades = attributes[toolUpgrades.attr]
+        if (upgrades.isEmpty()) return target
+        for ((requested, upgrade) in upgrades) {
+            if (upgrade.expires <= now ||
+                id != requested && id !in upgrade.satisfying && id != upgrade.fallback) continue
+            val owned = upgrade.satisfying.firstOrNull { bot.totalItemAmount(it) > 0 }
+            if (id == (owned ?: requested) ||
+                owned == null && id == upgrade.fallback && bot.totalItemAmount(id) > 0) target = maxOf(target, 1)
+        }
+        return target
+    }
+
+    /**
      * Resolves one explicitly recorded activity input without rebuilding the equipment shopping catalogue.
      * Player-sale admission uses this alongside broader default wishes, preserving temporary concrete needs.
      */
@@ -232,6 +331,13 @@ object BotTradeIntentions {
         val plan = bot.attributes()[plans.attr][id]?.takeIf { it.expires > now }
         var minimum = plan?.minimum ?: 0
         var target = plan?.target ?: 0
+        activeProductionPlan(bot, now)?.let { production ->
+            val productionTarget = productionTarget(production, id)
+            if (productionTarget > 0) {
+                minimum = maxOf(minimum, production.recipe.materials[id] ?: 1)
+                target = maxOf(target, productionTarget)
+            }
+        }
         val upgrade = bot.attributes()[toolUpgrades.attr][id]
         if (upgrade != null && upgrade.expires > now && upgrade.satisfying.none { bot.totalItemAmount(it) > 0 }) {
             minimum = maxOf(minimum, 1)
@@ -248,6 +354,13 @@ object BotTradeIntentions {
      */
     private fun supplyPlans(bot: Bot, now: Long): Map<Int, SupplyPlan> {
         val result = HashMap(livePlans(bot, now))
+        activeProductionPlan(bot, now)?.let { plan ->
+            for ((id, target) in plan.targets()) {
+                val existing = result[id]
+                result[id] = SupplyPlan(maxOf(plan.recipe.materials[id] ?: 1, existing?.minimum ?: 0),
+                    maxOf(target, existing?.target ?: 0), maxOf(plan.deadline, existing?.expires ?: 0L))
+            }
+        }
         val upgrades = bot.attributes()[toolUpgrades.attr]
         upgrades.entries.removeIf { it.value.expires <= now }
         fun add(id: Int, upgrade: ToolUpgradePlan) {

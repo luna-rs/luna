@@ -9,6 +9,7 @@ import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
 import game.bot.scripts.skills.AlchemyBotScript
+import engine.bot.economy.BotProductionMetrics
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -55,6 +56,7 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
             }
             mob.inventory.remove(inventoryIndex, Item(item.id))
             mob.inventory.removeAll(removeItems)
+            if (mob.isRealBot()) BotProductionMetrics.recordSink(item.id)
             mob.magic.addExperience(type.xp)
             mob.animation(if (lowAlch) Animations.LOW_ALCHEMY else Animations.HIGH_ALCHEMY)
             mob.graphic(if (lowAlch) Graphic(112, 75) else Graphic(113, 75))

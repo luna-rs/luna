@@ -252,7 +252,11 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     stop()
                 } finally {
                     val normalExit = isActive
-                    finish()
+                    try {
+                        finish()
+                    } finally {
+                        if (this@BotScript is InventoryBotScript) finishPlannedProduction()
+                    }
                     if (normalExit) {
                         completed()
                     }

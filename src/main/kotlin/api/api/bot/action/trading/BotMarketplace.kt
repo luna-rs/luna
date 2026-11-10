@@ -159,6 +159,14 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
     fun tradingSpot(owner: BotScript): Position? = tradingSpots.position(owner)
 
     /**
+     * Captures the finite leased advertisers for request planning without scanning unrelated players.
+     * Callers still validate current preparation, stock, quotes and availability before approaching a session.
+     */
+    fun tradingSessions(): List<BotScript> = tradingSpots.owners().filter {
+        it.bot.state == EntityState.ACTIVE && it.bot.scriptStack.current() === it
+    }
+
+    /**
      * Returns a vacated spot to the back of this market's randomized rotation.
      */
     fun releaseTradingSpot(owner: BotScript) = tradingSpots.release(owner)

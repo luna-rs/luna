@@ -61,6 +61,9 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
         val abyss = bot.recentEscape?.avoids(SubZone.ABYSS_ENTRY_MAGE) != true &&
             bot.health >= 30 && Food.values().any { it.heal >= 8 && bot.itemTracker.count(it.id) >= 4 } &&
             rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5)
-        return CraftRuneBotScript(bot, rune.altar, getDuration(bot), viaAbyss = abyss, profit = !training)
+        val duration = getDuration(bot)
+        val plan = BotProductionPlanner.select(bot, SKILL_RUNECRAFTING, currentLevel, training, duration,
+            "runecraft:${rune.name}")?.productionPlan ?: return VoidBotScript(bot)
+        return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss = abyss, profit = !training).planProduction(plan)
     }
 }

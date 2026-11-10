@@ -45,7 +45,7 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
      */
     fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>, duration: Duration): BotScript {
         if (duration <= Duration.ZERO || !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
-        getBurnScript(bot, level, zones, duration)?.let { return it }
+        BotProductionPlanner.select(bot, skillId, level, true, duration)?.let { return it }
         if (Log.entries.any { it.level <= level && bot.itemTracker.count(it.id) > 0 }) return VoidBotScript(bot)
         return WoodcuttingScriptFactory.getFiremakingScript(bot, level, duration, zones)
     }

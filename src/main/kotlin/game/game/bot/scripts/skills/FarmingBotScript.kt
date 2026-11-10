@@ -95,6 +95,22 @@ class FarmingBotScript(
     }).distinctBy { it.location }
     private var visitIndex = 0
     private var portableSuppliesOnly = false
+    private var purchaseMaximumCoins: Long? = null
+    private var purchaseSpentCoins = 0L
+    private var purchaseUnitPrices = emptyMap<Int, Long>()
+
+    /**
+     * Captures one finite visit's purchase allowance and input ceilings before the activity starts.
+     * Actual shop payments debit this same allowance before suspending, including partial preparations.
+     */
+    fun limitPurchases(maximumCoins: Long, maximumUnitPrices: Map<Int, Long>): FarmingBotScript {
+        require(maximumCoins >= 0L && maximumUnitPrices.size <= 32)
+        require(maximumUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
+        check(purchaseMaximumCoins == null) { "This farming visit already has a purchase allowance." }
+        purchaseMaximumCoins = maximumCoins
+        purchaseUnitPrices = maximumUnitPrices.toMap()
+        return this
+    }
 
     /**
      * Native patch currently being attended in this bounded run.
@@ -169,6 +185,9 @@ class FarmingBotScript(
             var replantTrees = false
             var visits: List<Visit> = emptyList()
             var visitIndex = 0
+            var purchaseMaximumCoins: Long? = null
+            var purchaseSpentCoins = 0L
+            var purchaseUnitPrices = emptyMap<Int, Long>()
             override fun load(data: JsonObject) {
                 super.load(data)
                 patchKey = data.get("patchKey").asString
@@ -179,6 +198,15 @@ class FarmingBotScript(
                     Visit(SITES.keys.first { it.key == visit.get("patchKey").asString }, visit.get("seedId").asInt)
                 } ?: emptyList()
                 visitIndex = data.get("visitIndex")?.asInt ?: 0
+                purchaseMaximumCoins = data.get("purchaseMaximumCoins")?.asLong
+                purchaseSpentCoins = data.get("purchaseSpentCoins")?.asLong ?: 0L
+                val unitPrices = data.getAsJsonObject("purchaseUnitPrices")
+                require(unitPrices == null || unitPrices.size() <= 32)
+                purchaseUnitPrices = unitPrices?.entrySet()?.associate { it.key.toInt() to it.value.asLong }
+                    ?: emptyMap()
+                require(purchaseMaximumCoins?.let { it >= 0L } != false && purchaseSpentCoins >= 0L)
+                require(purchaseUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
+                require(purchaseMaximumCoins != null || purchaseUnitPrices.isEmpty())
             }
             override fun save(data: JsonObject) {
                 super.save(data)
@@ -192,6 +220,11 @@ class FarmingBotScript(
                     })
                 } })
                 data.addProperty("visitIndex", visitIndex)
+                purchaseMaximumCoins?.let { data.addProperty("purchaseMaximumCoins", it) }
+                data.addProperty("purchaseSpentCoins", purchaseSpentCoins)
+                data.add("purchaseUnitPrices", JsonObject().also { prices ->
+                    purchaseUnitPrices.forEach { (id, price) -> prices.addProperty(id.toString(), price) }
+                })
             }
         }
     }
@@ -222,6 +255,8 @@ class FarmingBotScript(
         data.visits.firstOrNull()?.location ?: SITES.keys.first { it.key == data.patchKey },
         data.visits.firstOrNull()?.seedId ?: data.seedId, data.duration, data.replantTrees, data.visits.drop(1)) {
         visitIndex = data.visitIndex.coerceIn(0, visits.lastIndex)
+        data.purchaseMaximumCoins?.let { limitPurchases(it, data.purchaseUnitPrices) }
+        purchaseSpentCoins = data.purchaseSpentCoins
         restoreInventoryState(data)
     }
 
@@ -540,7 +575,14 @@ class FarmingBotScript(
         Farming.update(bot)
         if (!canPrepare()) return false
         FarmingSupplyPreparation.prepare(bot, handler, preparationSupplies(), SITES.getValue(location),
-            { isActionSafe() }, remainingDuration())
+            { isActionSafe() }, remainingDuration(),
+            maximumPurchaseCoins = purchaseMaximumCoins?.let { (it - purchaseSpentCoins).coerceAtLeast(0L) }
+                ?: Long.MAX_VALUE,
+            maximumUnitPrices = purchaseUnitPrices.takeIf { purchaseMaximumCoins != null },
+            recordSpending = { coins ->
+                purchaseSpentCoins = if (coins.toLong() > Long.MAX_VALUE - purchaseSpentCoins) Long.MAX_VALUE
+                    else purchaseSpentCoins + coins
+            })
         Farming.update(bot)
         return selectSuppliedVisit()
     }
@@ -598,5 +640,8 @@ class FarmingBotScript(
         it.replantTrees = replantTrees
         it.visits = visits
         it.visitIndex = visitIndex
+        it.purchaseMaximumCoins = purchaseMaximumCoins
+        it.purchaseSpentCoins = purchaseSpentCoins
+        it.purchaseUnitPrices = purchaseUnitPrices
     }
 }

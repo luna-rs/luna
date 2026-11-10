@@ -206,6 +206,11 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
      */
     internal suspend fun prepareEssence(): Boolean {
         val craftingRune = CraftableRune.ALTAR_TO_RUNE[altar] ?: return false
+        productionPlan?.let { plan ->
+            return plan.recipe.materials.any { (id, amount) ->
+                bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id) >= amount
+            }
+        }
         val remaining = remainingDuration()
         if (remaining <= Duration.ZERO || productionRetriesExhausted() || isPaused() || isTerminated() ||
             bot.state != EntityState.ACTIVE ||
@@ -308,11 +313,12 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         }
 
         if (!viaAbyss && !bot.itemTracker.contains(altar.talisman)) {
+            if (productionPlan != null) { stop(); return emptyList() }
             // Emergency spawn talisman if needed.
             bot.bank.add(altar.talisman)
         }
 
-        pouches = EssencePouch.entries.filter { pouch ->
+        pouches = if (productionPlan != null) emptyList() else EssencePouch.entries.filter { pouch ->
             pouch.level <= bot.runecrafting.staticLevel && pouch.isOwnedBy(bot) &&
                     (bot.attributes()[pouch.essence] == 0 || bot.attributes()[pouch.essenceId] == essence) &&
                     (viaAbyss || pouch.capacity(bot.attributes()[pouch.wear]) > 0)
@@ -329,6 +335,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
 
     override suspend fun withdrawBankItems(items: List<Item>): Boolean = withTimeoutOrNull(90.seconds) {
         if (!super.withdrawBankItems(items)) return@withTimeoutOrNull false
+        if (productionPlan != null) return@withTimeoutOrNull hasEssence()
         val id = essence ?: return@withTimeoutOrNull false
         for (pouch in pouches) {
             if (!isActionSafe(ActionSafety.NON_COMBAT)) return@withTimeoutOrNull false
