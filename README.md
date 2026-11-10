@@ -3,7 +3,7 @@ Luna is a high-performance RuneScape server for the #377 protocol. It combines c
 with **autonomous player bots** that train, trade, fight, and progress alongside you.
 
 <p align="center">
-<a href="https://luna2006.rs/"><img src="data/res   ources/play-luna-2006.png" alt="Play Luna 2006" width="320" height="88" border="0"></a>
+<a href="https://luna2006.rs/"><img src="data/resources/play-luna-2006.png" alt="Play Luna 2006" width="320" height="88" border="0"></a>
 </p>
 
 **Luna 2006** is an actively hosted 2006-era experience based on this project. Come see the 
