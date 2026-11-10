@@ -51,6 +51,7 @@ object BotMerchantValuation {
                                        private val nature: Long, private val fire: Long,
                                        private val shops: List<Shop>) {
         private val references = HashMap<Int, Long>()
+        private val liquidations = HashMap<Int, Long>()
         private val bids = HashMap<Pair<Int, Boolean>, Long>()
         private val asks = HashMap<Int, Long>()
 
@@ -60,7 +61,9 @@ object BotMerchantValuation {
         fun reference(id: Int, guide: Long): Long = references.getOrPut(id) {
             val shop = shops.asSequence().filter { it.computeCanSell(id) }
                 .map { it.computeSellValue(id, 1).toLong() }.maxOrNull() ?: 0L
-            liquidationReference(guide, shop, itemDef(id).value, magic, nature, fire)
+            val liquidation = liquidationReference(0L, shop, itemDef(id).value, magic, nature, fire)
+            liquidations[id] = liquidation
+            maxOf(guide, liquidation)
         }
 
         /**
@@ -70,18 +73,23 @@ object BotMerchantValuation {
         fun buy(id: Int, guide: Long, useful: Boolean = false,
                 strategy: BotTradePrice = BotTradePrice.EXACT): Long = bids.getOrPut(id to useful) {
             val reference = reference(id, guide)
-            if (useful) strategy.applyBuy(reference).coerceAtLeast(1)
+            if (useful) BotMarketExperience.buy(bot, id, strategy.applyBuy(reference),
+                BotTradeIntentions.productionLimit(bot, id)?.maximumUnitPrice ?: Long.MAX_VALUE)
             else resaleBid(reference, intelligence, greedy, rand().nextDouble())
         }
 
         /**
-         * Keeps resale asks above the reference even when the ordinary strategy discounts heavily.
+         * Starts resale asks above reference. Experienced unsold stock may discount toward independently
+         * accessible liquidation proceeds while retaining the merchant's margin on that alternative.
          */
         fun sell(id: Int, guide: Long, strategy: BotTradePrice): Long = asks.getOrPut(id) {
             val reference = reference(id, guide)
             val margin = 0.05 + intelligence.coerceIn(0.0, 1.0) * 0.10 + if (greedy) 0.10 else 0.0
-            maxOf(strategy.applySell(scaled(reference, 1.20 + margin)), scaled(reference, 1.0 + margin),
+            val minimum = maxOf(scaled(reference, 1.0 + margin),
                 if (reference == Long.MAX_VALUE) reference else reference + 1)
+            BotMarketExperience.sell(bot, id,
+                maxOf(strategy.applySell(scaled(reference, 1.20 + margin)), minimum),
+                scaled(liquidations.getValue(id), 1.0 + margin))
         }
     }
 

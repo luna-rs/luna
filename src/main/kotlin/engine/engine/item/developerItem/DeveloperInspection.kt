@@ -1,6 +1,7 @@
 package engine.item.developerItem
 
 import api.predef.ext.removeObject
+import engine.bot.economy.BotProductionMetrics
 import game.skill.magic.lowHighAlch.AlchemyType
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Bank.DynamicBankInterface
@@ -67,6 +68,7 @@ internal object DeveloperInspection {
 
     internal fun itemLines(actor: Player, item: Item, slot: Int? = null): List<String> {
         val d = item.itemDef
+        val flow = BotProductionMetrics.snapshot(item.id)
         return listOf("Name/ID: ${d.name} / ${item.id}", "Quantity: ${item.amount}; slot: ${slot ?: "ground"}",
             "Store/base value: ${d.value}",
             "Alchemy low/high: ${(d.value * AlchemyType.LOW.valueMultiplier).toInt()} / ${(d.value * AlchemyType.HIGH.valueMultiplier).toInt()}",
@@ -74,6 +76,8 @@ internal object DeveloperInspection {
             "Tradeable: ${d.isTradeable}; noted: ${d.isNoted}",
             "Unnoted ID: ${d.unnotedId.orElse(-1)}; noted ID: ${d.notedId.orElse(-1)}",
             "Inventory actions: ${d.inventoryActions.joinToString()}", "Dynamic: ${item.isDynamic}") +
+            (flow?.let { listOf("Observed bot activity this boot: processed ${it.processed}; " +
+                "produced ${it.produced}; depleted ${it.depleted}.") } ?: emptyList()) +
             if (item.isDynamic) item.asDynamic().attributes().save().entries.map { "${it.key}: ${it.value}" } else emptyList()
     }
 

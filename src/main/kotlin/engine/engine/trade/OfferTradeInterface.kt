@@ -76,6 +76,33 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      */
     var samplesMarketPrices = true
 
+    private var nativeValidation: (() -> Boolean)? = null
+    private var nativeSettlement: (() -> Unit)? = null
+
+    /**
+     * Attaches an optional game-thread guard and settlement for the exact captured trade basket.
+     * Native confirmation rechecks both participants before transfer and settles before closing either window.
+     */
+    fun guardNativeTrade(validate: () -> Boolean, settle: () -> Unit) {
+        nativeValidation = validate
+        nativeSettlement = settle
+    }
+
+    /**
+     * Checks a participant's optional guard without suspending or changing the native basket.
+     */
+    internal fun nativeTradeAllowed(): Boolean = nativeValidation?.invoke() != false
+
+    /**
+     * Settles exactly once, clearing captured state before calling its owner.
+     */
+    internal fun settleNativeTrade() {
+        val settle = nativeSettlement
+        nativeValidation = null
+        nativeSettlement = null
+        settle?.invoke()
+    }
+
     /**
      * Initializes the trading interface, inventory overlay, and offer panels.
      */
@@ -104,6 +131,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      */
     override fun onClose(plr: Player) {
         if (!completed) {
+            nativeValidation = null
+            nativeSettlement = null
             plr.tradingWith = -1
 
             plr.inventory.clearSecondaryWidget()

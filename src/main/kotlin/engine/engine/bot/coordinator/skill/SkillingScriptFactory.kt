@@ -93,6 +93,23 @@ abstract class SkillingScriptFactory(val skillId: Int) {
      */
     fun getScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
         if (training && !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
+        if (skillId in setOf(SKILL_CRAFTING, SKILL_FLETCHING, SKILL_HERBLORE, SKILL_SMITHING, SKILL_COOKING)) {
+            if (skillId == SKILL_HERBLORE)
+                HerbloreScriptFactory.getOwnedGatheringScript(bot, training)?.let { return it }
+            if (skillId == SKILL_COOKING && !training)
+                CookingScriptFactory.getOwnedMillingScript(bot)?.let { return it }
+            val planned = BotProductionPlanner.select(bot, skillId, level, training, getDuration(bot))
+            if (planned != null) return planned
+            return when (skillId) {
+                SKILL_CRAFTING -> CraftingScriptFactory.getCollectHidesScript(bot, zones)
+                SKILL_FLETCHING -> WoodcuttingScriptFactory.getScript(bot, bot.woodcutting.staticLevel, zones, false)
+                SKILL_HERBLORE -> game.bot.scripts.skills.HerbGatheringScript(bot,
+                    game.skill.herblore.identifyHerb.Herb.GUAM_LEAF, getDuration(bot))
+                SKILL_SMITHING -> MiningScriptFactory.getScript(bot, bot.mining.staticLevel, zones, false)
+                SKILL_COOKING -> FishingScriptFactory.getScript(bot, bot.fishing.staticLevel, zones, false)
+                else -> VoidBotScript(bot)
+            }
+        }
         return if (training) {
             getTrainingScript(bot, level, zones)
         } else {

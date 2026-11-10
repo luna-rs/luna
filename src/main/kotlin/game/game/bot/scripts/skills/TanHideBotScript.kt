@@ -179,6 +179,10 @@ class TanHideBotScript(
     override fun bankWithdraw(): List<Item> = withdrawBatch(bankOnly = true)
 
     override fun withdraw(): List<Item> {
+        if (productionPlan != null) {
+            started = true
+            return withdrawBatch(bankOnly = false)
+        }
         if (!started) {
             val stock = Hide.HIDE_TO_HIDE.keys.sumOf { bot.itemTracker.count(it).toLong() }
             if (stock < CollectHidesBotScript.hideTarget(bot)) {
@@ -206,10 +210,14 @@ class TanHideBotScript(
         if (!bankOnly && productionRetriesExhausted()) { stop(); return emptyList() }
         fun amount(id: Int) = if (bankOnly) bot.bank.computeAmountForId(id) else bot.itemTracker.count(id)
         val coins = amount(995)
-        for ((id, configured) in Hide.HIDE_TO_HIDE) {
+        val planned = productionPlan?.recipe?.key?.takeIf { it.startsWith("tan:") }
+            ?.substringAfter(':')?.let(Hide::valueOf)
+        if (productionPlan != null && planned == null) { stop(); return emptyList() }
+        val choices = planned?.let { listOf(it.hide to it) } ?: Hide.HIDE_TO_HIDE.map { it.key to it.value }
+        for ((id, configured) in choices) {
             val stock = amount(id)
             if (stock < 1) continue
-            val hide = if (configured == Hide.HARD_LEATHER) {
+            val hide = if (planned == null && configured == Hide.HARD_LEATHER) {
                 val canCraftHard = bot.crafting.staticLevel >= HideArmor.HARD_LEATHER_BODY.level
                 if (canCraftHard && coins >= Hide.HARD_LEATHER.cost && roll(1 of 4)) Hide.HARD_LEATHER else Hide.SOFT_LEATHER
             } else configured
@@ -231,6 +239,7 @@ class TanHideBotScript(
      * total stock and never lower existing demand or replace its skill, level, priority, and purpose metadata.
      */
     private fun requestMissingSupplies() {
+        if (productionPlan != null) return
         val ownedHides = Hide.entries.filter { bot.itemTracker.count(it.hide) > 0 }
         if (ownedHides.isEmpty()) Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.raiseWantedItemTarget(it, CollectHidesBotScript.hideTarget(bot)) }
         val minimumFee = ownedHides.minOfOrNull { it.cost } ?: Hide.SOFT_LEATHER.cost
@@ -238,6 +247,7 @@ class TanHideBotScript(
     }
 
     override suspend fun finish() {
+        if (productionPlan != null) return
         if (isPaused() || craftingQueued || made < 100) return
         val leather = Hide.TAN_TO_HIDE.keys.sumOf { bot.itemTracker.count(it).toLong() }
         if (leather < 100) return

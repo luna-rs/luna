@@ -241,6 +241,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      * Attempts to complete one wanted-item target before moving to another wanted item.
      */
     private suspend fun buyWantedItem(shops: List<Shop>, wanted: WantedItemDefinition, budget: Int): Int {
+        val production = BotTradeIntentions.productionLimit(bot, wanted.id)
         var spent = 0
         val failedShops = HashSet<Shop>()
 
@@ -267,7 +268,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 shop = shop,
                 id = wanted.id,
                 maxAmount = amountNeeded,
-                budget = budget - spent
+                budget = budget - spent,
+                expectedProduction = production
             )
 
             spent += amountSpent
@@ -408,8 +410,10 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         shop: Shop,
         id: Int,
         maxAmount: Int,
-        budget: Int
+        budget: Int,
+        expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null
     ): Int {
+        val production = expectedProduction ?: BotTradeIntentions.productionLimit(bot, id)
         var remainingAmount = maxAmount
         var remainingBudget = budget
         var totalSpent = 0
@@ -423,7 +427,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             val coinsBefore = bot.inventory.computeAmountForId(COINS_ID)
             val itemsBefore = bot.inventory.computeAmountForId(id)
 
-            val bought = handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget)
+            val bought = handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget, production)
 
             val coinsAfter = bot.inventory.computeAmountForId(COINS_ID)
             val itemsAfter = bot.inventory.computeAmountForId(id)

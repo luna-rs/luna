@@ -14,6 +14,7 @@ import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import engine.bot.coordinator.skill.BotProductionPlanner
 import engine.controllers.Controllers.inWilderness
 import engine.spawn.PersistentGroundItem
 import game.skill.herblore.makePotion.FinishedPotion
@@ -54,10 +55,11 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration: Duration, zones: MutableList<SubZone>,
-                       private val herbloreContinuation: Boolean = false) :
+                       private val herbloreContinuation: Boolean = false, private val ownedRunesOnly: Boolean = false) :
     InventoryBotScript(bot, duration, zones) {
     override val trainingSkill = SKILL_MAGIC
     override val verifiedProductionWithdrawals = true
+    override val ownedSuppliesOnly get() = ownedRunesOnly
     override val actionSafety get() = if (itemId == WINE) ActionSafety.COMBAT else ActionSafety.NON_COMBAT
     override val allowsCombatResponse get() = !bot.inWilderness()
 
@@ -101,6 +103,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
              */
             var profit = false
             var herbloreContinuation = false
+            var ownedRunesOnly = false
             var continued = false
             var competitionLimit = 0
             var competitionLosses: Map<SubZone, Int> = emptyMap()
@@ -110,6 +113,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
                 itemId = data.get("itemId")?.asInt ?: WINE
                 profit = data.get("profit")?.asBoolean ?: false
                 herbloreContinuation = data.get("herbloreContinuation")?.asBoolean ?: false
+                ownedRunesOnly = data.get("owned_runes_only")?.asBoolean ?: false
                 continued = data.get("continued")?.asBoolean ?: false
                 competitionLimit = data.get("competition_limit")?.asInt ?: 0
                 competitionLosses = data.getAsJsonObject("competition_losses")?.entrySet()?.associate {
@@ -122,6 +126,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
                 data.addProperty("itemId", itemId)
                 data.addProperty("profit", profit)
                 data.addProperty("herbloreContinuation", herbloreContinuation)
+                data.addProperty("owned_runes_only", ownedRunesOnly)
                 data.addProperty("continued", continued)
                 data.addProperty("competition_limit", competitionLimit)
                 data.add("competition_losses", JsonObject().also { losses ->
@@ -135,7 +140,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
      * Restores the resource and purpose without retaining live ground-item references.
      */
     constructor(bot: Bot, data: TelegrabData) :
-        this(bot, data.itemId, data.profit, data.duration, data.zones, data.herbloreContinuation) {
+        this(bot, data.itemId, data.profit, data.duration, data.zones, data.herbloreContinuation, data.ownedRunesOnly) {
         restoreInventoryState(data)
         continued = data.continued
         if (data.competitionLimit in 3..10) competitionLimit = data.competitionLimit
@@ -174,6 +179,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
      */
     fun isEligible(): Boolean = bot.spellbook == Spellbook.REGULAR && bot.magic.staticLevel >= LEVEL &&
         BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) && purposeAllowed() && outputStock() < collectionGoal() &&
+        (!ownedRunesOnly || bot.ownsProductionSupplies(bot.productionRuneCosts(REQUIREMENTS))) &&
         (!profit || margin() > 0)
 
     /**
@@ -226,7 +232,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
                 if (!ActionSafety.NON_COMBAT.allows(bot) || remainingDuration() <= Duration.ZERO) break
                 val target = cost.amount * casts
                 val owned = bot.inventory.computeAmountForId(cost.id).toLong() + bot.bank.computeAmountForId(cost.id)
-                if (owned < target) handler.shop.obtainWantedItem(cost.id, target)
+                if (owned < target && !ownedRunesOnly) handler.shop.obtainWantedItem(cost.id, target)
                 if (bot.inventory.computeAmountForId(cost.id).toLong() + bot.bank.computeAmountForId(cost.id) < cost.amount) break
             }
         }
@@ -252,7 +258,9 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
         val remaining = remainingDuration()
         if (remaining <= Duration.ZERO) return
         continued = true
-        bot.scriptStack.softPushHead(MakePotionBotScript(bot, FinishedPotion.RANGING_POTION, remaining))
+        BotProductionPlanner.select(bot, SKILL_HERBLORE, bot.herblore.staticLevel,
+            BotCombatActionHandler.wantsToTrain(bot, SKILL_HERBLORE), remaining, "potion:RANGING_POTION")
+            ?.let { bot.scriptStack.softPushHead(it) }
     }
 
     /**
@@ -412,6 +420,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
         it.itemId = itemId
         it.profit = profit
         it.herbloreContinuation = herbloreContinuation
+        it.ownedRunesOnly = ownedRunesOnly
         it.continued = continued
         it.competitionLimit = competitionLimit
         it.competitionLosses = competitionLosses.toMap()

@@ -104,9 +104,12 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
                 Method.COMBAT -> CombatCoordinator.magicTrainingScript(bot, !profit, getDuration(bot))
                 Method.ALCHEMY -> getAlchemyScript(bot, level, profit)
                 Method.WINE -> getTelegrabScript(bot, profit)
-                Method.ORBS -> getOrbScript(bot, level)
-                Method.ENCHANTING -> getEnchantScript(bot, level)
-                Method.SUPERHEAT -> getSuperheatScript(bot, level)
+                Method.ORBS -> BotProductionPlanner.select(bot, SKILL_MAGIC, level, !profit,
+                    getDuration(bot), "charge-orb:")
+                Method.ENCHANTING -> BotProductionPlanner.select(bot, SKILL_MAGIC, level, !profit,
+                    getDuration(bot), "enchant:")
+                Method.SUPERHEAT -> BotProductionPlanner.select(bot, SKILL_MAGIC, level, !profit,
+                    getDuration(bot), "superheat:")
                 Method.BONES -> getBonesToFoodScript(bot, level)
                 Method.TELEPORT -> getTeleportScript(bot, level)
                 Method.TELEOTHER -> {

@@ -270,13 +270,25 @@ object BotTradeManager {
         val remaining = payment.associate { it.item.id to it.item.amount }.toMutableMap()
         val paymentPrices = payment.associate { it.item.id to it.price }
         val selected = ArrayList<BotTradeItem>()
-        for (candidate in candidates) {
+        val productionBudgets = HashMap<Bot, Long>()
+        for (original in candidates) {
+            val candidate = capProductionPurchase(original) ?: continue
             val id = candidate.item.id
-            val demand = mapOf(id to candidate.item.amount)
+            val production = BotTradeIntentions.productionLimit(candidate.bot, id)
+            val budget = if (production == null) Long.MAX_VALUE else
+                productionBudgets.getOrPut(candidate.bot) { production.maximumCoins }
+            val amount = minOf(candidate.item.amount.toLong(), budget / candidate.price.coerceAtLeast(1L)).toInt()
+            if (amount < 1) continue
+            val demand = mapOf(id to amount)
             val prices = mapOf(id to candidate.price)
-            val exchange = TradeBasket.exchange(demand, demand, prices, prices, remaining, paymentPrices) ?: continue
+            val funding = if (production == null) remaining else remaining.filterKeys { it == 995 }
+            val exchange = TradeBasket.exchange(demand, demand, prices, prices, funding, paymentPrices) ?: continue
             selected += BotTradeItem(Item(id, exchange.first.getValue(id)), candidate.price,
                 candidate.purpose, candidate.bot)
+            if (production != null) {
+                productionBudgets[candidate.bot] =
+                    (budget - TradeBasket.value(exchange.second, paymentPrices)).coerceAtLeast(0L)
+            }
             if (candidate.purpose != BotTradePurpose.MERCHANT_BUY) {
                 for ((paymentId, amount) in exchange.second) {
                     remaining[paymentId] = remaining.getValue(paymentId) - amount
@@ -284,6 +296,19 @@ object BotTradeManager {
             }
         }
         return selected
+    }
+
+    /**
+     * Applies a finite production goal's total ownership, unit-price and shared coin limits to a captured bid.
+     * Ordinary market wishes keep their existing quantity and valuation policy.
+     */
+    internal fun capProductionPurchase(quote: BotTradeItem): BotTradeItem? {
+        val limit = BotTradeIntentions.productionLimit(quote.bot, quote.item.id) ?: return quote
+        if (limit.maximumUnitPrice < 1L || limit.maximumCoins < 1L) return null
+        val price = minOf(quote.price.coerceAtLeast(1L), limit.maximumUnitPrice)
+        val deficit = (limit.target.toLong() - quote.bot.totalItemAmount(quote.item.id)).coerceAtLeast(0L)
+        val count = minOf(quote.item.amount.toLong(), deficit, limit.maximumCoins / price).toInt()
+        return if (count < 1) null else BotTradeItem(Item(quote.item.id, count), price, quote.purpose, quote.bot)
     }
 
     /**
@@ -320,7 +345,7 @@ object BotTradeManager {
             if (purpose == BotTradePurpose.SELL && guide <= 0) continue
             val quote = if (purpose == BotTradePurpose.MERCHANT_SELL)
                 merchantPrices!!.sell(id, guide, priceStrategy)
-            else priceStrategy.applySell(guide).coerceAtLeast(1)
+            else BotMarketExperience.sell(bot, id, priceStrategy.applySell(guide))
             candidates += BotTradeItem(Item(id, count), quote, purpose, bot)
         }
         return BotTradeSelection.order(candidates)
@@ -404,10 +429,13 @@ object BotTradeManager {
                     val deficit = (item.target.toLong() - bot.totalItemAmount(item.id))
                         .coerceIn(0, Int.MAX_VALUE.toLong()).toInt()
                     if (deficit < 1 || !itemDef(item.id).isTradeable) continue
+                    val quote = if (BotEquipmentPreferences.isCosmetic(item.id))
+                        BotMerchantValuation.cosmeticBuy(bot, item.id, price)
+                    else priceStrategy.applyBuy(price).coerceAtLeast(1)
                     candidates += BotTradeItem(Item(item.id, deficit),
-                                               if (BotEquipmentPreferences.isCosmetic(item.id))
-                                                   BotMerchantValuation.cosmeticBuy(bot, item.id, price)
-                                               else priceStrategy.applyBuy(price).coerceAtLeast(1),
+                                               BotMarketExperience.buy(bot, item.id, quote,
+                                                   BotTradeIntentions.productionLimit(bot, item.id)?.maximumUnitPrice
+                                                       ?: Long.MAX_VALUE),
                                                purpose,
                                                bot)
                 }

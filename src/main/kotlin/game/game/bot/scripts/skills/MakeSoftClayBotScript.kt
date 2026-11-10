@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.script.InventoryBotScript
+import api.bot.script.ProductionPlan
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
@@ -100,14 +101,22 @@ class MakeSoftClayBotScript(
     /** Queues one bounded refill only when both clay and matching empties remain; no acquisition loop is created. */
     private fun queueWaterPreparation(): Boolean {
         if (!isActionSafe()) return false
-        if (!canPrepareWater()) return false
+        if (productionPlan == null && !canPrepareWater()) return false
         val empty = WaterResource.FILLABLES.inverse().getValue(water)
         val clayStock = bot.bank.computeAmountForId(CLAY).toLong() + bot.inventory.computeAmountForId(CLAY)
         val emptyStock = bot.bank.computeAmountForId(empty).toLong() + bot.inventory.computeAmountForId(empty)
+        productionPlan?.let { plan ->
+            val fill = plannedFilling(bot, plan, empty, water, minOf(clayStock, emptyStock), remainingDuration())
+                ?: return false
+            bot.scriptStack.pushHead(fill)
+            return true
+        }
         bot.scriptStack.softPushHead(FillWaterBotScript(bot, empty, minOf(14L, clayStock, emptyStock).toInt(), duration))
         stop()
         return true
     }
+
+    override fun prepareMissingPlannedSupplies(plan: ProductionPlan): Boolean = queueWaterPreparation()
 
     /** Returns up to fourteen balanced banked input pairs, or an empty batch when either input is absent. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)

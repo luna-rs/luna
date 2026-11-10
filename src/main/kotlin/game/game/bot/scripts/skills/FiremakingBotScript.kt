@@ -302,7 +302,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             return emptyList()
         }
         if (TINDERBOX !in bot.itemTracker) {
-            if (bankRelief) { stop(); return emptyList() }
+            if (bankRelief || productionPlan != null) { stop(); return emptyList() }
             // Emergency spawn tinderbox if needed.
             bot.bank.add(Item(TINDERBOX))
         }
@@ -425,7 +425,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         if (gatheringQueued) return
         gatheringQueued = true
         releaseSpot()
-        if (bankRelief) { stop(); return }
+        if (bankRelief || productionPlan != null) { stop(); return }
         val remaining = remainingDuration()
         if (remaining > Duration.ZERO) {
             val script = FiremakingScriptFactory.getTrainingScript(bot, bot.firemaking.staticLevel,

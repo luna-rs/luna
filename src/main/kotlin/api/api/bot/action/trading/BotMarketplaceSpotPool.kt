@@ -60,6 +60,11 @@ internal class BotMarketplaceSpotPool<Owner : Any, Spot : Any>(
     fun position(owner: Owner): Spot? = leases[owner]
 
     /**
+     * Captures at most the pool's fixed capacity of session owners without searching the world population.
+     */
+    fun owners(): List<Owner> = leases.keys.toList()
+
+    /**
      * Prevents unrelated marketplace activities from using a currently leased trader position.
      */
     fun reserved(spot: Spot): Boolean = spot in leases.values

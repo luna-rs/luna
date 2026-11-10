@@ -2,6 +2,7 @@ package game.item.degradable.jewellery
 
 import api.predef.*
 import engine.controllers.WildernessLocatableController.wildernessLevel
+import engine.bot.economy.BotConsumableDemand
 import game.skill.magic.Magic.findLandingTile
 import game.skill.magic.Magic.teleport
 import game.skill.magic.teleportSpells.TeleportStyle
@@ -25,5 +26,6 @@ on(DamageReceivedEvent::class) {
     plr.teleport(destination, TeleportStyle.REGULAR, maxWildernessLevel = 30) {
         plr.sendMessage("Your Ring of Life saves you and is destroyed in the process.")
         plr.equipment[Equipment.RING] = null
+        BotConsumableDemand.depleted(plr, RING_OF_LIFE)
     }
 }

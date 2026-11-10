@@ -6,7 +6,6 @@ import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
 import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.NumberInput
 
@@ -43,29 +42,7 @@ val buttonToTan = mutableMapOf<Int, TanButton>()
  * Tans the specified amount of hides.
  */
 fun tan(plr: Player, hide: Hide, selectedAmount: Int) {
-    val inv = plr.inventory
-    var makeAmount = inv.computeAmountForId(hide.hide)
-    if (makeAmount == 0) {
-        plr.sendMessage("You do not have any of these hides to tan.")
-        return
-    }
-
-    if (makeAmount > selectedAmount) {
-        makeAmount = selectedAmount
-    }
-
-    val totalCost = hide.cost * makeAmount
-    val totalMoney = inv.computeAmountForId(995)
-    if (totalCost > totalMoney) {
-        plr.sendMessage("You need ${numF(totalCost - totalMoney)} more coins to tan these.")
-        return
-    }
-
-    val moneyItem = Item(995, totalCost)
-    if (inv.remove(moneyItem)) {
-        inv.replace(hide.hide, hide.tan, makeAmount)
-        plr.sendMessage("The tanner tans $makeAmount hides for you.")
-    }
+    Tanning.tan(plr, hide, selectedAmount)
 }
 
 /**

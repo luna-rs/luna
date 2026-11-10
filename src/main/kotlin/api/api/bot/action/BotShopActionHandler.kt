@@ -34,31 +34,43 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      *
      * @author lare96
      */
-    private class PurchaseBudget(var remainingCoins: Int, val maximumUnitPrices: Map<Int, Long>)
+    private class PurchaseBudget(var remainingCoins: Int, val maximumUnitPrices: Map<Int, Long>,
+                                 val recordSpending: (Int) -> Unit,
+                                 val productionLimits: Map<Int, BotTradeIntentions.ProductionPurchaseLimit>)
 
     /**
      * Executes one price-protected GP purchase on the game thread through the native shop transaction.
      * The expected overlay, access, quantity, space and current quote are checked without suspending before buying.
      * Ordinary queued shop clicks retain their existing behavior; this action is for finite bargain purchases.
      */
-    fun buyQuoted(shop: Shop, id: Int, amount: Int, maxTotalCost: Int): Boolean =
-        shop.currency == Currency.COINS && buyExact(shop, id, amount, maxTotalCost)
+    fun buyQuoted(shop: Shop, id: Int, amount: Int, maxTotalCost: Int,
+                  expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null): Boolean =
+        shop.currency == Currency.COINS && buyExact(shop, id, amount, maxTotalCost, expectedProduction)
 
     /**
      * Buys the largest affordable batch of up to one hundred within the caller's quantity and spending limits.
      * Stock, capacity and the exact price are checked in the same game-thread operation as payment, so restocking
      * cannot turn a partial batch into an oversized purchase. Successful purchases yield before the next batch.
      */
-    suspend fun buyUpTo(shop: Shop, id: Int, maxAmount: Int, maxTotalCost: Int): Boolean {
-        val wallet = minOf(maxTotalCost, bot.inventory.computeAmountForId(shop.currency.id))
+    suspend fun buyUpTo(shop: Shop, id: Int, maxAmount: Int, maxTotalCost: Int,
+                        expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null): Boolean {
+        val production = BotTradeIntentions.productionLimit(bot, id)
+        if (expectedProduction != null && (production == null ||
+            production.identity !== expectedProduction.identity || production.expires != expectedProduction.expires)) return false
+        val wallet = minOf(maxTotalCost.toLong(), bot.inventory.computeAmountForId(shop.currency.id).toLong(),
+            production?.maximumCoins ?: Long.MAX_VALUE).toInt()
         if (maxAmount < 1 || wallet < 1) return false
+        if (production != null && shop.currency != Currency.COINS) return false
         val capacity = if (itemDef(id).isStackable) Int.MAX_VALUE else bot.inventory.computeRemainingSize()
         var quantity = minOf(100, maxAmount, shop.items.computeAmountForId(id), capacity,
             Int.MAX_VALUE - bot.inventory.computeAmountForId(id))
+        if (production != null) quantity = minOf(quantity,
+            (production.target.toLong() - bot.totalItemAmount(id)).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
         while (quantity > 0) {
             val quote = shop.computeBuyValue(id, quantity).orElse(-1)
-            if (quote in 1..wallet && bot.inventory.hasSpaceFor(Item(id, quantity))) {
-                val bought = buyExact(shop, id, quantity, quote)
+            if (quote in 1..wallet && bot.inventory.hasSpaceFor(Item(id, quantity)) &&
+                (production == null || (quote.toLong() + quantity - 1L) / quantity <= production.maximumUnitPrice)) {
+                val bought = buyExact(shop, id, quantity, quote, expectedProduction ?: production)
                 if (bought) delay(1.seconds)
                 return bought
             }
@@ -70,7 +82,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     /**
      * Applies an exact quantity and currency ceiling to one native shop transaction without suspending.
      */
-    private fun buyExact(shop: Shop, id: Int, amount: Int, maxTotalCost: Int): Boolean {
+    private fun buyExact(shop: Shop, id: Int, amount: Int, maxTotalCost: Int,
+                         expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null): Boolean {
         if (amount !in 1..100 || maxTotalCost < 1 || !ActionSafety.NON_COMBAT.allows(bot) ||
             bot.isConnectedPlayer && !bot.isAutomationActive ||
             !shop.botAccess.apply(bot) ||
@@ -85,9 +98,18 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         val currency = shop.currency.id
         val coins = bot.inventory.computeAmountForId(currency)
         if (quoted !in 1..maxTotalCost || coins < quoted) return false
+        val production = BotTradeIntentions.productionLimit(bot, id)
+        if (expectedProduction != null && (production == null ||
+            production.identity !== expectedProduction.identity || production.expires != expectedProduction.expires)) return false
+        if (production != null && (currency != Currency.COINS.id ||
+            bot.totalItemAmount(id).toLong() + amount > production.target || quoted.toLong() > production.maximumCoins ||
+            (quoted.toLong() + amount - 1L) / amount > production.maximumUnitPrice)) return false
         val before = bot.inventory.computeAmountForId(id)
-        return shop.buy(bot, index, amount) && bot.inventory.computeAmountForId(id) == before + amount &&
-            bot.inventory.computeAmountForId(currency) == coins - quoted
+        val bought = shop.buy(bot, index, amount)
+        val spent = (coins - bot.inventory.computeAmountForId(currency)).coerceAtLeast(0)
+        if (spent > 0 && production != null)
+            BotTradeIntentions.recordProductionPurchase(bot, id, spent.toLong(), production.identity)
+        return bought && bot.inventory.computeAmountForId(id) == before + amount && spent == quoted
     }
 
     /**
@@ -245,10 +267,15 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Partial purchases remain owned; the ordinary unguarded acquisition API retains its existing behavior.
      */
     suspend fun obtainWantedItems(amounts: Map<Int, Int>, maximumCoins: Int,
-                                  maximumUnitPrices: Map<Int, Long>): Set<Int> {
+                                  maximumUnitPrices: Map<Int, Long>,
+                                  recordSpending: (Int) -> Unit = {}): Set<Int> {
         require(maximumCoins >= 0)
         require(maximumUnitPrices.values.all { it > 0L })
-        return obtainWantedItems(amounts, PurchaseBudget(maximumCoins, maximumUnitPrices.toMap()))
+        val limits = amounts.keys.mapNotNull { id ->
+            BotTradeIntentions.productionLimit(bot, id)?.let { id to it }
+        }.toMap()
+        return obtainWantedItems(amounts,
+            PurchaseBudget(maximumCoins, maximumUnitPrices.toMap(), recordSpending, limits))
     }
 
     private suspend fun obtainWantedItems(amounts: Map<Int, Int>, budget: PurchaseBudget?): Set<Int> {
@@ -382,23 +409,32 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                 if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
                 bot.overlays.open(ShopInterface(shop))
                 val before = carried()
+                val production = BotTradeIntentions.productionLimit(bot, id)
+                val captured = budget.productionLimits[id]
+                if (captured != null && (production == null || production.expires != captured.expires ||
+                    production.identity !== captured.identity)) break
+                val deficit = production?.let { (it.target.toLong() - bot.totalItemAmount(id)).coerceAtLeast(0L) }
+                    ?: Int.MAX_VALUE.toLong()
+                val unitCeiling = minOf(ceiling, production?.maximumUnitPrice ?: Long.MAX_VALUE)
                 val maximum = minOf((amount - before).coerceAtLeast(0L),
-                    shop.items.computeAmountForId(id).toLong(), 100L).toInt()
-                val wallet = minOf(budget.remainingCoins, bot.inventory.computeAmountForId(coins))
+                    shop.items.computeAmountForId(id).toLong(), 100L, deficit).toInt()
+                val wallet = minOf(budget.remainingCoins.toLong(), bot.inventory.computeAmountForId(coins).toLong(),
+                    production?.maximumCoins ?: Long.MAX_VALUE).toInt()
                 var quantity = maximum
                 var quote = -1
                 while (quantity > 0) {
                     quote = shop.computeBuyValue(id, quantity).orElse(-1)
                     if (quote in 1..wallet &&
-                        quote.toLong() <= ceiling.coerceAtMost(Int.MAX_VALUE.toLong()) * quantity &&
+                        quote.toLong() <= unitCeiling.coerceAtMost(Int.MAX_VALUE.toLong()) * quantity &&
                         bot.inventory.hasSpaceFor(Item(id, quantity))) break
                     quantity--
                 }
                 if (quantity < 1) break
                 val beforeCoins = bot.inventory.computeAmountForId(coins)
-                val bought = buyQuoted(shop, id, quantity, quote)
+                val bought = buyQuoted(shop, id, quantity, quote, captured ?: production)
                 val spent = (beforeCoins - bot.inventory.computeAmountForId(coins)).coerceAtLeast(0)
                 budget.remainingCoins = (budget.remainingCoins - spent).coerceAtLeast(0)
+                if (spent > 0) budget.recordSpending(spent)
                 if (!bought || carried() <= before) break
                 delay(1.seconds)
             }

@@ -12,6 +12,8 @@ import api.predef.ext.get
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.CookingScriptFactory
 import engine.bot.coordinator.skill.SkillingScriptFactory
+import engine.bot.coordinator.skill.BotProductionPlanner
+import api.bot.action.BotCombatActionHandler
 import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.content.flourMill.FlourMill
@@ -58,7 +60,10 @@ class MillFlourBotScript(
     bot: Bot,
     val mill: BotMill,
     private val duration: Duration,
-    private val supplied: Boolean = false
+    private val supplied: Boolean = false,
+    private val ownedInputsOnly: Boolean = false,
+    private val flourTarget: Int = 0,
+    private val goalDeadline: Long = 0L
 ) : BotScript(bot) {
 
     companion object {
@@ -155,12 +160,18 @@ class MillFlourBotScript(
             var duration = Duration.ZERO
             var supplied = false
             var failures = 0
+            var ownedInputsOnly = false
+            var flourTarget = 0
+            var goalDeadline = 0L
 
             override fun load(data: JsonObject) {
                 mill = BotMill.valueOf(data.get("mill").asString)
                 duration = data.get("duration").asLong.milliseconds
                 supplied = data.get("supplied")?.asBoolean ?: false
                 failures = data.get("failures")?.asInt ?: 0
+                ownedInputsOnly = data.get("owned_inputs_only")?.asBoolean ?: false
+                flourTarget = data.get("flour_target")?.asInt ?: 0
+                goalDeadline = data.get("goal_deadline")?.asLong ?: 0L
             }
 
             override fun save(data: JsonObject) {
@@ -168,6 +179,9 @@ class MillFlourBotScript(
                 data.addProperty("duration", duration.inWholeMilliseconds)
                 data.addProperty("supplied", supplied)
                 data.addProperty("failures", failures)
+                data.addProperty("owned_inputs_only", ownedInputsOnly)
+                data.addProperty("flour_target", flourTarget)
+                data.addProperty("goal_deadline", goalDeadline)
             }
         }
 
@@ -188,6 +202,26 @@ class MillFlourBotScript(
         internal fun guildEligible(bot: Bot): Boolean = bot.cooking.level >= CookingGuild.REQUIRED_LEVEL &&
             (CookingGuild.CHEFS_HAT in bot.equipment || CookingGuild.CHEFS_HAT in bot.inventory ||
                 CookingGuild.CHEFS_HAT in bot.bank)
+
+        /**
+         * Preserves a finite owned milling visit without buying pots or requesting another wheat trip.
+         * Existing bin and hopper contents are real previously consumed grain, not speculative future stock.
+         */
+        fun ownedSession(bot: Bot, duration: Duration): MillFlourBotScript? {
+            if (duration <= Duration.ZERO) return null
+            fun owned(id: Int) = bot.inventory.computeNonDynamicAmountForId(id).toLong() +
+                bot.bank.computeNonDynamicAmountForId(id)
+            val flour = owned(FlourMill.POT_OF_FLOUR)
+            if (flour >= Int.MAX_VALUE) return null
+            val pending = bot.flourInBin.toLong() + if (bot.hopperFull) 1L else 0L
+            if (flour >= 56 && pending == 0L) return null
+            val amount = minOf(TRIP_SIZE.toLong(), owned(FlourMill.POT),
+                owned(FlourMill.GRAIN) + pending, Int.MAX_VALUE - flour)
+            if (amount < 1L) return null
+            val deadline = System.currentTimeMillis() + minOf(duration.inWholeMilliseconds, 10 * 60_000L)
+            return MillFlourBotScript(bot, pickMill(bot), duration, supplied = true, ownedInputsOnly = true,
+                flourTarget = (flour + amount).toInt(), goalDeadline = deadline)
+        }
     }
 
     /**
@@ -208,43 +242,57 @@ class MillFlourBotScript(
     /**
      * Restores the mill, remaining session time and retry budget.
      */
-    constructor(bot: Bot, data: MillData) : this(bot, data.mill, data.duration, data.supplied) {
+    constructor(bot: Bot, data: MillData) : this(bot, data.mill, data.duration, data.supplied,
+        data.ownedInputsOnly, data.flourTarget, data.goalDeadline) {
         failures = data.failures
     }
+
+    init { require(!ownedInputsOnly || flourTarget > 0 && goalDeadline > 0L) }
 
     /**
      * Total of [id] across the inventory and bank.
      */
     private fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
 
+    private fun remainingFlour(): Long = if (!ownedInputsOnly) Long.MAX_VALUE else
+        (flourTarget.toLong() - owned(FlourMill.POT_OF_FLOUR)).coerceAtLeast(0L)
+
+    private fun withinGoal(): Boolean = !ownedInputsOnly || System.currentTimeMillis() < goalDeadline
+
     /**
      * How much grain the next trip grinds: limited by grain, by pots left after the bin's flour, and by the bin.
      */
     private fun tripGrain(): Int {
-        val pots = owned(FlourMill.POT) - bot.flourInBin
-        val room = FlourMill.BIN_CAPACITY - bot.flourInBin
-        return minOf(TRIP_SIZE.toLong(), owned(FlourMill.GRAIN), pots, room.toLong()).coerceAtLeast(0).toInt()
+        val pending = bot.flourInBin + if (ownedInputsOnly && bot.hopperFull) 1 else 0
+        val pots = owned(FlourMill.POT) - pending
+        val room = FlourMill.BIN_CAPACITY - pending
+        return minOf(TRIP_SIZE.toLong(), owned(FlourMill.GRAIN), pots, room.toLong(),
+            if (ownedInputsOnly) remainingFlour() - pending else Long.MAX_VALUE).coerceAtLeast(0).toInt()
     }
 
     override suspend fun run(): Boolean {
-        if (failures >= MAX_FAILURES || started.elapsedNow() >= duration) return true
+        if (failures >= MAX_FAILURES || started.elapsedNow() >= duration || !withinGoal() || remainingFlour() == 0L)
+            return true
         if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) return false
         if (mill == BotMill.COOKS_GUILD && !guildEligible(bot)) return true
-        if (owned(FlourMill.GRAIN) == 0L && bot.flourInBin == 0) return milled || queueWheat()
+        if (owned(FlourMill.GRAIN) == 0L && bot.flourInBin == 0 && (!ownedInputsOnly || !bot.hopperFull))
+            return ownedInputsOnly || milled || queueWheat()
         if (owned(FlourMill.POT) == 0L) {
+            if (ownedInputsOnly) return true
             if (owned(COINS) == 0L) return true
             val bought = withTimeoutOrNull(300_000) { buyPots() } == true
             if (!bought) return true
         }
         val grain = tripGrain()
-        val success = withTimeoutOrNull(600_000) { trip(grain) } == true
+        val timeout = if (ownedInputsOnly) minOf(600_000L, goalDeadline - System.currentTimeMillis()) else 600_000L
+        val success = timeout > 0 && withTimeoutOrNull(timeout) { trip(grain) } == true
         if (success) {
             failures = 0
             milled = true
         } else if (isActionSafe()) {
             failures++
         }
-        return failures >= MAX_FAILURES
+        return failures >= MAX_FAILURES || remainingFlour() == 0L || !withinGoal()
     }
 
     /**
@@ -298,21 +346,25 @@ class MillFlourBotScript(
         if (!openMillBank() || !banking.depositInventory() || !isActionSafe()) return false
         if (mill == BotMill.COOKS_GUILD && !prepareGuildHat()) return false
         banking.clickBankingMode(false)
-        val pots = minOf(owned(FlourMill.POT), (grain + bot.flourInBin).toLong()).toInt()
+        val pots = minOf(owned(FlourMill.POT),
+            (grain + bot.flourInBin + if (ownedInputsOnly && bot.hopperFull) 1 else 0).toLong(),
+            remainingFlour()).toInt()
         val wanted = listOfNotNull(if (grain > 0) Item(FlourMill.GRAIN, grain) else null, Item(FlourMill.POT, pots))
         if (!banking.withdrawAll(wanted) || !isActionSafe()) return false
         if (!bot.actionHandler.widgets.clickCloseInterface() || !isActionSafe()) return false
         if (mill == BotMill.COOKS_GUILD && !enterGuild()) return false
 
-        if (grain > 0) {
+        if (grain > 0 || ownedInputsOnly && bot.hopperFull) {
             if (!handler.webWalkTo(mill.top, bank = BankAccess.NONE) || !isActionSafe()) return false
-            while (FlourMill.GRAIN in bot.inventory && bot.flourInBin < FlourMill.BIN_CAPACITY) {
+            while ((FlourMill.GRAIN in bot.inventory || ownedInputsOnly && bot.hopperFull) &&
+                bot.flourInBin < FlourMill.BIN_CAPACITY &&
+                withinGoal() && (!ownedInputsOnly || bot.flourInBin < remainingFlour())) {
                 if (!grind()) return false
             }
         }
 
         if (!handler.webWalkTo(mill.ground, bank = BankAccess.NONE) || !isActionSafe()) return false
-        while (bot.flourInBin > 0 && FlourMill.POT in bot.inventory) {
+        while (bot.flourInBin > 0 && FlourMill.POT in bot.inventory && withinGoal() && remainingFlour() > 0L) {
             if (!collect()) return false
         }
         return isActionSafe() && openMillBank() && banking.depositInventory()
@@ -409,6 +461,15 @@ class MillFlourBotScript(
         world.locator.findObjectsOnTile(position) { it.id in ids }.firstOrNull()
 
     override suspend fun completed() {
+        if (ownedInputsOnly) {
+            val remaining = minOf((duration - started.elapsedNow()).coerceAtLeast(Duration.ZERO),
+                (goalDeadline - System.currentTimeMillis()).coerceAtLeast(0L).milliseconds)
+            if (remaining > Duration.ZERO && owned(FlourMill.POT_OF_FLOUR) > 0)
+                BotProductionPlanner.select(bot, SKILL_COOKING, bot.cooking.staticLevel,
+                    BotCombatActionHandler.wantsToTrain(bot, SKILL_COOKING), remaining, "dough:")
+                    ?.let { bot.scriptStack.pushTail(it, 2) }
+            return
+        }
         // Bots that see a job through turn their flour into dough; the rest leave it banked for the market.
         if (owned(FlourMill.POT_OF_FLOUR) > 0 && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             CookingScriptFactory.getPreparationScript(bot, bot.cooking.staticLevel)?.let { bot.scriptStack.pushTail(it, 2) }
@@ -420,5 +481,8 @@ class MillFlourBotScript(
         it.duration = (duration - started.elapsedNow()).coerceAtLeast(Duration.ZERO)
         it.supplied = supplied
         it.failures = failures
+        it.ownedInputsOnly = ownedInputsOnly
+        it.flourTarget = flourTarget
+        it.goalDeadline = goalDeadline
     }
 }

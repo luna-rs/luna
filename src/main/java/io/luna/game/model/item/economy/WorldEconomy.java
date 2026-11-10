@@ -30,6 +30,7 @@ import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.LongSupplier;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -75,6 +76,45 @@ public final class WorldEconomy extends AbstractScheduledService {
      * The economy settings used for update frequency, acceptable trade ranges, and price movement limits.
      */
     private final WorldEconomySettings settings;
+
+    /**
+     * Supplies wall-clock time for deterministic evidence expiry and service-cycle accounting.
+     */
+    private final LongSupplier currentTime;
+
+    /**
+     * Fixed-size direct-coin evidence per observed commodity, owned exclusively by this service.
+     * Runtime evidence deliberately restarts empty without changing the persisted guide-price format.
+     */
+    private final Map<Integer, RecentTradeWindow> recentTrades = new HashMap<>();
+
+    /**
+     * Immutable snapshots allow game-thread readers to inspect evidence without walking service-owned windows.
+     */
+    private final Map<Integer, PublishedTradeReference> recentReferences = new ConcurrentHashMap<>();
+
+    /**
+     * Opening values bound each commodity's total movement across every observation in the current service pass.
+     */
+    private final Map<Integer, Double> cycleOpeningPrices = new HashMap<>();
+
+    private long tradeCycle;
+
+    /**
+     * Conservative evidence of completed direct coin sales; neither seeds, advertisements nor shop stock qualify.
+     *
+     * @author lare96
+     */
+    public record RecentTradeReference(double price, int observations, int independentPairs, long lastObserved) {
+    }
+
+    /**
+     * Expires a published snapshot as soon as any contributing observation becomes stale.
+     *
+     * @author lare96
+     */
+    private record PublishedTradeReference(RecentTradeReference reference, long expiresAt) {
+    }
 
     /**
      * The active guide price snapshots.
@@ -156,7 +196,15 @@ public final class WorldEconomy extends AbstractScheduledService {
      * @param world The world that owns this economy service.
      */
     public WorldEconomy(World world) {
+        this(world, System::currentTimeMillis);
+    }
+
+    /**
+     * Creates a service with a controlled observation clock.
+     */
+    WorldEconomy(World world, LongSupplier currentTime) {
         this.world = world;
+        this.currentTime = currentTime;
         settings = Luna.settings().economy();
     }
 
@@ -205,7 +253,7 @@ public final class WorldEconomy extends AbstractScheduledService {
      * <p>
      * Trades are classified by offer shape:
      * <ul>
-     *     <li>One item stack for coins is handled by {@link #itemForCoins(Item, Item, SampleType)}.</li>
+     *     <li>One item stack for coins is handled by {@link #itemForCoins(Item, Item, SampleType, CompletedTradeData)}.</li>
      *     <li>One item stack for one other item stack is handled by {@link #itemForItem(Item, Item)}.</li>
      *     <li>Multiple item stacks for coins are handled by {@link #multiItemForCoins(List, double)}.</li>
      *     <li>All other mixed trades are handled by {@link #bartering(List, List)}.</li>
@@ -220,6 +268,9 @@ public final class WorldEconomy extends AbstractScheduledService {
                 priceUpdates.isEmpty() && historyUpdates.isEmpty() && prices.size() == lastPricesAmount) {
             return;
         }
+
+        cycleOpeningPrices.clear();
+        tradeCycle++;
 
         for (; ; ) {
             CompletedTradeData tradeData = trades.poll();
@@ -243,7 +294,7 @@ public final class WorldEconomy extends AbstractScheduledService {
                 }
 
                 if (itemA.getId() == 995 || itemB.getId() == 995) {
-                    itemForCoins(itemA, itemB, SampleType.ITEM_FOR_COINS);
+                    itemForCoins(itemA, itemB, SampleType.ITEM_FOR_COINS, tradeData);
                 } else {
                     itemForItem(itemA, itemB);
                 }
@@ -264,7 +315,7 @@ public final class WorldEconomy extends AbstractScheduledService {
         }
 
         for (ShopPurchase purchase; (purchase = shopPurchases.poll()) != null; ) {
-            itemForCoins(purchase.item(), purchase.coins(), SampleType.SHOP_PURCHASE);
+            itemForCoins(purchase.item(), purchase.coins(), SampleType.SHOP_PURCHASE, null);
         }
 
         lastPricesAmount = prices.size();
@@ -354,6 +405,27 @@ public final class WorldEconomy extends AbstractScheduledService {
     }
 
     /**
+     * Returns conservative recent sale evidence, or {@code null} without three consistent disjoint trader pairs.
+     * Notes share their commodity's window. Reads are constant-time and do not create prices or consult world stock.
+     * Evidence lasts at most twenty-four hours and must be earned again after a restart. The quoted lower quartile
+     * cannot exceed the current guide's ordinary upper bound; a low observed sale is never raised to a guide floor.
+     */
+    public RecentTradeReference getRecentTradeReference(int id) {
+        var definition = ItemDefinition.ALL.get(id).orElse(null);
+        if (definition == null || id == 995 || !definition.isTradeable()) return null;
+        int base = definition.getUnnotedId().orElse(id);
+        var published = recentReferences.get(base);
+        var data = prices.get(base);
+        long now = currentTime.getAsLong();
+        if (published == null || data == null || now >= published.expiresAt() ||
+                now < published.reference().lastObserved()) return null;
+        var reference = published.reference();
+        double price = Math.min(data.price * (1.0 + settings.maximumOverpayRatio()), reference.price());
+        return new RecentTradeReference(price, reference.observations(), reference.independentPairs(),
+                reference.lastObserved());
+    }
+
+    /**
      * Returns observed popularity plus a fading initial seed without creating or changing price snapshots.
      * Notes share their base item's history. Coins and untradeable items have no market popularity.
      *
@@ -422,7 +494,7 @@ public final class WorldEconomy extends AbstractScheduledService {
      * @param itemB The second trade offer.
      * @param type The source of the observed coin payment.
      */
-    private void itemForCoins(Item itemA, Item itemB, SampleType type) {
+    private void itemForCoins(Item itemA, Item itemB, SampleType type, CompletedTradeData trade) {
         Item tradedItem = itemA.getId() != 995 ? itemA : itemB;
         Item coins = itemA.getId() == 995 ? itemA : itemB;
         double offerPrice = (double) coins.getAmount() / (double) tradedItem.getAmount();
@@ -433,16 +505,21 @@ public final class WorldEconomy extends AbstractScheduledService {
         }
 
         double realPrice = data.price;
-        if (!withinRange(offerPrice, realPrice)) {
+        if (!Double.isFinite(offerPrice) || offerPrice <= 0.0 || tradedItem.getAmount() <= 0) return;
+        if (trade != null) {
+            long now = currentTime.getAsLong();
+            // Extremely distant prices remain outliers even if several related accounts repeat them.
+            if (offerPrice < realPrice / 8.0 || offerPrice > realPrice * 8.0) return;
+            var window = recentTrades.computeIfAbsent(data.id, key -> new RecentTradeWindow());
+            if (!window.record(trade.getTraderA(), trade.getTraderB(), offerPrice, trade.getTimestamp(),
+                    now, tradeCycle)) return;
+            publishRecentReference(data.id, window, now);
+            if (!withinRange(offerPrice, realPrice) && !window.corroborates(offerPrice, now)) return;
+        } else if (!withinRange(offerPrice, realPrice)) {
             return;
         }
 
-        ItemPriceData newData = data.setCalculatedPrice(offerPrice, type, tradedItem);
-        if (newData != data) {
-            prices.put(data.id, newData);
-            priceUpdates.put(data.id, newData);
-            historyUpdates.add(newData);
-        }
+        applyPriceSample(data, offerPrice, type, tradedItem);
     }
 
     /**
@@ -470,19 +547,8 @@ public final class WorldEconomy extends AbstractScheduledService {
         double tradePriceA = valueB / itemA.getAmount();
         double tradePriceB = valueA / itemB.getAmount();
 
-        var newDataA = dataA.setCalculatedPrice(tradePriceA, SampleType.ITEM_FOR_ITEM, itemA);
-        var newDataB = dataB.setCalculatedPrice(tradePriceB, SampleType.ITEM_FOR_ITEM, itemB);
-
-        if (newDataA != dataA) {
-            prices.put(dataA.id, newDataA);
-            priceUpdates.put(dataA.id, newDataA);
-            historyUpdates.add(newDataA);
-        }
-        if (newDataB != dataB) {
-            prices.put(dataB.id, newDataB);
-            priceUpdates.put(dataB.id, newDataB);
-            historyUpdates.add(newDataB);
-        }
+        applyPriceSample(dataA, tradePriceA, SampleType.ITEM_FOR_ITEM, itemA);
+        applyPriceSample(dataB, tradePriceB, SampleType.ITEM_FOR_ITEM, itemB);
     }
 
     /**
@@ -515,12 +581,7 @@ public final class WorldEconomy extends AbstractScheduledService {
             }
 
             double tradePrice = data.price * (totalCoins / totalValue);
-            var newData = data.setCalculatedPrice(tradePrice, SampleType.MULTI_ITEM_FOR_COINS, item);
-            if (newData != data) {
-                prices.put(data.id, newData);
-                priceUpdates.put(data.id, newData);
-                historyUpdates.add(newData);
-            }
+            applyPriceSample(data, tradePrice, SampleType.MULTI_ITEM_FOR_COINS, item);
         }
     }
 
@@ -585,12 +646,7 @@ public final class WorldEconomy extends AbstractScheduledService {
             }
 
             double tradePrice = data.price * winnerPriceMultiplier;
-            var newData = data.setCalculatedPrice(tradePrice, SampleType.BARTERING, item);
-            if (newData != data) {
-                prices.put(data.id, newData);
-                priceUpdates.put(data.id, newData);
-                historyUpdates.add(newData);
-            }
+            applyPriceSample(data, tradePrice, SampleType.BARTERING, item);
         }
 
         for (Item item : loser.getSecond()) {
@@ -604,12 +660,40 @@ public final class WorldEconomy extends AbstractScheduledService {
             }
 
             double tradePrice = data.price * loserPriceMultiplier;
-            var newData = data.setCalculatedPrice(tradePrice, SampleType.BARTERING, item);
-            if (newData != data) {
-                prices.put(data.id, newData);
-                priceUpdates.put(data.id, newData);
-                historyUpdates.add(newData);
-            }
+            applyPriceSample(data, tradePrice, SampleType.BARTERING, item);
+        }
+    }
+
+    /**
+     * Applies a bounded observation without allowing many transactions to compound past the cycle's movement cap.
+     */
+    private void applyPriceSample(ItemPriceData data, double tradePrice, SampleType type, Item item) {
+        var updated = data.setCalculatedPrice(tradePrice, type, item);
+        if (updated == data) return;
+        double opening = cycleOpeningPrices.computeIfAbsent(data.id, key -> data.price);
+        double movement = Math.max(0.0, Math.min(1.0, settings.maximumPriceMovement()));
+        double lower = opening * (1.0 - movement);
+        double upper = Math.min(Integer.MAX_VALUE, opening * (1.0 + movement));
+        double bounded = Math.max(lower, Math.min(upper, updated.price));
+        if (bounded != updated.price) {
+            updated = new ItemPriceData(data.id, bounded, data.price, updated.samples, data.samples);
+        }
+        prices.put(data.id, updated);
+        priceUpdates.put(data.id, updated);
+        historyUpdates.add(updated);
+    }
+
+    /**
+     * Publishes only bounded immutable evidence; no game-thread consumer can mutate the service's recent window.
+     */
+    private void publishRecentReference(int id, RecentTradeWindow window, long now) {
+        var reference = window.reference(now);
+        if (reference == null) {
+            recentReferences.remove(id);
+        } else {
+            recentReferences.put(id, new PublishedTradeReference(new RecentTradeReference(reference.price(),
+                    reference.observations(), reference.independentPairs(), reference.lastObserved()),
+                    reference.expiresAt()));
         }
     }
 

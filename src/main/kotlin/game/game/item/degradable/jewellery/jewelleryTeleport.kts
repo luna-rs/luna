@@ -2,6 +2,7 @@ package game.item.degradable.jewellery
 
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.economy.BotConsumableDemand
 import game.item.degradable.jewellery.TeleportJewellery.JewelleryDestination
 import game.skill.magic.Magic.findLandingTile
 import game.skill.magic.Magic.teleport
@@ -79,6 +80,7 @@ fun useCharge(plr: Player, event: ItemClickEvent, index: Int, jewellery: Telepor
     }
     val nextId = jewellery.items.getOrNull(index + 1) ?: jewellery.emptyId
     plr.inventory[event.index] = if (nextId == null) null else Item(nextId)
+    if (nextId == null) BotConsumableDemand.depleted(plr, jewellery.items.first())
 }
 
 for (jewellery in TeleportJewellery.values()) {

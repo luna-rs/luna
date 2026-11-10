@@ -88,6 +88,17 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
             return
         }
 
+        val allowed = try {
+            offer.nativeTradeAllowed() && confirm.offer.nativeTradeAllowed()
+        } catch (error: Exception) {
+            plr.overlays.closeWindows()
+            throw error
+        }
+        if (!allowed) {
+            plr.overlays.closeWindows()
+            return
+        }
+
         if (confirm.accepted) {
             val plrReaction = WantedTradeReaction.capture(plr, tradingItems)
             val otherReaction = WantedTradeReaction.capture(other, confirm.tradingItems)
@@ -104,6 +115,11 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
             try {
                 plr.inventory.addAll(otherItems)
                 other.inventory.addAll(plrItems)
+                try {
+                    offer.settleNativeTrade()
+                } finally {
+                    confirm.offer.settleNativeTrade()
+                }
                 plrReaction?.complete()
                 otherReaction?.complete()
             } finally {
@@ -111,8 +127,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
                 other.overlays.closeWindows()
             }
 
-            // TODO@1.0 Prevent manipulation by making player trades not count if they're trading with someone they've
-            //  traded with in the last <x> trades. The system should support a modifiable number of trades.
+            // The economy service bounds repeated trader-pair observations before moving guide prices.
             if (offer.samplesMarketPrices && confirm.offer.samplesMarketPrices) {
                 world.economy.addTrade(CompletedTradeData(plr.username,
                                                           other.username,

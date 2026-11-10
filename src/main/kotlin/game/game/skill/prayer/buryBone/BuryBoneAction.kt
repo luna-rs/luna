@@ -1,11 +1,13 @@
 package game.skill.prayer.buryBone
 
 import api.attr.Attr
+import api.bot.isRealBot
 import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
 import game.content.randomEvents.RandomEvents
 import game.skill.prayer.Bone
+import engine.bot.economy.BotProductionMetrics
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
@@ -45,6 +47,7 @@ class BuryBoneAction(plr: Player, val bone: Bone) : ThrottledAction<Player>(plr,
 
     override fun execute() {
         if (mob.state != EntityState.ACTIVE || mob.health <= 0 || !mob.inventory.remove(bone.boneItem)) return
+        if (mob.isRealBot()) BotProductionMetrics.recordSink(bone.id)
         mob.animation(ANIMATION)
         mob.prayer.addExperience(bone.exp)
         mob.playSound(Sound.BONES_DOWN)

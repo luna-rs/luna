@@ -48,6 +48,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Alchable items are deliberately whitelisted so bots never decide to destroy arbitrary valuables. Bows may be alched
  * in either noted or unnoted form, while armour is withdrawn and alched as notes.
+ * Ordinary gold jewellery through diamond may also be liquidated as notes, only with a positive net margin.
+ * Dragonstone, onyx, quest jewellery and partially charged variants remain outside that whitelist.
  *
  * Intelligent bots usually select the item with the best current alchemy margin using Luna's economy guide price.
  * Less intelligent bots are increasingly likely to pick a random valid item instead.
@@ -150,10 +152,23 @@ class AlchemyBotScript(
         )
 
         /**
+         * Ordinary crafted gold jewellery and its full-charge enchantments. Existing working reservations
+         * and a strictly positive complete alchemy margin protect useful pieces in every activity mode.
+         */
+        private val JEWELLERY_IDS = setOf(
+            1635, 1637, 1639, 1641, 1643, // Gold through diamond rings.
+            1654, 1656, 1658, 1660, 1662, // Gold through diamond necklaces.
+            1673, 1675, 1677, 1679, 1681, // Unstrung gold through diamond amulets.
+            1692, 1694, 1696, 1698, 1700, // Strung gold through diamond amulets.
+            2550, 3853, 2552, 2568, 2570, // Recoil, games, dueling, forging and life.
+            1727, 1729, 1725, 1731       // Magic, defence, strength and power.
+        )
+
+        /**
          * Items that must be alched in noted form.
          */
         private val NOTE_REQUIRED_IDS: Set<Int> by lazy {
-            ARMOUR_IDS + BAR_IDS
+            ARMOUR_IDS + BAR_IDS + JEWELLERY_IDS
         }
 
         /**
@@ -162,6 +177,12 @@ class AlchemyBotScript(
         private val ALCHABLE_IDS: Set<Int> by lazy {
             BOW_IDS + NOTE_REQUIRED_IDS
         }
+
+        /**
+         * Exposes the native disposal whitelist to production valuation without creating an alchemy session.
+         * Availability, retained stock, costs and a positive margin still require separate validation.
+         */
+        fun supportsLiquidation(id: Int): Boolean = itemDef(id).unnotedId.orElse(id) in ALCHABLE_IDS
 
         /**
          * Unstrung and strung bow ids that may be alched.
@@ -291,8 +312,18 @@ class AlchemyBotScript(
         fun hasAlchableItems(bot: Bot, type: AlchemyType, profit: Boolean): Boolean {
             val retained = BotBankSpace.retainedStock(bot)
             val staff = AlchemyPolicy.resolveFireStaff(bot)
-            return ALCHABLE_IDS.any { AlchemyPolicy.eligible(bot, it, type, profit, staff, retained = retained) }
+            return ALCHABLE_IDS.any { eligibleTarget(bot, it, type, profit, staff, retained = retained) }
         }
+
+        /**
+         * Newly supported jewellery is a profitable disposal option, including during Magic training.
+         * The native surplus policy still preserves equipped, dynamic, explicit and active production stock.
+         */
+        private fun eligibleTarget(bot: Bot, id: Int, type: AlchemyType, profit: Boolean,
+                                   staffId: Int? = null, minimumPrices: Map<Int, Long> = emptyMap(),
+                                   retained: Map<Int, Int>? = null): Boolean =
+            AlchemyPolicy.eligible(bot, id, type,
+                profit || itemDef(id).unnotedId.orElse(id) in JEWELLERY_IDS, staffId, minimumPrices, retained)
     }
 
     /**
@@ -649,7 +680,7 @@ class AlchemyBotScript(
         }
 
         val retained = BotBankSpace.retainedStock(bot)
-        candidates.removeAll { !AlchemyPolicy.eligible(bot, it, type, profit, staff, runePrices, retained) }
+        candidates.removeAll { !eligibleTarget(bot, it, type, profit, staff, runePrices, retained) }
         if (candidates.isEmpty()) {
             return null
         }
@@ -1020,7 +1051,7 @@ class AlchemyBotScript(
     }
 
     private fun eligible(baseId: Int, staffId: Int? = null, prices: Map<Int, Long> = emptyMap()): Boolean =
-        AlchemyPolicy.eligible(bot, baseId, type, profit, staffId, priceFloors(prices))
+        eligibleTarget(bot, baseId, type, profit, staffId, priceFloors(prices))
 
     private fun ownedCoins(): Long = bot.inventory.computeAmountForId(995).toLong() + bot.bank.computeAmountForId(995)
 
@@ -1042,5 +1073,5 @@ class AlchemyBotScript(
 
     private fun eligibleTargets(staffId: Int? = null, prices: Map<Int, Long> = emptyMap(),
                                 retained: Map<Int, Int> = BotBankSpace.retainedStock(bot)): List<Int> =
-        ALCHABLE_IDS.filter { AlchemyPolicy.eligible(bot, it, type, profit, staffId, priceFloors(prices), retained) }
+        ALCHABLE_IDS.filter { eligibleTarget(bot, it, type, profit, staffId, priceFloors(prices), retained) }
 }

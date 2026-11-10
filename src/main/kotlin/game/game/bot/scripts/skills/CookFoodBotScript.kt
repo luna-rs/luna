@@ -4,6 +4,7 @@ import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.InventoryBotScript
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
@@ -65,7 +66,7 @@ class CookFoodBotScript(
          *
          * @author lare96
          */
-        class CookFoodData : ZonedBotScriptData() {
+        class CookFoodData : InventoryScriptData() {
             /** Explicit configured recipe, or null when available stock determines the recipe. */
             var food: Food? = null
 
@@ -89,7 +90,9 @@ class CookFoodBotScript(
      * Keeping the zoned-data constructor lets the existing central registration accept both data classes.
      */
     constructor(bot: Bot, data: ZonedBotScriptData) :
-        this(bot, (data as? CookFoodData)?.food, data.duration, data.zones)
+        this(bot, (data as? CookFoodData)?.food, data.duration, data.zones) {
+        if (data is InventoryScriptData) restoreInventoryState(data)
+    }
 
     /**
      * Cached cooking object for the active zone.
@@ -202,8 +205,7 @@ class CookFoodBotScript(
     }
 
     override fun snapshot(): CookFoodData = CookFoodData().also {
-        it.duration = duration
-        it.zones = originalZones.toMutableList()
+        saveInventoryState(it)
         it.food = selectedFood
     }
 

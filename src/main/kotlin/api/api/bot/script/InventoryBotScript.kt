@@ -6,19 +6,25 @@ import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
+import api.predef.itemDef
 import api.bot.social.SocialBotScript
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import com.google.gson.JsonArray
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import engine.bot.coordinator.skill.BotProductionPlanner
+import engine.bot.economy.BotProductionMetrics
+import game.bot.scripts.trading.TradeBotScript
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import io.luna.game.action.ActionType
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A base script for inventory-driven activities that operate inside one or more zones.
@@ -100,6 +106,11 @@ abstract class InventoryBotScript(
              * Sites already exhausted by this session, retained when its original zones are saved.
              */
             var failedZones: Set<SubZone> = emptySet()
+            /**
+             * Optional finite production guard; legacy sessions retain their existing lifecycle.
+             */
+            var productionPlan: ProductionPlan? = null
+            var productionBatch: Map<Int, Int> = emptyMap()
             override fun load(data: JsonObject) {
                 super.load(data)
                 failures = data.get("failures")?.asInt ?: 0
@@ -107,6 +118,11 @@ abstract class InventoryBotScript(
                 failedZone = data.get("failed_zone")?.takeUnless { it.isJsonNull }?.asString?.let(SubZone::fromSavedName)
                 failedZones = data.getAsJsonArray("failed_zones")?.mapNotNull { SubZone.fromSavedName(it.asString) }?.toSet()
                     ?: emptySet()
+                productionPlan = data.getAsJsonObject("production_plan")?.let(ProductionPlan::load)
+                productionBatch = data.getAsJsonObject("production_batch")?.also { require(it.size() <= 16) }
+                    ?.entrySet()?.associate { it.key.toInt() to it.value.asInt } ?: emptyMap()
+                require(productionBatch.all { (id, amount) -> id >= 0 && amount >= 0 &&
+                    productionPlan?.let { id in it.recipe.materials || id in it.recipe.products } == true })
             }
             override fun save(data: JsonObject) {
                 super.save(data)
@@ -115,6 +131,12 @@ abstract class InventoryBotScript(
                 if (failedZone == null) data.remove("failed_zone") else data.addProperty("failed_zone", failedZone!!.name)
                 if (failedZones.isEmpty()) data.remove("failed_zones") else
                     data.add("failed_zones", JsonArray().also { array -> failedZones.forEach { array.add(it.name) } })
+                if (productionPlan == null) data.remove("production_plan") else
+                    data.add("production_plan", productionPlan!!.save())
+                if (productionBatch.isEmpty()) data.remove("production_batch") else
+                    data.add("production_batch", JsonObject().also { batch ->
+                        productionBatch.forEach { (id, amount) -> batch.addProperty(id.toString(), amount) }
+                    })
             }
         }
     }
@@ -127,6 +149,25 @@ abstract class InventoryBotScript(
      * Runs an owned-stock disposal batch without creating replacement demand or purchasing missing inputs.
      */
     protected open val ownedSuppliesOnly = false
+    /**
+     * The selected finite goal, retained through native recipe snapshots and temporary child purchases.
+     */
+    var productionPlan: ProductionPlan? = null
+        private set
+    private var plannedBatch: Map<Int, Int> = emptyMap()
+    private var productionHandedOff = false
+
+    override fun allowsLoot(item: GroundItem): Boolean = productionPlan == null && super.allowsLoot(item)
+
+    /**
+     * Attaches the goal before startup so shared banking cannot enter unbudgeted acquisition.
+     */
+    fun planProduction(plan: ProductionPlan): InventoryBotScript {
+        check(productionPlan == null)
+        productionPlan = plan
+        return this
+    }
+
     private var productionTools = emptySet<Int>()
     /** Consecutive interactions without verified production progress. */
     protected var failures = 0
@@ -158,6 +199,8 @@ abstract class InventoryBotScript(
         failedProductionZone = data.failedZone
         failedProductionZones.addAll(data.failedZones)
         data.failedZone?.let { failedProductionZones.add(it) }
+        productionPlan = data.productionPlan
+        plannedBatch = data.productionBatch
     }
 
     /** Writes common configuration and counters into a recipe snapshot using the legacy field names. */
@@ -168,6 +211,8 @@ abstract class InventoryBotScript(
         data.bankFailures = bankFailures
         data.failedZone = failedProductionZone
         data.failedZones = failedProductionZones.toSet()
+        data.productionPlan = productionPlan
+        data.productionBatch = plannedBatch
     }
 
     /**
@@ -198,10 +243,11 @@ abstract class InventoryBotScript(
         }
         val items = tools.map { Item(it) } + materials
         productionTools = tools
-        if (!ownedSuppliesOnly) BotTradeIntentions.recordSupplies(bot, materials, tools, stockTarget = 1_000)
+        if (!ownedSuppliesOnly && productionPlan == null)
+            BotTradeIntentions.recordSupplies(bot, materials, tools, stockTarget = 1_000)
         if (!bot.ownsProductionSupplies(materials, tools)) {
             if (!requestMissing) { stop(); return emptyList() }
-            if (!ownedSuppliesOnly) items.filter { bot.bank.computeAmountForId(it.id).toLong() +
+            if (!ownedSuppliesOnly && productionPlan == null) items.filter { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) < it.amount }.forEach {
                 bot.preferences.raiseWantedItemTarget(it.id, if (it.id in tools) 3 else maxOf(1_000, it.amount))
             }
@@ -372,19 +418,28 @@ abstract class InventoryBotScript(
     }
 
     final override suspend fun onInit(resumed: Boolean): Boolean {
+        settlePlannedProduction()
         // A paused attempt belongs to its recorded site, not whichever candidate is selected on resume.
         zones.removeAll(failedProductionZones)
         if (failedProductionZone != null) resetProductionFailures()
         if (zones.isEmpty()) { stop(); return false }
         if (!trainingAllowed() || productionRetriesExhausted()) { stop(); return false }
+        val planned = productionPlan
+        if (planned != null && !preparePlannedSupplies(planned)) return false
         if (!beforeInventoryInit()) return false
         startupSupplies = null
         withdraw = withdraw()
         if (isTerminated() || isPaused()) return false
+        if (planned != null && withdraw.none { it.id == planned.recipe.materials.keys.first() }) {
+            stopPlannedProduction()
+            return false
+        }
         val startup = startupSupplies
         val supplied = if (ownedSuppliesOnly || startup?.allowAcquisition == false) {
             (startup?.items ?: withdraw).all { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) >= it.amount }
+        } else if (planned != null) (startup?.items ?: withdraw).all {
+            bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) >= it.amount
         } else obtainStartupSupplies(startup?.items ?: withdraw,
             startup?.let { plan -> { startupPurchaseTargets(plan) } })
         if (!supplied) {
@@ -406,11 +461,13 @@ abstract class InventoryBotScript(
 
     final override suspend fun onBankRequested(initial: Boolean): Boolean {
         if (initial) {
-            return true
+            return plannedGoalAvailable()
         }
         if (bot.actions.size(ActionType.WEAK) > 0) {
             return false
         }
+        settlePlannedProduction()
+        if (!plannedGoalAvailable()) return false
         return onInventoryBankRequested()
     }
 
@@ -421,6 +478,8 @@ abstract class InventoryBotScript(
             // Bot is busy, no need to re-execute.
             return true
         }
+        settlePlannedProduction()
+        if (!plannedGoalAvailable()) return true
         if (failedProductionZone != null) {
             if (activeZone == failedProductionZone) {
                 failures = 0
@@ -432,6 +491,7 @@ abstract class InventoryBotScript(
             stop()
             return false
         }
+        if (productionPlan != null && plannedBatch.isEmpty()) capturePlannedBatch()
         val accepted = onExecuteInZone()
         if (isActionSafe() && !isPaused() && !isTerminated() &&
             bot.actions.size(ActionType.WEAK) == 0 && failedProductionZone == activeZone && failedProductionZone != null) {
@@ -444,6 +504,19 @@ abstract class InventoryBotScript(
 
     final override suspend fun onBankOpen(initial: Boolean) {
         withdraw = bankWithdraw()
+        productionPlan?.let { plan ->
+            if (withdraw.none { it.id == plan.recipe.materials.keys.first() } ||
+                !BotProductionPlanner.remainsUseful(bot, plan)) { stopPlannedProduction(); return }
+            val maximum = plan.targets()
+            withdraw = withdraw.mapNotNull { item ->
+                val ceiling = if (item.id == 995 && plan.recipe.coinCost > 0L)
+                    ProductionEconomics.saturatingMultiply(plan.recipe.coinCost, plan.remainingOperations.toLong())
+                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                else maximum[item.id] ?: item.amount
+                val amount = minOf(item.amount, ceiling)
+                if (amount > 0) Item(item.id, amount) else null
+            }
+        }
         if (isTerminated()) return
         if (withdraw.isEmpty()) {
             // Some harvesting visits need only empty inventory space after depositing their produce.
@@ -465,8 +538,148 @@ abstract class InventoryBotScript(
         } else {
             bankFailures = 0
             if (verifiedProductionWithdrawals) forceBanking = false
+            if (productionPlan != null) capturePlannedBatch()
         }
     }
+
+    private fun capturePlannedBatch() {
+        val plan = productionPlan ?: return
+        plannedBatch = (plan.recipe.materials.keys + plan.recipe.products.keys)
+            .associateWith { bot.inventory.computeAmountForId(it) }
+    }
+
+    /**
+     * Settles complete native conversions after an action finishes or before inventory ownership can change.
+     * The early first-input wake in attemptProduction never counts an entire recipe batch as already completed.
+     */
+    internal fun settlePlannedProduction() {
+        val plan = productionPlan ?: return
+        if (plannedBatch.isEmpty()) return
+        val before = plannedBatch
+        plannedBatch = emptyMap()
+        val consumed = plan.recipe.materials.mapValues { (id, _) ->
+            ((before[id] ?: 0) - bot.inventory.computeAmountForId(id)).coerceAtLeast(0).toLong()
+        }
+        val produced = plan.recipe.products.mapValues { (id, _) ->
+            (bot.inventory.computeAmountForId(id) - (before[id] ?: 0)).coerceAtLeast(0).toLong()
+        }
+        val primary = plan.recipe.materials.entries.first()
+        val operations = (consumed.getValue(primary.key) / primary.value).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        plan.recordProduction(operations)
+        val product = plan.recipe.products.keys.firstOrNull()
+        consumed.forEach { (id, amount) ->
+            BotProductionMetrics.recordConversion(id, amount, if (id == primary.key) product else null,
+                if (id == primary.key && product != null) produced.getValue(product) else 0L)
+        }
+        produced.filterKeys { it != product }.forEach { (id, amount) ->
+            BotProductionMetrics.recordConversion(primary.key, 0L, id, amount)
+        }
+    }
+
+    /**
+     * Pauses interrupt native production before a temporary trade or other child can alter the measured inventory.
+     */
+    internal fun pausePlannedProduction() {
+        if (productionPlan == null) return
+        bot.actions.interruptWeak()
+        settlePlannedProduction()
+    }
+
+    /**
+     * Releases an ended owner's temporary shopping intent while a paused goal keeps its finite remaining allowance.
+     */
+    internal fun finishPlannedProduction() {
+        settlePlannedProduction()
+        productionPlan?.let {
+            if (!isPaused() && !productionHandedOff) BotTradeIntentions.clearProductionPlan(bot, it, this)
+        }
+    }
+
+    private fun stopPlannedProduction() {
+        productionPlan?.let { BotTradeIntentions.clearProductionPlan(bot, it, this) }
+        stop()
+    }
+
+    private fun plannedGoalAvailable(): Boolean {
+        val plan = productionPlan ?: return true
+        if (plan.remainingOperations == 0 && plan.hasNextStage() && plan.advanceStage()) {
+            val next = BotProductionPlanner.continuePlan(bot, plan, remainingDuration())
+            if (next != null) {
+                productionHandedOff = true
+                bot.scriptStack.softPushHead(next)
+                stop()
+            } else stopPlannedProduction()
+            return false
+        }
+        if (plan.remainingOperations > 0 && plan.deadline > System.currentTimeMillis() &&
+            bot.skill(plan.recipe.skill).level >= plan.recipe.level &&
+            BotCombatActionHandler.mayGainExperience(bot, plan.recipe.skill) &&
+            (!plan.training || BotCombatActionHandler.wantsToTrain(bot, plan.recipe.skill))) return true
+        stopPlannedProduction()
+        return false
+    }
+
+    private suspend fun preparePlannedSupplies(plan: ProductionPlan): Boolean {
+        if (!plannedGoalAvailable() || !BotProductionPlanner.remainsUseful(bot, plan)) {
+            stopPlannedProduction()
+            return false
+        }
+        BotTradeIntentions.recordProductionPlan(bot, plan, this)
+        val now = System.currentTimeMillis()
+        if (plan.supplyDeadline == 0L) plan.supplyDeadline = minOf(plan.deadline, now + 120_000L)
+        if (plan.targets().keys.any { id ->
+                val note = itemDef(id).notedId.orElse(-1)
+                note >= 0 && bot.inventory.contains(note)
+            }) {
+            val normalized = withTimeoutOrNull((minOf(plan.deadline, now + 120_000L) - now).coerceAtLeast(1L)) {
+                handler.banking.travelToBankDepositAll()
+            } == true
+            if (!normalized || !awaitActionSafety()) { stopPlannedProduction(); return false }
+        }
+        fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
+        fun supplied() = if (plan.recipes.size > 1) plan.targets().all { (id, amount) -> owned(id) >= amount }
+            else plan.recipe.materials.all { (id, amount) -> owned(id) >= amount } &&
+                plan.recipe.tools.all { owned(it) > 0L }
+        if (!plan.shopAttempted && now < plan.supplyDeadline) {
+            plan.shopAttempted = true
+            withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
+                if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
+                    handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
+                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
+            }
+        }
+        if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
+        if (!awaitActionSafety() || System.currentTimeMillis() >= plan.supplyDeadline) {
+            if (queueMissingPlannedPreparation(plan)) return false
+            if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
+                BotProductionPlanner.unavailable(bot, plan)
+            stopPlannedProduction()
+            return false
+        }
+        for ((id, target) in plan.targets()) {
+            if (owned(id) >= target || !plan.attemptedMarketItems.add(id)) continue
+            if (!BotProductionPlanner.remainsUseful(bot, plan)) break
+            val trade = TradeBotScript.buySpecific(bot, id, target, plan.supplyDeadline) ?: continue
+            trade.duration = minOf(duration, (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
+            if (trade.duration <= Duration.ZERO) break
+            bot.scriptStack.pushHead(trade)
+            return false
+        }
+        if (queueMissingPlannedPreparation(plan)) return false
+        if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
+            BotProductionPlanner.unavailable(bot, plan)
+        stopPlannedProduction()
+        return false
+    }
+
+    private fun queueMissingPlannedPreparation(plan: ProductionPlan): Boolean =
+        isActionSafe() && plan.deadline > System.currentTimeMillis() && prepareMissingPlannedSupplies(plan)
+
+    /**
+     * Queues one native prerequisite using owned supplies when bounded shopping cannot complete this same goal.
+     * Returning true means the caller queued a child; the current finite guard and absolute deadline stay owned.
+     */
+    protected open fun prepareMissingPlannedSupplies(plan: ProductionPlan): Boolean = false
 
     /**
      * Returns the items this script should withdraw from the bank.

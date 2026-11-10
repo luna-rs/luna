@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
+import api.bot.script.ProductionPlan
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
@@ -173,17 +174,26 @@ class AssembleFoodBotScript(
 
     /** Queues one bounded refill using owned containers, then returns selection to the activity coordinator. */
     private fun queueWaterPreparation(): Boolean {
-        if (!isActionSafe() || !canPrepareWater()) return false
+        if (!isActionSafe() || bot.cooking.staticLevel < requiredLevel ||
+            productionPlan == null && !canPrepareWater()) return false
         val water = waterIngredient ?: return false
         val empty = WaterResource.FILLABLES.inverse().getValue(water)
         val ingredientStock = materials.filter { it.id != water }.minOf {
             (bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id)) / it.amount
         }
         val emptyStock = bot.bank.computeAmountForId(empty).toLong() + bot.inventory.computeAmountForId(empty)
+        productionPlan?.let { plan ->
+            val fill = plannedFilling(bot, plan, empty, water, minOf(ingredientStock, emptyStock), remainingDuration())
+                ?: return false
+            bot.scriptStack.pushHead(fill)
+            return true
+        }
         bot.scriptStack.softPushHead(FillWaterBotScript(bot, empty, minOf(14L, ingredientStock, emptyStock).toInt(), duration))
         stop()
         return true
     }
+
+    override fun prepareMissingPlannedSupplies(plan: ProductionPlan): Boolean = queueWaterPreparation()
     /** Returns balanced bank inputs limited by stock and capacity, including three leaves per curry. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
