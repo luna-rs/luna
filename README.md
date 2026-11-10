@@ -1,26 +1,16 @@
 # Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
-Luna is a permanent revision 377 RuneScape server where everyone is welcome to play and progress.
-Enjoy faithful classic gameplay with limited changes, in a living world where autonomous player bots
-train, trade, fight, and progress alongside you.
+Luna is an open source, high-performance, RuneScape server for the #377 protocol. It combines classic 2006-style gameplay 
+with **autonomous player bots** that train, trade, fight, and progress alongside you.
 
 <p align="center">
-<a href="https://github.com/luna-rs/luna-client/releases/download/v0.5.0-alpha/luna-launcher.exe"><img src="data/resources/play-luna-launcher-v3.png" alt="Play with launcher (fullscreen mode)" width="190" height="207" border="0"></a><a href="https://luna-rs.github.io/luna-client/"><img src="data/resources/play-luna-web-v3.png" alt="Play with web client (fixed mode only)" width="190" height="207" border="0"></a><a href="https://luna-rs.github.io/luna-client/mobile/?mobile=1"><img src="data/resources/play-luna-mobile-v3.png" alt="Play on mobile (ios, android) — web beta" width="190" height="207" border="0"></a>
+<a href="https://luna2006.rs/"><img src="data/resources/play-luna-2006.png" alt="Play Luna 2006" width="320" height="88" border="0"></a>
 </p>
 
-- 5× XP
-- Standard economy with restricted item spawning
-- No character wipes
+**Luna 2006** is a closed-source, actively hosted, tasteful 2006-era custom experience based on this project. Come see the 
+gameplay for yourself!
 
-Luna is actively developed. Your feedback and bug reports help improve the world as you play.
-Luna preserves the classic experience; **HiveScape** will be the home for our custom content and “what if?” ideas.
-
-### Play on mobile
-
-[Open Luna Mobile](https://luna-rs.github.io/luna-client/mobile/?mobile=1) on your phone for the touch-enabled web beta.
-Rotate to landscape, tap **Play**, and use the existing Luna login screen.
-
-On iPhone, open the link in Safari, choose **Share → Add to Home Screen**, and add the icon.
-Launch that icon to return to Luna Mobile. No app download is needed; an internet connection is required.
+- 5x experience for players, 1x experience for bots
+- No character/economy wipes or resets
 
 # Meet the bots
 
@@ -49,4 +39,4 @@ To get started, visit the [wiki](https://github.com/luna-rs/luna/wiki) and follo
 - [Apollo](https://github.com/apollo-rsps/apollo) development team
 - [Lost City RS](https://github.com/LostCityRS/Content/tree/377-wip) development team
 - [RS Mod](https://github.com/rsmod/rsmod) development team, whose routefinder our pathfinding is based on
-- All [developers](https://github.com/orgs/luna-rs/people), [contributors](https://github.com/luna-rs/luna/graphs/contributors) and supporters of the project. 
+- All [developers](https://github.com/orgs/luna-rs/people), [contributors](https://github.com/luna-rs/luna/graphs/contributors) and supporters of the project
