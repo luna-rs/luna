@@ -77,6 +77,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * @param duration The maximum remaining duration of the marketplace session.
  * @param zone The candidate zones containing the marketplace.
  * @property purchaseDeadline Optional absolute deadline for a targeted supply visit; zero keeps ordinary waits.
+ * @property retryAt Optional earliest start for explicit callers; automatic retry cooldowns live on the bot.
  * @author lare96
  */
 class TradeBotScript(bot: Bot,
@@ -87,6 +88,7 @@ class TradeBotScript(bot: Bot,
                      private val purchaseTarget: Item? = null,
                      private val purchasePrice: Long = 0,
                      private val purchaseDeadline: Long = 0L,
+                     private val retryAt: Long = 0L,
                      private val reactiveSeller: Player? = null,
                      private val reactiveBuyer: Player? = null,
                      private val reactivePrevious: BotScript? = null) :
@@ -233,6 +235,11 @@ class TradeBotScript(bot: Bot,
 
     /** Whether banking and marketplace travel have finished and requests may be processed. */
     private var prepared = false
+
+    /**
+     * Affinity supplies occasional local advertising hints; neutral bots retain their usual stock selection.
+     */
+    private val scanAdvertisedGoods = BotMarketPreference.shouldScan(bot)
 
     /**
      * Retains both deadlines across banking and pauses; only useful native transfers renew the idle allowance.
@@ -412,6 +419,20 @@ class TradeBotScript(bot: Bot,
                 return false
             }
         }
+        val now = System.currentTimeMillis()
+        val requestedWait = retryAt - now
+        if (requestedWait > 0L) {
+            visitBudget.start(now)
+            val allowance = minOf(visitBudget.maximumRemaining(now),
+                if (purchaseDeadline > 0L) purchaseDeadline - now else Long.MAX_VALUE)
+            if (allowance <= 0L || withTimeoutOrNull(allowance) {
+                    delay(requestedWait.milliseconds)
+                    true
+                } != true) {
+                endSession("Requested marketplace start exceeded the visit deadline.")
+                return false
+            }
+        }
         if (!awaitActionSafety()) return false
         if (purchaseExpired()) {
             endSession("Specific purchase deadline expired.")
@@ -421,22 +442,26 @@ class TradeBotScript(bot: Bot,
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
         prepared = false
-        browsing = true
+        browsing = false
         browsingMarket = null
         browseAttempts = 0
+        if (reserveTradingSpot() == null) {
+            if (BotMarketplace.entries.any { it.hasAvailableTradingSpot(bot) }) {
+                bot.log("Marketplace is full; another market has trading space.")
+                return false
+            }
+            browsing = true
+            capacityBlocked = false
+        }
         for ((name, feeling) in bot.preferences.playerFeelings) {
             if (feeling < 0.25) addBlacklisted(name, 365.days)
         }
         if (!computeOfferAndExpected()) return false
-        // Prefer a funded customer visit before taking any exploratory advertising space.
-        val partner = withinVisitDeadline { listOfNotNull(findBrowsePartner(prospectiveStock())) }?.firstOrNull()
-        if (partner != null) {
-            browsingMarket = partner.marketplace
-        } else {
-            if (duration <= Duration.ZERO) return false
-            browsing = false
-            if (reserveTradingSpot() == null) {
-                deferTrading("No advertising position or matching prepared trader is available.", capacity = true)
+        // Overflow customers retain the existing fallback only when no advertising space remains anywhere.
+        if (browsing) {
+            val partners = withinVisitDeadline { listOfNotNull(findBrowsePartner(prospectiveStock())) } ?: return false
+            if (partners.isEmpty()) {
+                deferTrading("All marketplaces are full and no existing offer matches.", capacity = true)
                 return false
             }
         }
@@ -1104,7 +1129,7 @@ class TradeBotScript(bot: Bot,
     }
 
     /** Refreshes intentions from current ownership and ends the session normally when nothing useful remains. */
-    private suspend fun computeOfferAndExpected(): Boolean {
+    private fun computeOfferAndExpected(): Boolean {
         marketExperience.clear()
         val specificOwner = purchaseTarget?.id?.let { productionQuoteOwners[it] }
         val specificExpiry = purchaseTarget?.id?.let { productionQuoteExpiries[it] }
@@ -1127,10 +1152,13 @@ class TradeBotScript(bot: Bot,
         val traders = (if (browsing) BotMarketplace.entries else listOf(marketplace))
             .flatMap { it.tradingSessions() }.filterIsInstance<TradeBotScript>().filter { availableAtMarket(it) }
         val candidates = if (buying) wants else offers
+        val preferred = if (scanAdvertisedGoods)
+            preferAdvertisedGoods(candidates, marketplace.tradingSessions().filterIsInstance<TradeBotScript>())
+        else candidates
         // Preserve the buyer's budget allocation order; sellers favor stock with a current market match.
         val selected = if (purpose == BotTradePurpose.SELL && !merchantSelling || browsing && purpose == BotTradePurpose.BUY) {
-            prioritizeMarketItems(candidates, offers, traders).take(1)
-        } else candidates
+            prioritizeMarketItems(preferred, offers, traders).take(1)
+        } else preferred
         offering = if (buying) offers else selected
         expected = if (purpose == BotTradePurpose.BUY) selected.take(1) else if (buying) selected
         else BotTradeManager.computeExpected(bot, strategy, purpose, offering)
@@ -1170,43 +1198,54 @@ class TradeBotScript(bot: Bot,
             other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
 
     /**
-     * Selects a currently matchable commodity through a quote-id index before capacity-limited withdrawal.
-     * Exact basket checks are bounded independently of the number of owned items or leased advertisers.
+     * Keeps every eligible intention, placing currently matchable stock first for capacity-limited withdrawal.
+     * Later partners can match any retained item without waiting for a new banking trip.
      */
-    private suspend fun prioritizeMarketItems(candidates: List<BotTradeItem>, payment: List<BotTradeItem>,
+    private fun prioritizeMarketItems(candidates: List<BotTradeItem>, payment: List<BotTradeItem>,
                                       traders: List<TradeBotScript>): List<BotTradeItem> {
         val eligible = candidates.filter {
             buying || TradeBasket.value(quantities(listOf(it.item), true), prices(listOf(it))) >=
                 BotTradeManager.MINIMUM_OFFER_VALUE
         }
-        val byItem = hashMapOf<Int, MutableList<TradeBotScript>>()
-        for (other in traders) {
-            val quotes = if (buying) other.offering else other.expected
-            for (quote in quotes) byItem.getOrPut(unnotedId(quote.item.id)) { arrayListOf() }.add(other)
-        }
-        var checked = 0
-        for (candidate in eligible) {
-            val id = unnotedId(candidate.item.id)
-            for (other in byItem[id].orEmpty()) {
-                if (checked++ >= MAX_ROUTING_CHECKS) return eligible
-                if (!allowRoutingCheck()) return eligible
-                if (!availableAtMarket(other)) continue
-                val actual = other.carriedOffer.mapValues { (item, amount) ->
-                    minOf(amount, other.bot.inventory.computeAmountForId(item))
-                }.filterValues { it > 0 }
-                val exchange = if (buying) {
-                    TradeBasket.exchange(quantities(actual.toItems(), true),
+        val matching = eligible.filter { candidate ->
+            traders.any { other ->
+                if (buying) {
+                    TradeBasket.exchange(quantities(other.carriedOffer.toItems(), true),
                         quantities(listOf(candidate.item), true), prices(other.offering), prices(listOf(candidate)),
-                        quantities(payment.map { it.item }, true), prices(payment))
+                        quantities(payment.map { it.item }, true), prices(payment)) != null
                 } else {
                     TradeBasket.exchange(quantities(listOf(candidate.item), true),
                         quantities(other.expected.map { it.item }, true), prices(listOf(candidate)), prices(other.expected),
-                        quantities(actual.toItems(), true), prices(other.offering))
+                        quantities(other.carriedOffer.toItems(), true), prices(other.offering)) != null
                 }
-                if (exchange != null) return listOf(candidate)
             }
         }
-        return eligible
+        return matching + eligible.filterNot { it in matching }
+    }
+
+    /**
+     * Hears at most eight local advertisements without pricing offers, reading inventories or planning exchanges.
+     * This only reorders an existing basket; urgent personal purchases keep their original priority.
+     */
+    private fun preferAdvertisedGoods(candidates: List<BotTradeItem>, traders: List<TradeBotScript>): List<BotTradeItem> {
+        if (!scanAdvertisedGoods || candidates.isEmpty() || traders.isEmpty()) return candidates
+        val hints = hashSetOf<Int>()
+        val start = rand(traders.lastIndex)
+        repeat(minOf(8, traders.size)) { offset ->
+            val other = traders[(start + offset) % traders.size]
+            if (other.marketplace != marketplace || !availableAtMarket(other) ||
+                other.purpose == BotTradePurpose.MERCHANT_BUY) return@repeat
+            val advertised = (if (buying) other.offering else other.expected).firstOrNull() ?: return@repeat
+            if (advertised.item.id != COINS) hints += unnotedId(advertised.item.id)
+        }
+        if (hints.isEmpty()) return candidates
+        val urgent = if (buying) candidates.filter {
+            actionableWants[it.item.id]?.priority == WantedItemPriority.URGENT
+        } else emptyList()
+        val urgentIds = urgent.mapTo(hashSetOf()) { it.item.id }
+        val ordinary = candidates.filterNot { it.item.id in urgentIds }
+        return urgent + ordinary.filter { unnotedId(it.item.id) in hints } +
+                ordinary.filterNot { unnotedId(it.item.id) in hints }
     }
 
     /**
