@@ -1,5 +1,14 @@
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.math.BigInteger
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.StandardOpenOption
+import java.nio.file.attribute.PosixFilePermissions
+import java.security.KeyPairGenerator
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.RSAKeyGenParameterSpec
 
 plugins {
     val kotlinVersion = "1.9.25"
@@ -92,6 +101,55 @@ tasks.named<Test>("test") {
     useJUnitPlatform()
     // Decoding the cache's map data, which some tests do, needs more than the default heap.
     maxHeapSize = "2g"
+}
+
+// Generates a separate pair for installation on the server and client. Override the destination with
+// -PrsaOutputDir=path; existing keys are never replaced. This task does not compile or start Luna.
+tasks.register("rsakeygen") {
+    group = "luna"
+    description = "Generates rsapriv.json and rsapub.json in build/rsakeygen (or -PrsaOutputDir=path)."
+    doNotTrackState("RSA keys must be freshly generated and must never enter the build cache.")
+    val outputDirectory = providers.gradleProperty("rsaOutputDir").map { file(it) }
+        .getOrElse(layout.buildDirectory.dir("rsakeygen").get().asFile).toPath()
+
+    doLast {
+        val privateFile = outputDirectory.resolve("rsapriv.json")
+        val publicFile = outputDirectory.resolve("rsapub.json")
+        if (listOf(privateFile, publicFile).any { Files.exists(it, LinkOption.NOFOLLOW_LINKS) }) {
+            throw GradleException("RSA keys already exist in $outputDirectory. Choose a new -PrsaOutputDir=path.")
+        }
+        Files.createDirectories(outputDirectory)
+
+        // Retain the old generator's 1024-bit size for the revision 377 login packet.
+        val generator = KeyPairGenerator.getInstance("RSA")
+        generator.initialize(RSAKeyGenParameterSpec(1024, RSAKeyGenParameterSpec.F4))
+        val pair = generator.generateKeyPair()
+        val privateKey = pair.private as RSAPrivateKey
+        val publicKey = pair.public as RSAPublicKey
+        fun keyJson(exponent: BigInteger) = """
+            {
+              "modulus": "${publicKey.modulus}",
+              "exponent": "$exponent"
+            }
+        """.trimIndent() + "\n"
+
+        val privateAttributes = if (Files.getFileStore(outputDirectory).supportsFileAttributeView("posix")) {
+            arrayOf(PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")))
+        } else {
+            emptyArray()
+        }
+        Files.createFile(privateFile, *privateAttributes)
+        try {
+            Files.writeString(privateFile, keyJson(privateKey.privateExponent))
+            Files.writeString(publicFile, keyJson(publicKey.publicExponent), StandardOpenOption.CREATE_NEW)
+        } catch (failure: Exception) {
+            Files.deleteIfExists(privateFile)
+            throw failure
+        }
+        logger.lifecycle("Generated RSA keys in {}", outputDirectory)
+        logger.lifecycle("Install rsapriv.json in the server's data/net/rsa directory; use rsapub.json in the client.")
+        logger.lifecycle("Keep the private key out of source control and client distributions.")
+    }
 }
 
 // Draws the bot web-walker's data (everything in data/game/bots/webwalk) over the terrain of the cache and writes it to a

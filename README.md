@@ -6,7 +6,7 @@ with **autonomous player bots** that train, trade, fight, and progress alongside
 <a href="https://luna2006.rs/"><img src="data/resources/play-luna-2006.png" alt="Play Luna 2006" width="320" height="88" border="0"></a>
 </p>
 
-**Luna 2006** is a closed-source, actively hosted, tasteful 2006-era custom experience based on this project. Come see the 
+**Luna 2006** is an actively hosted 2006-era experience based on this project. Come see the 
 gameplay for yourself!
 
 - 5x experience for players, 1x experience for bots
@@ -27,11 +27,11 @@ To get started, visit the [wiki](https://github.com/luna-rs/luna/wiki) and follo
 # Follow our development
 
 - [Benchmarks](https://github.com/luna-rs/luna/tree/master/data/benchmarks) 
-- [Follow updates, get help, or contribute (Discord)](https://discord.gg/bqkGY7cmVX)
+- [Join the Discord](https://discord.gg/cpqFaHMdv9)
 
-<!--# Support us
+# Support our development
 
-[donation link here]-->
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/P4E72AFFM3)
 
 # Thanks
 - blakeman8192 
