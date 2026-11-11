@@ -2,6 +2,7 @@ package game.player.item.consume.food
 
 import api.attr.Attr
 import api.predef.*
+import game.player.Sound
 import io.luna.game.model.mob.Player
 
 /**
@@ -15,7 +16,29 @@ enum class Food(val heal: Int,
                 val id2: Int? = null,
                 val id3: Int? = null,
                 val id4: Int? = null,
-                val leftover: Int? = null) {
+                val leftover: Int? = null,
+                val sound: Sound = Sound.EAT) {
+
+    BEER(heal = 1,
+         delay = 3,
+         id = 1917,
+         leftover = 1919,
+         sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.strength.boost(1 + plr.strength.staticLevel * 2 / 100)
+            plr.attack.adjustLevel(-(1 + plr.attack.level * 6 / 100))
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the $name.  You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    KEBAB(heal = 0,
+          delay = 3,
+          id = 1971) {
+        override fun effect(plr: Player) = plr.onKebab()
+        override fun healMessage(name: String): String? = null
+    },
 
     BANANA(heal = 2,
            delay = 3,
@@ -160,6 +183,57 @@ enum class Food(val heal: Int,
          * Throttles how often the player can eat.
          */
         val Player.lastEat by Attr.timeSource()
+
+        /**
+         * Applies a kebab's weighted effects, including the Hitpoints penalties used before July 2007.
+         * Healing is handled here because each kebab rolls one outcome instead of restoring a fixed amount.
+         */
+        private fun Player.onKebab() {
+            val hp = hitpoints
+            val heal = when (rand(31)) {
+                0 -> {
+                    sendMessage("Wow, that was an amazing kebab! You feel really invigorated.")
+                    attack.boost(2)
+                    strength.boost(2)
+                    defence.boost(2)
+                    7 + hp.staticLevel * 24 / 100
+                }
+                in 1..8 -> {
+                    sendMessage("That was a good kebab. You feel a lot better.")
+                    6 + hp.staticLevel * 14 / 100
+                }
+                in 9..28 -> {
+                    if (hp.level < hp.staticLevel) {
+                        sendMessage("It heals some health.")
+                    }
+                    3 + hp.staticLevel * 7 / 100
+                }
+                29 -> {
+                    sendMessage("That tasted very dodgy. You feel very ill.")
+                    attack.adjustLevel(-3)
+                    strength.adjustLevel(-3)
+                    defence.adjustLevel(-3)
+                    if (hp.level > 2) {
+                        damage(minOf(4, hp.level - 2))
+                    }
+                    0
+                }
+                30 -> {
+                    if (hp.level > 4) {
+                        sendMessage("That tasted a bit dodgy. You feel a bit ill.")
+                        damage(3)
+                    } else {
+                        sendMessage("The kebab didn't seem to do a lot.")
+                    }
+                    0
+                }
+                else -> {
+                    sendMessage("The kebab didn't seem to do a lot.")
+                    0
+                }
+            }
+            hp.adjustLevel(heal)
+        }
     }
 
     /**
