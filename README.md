@@ -1,5 +1,5 @@
 # Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
-Luna is an open source, high-performance, RuneScape server for the #377 protocol. It combines classic 2006-style gameplay 
+Luna is a high-performance RuneScape server for the #377 protocol. It combines classic 2006-style gameplay 
 with **autonomous player bots** that train, trade, fight, and progress alongside you.
 
 <p align="center">
