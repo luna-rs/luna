@@ -39,6 +39,33 @@ enum class Food(val heal: Int,
         override fun effect(plr: Player) = plr.onKebab()
         override fun healMessage(name: String): String? = null
     },
+    WINE(heal = 11,
+         delay = 3,
+         id = 1993,
+         leftover = 1935,
+         sound = Sound.LIQUID) {
+        override fun effect(plr: Player) = plr.onWine(2)
+        override fun consumeMessage(name: String) = "You drink the wine."
+        override fun healMessage(name: String) = "It makes you feel a bit dizzy, but it heals some health."
+    },
+    HALF_WINE(heal = 7,
+              delay = 3,
+              id = 1989,
+              leftover = 1935,
+              sound = Sound.LIQUID) {
+        override fun effect(plr: Player) = plr.onWine(2)
+        override fun consumeMessage(name: String) = "You drink the wine."
+        override fun healMessage(name: String) = "It makes you feel a bit dizzy, but it heals some health."
+    },
+    BAD_WINE(heal = 0,
+             delay = 3,
+             id = 1991,
+             leftover = 1935,
+             sound = Sound.LIQUID) {
+        override fun effect(plr: Player) = plr.onWine(3, false)
+        override fun consumeMessage(name: String) = "You drink the wine."
+        override fun healMessage(name: String): String? = null
+    },
 
     BANANA(heal = 2,
            delay = 3,
@@ -183,6 +210,16 @@ enum class Food(val heal: Int,
          * Throttles how often the player can eat.
          */
         val Player.lastEat by Attr.timeSource()
+
+        /**
+         * Applies wine's Attack drain and the message used when it cannot restore health.
+         */
+        private fun Player.onWine(drain: Int, heals: Boolean = true) {
+            attack.adjustLevel(-drain)
+            if (!heals || hitpoints.level >= hitpoints.staticLevel) {
+                sendMessage("It makes you feel a bit dizzy.")
+            }
+        }
 
         /**
          * Applies a kebab's weighted effects, including the Hitpoints penalties used before July 2007.
