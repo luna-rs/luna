@@ -15,6 +15,8 @@ import api.bot.script.BotScript
 import api.bot.script.ZonedBotScript
 import api.bot.social.BotConversations
 import api.bot.social.BotSocialInteractions
+import api.bot.social.PlayerTradeScams
+import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.bot.webwalk.plan.BankAccess
 import api.predef.*
@@ -63,6 +65,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * prices when they fit the buyer's limits, so both participants independently calculate the same exchange.
  * Human sellers receive only carried coins for affordable wanted quantities. Bots offer items to a human only
  * for the exact commodity in that player's buying advertisement; those buyers may pay with coins or items.
+ * Scammer accounts may occasionally pause idle trading for a separately guarded misleading sale to a human.
  *
  * Negotiations apply quantity differences against explicit target baskets. Empty exchanges, unsuccessful item
  * movements, repeated offer cycles, and expired waits decline the trade. Both screens are checked against the
@@ -89,7 +92,7 @@ class TradeBotScript(bot: Bot,
                      private val reactiveSeller: Player? = null,
                      private val reactiveBuyer: Player? = null,
                      private val reactivePrevious: BotScript? = null) :
-    ZonedBotScript(bot, duration, zone) {
+    ZonedBotScript(bot, duration, zone), SocialBotScript {
 
     companion object {
 
@@ -146,6 +149,7 @@ class TradeBotScript(bot: Bot,
                 seller.state == EntityState.ACTIVE && ActionSafety.NON_COMBAT.allows(bot) &&
                 bot.combat.target == null && bot.reflex.activeReflex == null && !bot.inWilderness() &&
                 bot.tradingWith == -1 && !bot.overlays.hasWindow() && !seller.overlays.hasWindow() &&
+                !BotSocialInteractions.engaged(bot) && !BotConversations.engaged(bot) &&
                 bot.walking.isEmpty && !bot.navigator.isActive &&
                 bot.position.isWithinDistance(seller.position, Position.VIEWING_DISTANCE) &&
                 bot.isViewableFrom(seller) && seller.isViewableFrom(bot)
@@ -245,6 +249,9 @@ class TradeBotScript(bot: Bot,
      * Includes the outstanding request and approach before an offer screen exists.
      */
     private var negotiating = false
+    private var nextScamConsideration = System.currentTimeMillis() + (30_000L..90_000L).random()
+    private var consideringPlayerScam = false
+    private var playerScamActive = false
 
     /**
      * Identifies an unanswered bot approach that may yield to a matching human advertisement.
@@ -763,7 +770,27 @@ class TradeBotScript(bot: Bot,
 
     override suspend fun executeInZone(): Boolean = withinPurchaseDeadline { executeTradeInZone() } ?: false
 
+    override fun canSocialize(): Boolean = consideringPlayerScam && canAttemptPlayerScam()
+
+    /**
+     * Tests idle scammer availability; social recruitment is exposed only during its own player-scam consideration.
+     */
+    internal fun canAttemptPlayerScam(): Boolean = bot.preferences.isScammer && reactivePlayer == null &&
+        purchaseTarget == null && !browsing && prepared && !forceBanking && !negotiating && pendingPartner == null &&
+        activeTrade == null && advertisementTrade == null && !reactiveSalePreparing &&
+        marketplace.tradingSpot(this) == bot.position && bot.tradingWith == -1 && !bot.overlays.hasWindow() &&
+        bot.walking.isEmpty && !bot.navigator.isActive && !bot.tradeRequests.hasRequest { true }
+
     override suspend fun beforeZoneWork(): Boolean {
+        if (BotSocialInteractions.participate(bot)) {
+            if (!BotSocialInteractions.engaged(bot)) refreshSocialStock()
+            return true
+        }
+        if (playerScamActive) refreshSocialStock()
+        if (BotConversations.engaged(bot)) {
+            BotConversations.tick(bot)
+            return true
+        }
         if (reactiveBuyer != null) {
             try {
                 val opportunity = reactiveOpportunity
@@ -837,6 +864,7 @@ class TradeBotScript(bot: Bot,
             forceBanking = true
             return true
         }
+        if (considerPlayerScam()) return true
         if (!tryPlayerTrade()) {
             val incoming = bot.tradeRequests.pollBotRequests { canAcceptRequest(it) }
             val search = partnerSearch ?: BotTradePartnerSearch<Player>(world.currentTick).also { partnerSearch = it }
@@ -861,6 +889,43 @@ class TradeBotScript(bot: Bot,
             sendMessage()
         }
         return true
+    }
+
+    /**
+     * Gives idle scammer merchants one rare opportunity per consideration interval, using carried stock only.
+     */
+    private fun considerPlayerScam(): Boolean {
+        val now = System.currentTimeMillis()
+        if (now < nextScamConsideration) return false
+        nextScamConsideration = now + (30_000L..90_000L).random()
+        if (!canAttemptPlayerScam() || PlayerTradeAdvertisementMarket.live.hasPriority(this)) return false
+        val player = world.locator.findViewablePlayers(bot) {
+            !it.isRealBot() && it.isWithinDistance(bot, 8)
+        }.toList().randomOrNull() ?: return false
+        consideringPlayerScam = true
+        val started = try {
+            PlayerTradeScams.approach(bot, player)
+        } finally {
+            consideringPlayerScam = false
+        }
+        if (!started) return false
+        playerScamActive = true
+        partnerSearch = null
+        marketExperience.pause()
+        return true
+    }
+
+    /**
+     * Rebuilds ordinary trading quantities after a social exchange or a cancelled player-scam attempt.
+     */
+    private fun refreshSocialStock() {
+        if (!playerScamActive) return
+        playerScamActive = false
+        partnerSearch = null
+        marketExperience.clear()
+        prepared = false
+        prepared = reactivePlayer == null && computeOfferAndExpected() && refreshCarriedStock()
+        forceBanking = !prepared || bot.inventory.computeRemainingSize() <= 1
     }
 
     /**
@@ -1044,6 +1109,7 @@ class TradeBotScript(bot: Bot,
     private fun availableAtMarket(other: TradeBotScript): Boolean =
         other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
             !other.browsing && !other.forceBanking && !other.negotiating &&
+            !BotSocialInteractions.engaged(other.bot) && !BotConversations.engaged(other.bot) &&
             other.bot.scriptStack.current() === other && buying != other.buying &&
             (if (browsing) other.marketplace else marketplace).contains(other.bot.position) &&
             !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
@@ -1298,6 +1364,7 @@ class TradeBotScript(bot: Bot,
                 bot.scriptStack.current() === reactivePrevious && reactiveReady(bot, other)
         if (!bot.isRealBot() || other.isRealBot() || bot.state != EntityState.ACTIVE ||
             other.state != EntityState.ACTIVE || !prepared || forceBanking ||
+            BotSocialInteractions.engaged(bot) || BotConversations.engaged(bot) ||
             bot.scriptStack.current() !== this && !detachedReactive || !bot.isAlive || bot.isLocked ||
             !isActionSafe() ||
             bot.combat.target != null || bot.reflex.activeReflex != null ||
@@ -2455,7 +2522,9 @@ class TradeBotScript(bot: Bot,
      * Rejects unavailable and same-purpose partners before calculating any trade quantities or prices.
      */
     private fun eligibleTradePartner(other: Player): Boolean {
-        if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
+        if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username) ||
+            BotSocialInteractions.engaged(bot) || BotConversations.engaged(bot) ||
+            other.isRealBot() && (BotSocialInteractions.engaged(other) || BotConversations.engaged(other))) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
         if (!other.isRealBot()) return buying && humanPaymentStock().isNotEmpty() ||

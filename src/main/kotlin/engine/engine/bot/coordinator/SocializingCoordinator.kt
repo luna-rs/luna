@@ -26,7 +26,7 @@ object SocializingCoordinator : ProgressiveCoordinator() {
         val destination = if (randBoolean()) SubZone.HOME else BotMarketplace.select(bot).activityZone
         val minutes = if (bot.preferences.likesActivity(BotActivity.SOCIALIZING)) rand(10, 30) else rand(5, 15)
         val deadline = System.currentTimeMillis() + minutes * 60_000L
-        return if (bot.preferences.isScammer && rand(0.25 + bot.personality.confidence * 0.5))
+        return if (bot.preferences.isScammer && rand(0.30 + bot.personality.confidence * 0.5))
             if (rand(0.25)) PkScamBotScript(bot, deadline) else TradeScamBotScript(bot, destination, deadline)
         else IdleBotScript(bot, destination, deadline)
     }
