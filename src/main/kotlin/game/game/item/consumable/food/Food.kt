@@ -33,6 +33,109 @@ enum class Food(val heal: Int,
         override fun consumeMessage(name: String) = "You drink the $name.  You feel slightly reinvigorated..."
         override fun healMessage(name: String): String? = null
     },
+    ASGARNIAN_ALE(heal = 2,
+                  delay = 3,
+                  id = 1905,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.attack.adjustLevel(-(2 + plr.attack.level * 5 / 100))
+            plr.strength.boost(2)
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the ale. You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    WIZARDS_MIND_BOMB(heal = 1,
+                      delay = 3,
+                      id = 1907,
+                      leftover = 1919,
+                      sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.magic.boost(2 + plr.magic.staticLevel * 2 / 100)
+            plr.attack.adjustLevel(-(1 + plr.attack.level * 5 / 100))
+            plr.strength.adjustLevel(-(1 + plr.strength.level * 5 / 100))
+            plr.defence.adjustLevel(-(1 + plr.defence.level * 5 / 100))
+            plr.sendMessage("You feel very strange.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Wizard's Mind Bomb."
+        override fun healMessage(name: String): String? = null
+    },
+    GREENMANS_ALE(heal = 1,
+                  delay = 3,
+                  id = 1909,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.herblore.boost(1)
+            plr.attack.adjustLevel(-3)
+            plr.strength.adjustLevel(-3)
+            plr.defence.adjustLevel(-3)
+            plr.sendMessage("It has a strange taste.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Greenman's Ale."
+        override fun healMessage(name: String): String? = null
+    },
+    DRAGON_BITTER(heal = 1,
+                  delay = 3,
+                  id = 1911,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.strength.boost(2)
+            plr.attack.adjustLevel(-(2 + plr.attack.level * 5 / 100))
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Dragon Bitter. You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    DWARVEN_STOUT(heal = 1,
+                  delay = 3,
+                  id = 1913,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.mining.boost(1)
+            plr.smithing.boost(1)
+            plr.attack.adjustLevel(-(2 + plr.attack.level * 4 / 100))
+            plr.strength.adjustLevel(-(2 + plr.strength.level * 4 / 100))
+            plr.defence.adjustLevel(-(2 + plr.defence.level * 4 / 100))
+            plr.sendMessage("It tastes pretty strong too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Dwarven Stout. It tastes foul."
+        override fun healMessage(name: String): String? = null
+    },
+    GROG(heal = 3,
+         delay = 3,
+         id = 1915,
+         leftover = 1919,
+         sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.strength.boost(1 + plr.strength.staticLevel * 4 / 100)
+            plr.attack.adjustLevel(-(5 + plr.attack.level * 3 / 100))
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Grog. You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    MOONLIGHT_MEAD(heal = 4,
+                   delay = 3,
+                   id = 2955,
+                   leftover = 1919,
+                   sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.sendMessage("It tastes like something just died in your mouth.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the foul smelling brew."
+        override fun healMessage(name: String): String? = null
+    },
     KEBAB(heal = 0,
           delay = 3,
           id = 1971) {
