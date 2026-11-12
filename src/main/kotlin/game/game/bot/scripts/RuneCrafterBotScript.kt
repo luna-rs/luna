@@ -17,6 +17,7 @@ import engine.bot.coordinator.RuneRunningCoordinator.COINS
 import engine.bot.coordinator.RuneRunningCoordinator.NATURE_FARE
 import game.skill.runecrafting.craftRune.CraftableRune
 import game.skill.runecrafting.enterAltar.Altar
+import game.obj.entrances.Zanaris
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -36,7 +37,8 @@ import kotlin.time.Duration.Companion.seconds
 class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), SocialBotScript {
 
     val altar = data.altar
-    private val essence = RuneRunningCoordinator.essence(altar)
+    val essenceId = data.essenceId
+    private val essence get() = essenceId
     private val deadline = data.deadline
     private val rune = CraftableRune.ALTAR_TO_RUNE[altar]
     private var prepared = false
@@ -49,8 +51,9 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
     /**
      * Starts a finite session without saving live reservations or making new items.
      */
-    constructor(bot: Bot, altar: Altar, duration: Duration) : this(bot, CrafterData().also {
+    constructor(bot: Bot, altar: Altar, duration: Duration, essenceId: Int = RuneRunningCoordinator.essence(altar)) : this(bot, CrafterData().also {
         it.altar = altar
+        it.essenceId = essenceId
         it.deadline = System.currentTimeMillis() + duration.inWholeMilliseconds
     })
 
@@ -64,7 +67,7 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
     } == true
 
     private fun eligible(): Boolean = bot.preferences.isSkiller && altar in RuneRunningCoordinator.ALTARS &&
-        rune != null && bot.runecrafting.level >= rune.level && bot.isAlive
+        rune != null && RuneRunningCoordinator.validEssence(altar, essence) && bot.runecrafting.level >= rune.level && bot.isAlive
 
     private fun ending(): Boolean = System.currentTimeMillis() >= deadline || !eligible()
 
@@ -79,7 +82,7 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
     }
 
     override suspend fun init(resumed: Boolean): Boolean {
-        if (ending()) return true
+        if (ending() || !RuneRunningCoordinator.prepare(this)) return true
         if (!guardsInstalled) {
             previousCombatDisabled = bot.combat.isDisabled
             bot.combat.isDisabled = true
@@ -129,10 +132,11 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
         if (!registered) {
             if (!RuneRunningCoordinator.register(this)) return true
             registered = true
+            lastDeliveryAt = System.currentTimeMillis()
         }
         val agreement = RuneRunningCoordinator.pending(bot)
         if (agreement == null) {
-            val idle = if (altar == Altar.NATURE) 10.minutes else 5.minutes
+            val idle = RuneRunningCoordinator.tripTimeout(altar) * 2
             if (System.currentTimeMillis() - lastDeliveryAt >= idle.inWholeMilliseconds) {
                 RuneRunningCoordinator.unregister(bot)
                 bankRemainder()
@@ -165,7 +169,7 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
      * Withdraws one loose crafting load plus a finite stock of noted replacements. Native bank mode owns noting.
      * Nature hosts pack their own outbound fare and a real sixty-coin reimbursement for every noted load.
      */
-    private suspend fun pack(): Boolean = withTimeoutOrNull(3.minutes) {
+    private suspend fun pack(): Boolean = withTimeoutOrNull(RuneRunningCoordinator.tripTimeout(altar)) {
         val previous = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)
         try {
             if (!eligible() || !isActionSafe(ActionSafety.NON_COMBAT) || !openBank() ||
@@ -180,6 +184,8 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
                 !handler.banking.withdraw(Item(essence, BATCH)) ||
                 bot.inventory.computeAmountForId(essence) != BATCH || !bot.inventory.contains(altar.talisman))
                 return@withTimeoutOrNull false
+            if (altar == Altar.COSMIC && (!handler.banking.withdraw(Item(Zanaris.STAFF)) ||
+                    !bot.inventory.contains(Zanaris.STAFF))) return@withTimeoutOrNull false
             if (altar == Altar.NATURE) {
                 val amount = loads * NATURE_FARE + NATURE_FARE
                 if (!handler.banking.withdraw(Item(COINS, amount)) ||
@@ -200,7 +206,7 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
     /**
      * Enters through the existing talisman crossing, clicks the native altar, verifies consumption and exits.
      */
-    private suspend fun craftLoad(): Boolean = withTimeoutOrNull(3.minutes) {
+    private suspend fun craftLoad(): Boolean = withTimeoutOrNull(RuneRunningCoordinator.tripTimeout(altar)) {
         if (ending() || !isActionSafe(ActionSafety.NON_COMBAT) ||
             bot.inventory.computeAmountForId(essence) != BATCH || !bot.inventory.contains(altar.talisman))
             return@withTimeoutOrNull false
@@ -271,6 +277,7 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
 
     override fun snapshot(): BotScriptData = CrafterData().also {
         it.altar = altar
+        it.essenceId = essence
         it.deadline = deadline
     }
 
@@ -281,15 +288,18 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
      */
     class CrafterData : BotScriptData() {
         var altar = Altar.AIR
+        var essenceId = 1436
         var deadline = 0L
 
         override fun load(data: JsonObject) {
             altar = Altar.valueOf(data.get("altar").asString)
+            essenceId = data.get("essenceId")?.asInt ?: RuneRunningCoordinator.legacyEssence(altar)
             deadline = data.get("deadline")?.asLong ?: 0L
         }
 
         override fun save(data: JsonObject) {
             data.addProperty("altar", altar.name)
+            data.addProperty("essenceId", essenceId)
             data.addProperty("deadline", deadline)
         }
     }

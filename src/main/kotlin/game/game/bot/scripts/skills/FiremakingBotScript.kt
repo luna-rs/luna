@@ -430,6 +430,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         if (remaining > Duration.ZERO) {
             val script = FiremakingScriptFactory.getTrainingScript(bot, bot.firemaking.staticLevel,
                 mutableListOf(), remaining)
+            script.trainingGoal = trainingGoal
             bot.scriptStack.softPushHead(script)
         }
         stop()

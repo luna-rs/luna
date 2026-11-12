@@ -106,6 +106,12 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
             SlayerScriptFactory,
             FarmingScriptFactory
         ).associateBy { it.skillId }
+
+        /**
+         * Keeps training available while any supported skill still advances the account's training goal.
+         */
+        @JvmStatic
+        fun hasTrainingSkills(bot: Bot): Boolean = factories.keys.any { BotCombatActionHandler.wantsToTrain(bot, it) }
     }
 
     /**
@@ -140,6 +146,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         val factory = factories[selectedSkill] ?: return
         val zones = ArrayList<SubZone>()
         bot.profitMode = !training
-        bot.scriptStack.push(factory.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training))
+        val script = factory.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
+        bot.scriptStack.push(script)
     }
 }

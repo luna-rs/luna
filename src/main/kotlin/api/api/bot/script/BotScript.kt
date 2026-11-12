@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.GameCoroutineScope
 import api.bot.Suspendable.naturalMicroDelay
+import api.bot.action.BotCombatActionHandler
 import api.predef.*
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
@@ -41,6 +42,25 @@ import kotlin.coroutines.coroutineContext
  * @author lare96
  */
 abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
+
+    /**
+     * Selected training skill, or minus one for combined combat training. Ordinary work and profit sessions
+     * leave this unset. Invalid saved values are ignored rather than accessing a nonexistent skill.
+     */
+    var trainingGoal: Int? = null
+        set(value) {
+            field = value?.takeIf { it in -1..20 }
+        }
+
+    /**
+     * Ends training when its selected skill or combat build no longer needs experience.
+     * The shared policy preserves competitive skillers' maximum-experience goals beyond level 99.
+     */
+    fun trainingComplete(): Boolean = when (val goal = trainingGoal) {
+        null -> false
+        -1 -> BotCombatActionHandler.wantedCombatSkills(bot).isEmpty()
+        else -> !BotCombatActionHandler.wantsToTrain(bot, goal)
+    }
 
     /**
      * Shared entry conditions for ordinary work, combat work, and lifecycle-only scripts.
@@ -215,6 +235,10 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
      * @return `true` if a new script coroutine was started, otherwise `false`.
      */
     fun start(): Boolean {
+        if (trainingComplete()) {
+            terminated = true
+            return false
+        }
         if (progress?.isActive != true && !terminated) {
             val wasPaused = isPaused()
             bot.log("Running script {${javaClass.name}}.")

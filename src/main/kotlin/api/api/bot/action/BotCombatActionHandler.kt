@@ -162,6 +162,22 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         fun wantedCombatSkills(bot: Bot): Set<Int> = (0..6).filter { wantsToTrain(bot, it) }.toSet()
 
         /**
+         * Selects combat disciplines that can advance an unfinished offensive skill or incidental Hitpoints.
+         * Prayer needs its own training activity rather than another already-completed attack discipline.
+         */
+        @JvmStatic
+        fun trainingPurposeEligible(bot: Bot, purpose: BotGearPurpose): Boolean {
+            val wanted = wantedCombatSkills(bot)
+            return when (purpose) {
+                BotGearPurpose.MAGIC -> SKILL_MAGIC in wanted || SKILL_HITPOINTS in wanted
+                BotGearPurpose.RANGED -> SKILL_RANGED in wanted || SKILL_HITPOINTS in wanted
+                BotGearPurpose.MELEE -> setOf(SKILL_ATTACK, SKILL_STRENGTH, SKILL_DEFENCE, SKILL_HITPOINTS)
+                    .any { it in wanted }
+                else -> false
+            }
+        }
+
+        /**
          * Allows incidental experience in unrestricted skills, including skills already at 99.
          * A deliberately capped skill must still be below its target. This selects actions;
          * it never removes native experience or resets levels.

@@ -125,7 +125,11 @@ public final class BotScriptStack {
                 BotScriptData dataClass =
                         (BotScriptData) Class.forName(snapshot.getScriptDataClass()).getConstructor().newInstance();
                 dataClass.load(scriptData.getAsJsonObject());
-                loadedScripts[snapshot.getIndex()] = scriptManager.loadScript(scriptClass, bot, dataClass);
+                BotScript restored = scriptManager.loadScript(scriptClass, bot, dataClass);
+                if (restored != null) {
+                    restored.setTrainingGoal(snapshot.getTrainingGoal());
+                }
+                loadedScripts[snapshot.getIndex()] = restored;
             } catch (Exception e) {
                 logger.error("Error loading persisted script [{}]", scriptClass, e);
             }
@@ -158,13 +162,14 @@ public final class BotScriptStack {
             }
             BotScriptData snapshot = script.snapshot();
             if (snapshot == null) {
-                snapshots.add(new BotScriptSnapshot(index++, "null", "null", JsonNull.INSTANCE));
+                snapshots.add(new BotScriptSnapshot(index++, "null", "null", JsonNull.INSTANCE,
+                        script.getTrainingGoal()));
                 continue;
             }
             JsonObject data = new JsonObject();
             snapshot.save(data);
             snapshots.add(new BotScriptSnapshot(index++, script.getClass().getName(),
-                    snapshot.getClass().getName(), data));
+                    snapshot.getClass().getName(), data, script.getTrainingGoal()));
         }
         return snapshots;
     }
@@ -210,6 +215,16 @@ public final class BotScriptStack {
         }
         BotScript current = buffer.peek();
         if (current != null) {
+            if (current.trainingComplete()) {
+                // Remove ownership before cancellation invokes script cleanup or queues follow-up work.
+                buffer.removeFirst();
+                current.stop();
+                bot.getActions().interruptWeak();
+                bot.getCombat().setTarget(null);
+                bot.getNavigator().cancel();
+                bot.getWalking().clear();
+                return false;
+            }
             if (current.isIdle() || current.isPaused()) {
                 // Script is idle or paused, start it.
                 current.start();

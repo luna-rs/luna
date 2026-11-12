@@ -46,10 +46,28 @@ public final class BotRuneRunningPreference {
      * Accounts for online time once per bot tick. Backwards checkpoints rebase without consuming time.
      */
     public void advance(long onlineMillis) {
+        advance(onlineMillis, true);
+    }
+
+    /**
+     * Counts only time spent in a running session, preserving the allowance while no host is available.
+     */
+    public void advance(long onlineMillis, boolean working) {
+        if (!working) {
+            playtimeCheckpoint = -1;
+            return;
+        }
         if (playtimeCheckpoint >= 0 && onlineMillis >= playtimeCheckpoint) {
             remainingMillis = Math.max(0, remainingMillis - (onlineMillis - playtimeCheckpoint));
         }
         playtimeCheckpoint = onlineMillis;
+    }
+
+    /**
+     * Transfers a legacy scavenging introduction once without renewing an existing runner's cooldown.
+     */
+    public void inheritIntroduction(long unusedMillis) {
+        remainingMillis = Math.max(remainingMillis, Math.clamp(unusedMillis, 0, MAX_MILLIS));
     }
 
     /**

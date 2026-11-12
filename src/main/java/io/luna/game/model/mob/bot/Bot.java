@@ -11,6 +11,7 @@ import game.bot.scripts.DeathReflexScript;
 import game.bot.scripts.EatFoodReflexScript;
 import game.bot.scripts.LootItemReflexScript;
 import game.bot.scripts.RandomEventReflexScript;
+import game.bot.scripts.RuneRunnerBotScript;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
@@ -684,7 +685,8 @@ public final class Bot extends Player {
                 if (getCombatLevel() != 3) preferences.getScavenging().completeIntroduction();
             }
             if (preferences.getRuneRunning().isIntroductory()) {
-                preferences.getRuneRunning().advance(getTimePlayed().toMillis());
+                preferences.getRuneRunning().advance(getTimePlayed().toMillis(),
+                        scriptStack.containsActive(RuneRunnerBotScript.class));
                 if (getCombatLevel() >= 50) preferences.getRuneRunning().completeIntroduction();
             }
             // Process speech before scripts so we can still talk while doing anything.

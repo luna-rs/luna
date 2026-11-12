@@ -432,21 +432,19 @@ public final class BotPreference {
     }
 
     /**
-     * Assigns at most one introductory job after persistence confirms a genuinely new permanent account.
-     * Rune running remains available below combat level fifty without replacing the account's normal identity.
+     * Assigns introductory rune running after persistence confirms a genuinely new permanent account.
+     * Legacy scavenging odds contribute to this safe starting job instead of sending new accounts to the Wilderness.
      */
     public void initializeNewActivities(double scavengingChance, double runeRunningChance) {
         if (newAccountInitialized) return;
         newAccountInitialized = true;
         if (bot.isTemporary()) return;
-        double scavengingWeight = bot.getCombatLevel() == 3 && Double.isFinite(scavengingChance) ?
+        double legacyWeight = bot.getCombatLevel() == 3 && Double.isFinite(scavengingChance) ?
                 Math.clamp(scavengingChance, 0.0, 1.0) : 0.0;
         double runningWeight = bot.getCombatLevel() < 50 && Double.isFinite(runeRunningChance) ?
-                Math.clamp(runeRunningChance, 0.0, 1.0 - scavengingWeight) : 0.0;
+                Math.clamp(runeRunningChance, 0.0, 1.0) : 0.0;
         double roll = ThreadLocalRandom.current().nextDouble();
-        if (roll < scavengingWeight) {
-            scavenging = new BotScavengingPreference(ThreadLocalRandom.current().nextLong(60, 601) * 60_000);
-        } else if (roll < scavengingWeight + runningWeight) {
+        if (roll < Math.min(1.0, legacyWeight + runningWeight)) {
             runeRunning = new BotRuneRunningPreference(ThreadLocalRandom.current().nextLong(60, 181) * 60_000);
         }
     }
@@ -639,6 +637,10 @@ public final class BotPreference {
                 ? BotScavengingPreference.load(object.getAsJsonObject("scavenging")) : new BotScavengingPreference(0);
         runeRunning = object.has("runeRunning") && object.get("runeRunning").isJsonObject()
                 ? BotRuneRunningPreference.load(object.getAsJsonObject("runeRunning")) : new BotRuneRunningPreference(0);
+        if (scavenging.isIntroductory()) {
+            runeRunning.inheritIntroduction(scavenging.getRemainingMillis());
+            scavenging.completeIntroduction();
+        }
         // Deserialize activities and their weightings.
         JsonArray activitiesJson = object.getAsJsonArray("activities");
         for (JsonElement activityJson : activitiesJson) {
