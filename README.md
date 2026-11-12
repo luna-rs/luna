@@ -18,7 +18,7 @@ gameplay for yourself!
 - **Dynamic behavior**: Bots make their own decisions based on their personalities, goals, resources, and experiences.
 - **Player-like activities**: Bots skill, PvM, PK, trade, socialize, loot, and scam each other!
 
-![](./data/resources/marketplace.gif)
+<img src="./data/resources/marketplace.gif" width="543" height="392" alt="Players gathering in the marketplace">
 
 # Create your own world
 
