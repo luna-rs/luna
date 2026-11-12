@@ -165,7 +165,9 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
             val ordinary = preferred.filter { it.zone !in bosses }.ifEmpty { preferred }
             // Advanced alternatives supplement the established mid-game camps rather than displacing them.
-            val threshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            val tierThreshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            // Hill giants and other mid-level camps remain training alternatives as readiness increases.
+            val threshold = if (training) minOf(35, tierThreshold) else tierThreshold
             return preferred.filter { it.zone in bosses || it.minimum >= threshold ||
                 (training && it.zone in RockCrabBotScript.CAMPS) }
         }
