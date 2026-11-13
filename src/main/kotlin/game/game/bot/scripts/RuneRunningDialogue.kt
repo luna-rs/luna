@@ -131,7 +131,7 @@ class RuneRunningDialogue(private val delivery: RuneRunningCoordinator.Delivery)
                 if (outcomes.size == 2) {
                     if (!selected) {
                         val paid = outcomes.values.all { it }
-                        val note = api.predef.itemDef(RuneRunningCoordinator.essence(delivery.altar)).notedId.orElse(-1)
+                        val note = api.predef.itemDef(delivery.essenceId).notedId.orElse(-1)
                         hostFinished = paid && (note < 0 || delivery.crafter.inventory.computeAmountForId(note) < BATCH ||
                             delivery.altar == Altar.NATURE &&
                             delivery.crafter.inventory.computeAmountForId(COINS) < NATURE_FARE)

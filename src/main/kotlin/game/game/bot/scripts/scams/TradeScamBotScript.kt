@@ -5,6 +5,7 @@ import api.bot.isRealBot
 import api.bot.social.BotConversations
 import api.bot.social.BotTradeScams
 import api.bot.social.BotSocialInteractions
+import api.bot.social.PlayerTradeScams
 import api.bot.zone.SubZone
 import api.predef.world
 import engine.bot.speech.BotScamSpeechPool
@@ -13,7 +14,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.speech.BotSpeech
 
 /**
- * A bounded social visit advertising either money doubling or armour trimming to available bots only.
+ * A bounded social visit pitching bot trust trades or a rare misleading sale to a nearby player.
  * Travel, idle timing, interruption and partner conversation delivery use the ordinary idle script lifecycle.
  * Each visit retains its chosen pitch; trust trades remain transient and are never replayed after login.
  *
@@ -26,6 +27,11 @@ class TradeScamBotScript(bot: Bot, destination: SubZone, deadline: Long,
     override fun snapshot(): IdleData? = null
 
     override fun considerConversation() {
+        if (!bot.preferences.isScammer) return
+        val player = world.locator.findViewablePlayers(bot) {
+            !it.isRealBot() && it.isWithinDistance(bot, 8)
+        }.randomOrNull()
+        if (player != null && PlayerTradeScams.approach(bot, player)) return
         val victim = world.locator.findViewablePlayers(bot) {
             it.isRealBot() && it !== bot && it.isWithinDistance(bot, 8) && BotConversations.available(it)
         }.filterIsInstance<Bot>().shuffled().firstOrNull { BotTradeScams.approach(bot, it, kind) }

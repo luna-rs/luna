@@ -23,9 +23,9 @@ import kotlin.time.Duration
  * repeating action; the existing gameplay handler performs conversion, level validation, and experience awards.
  *
  * Eligibility requires one owned herb and the permanent Herblore level for its recipe. The stable 100-200-herb
- * gathering goal does not prevent processing a smaller haul. Empty startup stock queues chaos-druid gathering
- * followed by one bounded identification retry. Current level is checked again during execution,
- * while combat, locks, and strong actions defer processing. Three consecutive interactions without input
+ * gathering goal does not prevent processing a smaller haul. Empty startup stock queues herb gathering,
+ * which hands usable banked stock to identification without requesting another gathering trip. Current level
+ * is checked again during execution, while combat, locks, and strong actions defer processing. Three consecutive interactions without input
  * consumption end the session; unresolved banking requests are bounded separately. A failed or timed-out
  * withdrawal ends the script through the inherited banking hook.
  * Successfully exhausting owned herbs queues matching unfinished-potion preparation once, using only the
@@ -126,7 +126,6 @@ class IdentifyHerbBotScript(
         if (!started && !bot.ownsProductionSupplies(materials)) {
             if (allowGathering) {
                 allowGathering = false
-                bot.scriptStack.softPushHead(IdentifyHerbBotScript(bot, herb, duration, allowGathering = false))
                 bot.scriptStack.softPushHead(HerbGatheringScript(bot, herb, duration))
             }
             stop()

@@ -155,7 +155,9 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
             val ordinary = preferred.filter { it.zone !in bosses }.ifEmpty { preferred }
             // Advanced alternatives supplement the established mid-game camps rather than displacing them.
-            val threshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            val tierThreshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            // Hill giants and other mid-level camps remain training alternatives as readiness increases.
+            val threshold = if (training) minOf(35, tierThreshold) else tierThreshold
             return preferred.filter { it.zone in bosses || it.minimum >= threshold ||
                 (training && it.zone in RockCrabBotScript.CAMPS) }
         }
@@ -225,7 +227,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             if (candidates.firstOrNull()?.zone in RockCrabBotScript.CAMPS) {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
                     zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList(),
-                    magicOnly = magicOnly)
+                    magicOnly = magicOnly).also { if (training) it.trainingGoal = if (magicOnly) SKILL_MAGIC else -1 }
             }
             val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
@@ -236,6 +238,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             selected.forEach { names.putAll(it.zone, it.names) }
             return NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
                 names, purpose, loadout.spell?.spell, magicOnly = magicOnly)
+                .also { if (training) it.trainingGoal = if (magicOnly) SKILL_MAGIC else -1 }
         }
     }
 
@@ -244,14 +247,16 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
             return
         }
+        if (training && BotCombatActionHandler.wantedCombatSkills(bot).isEmpty()) return
         if (training) trainingMinigameScript(bot)?.let {
             bot.scriptStack.push(it)
             return
         }
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
             bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
-        if (rand(0.15)) {
+        if ((!training || BotCombatActionHandler.trainingPurposeEligible(bot, BotGearPurpose.MAGIC)) && rand(0.15)) {
             salarinScript(bot, duration)?.let {
+                if (training) it.trainingGoal = -1
                 bot.scriptStack.push(it)
                 return
             }
@@ -275,6 +280,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return
         }
         val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
+            .filter { !training || BotCombatActionHandler.trainingPurposeEligible(bot, it) }
             .mapNotNull { purpose ->
                 val ancient = if (purpose == BotGearPurpose.MAGIC && rand(0.95)) ancientMagicLoadout(bot) else null
                 (ancient ?: CombatLoadout.find(bot, purpose))?.let { purpose to it }

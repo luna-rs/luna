@@ -92,6 +92,10 @@ abstract class SkillingScriptFactory(val skillId: Int) {
      * @return A skilling script matching the requested mode, or an empty script if the training goal is complete.
      */
     fun getScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
+        return createScript(bot, level, zones, training).also { it.trainingGoal = if (training) skillId else null }
+    }
+
+    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
         if (training && !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
         if (skillId in setOf(SKILL_CRAFTING, SKILL_FLETCHING, SKILL_HERBLORE, SKILL_SMITHING, SKILL_COOKING)) {
             if (skillId == SKILL_HERBLORE)

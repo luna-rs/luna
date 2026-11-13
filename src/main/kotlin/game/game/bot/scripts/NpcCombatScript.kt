@@ -583,6 +583,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if (!trainingPurposeNeeded()) return false
         // Gear selection and banking can suspend waiting for combat to end. Keep the normal
         // combat response available until this script is ready to handle an actual engagement.
         bot.reflex.isDisableCombatReflex = false
@@ -1348,6 +1349,12 @@ open class NpcCombatScript(bot: Bot,
      * Validates actual equipment, dragon protection and one attack's supplies before permitting attack clicks.
      */
     internal fun prepareCombat(): Boolean {
+        if (!trainingPurposeNeeded()) {
+            bot.combat.target = null
+            clearMagic()
+            stop()
+            return false
+        }
         if (magicOnly && (purpose != BotGearPurpose.MAGIC || bot.preferences.isSkiller)) {
             bot.combat.target = null
             clearMagic()
@@ -1498,7 +1505,7 @@ open class NpcCombatScript(bot: Bot,
             }
         }
         // Recheck after level changes as well as equipment changes.
-        val allowed = BotCombatActionHandler.allowedStyles(bot, bot.combat.weapon.typeDef.styles)
+        val allowed = trainingStyles(bot.combat.weapon.typeDef.styles)
         if (allowed.isEmpty()) {
             bot.combat.target = null
             stop()
@@ -1509,6 +1516,31 @@ open class NpcCombatScript(bot: Bot,
             combatConfigured = true
         }
         return true
+    }
+
+    private fun trainingPurposeNeeded(): Boolean = when (val goal = trainingGoal) {
+        -1 -> BotCombatActionHandler.trainingPurposeEligible(bot, purpose)
+        in 0..6 -> BotCombatActionHandler.wantsToTrain(bot, goal!!) && when (purpose) {
+            BotGearPurpose.MAGIC -> goal == SKILL_MAGIC || goal == SKILL_HITPOINTS
+            BotGearPurpose.RANGED -> goal == SKILL_RANGED || goal == SKILL_HITPOINTS
+            BotGearPurpose.MELEE -> goal in setOf(SKILL_ATTACK, SKILL_STRENGTH, SKILL_DEFENCE, SKILL_HITPOINTS)
+            else -> false
+        }
+        else -> true
+    }
+
+    /**
+     * Prefers styles advancing the selected combat goal, retaining incidental Hitpoints as a valid fallback.
+     * Profit and non-combat goals such as Slayer retain every account-compatible native style.
+     */
+    fun trainingStyles(styles: Iterable<CombatStyleDefinition>): List<CombatStyleDefinition> {
+        val allowed = BotCombatActionHandler.allowedStyles(bot, styles)
+        val goal = trainingGoal ?: return allowed
+        if (goal !in -1..6) return allowed
+        val wanted = if (goal == -1) BotCombatActionHandler.wantedCombatSkills(bot)
+            else setOf(goal).filterTo(HashSet()) { BotCombatActionHandler.wantsToTrain(bot, it) }
+        val unfinished = allowed.filter { style -> style.exp.any { it in wanted } }
+        return unfinished.ifEmpty { if (SKILL_HITPOINTS in wanted) allowed else emptyList() }
     }
 
     private fun selectCombatStyle(styles: List<CombatStyleDefinition>): CombatStyleDefinition {

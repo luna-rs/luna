@@ -15,6 +15,8 @@ import api.bot.script.BotScript
 import api.bot.script.ZonedBotScript
 import api.bot.social.BotConversations
 import api.bot.social.BotSocialInteractions
+import api.bot.social.PlayerTradeScams
+import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.bot.webwalk.plan.BankAccess
 import api.predef.*
@@ -63,6 +65,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * prices when they fit the buyer's limits, so both participants independently calculate the same exchange.
  * Human sellers receive only carried coins for affordable wanted quantities. Bots offer items to a human only
  * for the exact commodity in that player's buying advertisement; those buyers may pay with coins or items.
+ * Scammer accounts may occasionally pause idle trading for a separately guarded misleading sale to a human.
  *
  * Negotiations apply quantity differences against explicit target baskets. Empty exchanges, unsuccessful item
  * movements, repeated offer cycles, and expired waits decline the trade. Both screens are checked against the
@@ -74,7 +77,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * @param duration The maximum remaining duration of the marketplace session.
  * @param zone The candidate zones containing the marketplace.
  * @property purchaseDeadline Optional absolute deadline for a targeted supply visit; zero keeps ordinary waits.
- * @property retryAt Earliest retry after deferring a visit, independent of hub capacity or intervening work.
+ * @property retryAt Optional earliest start for explicit callers; automatic retry cooldowns live on the bot.
  * @author lare96
  */
 class TradeBotScript(bot: Bot,
@@ -89,7 +92,7 @@ class TradeBotScript(bot: Bot,
                      private val reactiveSeller: Player? = null,
                      private val reactiveBuyer: Player? = null,
                      private val reactivePrevious: BotScript? = null) :
-    ZonedBotScript(bot, duration, zone) {
+    ZonedBotScript(bot, duration, zone), SocialBotScript {
 
     companion object {
 
@@ -146,6 +149,7 @@ class TradeBotScript(bot: Bot,
                 seller.state == EntityState.ACTIVE && ActionSafety.NON_COMBAT.allows(bot) &&
                 bot.combat.target == null && bot.reflex.activeReflex == null && !bot.inWilderness() &&
                 bot.tradingWith == -1 && !bot.overlays.hasWindow() && !seller.overlays.hasWindow() &&
+                !BotSocialInteractions.engaged(bot) && !BotConversations.engaged(bot) &&
                 bot.walking.isEmpty && !bot.navigator.isActive &&
                 bot.position.isWithinDistance(seller.position, Position.VIEWING_DISTANCE) &&
                 bot.isViewableFrom(seller) && seller.isViewableFrom(bot)
@@ -192,6 +196,8 @@ class TradeBotScript(bot: Bot,
         /** The maximum number of offer changes permitted in one negotiation. */
         private const val MAX_NEGOTIATION_ROUNDS = 12
         private const val MAX_CUSTOMER_APPROACHES = 4
+        private const val MAX_ROUTING_CHECKS = 64
+        private const val ROUTING_CHECKS_PER_TICK = 8
         private const val ADVERTISEMENT_NOTICE_COLOR = "@blu@"
 
         /** Selects a session duration, checking loved merchanting before the broader liked preference. */
@@ -212,6 +218,8 @@ class TradeBotScript(bot: Bot,
      * Retains only candidate order across bounded search passes, independently of incoming requests.
      */
     private var partnerSearch: BotTradePartnerSearch<Player>? = null
+    private var routingTick = Long.MIN_VALUE
+    private var routingChecks = 0
 
     /** Throttles advertisements for the current intentions. */
     private val messageTimer = Stopwatch.createUnstarted()
@@ -228,8 +236,21 @@ class TradeBotScript(bot: Bot,
     /** Whether banking and marketplace travel have finished and requests may be processed. */
     private var prepared = false
 
-    /** Whether this session has completed at least one exchange. */
-    private var traded = false
+    /**
+     * Affinity supplies occasional local advertising hints; neutral bots retain their usual stock selection.
+     */
+    private val scanAdvertisedGoods = BotMarketPreference.shouldScan(bot)
+
+    /**
+     * Retains both deadlines across banking and pauses; only useful native transfers renew the idle allowance.
+     */
+    private val visitBudget = BotTradeVisitBudget(
+        (if (bot.preferences.isMerchant || purpose == BotTradePurpose.MERCHANT_BUY ||
+            purpose == BotTradePurpose.MERCHANT_SELL) 20.minutes else 10.minutes).inWholeMilliseconds,
+        duration.inWholeMilliseconds.coerceAtLeast(1L))
+
+    private val ordinaryVisit: Boolean
+        get() = purchaseTarget == null && reactivePlayer == null
 
     private val marketExperience = BotMarketExperience.Visit()
     private var completedExposure: BotMarketExperience.Failure? = null
@@ -245,6 +266,9 @@ class TradeBotScript(bot: Bot,
      * Includes the outstanding request and approach before an offer screen exists.
      */
     private var negotiating = false
+    private var nextScamConsideration = System.currentTimeMillis() + (30_000L..90_000L).random()
+    private var consideringPlayerScam = false
+    private var playerScamActive = false
 
     /**
      * Identifies an unanswered bot approach that may yield to a matching human advertisement.
@@ -349,11 +373,6 @@ class TradeBotScript(bot: Bot,
     private var browsingMarket: BotMarketplace? = null
     private var browseAttempts = 0
 
-    /**
-     * Preserves the unspent session budget when a full market makes this visit yield to other work.
-     */
-    private var retryDuration: Duration? = null
-
     /** The advertisement interval selected for the current intentions, in seconds. */
     private var messageCooldown = 0
 
@@ -371,6 +390,7 @@ class TradeBotScript(bot: Bot,
         get() = purpose == BotTradePurpose.MERCHANT_SELL || purpose == BotTradePurpose.SELL && bot.preferences.isMerchant
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if (duration <= Duration.ZERO) return false
         val customer = reactivePlayer
         if (customer != null) {
             if (reactivePrevious?.isPassive() == false &&
@@ -388,8 +408,31 @@ class TradeBotScript(bot: Bot,
             }
             return prepareReactiveFunds()
         }
-        val cooldown = retryAt - System.currentTimeMillis()
-        if (cooldown > 0L) delay(cooldown.milliseconds)
+        if (ordinaryVisit) {
+            if (!resumed && !BotMarketCooldown.ready(bot, purpose)) {
+                capacityBlocked = true
+                return false
+            }
+            visitBudget.start(System.currentTimeMillis())
+            if (visitBudget.expired(System.currentTimeMillis())) {
+                endSession("Marketplace visit expired.")
+                return false
+            }
+        }
+        val now = System.currentTimeMillis()
+        val requestedWait = retryAt - now
+        if (requestedWait > 0L) {
+            visitBudget.start(now)
+            val allowance = minOf(visitBudget.maximumRemaining(now),
+                if (purchaseDeadline > 0L) purchaseDeadline - now else Long.MAX_VALUE)
+            if (allowance <= 0L || withTimeoutOrNull(allowance) {
+                    delay(requestedWait.milliseconds)
+                    true
+                } != true) {
+                endSession("Requested marketplace start exceeded the visit deadline.")
+                return false
+            }
+        }
         if (!awaitActionSafety()) return false
         if (purchaseExpired()) {
             endSession("Specific purchase deadline expired.")
@@ -402,21 +445,25 @@ class TradeBotScript(bot: Bot,
         browsing = false
         browsingMarket = null
         browseAttempts = 0
-        retryDuration = null
         if (reserveTradingSpot() == null) {
             if (BotMarketplace.entries.any { it.hasAvailableTradingSpot(bot) }) {
                 bot.log("Marketplace is full; another market has trading space.")
                 return false
             }
             browsing = true
+            capacityBlocked = false
         }
         for ((name, feeling) in bot.preferences.playerFeelings) {
             if (feeling < 0.25) addBlacklisted(name, 365.days)
         }
         if (!computeOfferAndExpected()) return false
-        if (browsing && findBrowsePartner(prospectiveStock()) == null) {
-            deferTrading("All marketplaces are full and no existing offer matches.")
-            return false
+        // Overflow customers retain the existing fallback only when no advertising space remains anywhere.
+        if (browsing) {
+            val partners = withinVisitDeadline { listOfNotNull(findBrowsePartner(prospectiveStock())) } ?: return false
+            if (partners.isEmpty()) {
+                deferTrading("All marketplaces are full and no existing offer matches.", capacity = true)
+                return false
+            }
         }
         previousBankMode = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)
         bot.speechStack.suppressGeneral(this)
@@ -427,9 +474,14 @@ class TradeBotScript(bot: Bot,
 
     override suspend fun equipment(): BotGearLocator? = null
 
-    override suspend fun awaitActionSafety(safety: ActionSafety): Boolean =
-        if (reactivePlayer == null) super.awaitActionSafety(safety)
-        else withinPurchaseDeadline { super.awaitActionSafety(safety) } ?: false
+    override suspend fun awaitActionSafety(safety: ActionSafety): Boolean {
+        if (purchaseExpired() || ordinaryVisit && visitBudget.expired(System.currentTimeMillis())) {
+            endSession("Marketplace visit expired.")
+            return false
+        }
+        if (safety.allows(bot)) return super.awaitActionSafety(safety)
+        return withinVisitDeadline { super.awaitActionSafety(safety) } ?: false
+    }
 
     /**
      * Binds an already selected response before pausing the previous activity. A rejected preview sends no request
@@ -617,7 +669,7 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun onBankOpen(initial: Boolean) {
-        withinPurchaseDeadline { prepareTradeInventory() }
+        withinVisitDeadline { prepareTradeInventory() }
     }
 
     private suspend fun prepareTradeInventory() {
@@ -718,9 +770,7 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun finish() {
-        val quote = marketExperienceQuote()
-        completedExposure = if (quote != null && marketExperienceReady() && marketExperienceStillUseful(quote))
-            marketExperience.unsuccessful(quote.item.id, buying, quote.price) else null
+        completedExposure = completedExposure ?: completedMarketExposure()
         partnerSearch = null
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
@@ -744,30 +794,47 @@ class TradeBotScript(bot: Bot,
         completedExposure?.let { BotMarketExperience.unsuccessful(bot, it) }
         completedExposure = null
         if (capacityBlocked) {
-            if (purchaseDeadline > 0L) return
-            val next = BotMarketplace.select(bot)
-            val remaining = retryDuration ?: remainingDuration()
-            if (remaining > Duration.ZERO) {
-                bot.scriptStack.pushTail(TradeBotScript(bot, purpose, next, remaining,
-                    purchaseTarget = purchaseTarget, purchasePrice = purchasePrice,
-                    purchaseDeadline = purchaseDeadline,
-                    retryAt = System.currentTimeMillis() + rand(2, 5) * 60_000L))
-            }
+            if (ordinaryVisit) BotMarketCooldown.defer(bot, purpose)
             return
         }
-        if (purchaseTarget == null && !traded && !bot.preferences.isMerchant) {
+        if (ordinaryVisit) BotMarketCooldown.defer(bot, purpose)
+        if (purchaseTarget == null && !bot.preferences.isMerchant) {
             if (buying) bot.scriptStack.push(BuyFromStoreBotScript(bot))
             else bot.scriptStack.push(SellToStoreBotScript(bot))
         }
     }
 
-    override suspend fun executeInZone(): Boolean = withinPurchaseDeadline { executeTradeInZone() } ?: false
+    override suspend fun executeInZone(): Boolean = executeTradeInZone()
+
+    override fun canSocialize(): Boolean = consideringPlayerScam && canAttemptPlayerScam()
+
+    /**
+     * Tests idle scammer availability; social recruitment is exposed only during its own player-scam consideration.
+     */
+    internal fun canAttemptPlayerScam(): Boolean = bot.preferences.isScammer && reactivePlayer == null &&
+        purchaseTarget == null && !browsing && prepared && !forceBanking && !negotiating && pendingPartner == null &&
+        activeTrade == null && advertisementTrade == null && !reactiveSalePreparing &&
+        marketplace.tradingSpot(this) == bot.position && bot.tradingWith == -1 && !bot.overlays.hasWindow() &&
+        bot.walking.isEmpty && !bot.navigator.isActive && !bot.tradeRequests.hasRequest { true }
 
     override suspend fun beforeZoneWork(): Boolean {
+        if (ordinaryVisit && visitBudget.expired(System.currentTimeMillis())) {
+            endSession("Marketplace visit stopped after its idle or overall deadline.")
+            return true
+        }
+        if (BotSocialInteractions.participate(bot)) {
+            if (!BotSocialInteractions.engaged(bot)) refreshSocialStock()
+            return true
+        }
+        if (playerScamActive) refreshSocialStock()
+        if (BotConversations.engaged(bot)) {
+            BotConversations.tick(bot)
+            return true
+        }
         if (reactiveBuyer != null) {
             try {
                 val opportunity = reactiveOpportunity
-                if (opportunity != null) withinPurchaseDeadline {
+                if (opportunity != null) withinVisitDeadline {
                     val physical = preparePlayerPurchaseStock(opportunity)
                     if (physical != null) attemptTrade(reactiveBuyer, physical)
                 }
@@ -781,7 +848,7 @@ class TradeBotScript(bot: Bot,
                 val opportunity = reactiveOpportunity
                 if (opportunity != null && opportunity.response?.let(opportunity.market.registry::isCurrent) == true &&
                     advertisementReady(reactiveSeller)) {
-                    withinPurchaseDeadline { attemptTrade(reactiveSeller, opportunity) }
+                    withinVisitDeadline { attemptTrade(reactiveSeller, opportunity) }
                 }
             } finally {
                 endSession("Nearby player-sale visit completed.")
@@ -789,25 +856,25 @@ class TradeBotScript(bot: Bot,
             return true
         }
         if (!browsing) return false
-        withinPurchaseDeadline {
+        withinVisitDeadline {
             if (!prepared) {
                 deferTrading("No stock remains prepared for this customer visit.")
-                return@withinPurchaseDeadline
+                return@withinVisitDeadline
             }
             if (tryPlayerTrade()) {
                 if (!prepared || forceBanking) deferTrading("Customer exchange completed.")
-                return@withinPurchaseDeadline
+                return@withinVisitDeadline
             }
             val stock = carriedOffer.mapValues { (id, amount) -> minOf(amount, bot.inventory.computeAmountForId(id)) }
                 .filterValues { it > 0 }
             val partner = findBrowsePartner(stock)
             if (partner == null) {
                 deferTrading("No matching advertised offers remain at any marketplace.")
-                return@withinPurchaseDeadline
+                return@withinVisitDeadline
             }
             if (browseAttempts++ >= MAX_CUSTOMER_APPROACHES) {
                 deferTrading("The available advertisers could not complete a customer trade.")
-                return@withinPurchaseDeadline
+                return@withinVisitDeadline
             }
             browsingMarket = partner.marketplace
             val tile = partner.marketplace.availableWorkPositions(bot)
@@ -815,7 +882,7 @@ class TradeBotScript(bot: Bot,
                 .minByOrNull { it.computeLongestDistance(bot.position) }
             if (tile == null || !handler.webWalkTo(partner.marketplace.parent) || !handler.webWalkTo(tile)) {
                 addBlacklisted(partner.bot.username, 5.minutes)
-                return@withinPurchaseDeadline
+                return@withinVisitDeadline
             }
             carriedOffer = carriedOffer.mapValues { (id, amount) -> minOf(amount, bot.inventory.computeAmountForId(id)) }
                 .filterValues { it > 0 }
@@ -824,6 +891,7 @@ class TradeBotScript(bot: Bot,
             }.filterValues { it > 0 }
             if (availableAtMarket(partner) && planExchange(partner, carriedOffer, available) != null &&
                 canTradeWith(partner.bot) && bot.isViewableFrom(partner.bot)) {
+                if (ordinaryVisit) visitBudget.ready(System.currentTimeMillis())
                 attemptTrade(partner.bot)
                 if (!prepared || forceBanking) deferTrading("Customer exchange completed.")
             } else addBlacklisted(partner.bot.username, 5.seconds)
@@ -832,11 +900,13 @@ class TradeBotScript(bot: Bot,
     }
 
     private suspend fun executeTradeInZone(): Boolean {
+        if (ordinaryVisit && prepared) visitBudget.ready(System.currentTimeMillis())
         sampleMarketExperience()
         if (!prepared) {
             forceBanking = true
             return true
         }
+        if (considerPlayerScam()) return true
         if (!tryPlayerTrade()) {
             val incoming = bot.tradeRequests.pollBotRequests { canAcceptRequest(it) }
             val search = partnerSearch ?: BotTradePartnerSearch<Player>(world.currentTick).also { partnerSearch = it }
@@ -864,6 +934,43 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
+     * Gives idle scammer merchants one rare opportunity per consideration interval, using carried stock only.
+     */
+    private fun considerPlayerScam(): Boolean {
+        val now = System.currentTimeMillis()
+        if (now < nextScamConsideration) return false
+        nextScamConsideration = now + (30_000L..90_000L).random()
+        if (!canAttemptPlayerScam() || PlayerTradeAdvertisementMarket.live.hasPriority(this)) return false
+        val player = world.locator.findViewablePlayers(bot) {
+            !it.isRealBot() && it.isWithinDistance(bot, 8)
+        }.toList().randomOrNull() ?: return false
+        consideringPlayerScam = true
+        val started = try {
+            PlayerTradeScams.approach(bot, player)
+        } finally {
+            consideringPlayerScam = false
+        }
+        if (!started) return false
+        playerScamActive = true
+        partnerSearch = null
+        marketExperience.pause()
+        return true
+    }
+
+    /**
+     * Rebuilds ordinary trading quantities after a social exchange or a cancelled player-scam attempt.
+     */
+    private fun refreshSocialStock() {
+        if (!playerScamActive) return
+        playerScamActive = false
+        partnerSearch = null
+        marketExperience.clear()
+        prepared = false
+        prepared = reactivePlayer == null && computeOfferAndExpected() && refreshCarriedStock()
+        forceBanking = !prepared || bot.inventory.computeRemainingSize() <= 1
+    }
+
+    /**
      * Lets an idle merchant take one bounded store opportunity without abandoning the current market session.
      * Player requests and negotiations are serviced first; the shared planner throttles unsuccessful checks.
      */
@@ -881,22 +988,24 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =
-        withinPurchaseDeadline { super.travelToWorkZone(zone, bank) } ?: false
+        withinVisitDeadline { super.travelToWorkZone(zone, bank) } ?: false
 
     /**
-     * A specific supply purchase shares its caller's absolute deadline. Cancellation unwinds native negotiation
-     * cleanup, so an unanswered request or an offer wait cannot consume the following gathering stage's budget.
-     * Ordinary marketplace sessions retain their existing duration and wait policy.
+     * Bounds suspending work by the ordinary visit's absolute deadline or a targeted caller's deadline.
+     * Idle expiry is checked between work cycles and by native acceptance, so a sale can renew it mid-action.
+     * Cancellation unwinds native negotiations before a following activity can reuse their time or stock.
      */
-    private suspend fun <T> withinPurchaseDeadline(action: suspend () -> T): T? {
-        if (purchaseDeadline <= 0L) return action()
-        val remaining = purchaseDeadline - System.currentTimeMillis()
+    private suspend fun <T> withinVisitDeadline(action: suspend () -> T): T? {
+        if (!ordinaryVisit && purchaseDeadline <= 0L) return action()
+        val now = System.currentTimeMillis()
+        val remaining = minOf(if (ordinaryVisit) visitBudget.maximumRemaining(now) else Long.MAX_VALUE,
+            if (purchaseDeadline > 0L) purchaseDeadline - now else Long.MAX_VALUE)
         if (remaining <= 0L) {
-            endSession("Specific purchase deadline expired.")
+            endSession("Marketplace visit deadline expired.")
             return null
         }
         return withTimeoutOrNull(remaining) { action() }.also {
-            if (it == null) endSession("Specific purchase deadline expired.")
+            if (it == null) endSession("Marketplace visit deadline expired.")
         }
     }
 
@@ -940,11 +1049,10 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
-     * Remembers the time left before completing normally, so a retry runs behind existing work.
+     * Ends this visit without retaining another trading script in the work queue.
      */
-    private fun deferTrading(reason: String) {
-        if (retryDuration == null) retryDuration = remainingDuration()
-        capacityBlocked = true
+    private fun deferTrading(reason: String, capacity: Boolean = false) {
+        capacityBlocked = capacityBlocked || capacity
         endSession(reason)
     }
 
@@ -959,16 +1067,52 @@ class TradeBotScript(bot: Bot,
     /**
      * Matches a customer's stock against live, leased advertisers throughout all marketplaces.
      */
-    private fun findBrowsePartner(stock: Map<Int, Int>): TradeBotScript? =
-        BotMarketplace.entries.flatMap { it.tradingSessions() }.filterIsInstance<TradeBotScript>()
+    private suspend fun findBrowsePartner(stock: Map<Int, Int>): TradeBotScript? {
+        val candidates = BotMarketplace.entries.flatMap { it.tradingSessions() }.filterIsInstance<TradeBotScript>()
             .filter { availableAtMarket(it) && it.marketplace.tradingSpot(it) != null }
             .sortedBy { it.bot.position.computeLongestDistance(bot.position) }
-            .firstOrNull { other ->
-                val actual = other.carriedOffer.mapValues { (id, amount) ->
-                    minOf(amount, other.bot.inventory.computeAmountForId(id))
-                }.filterValues { it > 0 }
-                planExchange(other, stock, actual) != null
-            }
+        val ownIds = quantities(stock.toItems(), true).keys
+        var checked = 0
+        for (other in candidates) {
+            if (!availableAtMarket(other) || other.marketplace.tradingSpot(other) == null) continue
+            val buyer = if (buying) this else other
+            val saleIds = if (buying) other.carriedOffer.keys.map(::unnotedId).toSet() else ownIds
+            // Merchant stock and cosmetic browsing retain their existing secondary buying policies.
+            if (buyer.purpose != BotTradePurpose.MERCHANT_BUY &&
+                buyer.expected.none { unnotedId(it.item.id) in saleIds } &&
+                saleIds.none(BotEquipmentPreferences::isCosmetic)) continue
+            if (checked == MAX_ROUTING_CHECKS) break
+            if (!allowRoutingCheck()) return null
+            if (!availableAtMarket(other) || other.marketplace.tradingSpot(other) == null) continue
+            checked++
+            val actual = other.carriedOffer.mapValues { (id, amount) ->
+                minOf(amount, other.bot.inventory.computeAmountForId(id))
+            }.filterValues { it > 0 }
+            val carried = if (prepared) stock.mapValues { (id, amount) ->
+                minOf(amount, bot.inventory.computeAmountForId(id))
+            }.filterValues { it > 0 } else stock
+            if (planExchange(other, carried, actual) != null) return other
+        }
+        return null
+    }
+
+    /**
+     * Shares a small exact-planning budget across stock selection and customer routing on each game tick.
+     */
+    private suspend fun allowRoutingCheck(): Boolean {
+        if (routingTick == world.currentTick && routingChecks >= ROUTING_CHECKS_PER_TICK) {
+            delay(600.milliseconds)
+            if (!awaitActionSafety() || purchaseExpired() ||
+                ordinaryVisit && visitBudget.expired(System.currentTimeMillis())) return false
+        }
+        if (routingTick != world.currentTick) {
+            routingTick = world.currentTick
+            routingChecks = 0
+        }
+        if (routingChecks >= ROUTING_CHECKS_PER_TICK) return false
+        routingChecks++
+        return true
+    }
 
     /**
      * Counts both noted and unnoted purchases so a banked or carried delivery cannot be bought twice.
@@ -1008,10 +1152,13 @@ class TradeBotScript(bot: Bot,
         val traders = (if (browsing) BotMarketplace.entries else listOf(marketplace))
             .flatMap { it.tradingSessions() }.filterIsInstance<TradeBotScript>().filter { availableAtMarket(it) }
         val candidates = if (buying) wants else offers
+        val preferred = if (scanAdvertisedGoods)
+            preferAdvertisedGoods(candidates, marketplace.tradingSessions().filterIsInstance<TradeBotScript>())
+        else candidates
         // Preserve the buyer's budget allocation order; sellers favor stock with a current market match.
         val selected = if (purpose == BotTradePurpose.SELL && !merchantSelling || browsing && purpose == BotTradePurpose.BUY) {
-            prioritizeMarketItems(candidates, offers, traders).take(1)
-        } else candidates
+            prioritizeMarketItems(preferred, offers, traders).take(1)
+        } else preferred
         offering = if (buying) offers else selected
         expected = if (purpose == BotTradePurpose.BUY) selected.take(1) else if (buying) selected
         else BotTradeManager.computeExpected(bot, strategy, purpose, offering)
@@ -1044,6 +1191,7 @@ class TradeBotScript(bot: Bot,
     private fun availableAtMarket(other: TradeBotScript): Boolean =
         other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
             !other.browsing && !other.forceBanking && !other.negotiating &&
+            !BotSocialInteractions.engaged(other.bot) && !BotConversations.engaged(other.bot) &&
             other.bot.scriptStack.current() === other && buying != other.buying &&
             (if (browsing) other.marketplace else marketplace).contains(other.bot.position) &&
             !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
@@ -1073,6 +1221,31 @@ class TradeBotScript(bot: Bot,
             }
         }
         return matching + eligible.filterNot { it in matching }
+    }
+
+    /**
+     * Hears at most eight local advertisements without pricing offers, reading inventories or planning exchanges.
+     * This only reorders an existing basket; urgent personal purchases keep their original priority.
+     */
+    private fun preferAdvertisedGoods(candidates: List<BotTradeItem>, traders: List<TradeBotScript>): List<BotTradeItem> {
+        if (!scanAdvertisedGoods || candidates.isEmpty() || traders.isEmpty()) return candidates
+        val hints = hashSetOf<Int>()
+        val start = rand(traders.lastIndex)
+        repeat(minOf(8, traders.size)) { offset ->
+            val other = traders[(start + offset) % traders.size]
+            if (other.marketplace != marketplace || !availableAtMarket(other) ||
+                other.purpose == BotTradePurpose.MERCHANT_BUY) return@repeat
+            val advertised = (if (buying) other.offering else other.expected).firstOrNull() ?: return@repeat
+            if (advertised.item.id != COINS) hints += unnotedId(advertised.item.id)
+        }
+        if (hints.isEmpty()) return candidates
+        val urgent = if (buying) candidates.filter {
+            actionableWants[it.item.id]?.priority == WantedItemPriority.URGENT
+        } else emptyList()
+        val urgentIds = urgent.mapTo(hashSetOf()) { it.item.id }
+        val ordinary = candidates.filterNot { it.item.id in urgentIds }
+        return urgent + ordinary.filter { unnotedId(it.item.id) in hints } +
+                ordinary.filterNot { unnotedId(it.item.id) in hints }
     }
 
     /**
@@ -1155,6 +1328,15 @@ class TradeBotScript(bot: Bot,
             !forceBanking && !negotiating && marketplace.tradingSpot(this) == bot.position &&
             bot.scriptStack.current() === this && ActionSafety.NON_COMBAT.allows(bot) &&
             !bot.overlays.hasWindow() && bot.walking.isEmpty && !bot.navigator.isActive
+
+    /**
+     * Captures qualified unsuccessful exposure before normal expiry releases its trading position or stock.
+     */
+    private fun completedMarketExposure(): BotMarketExperience.Failure? {
+        val quote = marketExperienceQuote() ?: return null
+        return if (marketExperienceReady() && marketExperienceStillUseful(quote))
+            marketExperience.unsuccessful(quote.item.id, buying, quote.price) else null
+    }
 
     /**
      * Uses the first actually carried sale stack or the ordinary buyer's one advertised commodity.
@@ -1298,6 +1480,7 @@ class TradeBotScript(bot: Bot,
                 bot.scriptStack.current() === reactivePrevious && reactiveReady(bot, other)
         if (!bot.isRealBot() || other.isRealBot() || bot.state != EntityState.ACTIVE ||
             other.state != EntityState.ACTIVE || !prepared || forceBanking ||
+            BotSocialInteractions.engaged(bot) || BotConversations.engaged(bot) ||
             bot.scriptStack.current() !== this && !detachedReactive || !bot.isAlive || bot.isLocked ||
             !isActionSafe() ||
             bot.combat.target != null || bot.reflex.activeReflex != null ||
@@ -1434,6 +1617,10 @@ class TradeBotScript(bot: Bot,
      * Runs an advertised or ordinary trade through the same request, offer and confirmation lifecycle.
      */
     private suspend fun attemptTrade(other: Player, advertised: Opportunity?) {
+        withinVisitDeadline { negotiateTrade(other, advertised) }
+    }
+
+    private suspend fun negotiateTrade(other: Player, advertised: Opportunity?) {
         val direct = if (advertised == null && !other.isRealBot())
             PlayerTradeAdvertisementMarket.live.directPurchase(this, other) else null
         if (direct != null && !direct.market.claimDirectPurchase(direct)) return
@@ -1489,7 +1676,6 @@ class TradeBotScript(bot: Bot,
                 }
             }
             if (success) {
-                traded = true
                 prepared = false
                 partnerSearch = null
                 if (reactivePlayer == null && computeOfferAndExpected()) {
@@ -2383,7 +2569,8 @@ class TradeBotScript(bot: Bot,
         val otherRevision = original.otherOffer.revision
         val mine = own.toItems()
         val theirs = receiving.toItems()
-        fun unchanged() = original.revision == ownRevision && original.otherOffer.revision == otherRevision &&
+        fun unchanged() = !purchaseExpired() && (!ordinaryVisit || !visitBudget.expired(System.currentTimeMillis())) &&
+                original.revision == ownRevision && original.otherOffer.revision == otherRevision &&
                 bot.inventory.hasSpaceForAll(theirs) && offer.other.inventory.hasSpaceForAll(mine) &&
                 productionTradeAllowed(own, receiving) && validate()
         original.guardNativeTrade(validate = {
@@ -2407,7 +2594,11 @@ class TradeBotScript(bot: Bot,
      * Debits and learns from the real native transfer before window cleanup can cancel a waiting coroutine.
      */
     private fun settleNativeTrade(own: Map<Int, Int>, receiving: Map<Int, Int>) {
-        traded = true
+        if (ordinaryVisit) {
+            val useful = own.any { it.value > 0 } && receiving.any { it.value > 0 } &&
+                (if (buying) receiving else own).any { it.key != COINS && it.value > 0 }
+            visitBudget.settled(System.currentTimeMillis(), useful)
+        }
         val planned = quantities(receiving.toItems(), true).keys.firstOrNull { it in productionQuotedIds }
         if (planned != null) BotTradeIntentions.recordProductionPurchase(bot, planned, (own[COINS] ?: 0).toLong(),
             productionQuoteOwners[planned])
@@ -2455,7 +2646,9 @@ class TradeBotScript(bot: Bot,
      * Rejects unavailable and same-purpose partners before calculating any trade quantities or prices.
      */
     private fun eligibleTradePartner(other: Player): Boolean {
-        if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
+        if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username) ||
+            BotSocialInteractions.engaged(bot) || BotConversations.engaged(bot) ||
+            other.isRealBot() && (BotSocialInteractions.engaged(other) || BotConversations.engaged(other))) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
         if (!other.isRealBot()) return buying && humanPaymentStock().isNotEmpty() ||
@@ -2491,6 +2684,7 @@ class TradeBotScript(bot: Bot,
     fun resolveScrutiny(other: Player): BotTradeScrutiny = BotTradeScrutiny.resolveScrutinyFor(bot, other)
 
     override fun onPaused() {
+        completedExposure = null
         marketExperience.clear()
         partnerSearch = null
         cancelAdvertisementTrade()
@@ -2503,12 +2697,16 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun onBankRequested(initial: Boolean): Boolean {
-        marketExperience.clear()
         if (reactivePlayer != null) return false
+        if (ordinaryVisit && visitBudget.expired(System.currentTimeMillis())) {
+            endSession("Marketplace visit expired before another banking trip.")
+            return false
+        }
         if (purchaseExpired()) {
             endSession("Specific purchase deadline expired.")
             return false
         }
+        marketExperience.clear()
         partnerSearch = null
         if (!initial) {
             marketplace.releaseTradingSpot(this)
@@ -2533,6 +2731,7 @@ class TradeBotScript(bot: Bot,
 
     /** Finishes through the normal zoned-script lifecycle so shop fallback remains available. */
     private fun endSession(reason: String) {
+        completedExposure = completedExposure ?: completedMarketExposure()
         marketExperience.clear()
         partnerSearch = null
         prepared = false

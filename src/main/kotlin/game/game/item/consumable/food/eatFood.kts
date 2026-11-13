@@ -1,7 +1,6 @@
 package game.item.consumable.food
 
 import api.predef.*
-import game.player.Sound
 import game.player.item.consume.food.Food
 import game.player.item.consume.food.Food.Companion.lastEat
 import io.luna.game.action.impl.ConsumeAction
@@ -42,7 +41,7 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
                 val name = food.formattedName
                 plr.sendMessage(food.consumeMessage(name, eatItem.id))
                 plr.animation(eatAnimation)
-                plr.playSound(Sound.EAT)
+                plr.playSound(food.sound)
                 food.effect(plr)
                 plr.combat.addFoodDelay(
                     when (food) {

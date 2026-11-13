@@ -78,6 +78,32 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
 
     private var nativeValidation: (() -> Boolean)? = null
     private var nativeSettlement: (() -> Unit)? = null
+    private var declineObserver: ((Player) -> Unit)? = null
+
+    /**
+     * Observes an explicit client decline on either side of this exact trade, including confirmation.
+     * Server cleanup, interrupted scripts and expired waits do not produce a player-decline notification.
+     */
+    fun onDecline(observer: (Player) -> Unit) {
+        declineObserver = observer
+    }
+
+    /**
+     * Routes the native close-interface request once before the two windows close recursively.
+     * Stale screens and completed confirmations cannot notify an observer of a replacement trade.
+     */
+    fun notifyDeclinedBy(plr: Player) {
+        val confirmation = plr.overlays[ConfirmTradeInterface::class]
+        if (plr.overlays[OfferTradeInterface::class] !== this && confirmation?.offer !== this ||
+            confirmation?.completed == true) return
+        val opposite = other.overlays[OfferTradeInterface::class]
+            ?: other.overlays[ConfirmTradeInterface::class]?.takeUnless { it.completed }?.offer
+        if (opposite?.other !== plr) return
+        val observers = listOfNotNull(declineObserver, opposite.declineObserver)
+        declineObserver = null
+        opposite.declineObserver = null
+        observers.forEach { it(plr) }
+    }
 
     /**
      * Attaches an optional game-thread guard and settlement for the exact captured trade basket.
@@ -133,6 +159,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         if (!completed) {
             nativeValidation = null
             nativeSettlement = null
+            declineObserver = null
             plr.tradingWith = -1
 
             plr.inventory.clearSecondaryWidget()

@@ -4,6 +4,7 @@ import api.bot.action.trading.BotTradePurpose
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePrice
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotMarketCooldown
 import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript.ActionSafety
 import api.predef.*
@@ -42,8 +43,8 @@ object MerchantingCoordinator : BotCoordinator {
      */
     internal fun getSellingScript(bot: Bot): TradeBotScript? {
         if (bot.state != EntityState.ACTIVE || bot.inWilderness() || !ActionSafety.NON_COMBAT.allows(bot)) return null
-        val market = BotMarketplace.select(bot)
         val purpose = sellingPurpose(bot) ?: return null
+        val market = BotMarketplace.select(bot)
         return TradeBotScript(bot, purpose, market)
     }
 
@@ -52,6 +53,7 @@ object MerchantingCoordinator : BotCoordinator {
      * offers skip the visit; a follow-up never accidentally chooses a purchase through the general coordinator.
      */
     internal fun sellingPurpose(bot: Bot): BotTradePurpose? {
+        if (!BotMarketCooldown.ready(bot, BotTradePurpose.SELL)) return null
         val strategy = BotTradePrice.computePriceStrategy(bot)
         val purposes = if (bot.preferences.isMerchant) listOf(BotTradePurpose.MERCHANT_SELL)
             else listOf(BotTradePurpose.SELL)
@@ -62,28 +64,30 @@ object MerchantingCoordinator : BotCoordinator {
     }
 
     override fun accept(bot: Bot) {
+        val canMarketSell = BotMarketCooldown.ready(bot, BotTradePurpose.SELL)
+        val canMarketBuyNow = BotMarketCooldown.ready(bot, BotTradePurpose.BUY)
         if (bot.preferences.isMerchant) {
-            MerchantStoreBargains.poll(bot)?.let { deal ->
+            if (!canMarketSell && !canMarketBuyNow) return
+            (if (canMarketSell) MerchantStoreBargains.poll(bot) else null)?.let { deal ->
                 bot.scriptStack.push(BuyStoreBargainBotScript(bot, deal))
                 bot.scriptStack.pushTail(TradeBotScript(bot, BotTradePurpose.MERCHANT_SELL))
                 return
             }
-            val market = BotMarketplace.select(bot)
             val selling = sellingPurpose(bot)
-            val canBuy = bot.totalItemAmount(995).toDouble() *
+            val canBuy = canMarketBuyNow && bot.totalItemAmount(995).toDouble() *
                 BotTradeIntentions.budgetFraction(bot, BotTradePurpose.MERCHANT_BUY) >= BotTradeManager.MINIMUM_OFFER_VALUE
             val purpose = when {
                 chooseSelling(selling != null, canBuy) -> selling
                 canBuy -> BotTradePurpose.MERCHANT_BUY
                 else -> null
             }
-            if (purpose != null) bot.scriptStack.push(TradeBotScript(bot, purpose, market))
+            if (purpose != null) bot.scriptStack.push(TradeBotScript(bot, purpose, BotMarketplace.select(bot)))
             return
         }
         val selling = sellingPurpose(bot)
         val needs = BotTradeIntentions.purchases(bot)
         val strategy = BotTradePrice.computePriceStrategy(bot)
-        val payment = if (needs.isEmpty()) emptyList() else
+        val payment = if (!canMarketBuyNow || needs.isEmpty()) emptyList() else
             BotTradeManager.computeBudgetedOfferItems(bot, strategy, BotTradePurpose.BUY)
         val canMarketBuy = payment.sumOf { it.totalPrice().toLong() } >= BotTradeManager.MINIMUM_OFFER_VALUE &&
             BotTradeManager.computeExpected(bot, strategy, BotTradePurpose.BUY, payment).isNotEmpty()

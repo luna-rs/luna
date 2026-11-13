@@ -3,7 +3,6 @@ package io.luna.game.model.mob.bot.brain;
 import api.bot.script.BotScript;
 import api.bot.action.BotBankSpace;
 import engine.bot.coordinator.BankResourceCoordinator;
-import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
 import engine.bot.coordinator.RuneRunningCoordinator;
 import game.bot.scripts.CannonBotSupport;
@@ -14,7 +13,6 @@ import game.bot.scripts.skills.FarmingReturnBotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
-import java.util.HashMap;
 import java.util.function.Consumer;
 
 /**
@@ -56,7 +54,7 @@ public class BotBrain {
         if (CannonBotSupport.needsRecovery(bot)) {
             return owner -> owner.getScriptStack().push(new RecoverCannonBotScript(owner));
         }
-        if (bot.getPreferences().getScavenging().isIntroductory()) {
+        if (ScavengingCoordinator.INSTANCE.canDispatch(bot)) {
             return ScavengingCoordinator.INSTANCE;
         }
         if (bot.getPreferences().getRuneRunning().isIntroductory() && RuneRunningCoordinator.INSTANCE.canDispatch(bot)) {
@@ -77,19 +75,14 @@ public class BotBrain {
         if (farmingReturn != null) {
             return owner -> owner.getScriptStack().pushTail(farmingReturn);
         }
-        var map = new HashMap<>(bot.getPreferences().getActivities());
-        map.computeIfPresent(BotActivity.PKING, (key, value) -> PkingCoordinator.INSTANCE.activityWeight(bot));
-        if (bot.getTimePlayed().toDays() < 2) {
-            // New bots have an additional chance to do combat activities.
-            map.computeIfPresent(BotActivity.TRAINING_COMBAT, (key, value) -> value + 0.35);
-            map.computeIfPresent(BotActivity.PROFIT_COMBAT, (key, value) -> value + 0.25);
+        BotScript runeCrafter = RuneRunningCoordinator.INSTANCE.introductoryCrafterScript(bot);
+        if (runeCrafter != null) {
+            return owner -> owner.getScriptStack().push(runeCrafter);
         }
-        map.keySet().removeIf(activity -> !bot.getPreferences().canChooseActivity(activity));
+        var map = BotActivityWeights.weights(bot);
         BotActivity activity = RandomUtils.weightedRoll(map);
         if (activity == null) {
-            activity = RandomUtils.random(BotActivity.ALL.stream()
-                    .filter(bot.getPreferences()::canChooseActivity)
-                    .filter(it -> it != BotActivity.PKING || PkingCoordinator.INSTANCE.activityWeight(bot) > 0.0).toList());
+            return BotActivity.SOCIALIZING.getCoordinator();
         }
         return activity.getCoordinator();
     }

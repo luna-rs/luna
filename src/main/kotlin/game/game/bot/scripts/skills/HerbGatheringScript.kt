@@ -15,9 +15,10 @@ import kotlin.time.Duration
 
 /**
  * Collects herbs from configured Chaos druid and Monk of Zamorak camps using ordinary combat, drops and banking.
- * All herb drops, water vials and snape grass are retained, but only the requested unidentified
- * herb counts toward the identification batch. Existing combat eligibility and supply checks apply.
- * The caller queues identification separately so failed or interrupted gathering cannot loop forever.
+ * All herb drops, water vials and snape grass are retained. The requested herb determines the reserve
+ * ceiling; a smaller usable haul can finish the trip sooner. Existing combat eligibility and supply checks apply.
+ * A productive bank return continues into identification, even for a smaller haul or another usable herb.
+ * Identification cannot request another gathering trip, and retains only the remaining session budget.
  *
  * @author lare96
  */
@@ -83,9 +84,21 @@ class HerbGatheringScript(
     }
 
     override suspend fun onBankOpen(initial: Boolean) {
-        if (bot.totalItemAmount(herb.id) >= IdentifyHerbBotScript.herbTarget(bot)) {
-            stop()
-            return
+        val targetReached = bot.totalItemAmount(herb.id) >= IdentifyHerbBotScript.herbTarget(bot)
+        if (!initial || targetReached) {
+            val remaining = remainingDuration()
+            val identification = Herb.entries.sortedWith(
+                compareByDescending<Herb> { it == herb }.thenByDescending { it.exp }
+            ).asSequence().map {
+                IdentifyHerbBotScript(bot, it, remaining, allowGathering = false)
+            }.firstOrNull { it.isEligible() }
+            if (identification != null || targetReached) {
+                if (identification != null && remaining > Duration.ZERO) {
+                    bot.scriptStack.softPushHead(identification)
+                }
+                stop()
+                return
+            }
         }
         super.onBankOpen(initial)
     }

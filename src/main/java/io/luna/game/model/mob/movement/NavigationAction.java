@@ -195,9 +195,15 @@ final class NavigationAction extends Action<Mob> {
 
         // Re-path to target if needed.
         if (current == null) {
-            if ((target instanceof GameObject || (isTargetMob && request.getOffsetDir().isEmpty())) &&
-                    request.getPolicy().getType() == InteractionType.SIZE &&
-                    request.getPolicy().getDistance() == 1) {
+            boolean objectApproach = target instanceof GameObject &&
+                    request.getPolicy().getType() == InteractionType.SIZE && request.getPolicy().getDistance() == 1;
+            boolean mobApproach = isTargetMob && request.getOffsetDir().isEmpty() &&
+                    request.getPolicy().getDistance() > 0 &&
+                    (request.getPolicy().getType() == InteractionType.SIZE ||
+                            request.getPolicy().getType() == InteractionType.LINE_OF_SIGHT);
+            // Ranged and magic pursuit also need a reachable side when a wall blocks the direct attack.
+            // The reach check above still stops movement as soon as the selected attack is in range.
+            if (objectApproach || mobApproach) {
                 current = navigator.walkToInteraction((Entity) target, request.getOffsetDir(), request.getPathfinder(), request.isAsync());
             } else {
                 current = isTargetMob ?

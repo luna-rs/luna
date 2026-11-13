@@ -1,4 +1,4 @@
-# Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/cpqFaHMdv9) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
+# Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
 Luna is a high-performance RuneScape server for the #377 protocol. It combines classic 2006-style gameplay 
 with **autonomous player bots** that train, trade, fight, and progress alongside you.
 
@@ -18,7 +18,7 @@ gameplay for yourself!
 - **Dynamic behavior**: Bots make their own decisions based on their personalities, goals, resources, and experiences.
 - **Player-like activities**: Bots skill, PvM, PK, trade, socialize, loot, and scam each other!
 
-![Bots in action](./data/resources/2RZMhkE[1].gif)
+<img src="./data/resources/marketplace.gif" width="543" height="392" alt="Players gathering in the marketplace">
 
 # Create your own world
 

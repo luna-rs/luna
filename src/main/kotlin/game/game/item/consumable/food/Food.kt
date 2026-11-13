@@ -2,6 +2,7 @@ package game.player.item.consume.food
 
 import api.attr.Attr
 import api.predef.*
+import game.player.Sound
 import io.luna.game.model.mob.Player
 
 /**
@@ -15,7 +16,159 @@ enum class Food(val heal: Int,
                 val id2: Int? = null,
                 val id3: Int? = null,
                 val id4: Int? = null,
-                val leftover: Int? = null) {
+                val leftover: Int? = null,
+                val sound: Sound = Sound.EAT) {
+
+    BEER(heal = 1,
+         delay = 3,
+         id = 1917,
+         leftover = 1919,
+         sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.strength.boost(1 + plr.strength.staticLevel * 2 / 100)
+            plr.attack.adjustLevel(-(1 + plr.attack.level * 6 / 100))
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the $name.  You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    ASGARNIAN_ALE(heal = 2,
+                  delay = 3,
+                  id = 1905,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.attack.adjustLevel(-(2 + plr.attack.level * 5 / 100))
+            plr.strength.boost(2)
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the ale. You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    WIZARDS_MIND_BOMB(heal = 1,
+                      delay = 3,
+                      id = 1907,
+                      leftover = 1919,
+                      sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.magic.boost(2 + plr.magic.staticLevel * 2 / 100)
+            plr.attack.adjustLevel(-(1 + plr.attack.level * 5 / 100))
+            plr.strength.adjustLevel(-(1 + plr.strength.level * 5 / 100))
+            plr.defence.adjustLevel(-(1 + plr.defence.level * 5 / 100))
+            plr.sendMessage("You feel very strange.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Wizard's Mind Bomb."
+        override fun healMessage(name: String): String? = null
+    },
+    GREENMANS_ALE(heal = 1,
+                  delay = 3,
+                  id = 1909,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.herblore.boost(1)
+            plr.attack.adjustLevel(-3)
+            plr.strength.adjustLevel(-3)
+            plr.defence.adjustLevel(-3)
+            plr.sendMessage("It has a strange taste.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Greenman's Ale."
+        override fun healMessage(name: String): String? = null
+    },
+    DRAGON_BITTER(heal = 1,
+                  delay = 3,
+                  id = 1911,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.strength.boost(2)
+            plr.attack.adjustLevel(-(2 + plr.attack.level * 5 / 100))
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Dragon Bitter. You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    DWARVEN_STOUT(heal = 1,
+                  delay = 3,
+                  id = 1913,
+                  leftover = 1919,
+                  sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.mining.boost(1)
+            plr.smithing.boost(1)
+            plr.attack.adjustLevel(-(2 + plr.attack.level * 4 / 100))
+            plr.strength.adjustLevel(-(2 + plr.strength.level * 4 / 100))
+            plr.defence.adjustLevel(-(2 + plr.defence.level * 4 / 100))
+            plr.sendMessage("It tastes pretty strong too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Dwarven Stout. It tastes foul."
+        override fun healMessage(name: String): String? = null
+    },
+    GROG(heal = 3,
+         delay = 3,
+         id = 1915,
+         leftover = 1919,
+         sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.strength.boost(1 + plr.strength.staticLevel * 4 / 100)
+            plr.attack.adjustLevel(-(5 + plr.attack.level * 3 / 100))
+            plr.sendMessage("...and slightly dizzy too.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the Grog. You feel slightly reinvigorated..."
+        override fun healMessage(name: String): String? = null
+    },
+    MOONLIGHT_MEAD(heal = 4,
+                   delay = 3,
+                   id = 2955,
+                   leftover = 1919,
+                   sound = Sound.LIQUID) {
+        override fun effect(plr: Player) {
+            plr.sendMessage("It tastes like something just died in your mouth.")
+        }
+
+        override fun consumeMessage(name: String) = "You drink the foul smelling brew."
+        override fun healMessage(name: String): String? = null
+    },
+    KEBAB(heal = 0,
+          delay = 3,
+          id = 1971) {
+        override fun effect(plr: Player) = plr.onKebab()
+        override fun healMessage(name: String): String? = null
+    },
+    WINE(heal = 11,
+         delay = 3,
+         id = 1993,
+         leftover = 1935,
+         sound = Sound.LIQUID) {
+        override fun effect(plr: Player) = plr.onWine(2)
+        override fun consumeMessage(name: String) = "You drink the wine."
+        override fun healMessage(name: String) = "It makes you feel a bit dizzy, but it heals some health."
+    },
+    HALF_WINE(heal = 7,
+              delay = 3,
+              id = 1989,
+              leftover = 1935,
+              sound = Sound.LIQUID) {
+        override fun effect(plr: Player) = plr.onWine(2)
+        override fun consumeMessage(name: String) = "You drink the wine."
+        override fun healMessage(name: String) = "It makes you feel a bit dizzy, but it heals some health."
+    },
+    BAD_WINE(heal = 0,
+             delay = 3,
+             id = 1991,
+             leftover = 1935,
+             sound = Sound.LIQUID) {
+        override fun effect(plr: Player) = plr.onWine(3, false)
+        override fun consumeMessage(name: String) = "You drink the wine."
+        override fun healMessage(name: String): String? = null
+    },
 
     BANANA(heal = 2,
            delay = 3,
@@ -160,6 +313,67 @@ enum class Food(val heal: Int,
          * Throttles how often the player can eat.
          */
         val Player.lastEat by Attr.timeSource()
+
+        /**
+         * Applies wine's Attack drain and the message used when it cannot restore health.
+         */
+        private fun Player.onWine(drain: Int, heals: Boolean = true) {
+            attack.adjustLevel(-drain)
+            if (!heals || hitpoints.level >= hitpoints.staticLevel) {
+                sendMessage("It makes you feel a bit dizzy.")
+            }
+        }
+
+        /**
+         * Applies a kebab's weighted effects, including the Hitpoints penalties used before July 2007.
+         * Healing is handled here because each kebab rolls one outcome instead of restoring a fixed amount.
+         */
+        private fun Player.onKebab() {
+            val hp = hitpoints
+            val heal = when (rand(31)) {
+                0 -> {
+                    sendMessage("Wow, that was an amazing kebab! You feel really invigorated.")
+                    attack.boost(2)
+                    strength.boost(2)
+                    defence.boost(2)
+                    7 + hp.staticLevel * 24 / 100
+                }
+                in 1..8 -> {
+                    sendMessage("That was a good kebab. You feel a lot better.")
+                    6 + hp.staticLevel * 14 / 100
+                }
+                in 9..28 -> {
+                    if (hp.level < hp.staticLevel) {
+                        sendMessage("It heals some health.")
+                    }
+                    3 + hp.staticLevel * 7 / 100
+                }
+                29 -> {
+                    sendMessage("That tasted very dodgy. You feel very ill.")
+                    attack.adjustLevel(-3)
+                    strength.adjustLevel(-3)
+                    defence.adjustLevel(-3)
+                    if (hp.level > 2) {
+                        damage(minOf(4, hp.level - 2))
+                    }
+                    0
+                }
+                30 -> {
+                    if (hp.level > 4) {
+                        sendMessage("That tasted a bit dodgy. You feel a bit ill.")
+                        damage(3)
+                    } else {
+                        sendMessage("The kebab didn't seem to do a lot.")
+                    }
+                    0
+                }
+                else -> {
+                    sendMessage("The kebab didn't seem to do a lot.")
+                    0
+                }
+            }
+            hp.adjustLevel(heal)
+        }
     }
 
     /**

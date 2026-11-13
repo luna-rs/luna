@@ -101,7 +101,10 @@ class SlayerBotScript private constructor(
         }
         // softPushHead inserts immediately after us: queue continuation first, then combat before it.
         dispatched = true
-        bot.scriptStack.softPushHead(SlayerBotScript(bot, deadline, key(task), task.remaining))
+        bot.scriptStack.softPushHead(SlayerBotScript(bot, deadline, key(task), task.remaining).also {
+            it.trainingGoal = trainingGoal
+        })
+        combat.trainingGoal = trainingGoal
         bot.scriptStack.softPushHead(combat)
         return true
     }

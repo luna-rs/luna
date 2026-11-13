@@ -43,6 +43,13 @@ public final class BotScavengingPreference {
     }
 
     /**
+     * Returns the unused allowance for migration to the replacement introductory activity.
+     */
+    public long getRemainingMillis() {
+        return remainingMillis;
+    }
+
+    /**
      * Accounts for online playtime once per bot tick, independently of script pauses and banking.
      * A backwards checkpoint is rebased without adding or removing time.
      */
