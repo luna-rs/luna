@@ -13,7 +13,7 @@ import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Sells an ordinary bot's actual surplus to registered GP shops while the bot is at home.
+ * Sells a dumb bot's actual surplus to registered GP shops while the bot is at home.
  *
  * Active supplies, personal cosmetic copies and useful equipment share marketplace retention rules. Broad default
  * wanted targets do not prevent gathered loot from being sold. Merchants never use this script. A trip starts only
@@ -36,7 +36,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     private var startedTrip = false
 
     override suspend fun run(): Boolean {
-        if (bot.preferences.isMerchant) return true
+        if (bot.preferences.isMerchant || !bot.personality.isDumb) return true
         val surplus = saleCandidates()
         if (surplus.isEmpty()) return true
         startedTrip = true
@@ -105,7 +105,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * Shares actual marketplace surplus and prices while excluding stock without an accessible shop buyer.
      */
     internal fun saleCandidates(): List<Item> {
-        if (bot.preferences.isMerchant) return emptyList()
+        if (bot.preferences.isMerchant || !bot.personality.isDumb) return emptyList()
         return BotTradeManager.computeOfferItems(bot, BotTradePrice.EXACT, BotTradePurpose.SELL)
             .filter { shopsFor(sales.saleId(it.item.id)).isNotEmpty() }
             .sortedByDescending { it.totalPrice() }.map { it.item }

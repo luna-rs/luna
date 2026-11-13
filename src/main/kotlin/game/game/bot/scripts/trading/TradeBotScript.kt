@@ -800,7 +800,7 @@ class TradeBotScript(bot: Bot,
         if (ordinaryVisit) BotMarketCooldown.defer(bot, purpose)
         if (purchaseTarget == null && !bot.preferences.isMerchant) {
             if (buying) bot.scriptStack.push(BuyFromStoreBotScript(bot))
-            else bot.scriptStack.push(SellToStoreBotScript(bot))
+            else if (bot.personality.isDumb) bot.scriptStack.push(SellToStoreBotScript(bot))
         }
     }
 

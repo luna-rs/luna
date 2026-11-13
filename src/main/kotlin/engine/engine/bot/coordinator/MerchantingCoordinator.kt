@@ -19,7 +19,6 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
-import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.item.shop.Currency
 
 /**
@@ -105,10 +104,9 @@ object MerchantingCoordinator : BotCoordinator {
         if (chooseSelling(selling != null, needsItems)) {
             // Start trading script, or sell items to store.
             val purpose = BotTradePurpose.SELL
-            val isDumbOrGreedy = bot.personality.isDumb || (bot.personality.isIntelligent && bot.emotions.isFeeling(
-                EmotionType.GREEDY))
-            val store = if (isDumbOrGreedy) SellToStoreBotScript(bot) else null
-            if (store != null && randBoolean() && store.saleCandidates().isNotEmpty()) {
+            val store = if (bot.personality.isDumb) SellToStoreBotScript(bot) else null
+            val desperate = bot.totalItemAmount(995) < 1_000
+            if (store != null && (desperate || randBoolean()) && store.saleCandidates().isNotEmpty()) {
                 bot.scriptStack.push(store)
             } else {
                 val market = BotMarketplace.select(bot)
