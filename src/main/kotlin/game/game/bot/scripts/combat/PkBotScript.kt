@@ -18,7 +18,6 @@ import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.levelAt
-import game.obj.wildernessObelisk.Obelisk
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
@@ -60,7 +59,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Restores the outing's remaining duration, solo decision and current destination without rerolling identity.
      */
     constructor(bot: Bot, data: PkData) : this(bot, data.duration, data.soloClanOuting) {
-        patrolDestination = data.patrolDestination?.takeIf { it.z == 0 && levelAt(it) > 0 &&
+        patrolDestination = data.patrolDestination?.takeIf { it in patrolGroups(bot).flatten() &&
             allowsHuntingAt(it) && bot.recentEscape?.avoids(it) != true }
     }
 
@@ -103,51 +102,30 @@ class PkBotScript(bot: Bot, val duration: Duration,
     companion object {
 
         /**
-         * Shared patrol groups for hunting and supply-starved scavenging, retaining permanent PK purpose.
+         * Shared patrol groups for hunting and supply-starved scavenging.
          */
         internal fun patrolGroups(bot: Bot): List<List<Position>> {
-            val groups = when (bot.preferences.pk?.purpose()) {
-                Purpose.SKILL -> listOf(PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION })
-                Purpose.VALUE -> listOf(PkArea.EDGEVILLE_DUNGEON.anchors, PkArea.ABYSS_ENTRY_MAGE.anchors,
-                    PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
-                    PkArea.CHAOS_TEMPLE_LVL_40.anchors, Obelisk.ALL.map { it.anchor },
-                    listOfNotNull(SubZone.KBD_LAIR.entrance(bot)))
-                Purpose.CLAN -> listOf(PkArea.CHAOS_TEMPLE_LVL_40.anchors, PkArea.LAVA_MAZE.anchors,
-                    PkArea.DEMONIC_RUINS.anchors)
-                else -> PkArea.ALL.map { it.anchors }
-            }
-            val escape = bot.recentEscape
-            val valid = groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 && escape?.avoids(it) != true } }
-                .filter { it.isNotEmpty() }
-            val hotspots = hotspotGroups(bot)
-            if (hotspots.isEmpty()) return valid
-
-            val others = valid.filter { it !in hotspots }
-            if (others.isEmpty()) return hotspots
-            // Two thirds of choices visit level-appropriate hotspots, with equal weight for each hotspot group.
-            return others.flatMap { group -> List(hotspots.size) { group } } +
-                hotspots.flatMap { group -> List(others.size * 2) { group } }
+            return if (bot.preferences.pk?.purpose() == Purpose.SKILL) {
+                listOf(PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION &&
+                    levelAt(it) > 0 && bot.recentEscape?.avoids(it) != true }).filter { it.isNotEmpty() }
+            } else hotspotGroups(bot)
         }
 
         /**
-         * Abyss runecrafters attract solo PKers at every combat level. Other resource camps attract PKers below
-         * combat level 70. Stronger PKers favour dragons, greater demons,
-         * deep Wilderness and the agility course approach. Recreational SKILL sessions retain low Edgeville.
-         * Clan outings retain their existing minimum hunting depth of Wilderness level 30.
+         * PKers patrol Edgeville and the Graveyard green dragons at lower levels. Stronger PKers also visit the
+         * Wilderness agility course, KBD entrance, runite rocks and eastern greater demons. Clan outings retain
+         * their minimum hunting depth of Wilderness level 30.
          */
         internal fun hotspotGroups(bot: Bot): List<List<Position>> {
             if (bot.preferences.pk?.purpose() == Purpose.SKILL) return emptyList()
-            val groups = if (bot.combatLevel < 70) {
-                listOf(PkArea.ABYSS_ENTRY_MAGE.anchors, PkArea.EDGEVILLE_DUNGEON.anchors,
-                    listOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE.inside),
-                    listOf(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE.inside))
-            } else {
-                listOf(PkArea.ABYSS_ENTRY_MAGE.anchors, listOfNotNull(SubZone.KBD_LAIR.entrance(bot)),
-                    PkArea.GREEN_DRAGONS.anchors, PkArea.GREEN_DRAGONS_WEST.anchors,
-                    PkArea.GREEN_DRAGONS_NORTH.anchors, PkArea.GREEN_DRAGONS_EAST.anchors,
-                    PkArea.RED_DRAGONS.anchors, PkArea.DEMONIC_RUINS.anchors, PkArea.LAVA_MAZE.anchors,
-                    listOfNotNull(SubZone.WILDERNESS_AGILITY.entrance(bot)))
-            }
+            val groups = mutableListOf(
+                PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION },
+                PkArea.GREEN_DRAGONS.anchors)
+            if (bot.combatLevel >= 70) groups += listOf(
+                listOfNotNull(SubZone.WILDERNESS_AGILITY.entrance(bot)),
+                listOfNotNull(SubZone.KBD_LAIR.entrance(bot)),
+                listOf(SubZone.DEEP_WILDERNESS_RUNITE_ROCKS.inside),
+                PkArea.DEMONIC_RUINS.anchors)
             val minimumDepth = if (bot.preferences.pk?.purpose() == Purpose.CLAN) 30 else 1
             val escape = bot.recentEscape
             return groups.map { group -> group.filter { it.z == 0 && levelAt(it) >= minimumDepth && escape?.avoids(it) != true } }
@@ -421,28 +399,6 @@ class PkBotScript(bot: Bot, val duration: Duration,
                                       Position(3154, 3715, 0))),
 
         /**
-         * Deep-west Chaos Temple routes near the level-40 Wilderness area.
-         */
-        CHAOS_TEMPLE_LVL_40(regions = setOf(11835),
-                            anchors = listOf(Position(2955, 3785, 0),
-                                             Position(2976, 3788, 0),
-                                             Position(2988, 3796, 0),
-                                             Position(2996, 3814, 0),
-                                             Position(2999, 3821, 0),
-                                             Position(3000, 3832, 0),
-                                             Position(2984, 3832, 0),
-                                             Position(2966, 3834, 0),
-                                             Position(2951, 3832, 0),
-                                             Position(2960, 3825, 0),
-                                             Position(2979, 3821, 0),
-                                             Position(2983, 3815, 0),
-                                             Position(2962, 3807, 0),
-                                             Position(2961, 3798, 0),
-                                             Position(2951, 3802, 0),
-                                             Position(2959, 3819, 0),
-                                             Position(2952, 3820, 0))),
-
-        /**
          * Lava Maze and surrounding deep Wilderness routes.
          */
         LAVA_MAZE(regions = setOf(12092, 12348, 12091, 12347),
@@ -691,8 +647,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
     }
 
     /**
-     * SKILL stays in low Edgeville. Solo hunters visit the Abyss mage at every combat level, alongside resource
-     * camps below combat level 70 and dragon, demon and deep Wilderness hotspots from level 70 onward.
+     * SKILL stays in low Edgeville. Other hunters visit Edgeville and the Graveyard green dragons, with
+     * agility, KBD, runite and eastern greater demon destinations from combat level 70 onward.
      * Travel is delegated to the shared walker.
      */
     internal fun patrolAnchors(): List<Position> {
@@ -1104,7 +1060,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 isGroupOuting() -> selectPatrolDestination()
                 isSkillSession -> patrolAnchors().randomOrNull()
                 rand(2 of 3) -> hotspotGroups(bot).randomOrNull()?.randomOrNull() ?: patrolAnchors().randomOrNull()
-                else -> LOW_LEVEL_ANCHOR_POINTS.filter { bot.recentEscape?.avoids(it) != true }.randomOrNull()
+                else -> patrolAnchors().randomOrNull()
             } ?: run {
                 preparationState = PreparationState.LEAVING
                 return false
