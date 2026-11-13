@@ -10,9 +10,11 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.herblore.identifyHerb.Herb
+import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Identifies one configured herb type through its normal first inventory option.
@@ -23,7 +25,8 @@ import kotlin.time.Duration
  * repeating action; the existing gameplay handler performs conversion, level validation, and experience awards.
  *
  * Eligibility requires one owned herb and the permanent Herblore level for its recipe. The stable 100-200-herb
- * gathering goal does not prevent processing a smaller haul. Empty startup stock queues herb gathering,
+ * gathering goal does not prevent processing a smaller haul. Empty startup stock tries a prepared item-market seller
+ * before herb gathering,
  * which hands usable banked stock to identification without requesting another gathering trip. Current level
  * is checked again during execution, while combat, locks, and strong actions defer processing. Three consecutive interactions without input
  * consumption end the session; unresolved banking requests are bounded separately. A failed or timed-out
@@ -68,6 +71,7 @@ class IdentifyHerbBotScript(
             var started = false
             var produced = false
             var continued = false
+            var marketAttempted = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
@@ -76,6 +80,7 @@ class IdentifyHerbBotScript(
                 started = data.get("started")?.asBoolean ?: false
                 produced = data.get("produced")?.asBoolean ?: false
                 continued = data.get("continued")?.asBoolean ?: false
+                marketAttempted = data.get("market_attempted")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
@@ -85,6 +90,7 @@ class IdentifyHerbBotScript(
                 data.addProperty("started", started)
                 data.addProperty("produced", produced)
                 data.addProperty("continued", continued)
+                data.addProperty("market_attempted", marketAttempted)
             }
         }
     }
@@ -94,6 +100,7 @@ class IdentifyHerbBotScript(
     private var started = false
     private var produced = false
     private var continued = false
+    private var marketAttempted = false
     /** One unidentified herb, the minimum supply for a single conversion. */
     private val materials = listOf(herb.idItem)
 
@@ -110,6 +117,7 @@ class IdentifyHerbBotScript(
         started = data.started
         produced = data.produced
         continued = data.continued
+        marketAttempted = data.marketAttempted
     }
 
     /**
@@ -159,6 +167,17 @@ class IdentifyHerbBotScript(
             stop()
             return false
         }
+        if (allowGathering && productionPlan == null && !marketAttempted &&
+            !bot.ownsProductionSupplies(materials) && isActionSafe() && remainingDuration() > Duration.ZERO) {
+            marketAttempted = true
+            val deadline = System.currentTimeMillis() + minOf(45_000L, remainingDuration().inWholeMilliseconds)
+            val trade = TradeBotScript.buySpecific(bot, herb.id, herbTarget(bot), deadline)
+            if (trade != null) {
+                trade.duration = minOf(remainingDuration(), 45.seconds)
+                bot.scriptStack.pushHead(trade)
+                return false
+            }
+        }
         return true
     }
 
@@ -189,6 +208,7 @@ class IdentifyHerbBotScript(
         it.started = started
         it.produced = produced
         it.continued = continued
+        it.marketAttempted = marketAttempted
         saveInventoryState(it)
     }
 }

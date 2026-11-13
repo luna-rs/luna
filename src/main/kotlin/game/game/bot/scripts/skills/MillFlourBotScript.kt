@@ -16,6 +16,7 @@ import engine.bot.coordinator.skill.BotProductionPlanner
 import api.bot.action.BotCombatActionHandler
 import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
+import game.bot.scripts.trading.TradeBotScript
 import game.content.flourMill.FlourMill
 import game.content.flourMill.FlourMill.flourInBin
 import game.content.flourMill.FlourMill.hopperFull
@@ -44,8 +45,8 @@ import kotlin.time.TimeSource
  * Each trip withdraws grain and empty pots, climbs to the hopper, grinds one grain at a time, then climbs down and
  * fills the pots from the flour bin before banking the flour. Flour already in the bot's bin is collected first.
  *
- * Missing grain queues one wheat-picking session in the mill's assigned field, with the mill session queued again once
- * behind it. Missing pots are bought at home from the general stores that stock them. Once a session has milled,
+ * Missing grain tries a prepared item-market seller before wheat picking in the mill's assigned field, with the mill session queued again once
+ * behind it. Missing pots try the market before the general stores at home. Once a session has milled,
  * running out of grain ends it, and so does a shopping trip that finds no pots. Finished
  * flour stays banked for the market, or a dough session follows for bots that like to see a job through.
  *
@@ -63,7 +64,9 @@ class MillFlourBotScript(
     private val supplied: Boolean = false,
     private val ownedInputsOnly: Boolean = false,
     private val flourTarget: Int = 0,
-    private val goalDeadline: Long = 0L
+    private val goalDeadline: Long = 0L,
+    private val marketAttempted: Boolean = false,
+    private val potMarketAttempted: Boolean = false
 ) : BotScript(bot) {
 
     companion object {
@@ -163,6 +166,8 @@ class MillFlourBotScript(
             var ownedInputsOnly = false
             var flourTarget = 0
             var goalDeadline = 0L
+            var marketAttempted = false
+            var potMarketAttempted = false
 
             override fun load(data: JsonObject) {
                 mill = BotMill.valueOf(data.get("mill").asString)
@@ -172,6 +177,8 @@ class MillFlourBotScript(
                 ownedInputsOnly = data.get("owned_inputs_only")?.asBoolean ?: false
                 flourTarget = data.get("flour_target")?.asInt ?: 0
                 goalDeadline = data.get("goal_deadline")?.asLong ?: 0L
+                marketAttempted = data.get("market_attempted")?.asBoolean ?: false
+                potMarketAttempted = data.get("pot_market_attempted")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
@@ -182,6 +189,8 @@ class MillFlourBotScript(
                 data.addProperty("owned_inputs_only", ownedInputsOnly)
                 data.addProperty("flour_target", flourTarget)
                 data.addProperty("goal_deadline", goalDeadline)
+                data.addProperty("market_attempted", marketAttempted)
+                data.addProperty("pot_market_attempted", potMarketAttempted)
             }
         }
 
@@ -243,7 +252,8 @@ class MillFlourBotScript(
      * Restores the mill, remaining session time and retry budget.
      */
     constructor(bot: Bot, data: MillData) : this(bot, data.mill, data.duration, data.supplied,
-        data.ownedInputsOnly, data.flourTarget, data.goalDeadline) {
+        data.ownedInputsOnly, data.flourTarget, data.goalDeadline, data.marketAttempted,
+        data.potMarketAttempted) {
         failures = data.failures
     }
 
@@ -280,6 +290,18 @@ class MillFlourBotScript(
         if (owned(FlourMill.POT) == 0L) {
             if (ownedInputsOnly) return true
             if (owned(COINS) == 0L) return true
+            val remaining = (duration - started.elapsedNow()).coerceAtLeast(Duration.ZERO)
+            if (!potMarketAttempted && remaining > Duration.ZERO) {
+                val trade = TradeBotScript.buySpecific(bot, FlourMill.POT, POT_PURCHASE,
+                    System.currentTimeMillis() + minOf(45.seconds, remaining).inWholeMilliseconds)
+                if (trade != null) {
+                    trade.duration = minOf(45.seconds, remaining)
+                    bot.scriptStack.push(trade)
+                    bot.scriptStack.push(MillFlourBotScript(bot, mill, remaining, supplied,
+                        ownedInputsOnly, flourTarget, goalDeadline, marketAttempted, potMarketAttempted = true))
+                    return true
+                }
+            }
             val bought = withTimeoutOrNull(300_000) { buyPots() } == true
             if (!bought) return true
         }
@@ -301,8 +323,18 @@ class MillFlourBotScript(
      */
     private fun queueWheat(): Boolean {
         if (supplied) return true
-        bot.scriptStack.push(HarvestBotScript(bot, Harvestable.WHEAT, PICKING_TIME, mutableListOf(mill.wheat)))
         val remaining = (duration - started.elapsedNow()).coerceAtLeast(Duration.ZERO)
+        if (!marketAttempted && remaining > Duration.ZERO) {
+            val trade = TradeBotScript.buySpecific(bot, FlourMill.GRAIN, TRIP_SIZE,
+                System.currentTimeMillis() + minOf(45.seconds, remaining).inWholeMilliseconds)
+            if (trade != null) {
+                trade.duration = minOf(45.seconds, remaining)
+                bot.scriptStack.push(trade)
+                bot.scriptStack.push(MillFlourBotScript(bot, mill, remaining, marketAttempted = true))
+                return true
+            }
+        }
+        bot.scriptStack.push(HarvestBotScript(bot, Harvestable.WHEAT, PICKING_TIME, mutableListOf(mill.wheat)))
         bot.scriptStack.push(MillFlourBotScript(bot, mill, remaining, supplied = true))
         return true
     }
@@ -484,5 +516,7 @@ class MillFlourBotScript(
         it.ownedInputsOnly = ownedInputsOnly
         it.flourTarget = flourTarget
         it.goalDeadline = goalDeadline
+        it.marketAttempted = marketAttempted
+        it.potMarketAttempted = potMarketAttempted
     }
 }

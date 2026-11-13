@@ -927,7 +927,6 @@ class TradeBotScript(bot: Bot,
             }
         }
         if (prepared && !forceBanking) {
-            if (tryStoreBargain()) return true
             sendMessage()
         }
         return true
@@ -968,23 +967,6 @@ class TradeBotScript(bot: Bot,
         prepared = false
         prepared = reactivePlayer == null && computeOfferAndExpected() && refreshCarriedStock()
         forceBanking = !prepared || bot.inventory.computeRemainingSize() <= 1
-    }
-
-    /**
-     * Lets an idle merchant take one bounded store opportunity without abandoning the current market session.
-     * Player requests and negotiations are serviced first; the shared planner throttles unsuccessful checks.
-     */
-    private fun tryStoreBargain(): Boolean {
-        if (!bot.preferences.isMerchant || purchaseTarget != null || negotiating || pendingPartner != null ||
-            activeTrade != null || advertisementTrade != null || bot.tradingWith != -1 || bot.overlays.hasWindow() ||
-            !bot.walking.isEmpty || bot.navigator.isActive) return false
-        val deal = MerchantStoreBargains.poll(bot) ?: return false
-        if (bot.tradeRequests.hasRequest { canAcceptRequest(it) } ||
-            bot.scriptStack.scripts.any { it is BuyStoreBargainBotScript && !it.isFinished() && !it.isTerminated() }) {
-            return false
-        }
-        bot.scriptStack.pushHead(BuyStoreBargainBotScript(bot, deal))
-        return true
     }
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =

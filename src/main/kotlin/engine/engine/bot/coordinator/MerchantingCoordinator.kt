@@ -17,7 +17,6 @@ import game.bot.scripts.trading.TradeBotScript
 import engine.controllers.Controllers.inWilderness
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.game.model.item.shop.Currency
 
@@ -67,11 +66,6 @@ object MerchantingCoordinator : BotCoordinator {
         val canMarketBuyNow = BotMarketCooldown.ready(bot, BotTradePurpose.BUY)
         if (bot.preferences.isMerchant) {
             if (!canMarketSell && !canMarketBuyNow) return
-            (if (canMarketSell) MerchantStoreBargains.poll(bot) else null)?.let { deal ->
-                bot.scriptStack.push(BuyStoreBargainBotScript(bot, deal))
-                bot.scriptStack.pushTail(TradeBotScript(bot, BotTradePurpose.MERCHANT_SELL))
-                return
-            }
             val selling = sellingPurpose(bot)
             val canBuy = canMarketBuyNow && bot.totalItemAmount(995).toDouble() *
                 BotTradeIntentions.budgetFraction(bot, BotTradePurpose.MERCHANT_BUY) >= BotTradeManager.MINIMUM_OFFER_VALUE
@@ -80,7 +74,10 @@ object MerchantingCoordinator : BotCoordinator {
                 canBuy -> BotTradePurpose.MERCHANT_BUY
                 else -> null
             }
-            if (purpose != null) bot.scriptStack.push(TradeBotScript(bot, purpose, BotMarketplace.select(bot)))
+            if (purpose != null) {
+                bot.scriptStack.push(TradeBotScript(bot, purpose, BotMarketplace.select(bot)))
+                MerchantStoreBargains.poll(bot)?.let { bot.scriptStack.pushTail(BuyStoreBargainBotScript(bot, it)) }
+            }
             return
         }
         val selling = sellingPurpose(bot)
@@ -113,15 +110,13 @@ object MerchantingCoordinator : BotCoordinator {
                 bot.scriptStack.push(TradeBotScript(bot, purpose, market))
             }
         } else if (needsItems) {
-            // Start trading script, or buy items from store.
+            // Visit the market before using a shop for wanted items.
             val purpose = BotTradePurpose.BUY
-            val isShopper = bot.personality.isIntelligent && !bot.preferences.hatesActivity(BotActivity.MERCHANTING) ||
-                    bot.preferences.isMerchant
-            if (canShopBuy && (!canMarketBuy || rand(3) == 0 || isShopper && randBoolean())) {
-                bot.scriptStack.push(BuyFromStoreBotScript(bot, shopBudget))
-            } else {
+            if (canMarketBuy) {
                 val market = BotMarketplace.select(bot)
                 bot.scriptStack.push(TradeBotScript(bot, purpose, market))
+            } else if (canShopBuy) {
+                bot.scriptStack.push(BuyFromStoreBotScript(bot, shopBudget))
             }
         }
     }

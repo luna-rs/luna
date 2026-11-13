@@ -91,6 +91,7 @@ abstract class SkillingBotScript<E : Entity>(
 
         recoverMissingTool()
         tool = resolveTool()
+        if (isPaused()) return false
         reviewToolUpgrade()
         if (skill.level < requiredLevel) return false
         val toolId = tool?.id
@@ -319,6 +320,7 @@ abstract class SkillingBotScript<E : Entity>(
                 return candidate
             }
         }
+        if (isPaused()) return null
         val emergency = emergencyTool() ?: return null
         if (skill.level < emergency.skillLevel) return null
         if (!ownsTool(emergency.id) && !bot.bank.add(Item(emergency.id))) {
