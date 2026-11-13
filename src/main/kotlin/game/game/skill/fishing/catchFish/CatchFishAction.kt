@@ -96,6 +96,7 @@ class CatchFishAction(plr: Player,
         }
 
         // Cast, then roll for a catch every few ticks.
+        mob.face(target.position)
         when (ticks - castTick) {
             1 -> {
                 mob.animation(Animation(tool.castAnimation))

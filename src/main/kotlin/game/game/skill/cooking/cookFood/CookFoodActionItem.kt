@@ -49,6 +49,7 @@ class CookFoodActionItem(plr: Player,
         }
 
     override fun execute() {
+        mob.face(cookObj.position)
         mob.animation(if (usingFire) Animations.FIRE_COOKING else Animations.RANGE_COOKING)
 
         if (experience != null) {
