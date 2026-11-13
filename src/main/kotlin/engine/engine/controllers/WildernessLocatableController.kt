@@ -59,7 +59,6 @@ object WildernessLocatableController : PlayerAreaListener() {
         plr.overlays.closeWalkable()
         plr.wildernessLevel = 0
         plr.status.remove(StatusEffectType.TELEBLOCK)
-        plr.clearText(199)
         plr.controllers.unregister()
     }
 
