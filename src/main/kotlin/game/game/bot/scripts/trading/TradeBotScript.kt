@@ -372,6 +372,9 @@ class TradeBotScript(bot: Bot,
      */
     private var capacityBlocked = false
 
+    /** Whether this visit attempted a market when no advertising spot was available anywhere. */
+    private var marketOverflow = false
+
     /**
      * Customers of existing advertisers need no trading lease and never advertise their own stock.
      */
@@ -397,6 +400,7 @@ class TradeBotScript(bot: Bot,
             purpose == BotTradePurpose.SELL && saleTarget == null && bot.preferences.isMerchant
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        marketOverflow = false
         if (duration <= Duration.ZERO) return false
         val customer = reactivePlayer
         if (customer != null) {
@@ -458,6 +462,7 @@ class TradeBotScript(bot: Bot,
                 return false
             }
             browsing = true
+            marketOverflow = true
             capacityBlocked = false
         }
         for ((name, feeling) in bot.preferences.playerFeelings) {
@@ -802,13 +807,27 @@ class TradeBotScript(bot: Bot,
         completedExposure = null
         if (capacityBlocked) {
             if (ordinaryVisit) BotMarketCooldown.defer(bot, purpose)
+            storeOverflow()?.let { bot.scriptStack.push(it) }
             return
         }
         if (ordinaryVisit) BotMarketCooldown.defer(bot, purpose)
-        if (purchaseTarget == null && saleTarget == null && !bot.preferences.isMerchant) {
+        if (saleTarget != null) {
+            storeOverflow()?.let { bot.scriptStack.push(it) }
+            return
+        }
+        if (purchaseTarget == null && !bot.preferences.isMerchant) {
             if (buying) bot.scriptStack.push(BuyFromStoreBotScript(bot))
             else if (bot.personality.isDumb) bot.scriptStack.push(SellToStoreBotScript(bot))
+            else storeOverflow()?.let { bot.scriptStack.push(it) }
         }
+    }
+
+    /**
+     * Offers shop selling only after an overflow visit has tried matching existing marketplace advertisers.
+     */
+    private fun storeOverflow(): SellToStoreBotScript? {
+        if (!marketOverflow || buying || bot.preferences.isMerchant) return null
+        return SellToStoreBotScript(bot, saleTarget).takeIf { it.saleCandidates().isNotEmpty() }
     }
 
     override suspend fun executeInZone(): Boolean = executeTradeInZone()

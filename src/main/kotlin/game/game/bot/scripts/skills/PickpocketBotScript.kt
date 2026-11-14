@@ -13,6 +13,7 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotGearSet
+import engine.bot.coordinator.MerchantingCoordinator
 import engine.controllers.Controllers.inWilderness
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import io.luna.game.model.Position
@@ -38,6 +39,7 @@ import kotlin.time.Duration.Companion.seconds
  * @property npcs The thieving NPC types this script is allowed to pickpocket.
  * @property duration The maximum amount of time the bot should spend running this script.
  * @property zones The subzones where the bot may train.
+ * @property sellOnCompletion Offer saleable surplus when this is a profit outing.
  *
  * @author lare96
  */
@@ -45,7 +47,8 @@ class PickpocketBotScript(
     bot: Bot,
     val npcs: Set<ThievingNpcType>,
     duration: Duration,
-    zones: MutableList<SubZone>
+    zones: MutableList<SubZone>,
+    val sellOnCompletion: Boolean = false
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.thieving) {
 
     // Move on if no eligible NPC can be selected, rather than waiting until the entire script expires.
@@ -68,14 +71,21 @@ class PickpocketBotScript(
              */
             var npcs = emptySet<ThievingNpcType>()
 
+            /**
+             * Whether a completed profit outing should offer its surplus for sale.
+             */
+            var sellOnCompletion = false
+
             override fun load(data: JsonObject) {
                 super.load(data)
                 npcs = loadEnumSet("npcs", data) { ThievingNpcType.valueOf(it) }
+                sellOnCompletion = data.get("sell_on_completion")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 saveEnumSet("npcs", data, npcs)
+                data.addProperty("sell_on_completion", sellOnCompletion)
             }
         }
     }
@@ -86,7 +96,8 @@ class PickpocketBotScript(
      * @param bot The bot running this script.
      * @param data The saved pickpocket script settings.
      */
-    constructor(bot: Bot, data: PickpocketData) : this(bot, data.npcs, data.duration, data.zones)
+    constructor(bot: Bot, data: PickpocketData) : this(bot, data.npcs, data.duration, data.zones,
+        data.sellOnCompletion)
 
     /**
      * The normalized set of NPC names accepted as valid pickpocket targets.
@@ -143,9 +154,16 @@ class PickpocketBotScript(
         return false
     }
 
+    override suspend fun completed() {
+        if (sellOnCompletion) {
+            MerchantingCoordinator.getSellingScript(bot)?.let { bot.scriptStack.softPushHead(it) }
+        }
+    }
+
     override fun snapshot(): BotScriptData {
         val data = PickpocketData()
         data.npcs = npcs
+        data.sellOnCompletion = sellOnCompletion
         data.duration = duration
         data.zones = originalZones.toMutableList()
         return data

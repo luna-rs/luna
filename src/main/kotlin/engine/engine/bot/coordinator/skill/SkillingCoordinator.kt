@@ -3,9 +3,12 @@ package engine.bot.coordinator.skill
 import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
 import api.bot.zone.SubZone
-import api.predef.SKILL_PRAYER
 import api.predef.SKILL_MAGIC
+import api.predef.SKILL_PRAYER
+import api.predef.SKILL_THIEVING
+import game.player.item.consume.food.Food
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivityWeights
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.util.RandomUtils
 
@@ -81,6 +84,23 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         private const val MAGIC_TRAINING_WEIGHT_MULTIPLIER = 2.0
 
         /**
+         * Gives Thieving a substantial share of profit skilling even after the first coin reserve is built.
+         */
+        private const val THIEVING_PROFIT_WEIGHT_MULTIPLIER = 3.0
+
+        /**
+         * Further favors Thieving's direct coin methods when a cash-poor bot can supply food for the outing.
+         */
+        private const val STARTER_THIEVING_WEIGHT_MULTIPLIER = 6.0
+
+        /**
+         * Thieving scripts withdraw any recognized food from the bank after depositing carried items.
+         */
+        internal fun hasThievingFood(bot: Bot): Boolean =
+            bot.bank.any { it != null && it.id in Food.ID_TO_FOOD } ||
+                bot.inventory.any { it != null && it.id in Food.ID_TO_FOOD }
+
+        /**
          * Attribute representing if this coordinator was last in profit or training mode.
          */
         var Bot.profitMode by Attr.boolean { false }
@@ -136,7 +156,14 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
             weights.computeIfPresent(skill) { _, old -> old + PREFERENCE_WEIGHT }
         }
 
-        if (training) weights.computeIfPresent(SKILL_MAGIC) { _, old -> old * MAGIC_TRAINING_WEIGHT_MULTIPLIER }
+        if (training) {
+            weights.computeIfPresent(SKILL_MAGIC) { _, old -> old * MAGIC_TRAINING_WEIGHT_MULTIPLIER }
+        } else {
+            val thievingMultiplier = THIEVING_PROFIT_WEIGHT_MULTIPLIER *
+                (if (BotActivityWeights.needsStarterCoins(bot) && hasThievingFood(bot))
+                    STARTER_THIEVING_WEIGHT_MULTIPLIER else 1.0)
+            weights.computeIfPresent(SKILL_THIEVING) { _, old -> old * thievingMultiplier }
+        }
 
         return weights
     }

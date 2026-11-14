@@ -4,80 +4,63 @@ import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.PickpocketBotScript
-import game.bot.scripts.skills.SearchBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.RoguesDenBotScript
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import game.skill.thieving.pickpocketNpc.ThievingNpcType.*
-import game.skill.thieving.searchForTraps.ThievingChest
 import game.skill.thieving.stealFromStall.ThievingStallType
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivityWeights
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Describes pickpocket, stall, and chest methods with matching locations. Personality retains the
- * original method odds and early target progression; unavailable methods fall back to basic pickpocketing.
+ * Describes pickpocket and stall methods with matching locations. Personality retains the
+ * training method odds and early target progression; unavailable methods fall back to basic pickpocketing.
  * Watchmen at 65, Gnomes at 75 and Heroes at 80 extend both training and profit pickpocket selection through
  * the same level/personality policy. Existing pickpocket scripts own food, stun handling, loot and banking;
- * higher-level profit targets describe gathering choices rather than guaranteeing a market return.
+ * profit outings pickpocket or steal gems and offer saleable loot at the market on completion.
  * Confident bots can pickpocket the two outdoor Wilderness rogues, subject to their normal death-loss budget.
  * Native crafting, magic and scimitar stalls join the same level/personality selection as other stalls.
- * Eligible bots also attempt Rogues' Den with its independent Agility and Thieving point budgets.
+ * Eligible training bots also attempt Rogues' Den with its independent Agility and Thieving point budgets.
  *
  * @author lare96
  */
 object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        createScript(bot, level, zones, true)
+        createTrainingScript(bot, level, zones)
 
-    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        createScript(bot, level, zones, false)
+    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        val needsCoins = BotActivityWeights.needsStarterCoins(bot)
+        if (needsCoins || level < ThievingStallType.GEM.level || rand(bot.personality.intelligence)) {
+            return createPickpocketScript(bot, level, zones, training = false, coinsOnly = needsCoins)
+        }
+        zones.clear()
+        zones += SubZone.ARDOUGNE_SQUARE_THIEVING
+        return StealBotScript(bot, setOf(ThievingStallType.GEM), getDuration(bot), zones,
+            sellOnCompletion = true)
+    }
 
     /**
-     * Retains the existing rolls between pickpocketing, stalls, and chests.
+     * Retains the existing training rolls between pickpocketing, stalls, and Rogues' Den.
      */
-    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
+    private fun createTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         if (RoguesDenBotScript.eligible(bot) && rand(0.15)) {
             zones.clear()
             zones += SubZone.ROGUES_DEN_MAZE
             return RoguesDenBotScript(bot, getDuration(bot).coerceAtLeast(20.minutes))
         }
-        val shouldPickpocket = if (training) {
-            bot.personality.isDextrous || rand(bot.personality.dexterity) ||
-                rand(bot.personality.intelligence) || level < ThievingStallType.VEGETABLE.level
-        } else {
-            rand(bot.personality.intelligence) || level < ThievingStallType.SEED.level
-        }
+        val shouldPickpocket = bot.personality.isDextrous || rand(bot.personality.dexterity) ||
+            rand(bot.personality.intelligence) || level < ThievingStallType.VEGETABLE.level
         if (shouldPickpocket) {
-            return createPickpocketScript(bot, level, zones, training)
-        }
-        if (!training && level >= ThievingChest.TEN_COIN.level && !randBoolean()) {
-            val activity = getBestSkillingActivity(bot, level, { it.level }, listOf(
-                BotSkillingActivity(setOf(ThievingChest.TEN_COIN), setOf(SubZone.ARDOUGNE_EAST_CHEST)),
-                BotSkillingActivity(setOf(ThievingChest.NATURE_RUNE, ThievingChest.FIFTY_COIN),
-                    setOf(SubZone.ARDOUGNE_EAST_CHEST_ROOM)),
-                BotSkillingActivity(setOf(ThievingChest.STEEL_ARROWTIPS), setOf(SubZone.HEMENSTER_CHEST_ROOM)),
-                BotSkillingActivity(setOf(ThievingChest.BLOOD_RUNES), setOf(SubZone.CHAOS_DRUID_TOWER_DUNGEON)),
-                BotSkillingActivity(setOf(ThievingChest.ARDOUGNE_CASTLE),
-                    setOf(SubZone.ARDOUGNE_CASTLE_SOUTH_CHEST, SubZone.ARDOUGNE_CASTLE_NORTH_CHEST))
-            ))!!
-            zones.clear()
-            zones.addAll(activity.zones)
-            return SearchBotScript(bot, activity.tokens, getDuration(bot), zones)
+            return createPickpocketScript(bot, level, zones, training = true)
         }
         val stalls = ArrayList<BotSkillingActivity<ThievingStallType>>()
-        if (training) {
-            stalls.add(stall(setOf(ThievingStallType.WINE, ThievingStallType.SEED), SubZone.DRAYNOR_MAIN))
-            val ardougneStalls = setOf(
-                ThievingStallType.BAKERY, ThievingStallType.SILK, ThievingStallType.FUR,
-                ThievingStallType.SILVER, ThievingStallType.SPICE, ThievingStallType.GEM
-            )
-            stalls.add(stall(ardougneStalls, SubZone.ARDOUGNE_SQUARE_THIEVING))
-        } else if (!bot.personality.isDumb && level >= ThievingStallType.GEM.level) {
-            stalls.add(stall(setOf(ThievingStallType.GEM), SubZone.ARDOUGNE_SQUARE_THIEVING))
-        } else {
-            stalls.add(stall(setOf(ThievingStallType.SEED), SubZone.DRAYNOR_MAIN))
-        }
+        stalls.add(stall(setOf(ThievingStallType.WINE, ThievingStallType.SEED), SubZone.DRAYNOR_MAIN))
+        val ardougneStalls = setOf(
+            ThievingStallType.BAKERY, ThievingStallType.SILK, ThievingStallType.FUR,
+            ThievingStallType.SILVER, ThievingStallType.SPICE, ThievingStallType.GEM
+        )
+        stalls.add(stall(ardougneStalls, SubZone.ARDOUGNE_SQUARE_THIEVING))
         stalls.add(stall(setOf(ThievingStallType.TEA), SubZone.VARROCK_TEA_STALL))
         stalls.add(stall(setOf(ThievingStallType.VEGETABLE),
             SubZone.MISCELLANIA_MARKET_STALLS, SubZone.ETCETERIA_MARKET_STALLS))
@@ -90,7 +73,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         stalls.add(stall(setOf(ThievingStallType.MAGIC, ThievingStallType.SCIMITAR), SubZone.APE_ATOLL_MARKET_STALLS))
         val activity = getBestSkillingActivity(bot, level, { it.level }, stalls)
         if (activity == null) {
-            return createPickpocketScript(bot, level, zones, training)
+            return createPickpocketScript(bot, level, zones, training = true)
         }
         zones.clear()
         zones.addAll((activity.zones + stalls.filter { option ->
@@ -106,9 +89,10 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         bot: Bot,
         level: Int,
         zones: MutableList<SubZone>,
-        training: Boolean
+        training: Boolean,
+        coinsOnly: Boolean = false
     ): PickpocketBotScript {
-        val options = pickpockets(bot, level, training) + listOfNotNull(
+        val options = if (coinsOnly) coinPickpockets(level) else pickpockets(bot, level, training) + listOfNotNull(
             npc(setOf(ROGUE), SubZone.WILDERNESS_ROGUE_CAMP).takeIf { bot.personality.confidence >= 0.5 },
             npc(setOf(WATCHMAN), SubZone.YANILLE_WATCHMEN),
             npc(setOf(GNOME), SubZone.GNOME_STRONGHOLD_THIEVING),
@@ -128,7 +112,29 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         val expanded = zones.distinct()
         zones.clear()
         zones.addAll(expanded)
-        return PickpocketBotScript(bot, activity.tokens, getDuration(bot), zones)
+        return PickpocketBotScript(bot, activity.tokens, getDuration(bot), zones,
+            sellOnCompletion = !training)
+    }
+
+    /**
+     * Uses level-appropriate coin-bearing NPCs when the bot needs immediately spendable gold.
+     */
+    private fun coinPickpockets(level: Int): List<BotSkillingActivity<ThievingNpcType>> {
+        val target = when {
+            level >= PALADIN.level -> PALADIN
+            level >= KNIGHT_OF_ARDOUGNE.level -> KNIGHT_OF_ARDOUGNE
+            level >= GUARD.level -> GUARD
+            level >= WARRIOR.level -> WARRIOR
+            level >= FARMER.level -> FARMER
+            else -> MAN_AND_WOMAN
+        }
+        val zone = when (target) {
+            PALADIN, KNIGHT_OF_ARDOUGNE, GUARD -> SubZone.ARDOUGNE_SQUARE_THIEVING
+            WARRIOR -> SubZone.ARDOUGNE_WARRIOR_THIEVING
+            FARMER -> SubZone.NORTH_LUMBRIDGE_FARMING
+            else -> SubZone.LUMBRIDGE_COURT_YARD
+        }
+        return listOf(npc(setOf(target), zone))
     }
 
     /**

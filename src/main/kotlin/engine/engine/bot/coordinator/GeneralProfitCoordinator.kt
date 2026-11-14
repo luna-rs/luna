@@ -1,5 +1,6 @@
 package engine.bot.coordinator
 
+import api.bot.action.trading.BotMarketplace
 import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript
 import api.bot.script.BotScript.ActionSafety
@@ -24,6 +25,7 @@ import game.bot.scripts.trading.BuyStoreBargainBotScript
 import game.bot.scripts.trading.SellToStoreBotScript
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivityWeights
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import kotlin.time.Duration.Companion.minutes
 
@@ -73,10 +75,13 @@ object GeneralProfitCoordinator : BotCoordinator {
         if (VialWaterProfitBotScript.eligible(bot)) VialWaterProfitBotScript(bot) else null
 
     /**
-     * Chooses the first currently eligible task after shuffling independent profit opportunities.
+     * Sells available surplus first for low-cash bots, then shuffles independent profit opportunities.
      */
     internal fun getScript(bot: Bot): BotScript? {
         if (!ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness()) return null
+        if (BotActivityWeights.needsStarterCoins(bot)) {
+            MerchantingCoordinator.getSellingScript(bot)?.let { return it }
+        }
         val duration = rand(30, 90).minutes
         val candidates = mutableListOf<() -> BotScript?>(
             { RuneRunningCoordinator.profitScript(bot) },
@@ -89,7 +94,9 @@ object GeneralProfitCoordinator : BotCoordinator {
             { collectGroundSecondaries(bot) },
             { MerchantingCoordinator.getSellingScript(bot) },
             {
-                if (!bot.preferences.isMerchant && bot.personality.isDumb)
+                if (!bot.preferences.isMerchant && (bot.personality.isDumb ||
+                        MerchantingCoordinator.sellingPurpose(bot) == null &&
+                        BotMarketplace.entries.none { it.hasAvailableTradingSpot(bot) }))
                     SellToStoreBotScript(bot).takeIf { it.saleCandidates().isNotEmpty() }
                 else null
             }
