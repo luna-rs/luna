@@ -324,8 +324,11 @@ object BotReactions {
      * @param bot The bot that was scammed.
      */
     fun reactToScammed(bot: Bot) {
-        // TODO@0.5.0 Impl, in ScamBotScript
-        // adjustfeelingtoward(scammer, -0.50)
+        if (rand(bot.personality.social)) {
+            val text = BotReactionSpeechPool.take(bot, ReactionSpeech.SCAMMED)
+            val delay = rand(4, 12)
+            bot.speechStack.pushHead(BotSpeech(text, delay))
+        }
     }
 
     fun reactToOtherScammed(bot: Bot) {

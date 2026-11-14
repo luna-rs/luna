@@ -109,7 +109,7 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
                     if (clueDropped) continue
                     clueDropped = true
                 }
-                if (source.isRealBot() && item.itemDef.value > 10_000 && !reacted) { // TODO@0.5.0 Use economy value.
+                if (source.isRealBot() && !reacted && world.economy.getPrice(item.id) > 10_000) {
                     // React to receiving a rare drop.
                     BotReactions.reactToRareDrop(source, item)
                     reacted = true

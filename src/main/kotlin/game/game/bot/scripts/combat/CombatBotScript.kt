@@ -204,13 +204,6 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     }
 
     /**
-     * Tracks whether this bot has already failed to find food.
-     *
-     * TODO@0.5.0 This is currently unused. Use it to avoid repeatedly scanning the inventory every low-health cycle.
-     */
-    private var noFood = false
-
-    /**
      * Cached special attack weapon id.
      *
      * A value of `null` means the script has not checked yet. A value of `-1` means the check already happened and no

@@ -10,6 +10,7 @@ import api.bot.script.BotScript
 import api.predef.ext.*
 import api.predef.rand
 import api.predef.world
+import engine.bot.speech.BotReactions
 import engine.bot.speech.BotReactions.lastScammedBy
 import engine.bot.speech.BotScamSpeechPool
 import engine.bot.speech.BotScamSpeechPool.ScamSpeech
@@ -229,6 +230,7 @@ object BotTradeScams {
             recorded = true
             victim.lastScammedBy = actor.username
             victim.preferences.adjustFeelingsToward(actor.username, -0.5)
+            BotReactions.reactToScammed(victim)
             victim.preferences.rebalanceWantedItems()
             actor.preferences.rebalanceWantedItems()
             scripts.forEach { (it as? SocialBotScript)?.socialTradeCompleted() }
