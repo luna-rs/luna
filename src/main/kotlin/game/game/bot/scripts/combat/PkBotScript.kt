@@ -14,6 +14,7 @@ import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.gear.BotGearPurpose
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
@@ -34,6 +35,7 @@ import kotlin.coroutines.coroutineContext
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
@@ -82,6 +84,21 @@ class PkBotScript(bot: Bot, val duration: Duration,
             field = value
             if (value == PreparationState.RESTOCKING || value == PreparationState.LEAVING) bot.combat.target = null
         }
+
+    /**
+     * Bounds a prepared clan outing's wait for nearby hunting company.
+     */
+    private var clanRallyStartedAt: Long? = null
+
+    /**
+     * One recently unreachable opponent, retained briefly so patrol does not immediately restart the same chase.
+     */
+    private var stalledTarget: Pair<Long, Long>? = null
+
+    /**
+     * Keeps an under-supplied Magic profile's fallback outing on melee even if it later loots a few runes.
+     */
+    private var meleeOnlyOuting = false
 
     /**
      * Keeps resupply separate from a final departure, so an aborted trip cannot restart after prices change.
@@ -516,11 +533,17 @@ class PkBotScript(bot: Bot, val duration: Duration,
         combatPolicy.pkRiskBudget().withinBudget
 
     /**
+     * Allows a stocked Magic outing to use its remaining casts while keeping a melee fallback on melee.
+     */
+    internal fun allowsCombatPurpose(purpose: BotGearPurpose): Boolean = !meleeOnlyOuting || purpose == BotGearPurpose.MELEE
+
+    /**
      * Keeps target-independent risk valuation outside bounded travel scans. A synchronous clan snapshot may
      * be shared within one scan; ordinary pursuit and combat children continue to check the live clan policy.
      */
     private fun permitsPursuit(target: Player, clanReady: Boolean? = null): Boolean {
         if (isRestocking() || System.currentTimeMillis() >= expireAt) return false
+        if (isAvoidedStalledTarget(target) && !combatPolicy.canRetaliateAgainst(target)) return false
         if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
         if (clan.enabled) {
             if (!clan.wearingCape()) return false
@@ -533,6 +556,25 @@ class PkBotScript(bot: Bot, val duration: Duration,
         if (isKindGenericSession()) return target.skullIcon != SkullIcon.NONE ||
             observations.canProtectAgainst(target) || combatPolicy.canRetaliateAgainst(target)
         return !bot.personality.isUncertain || combatPolicy.canRetaliateAgainst(target)
+    }
+
+    /**
+     * Gives patrol a minute to choose another opponent after a fight made no attack progress.
+     */
+    internal fun avoidStalledTarget(target: Player, now: Long = System.currentTimeMillis()) {
+        stalledTarget = target.usernameHash to now + 1.minutes.inWholeMilliseconds
+    }
+
+    /**
+     * Forgets the previous failed chase once its short cooldown expires.
+     */
+    internal fun isAvoidedStalledTarget(target: Player, now: Long = System.currentTimeMillis()): Boolean {
+        val (username, until) = stalledTarget ?: return false
+        if (now >= until) {
+            stalledTarget = null
+            return false
+        }
+        return target.usernameHash == username
     }
 
     /**
@@ -556,6 +598,20 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     internal fun isGroupOuting(): Boolean = clan.clanOuting && !soloClanOuting && !isRestocking() &&
         System.currentTimeMillis() < expireAt
+
+    /**
+     * Ends a clan outing after five minutes without formation instead of waiting through its entire session.
+     * Successful regrouping, combat and bank preparation reset the wait without changing permanent allegiance.
+     */
+    internal fun clanRallyExpired(now: Long = System.currentTimeMillis()): Boolean {
+        if (preparationState != PreparationState.READY || !isGroupOuting() || !bot.inWilderness() ||
+            bot.combat.inCombat() || clan.inFormation()) {
+            clanRallyStartedAt = null
+            return false
+        }
+        val startedAt = clanRallyStartedAt ?: now.also { clanRallyStartedAt = it }
+        return now - startedAt >= 5.minutes.inWholeMilliseconds
+    }
 
     /**
      * Enables fresh attack evidence for kind protection and cape-based clan infighting.
@@ -845,16 +901,26 @@ class PkBotScript(bot: Bot, val duration: Duration,
             if (!ActionSafety.NON_COMBAT.allows(bot)) return false
             if (!preparation.prepare()) {
                 preparationState = PreparationState.LEAVING
-                ScavengingCoordinator.detour(bot, preparation)?.let { bot.scriptStack.softPushHead(it) }
+                if (!preparation.magicRestockRequired()) {
+                    ScavengingCoordinator.detour(bot, preparation)?.let { bot.scriptStack.softPushHead(it) }
+                }
                 return if (bot.inWilderness()) handler.combat.fleeWilderness() else true
             }
+            meleeOnlyOuting = bot.preferences.pk?.styles()?.uses(SKILL_MAGIC) == true &&
+                !preparation.hasCarriedMagicForDeparture()
             preparationState = PreparationState.READY
             return false
+        }
+        if (clanRallyExpired()) {
+            bot.log("Clan did not regroup within five minutes. Ending this outing.")
+            preparationState = PreparationState.LEAVING
+            return handler.combat.fleeWilderness()
         }
         val risk = combatPolicy.pkRiskBudget()
         if (!risk.withinBudget) {
             preparationState = PreparationState.LEAVING
-            bot.log("PK death loss ${risk.deathLoss} exceeds allowance ${risk.maximumLoss}. Ending the trip safely.")
+            bot.log(if (risk.hasProtectedCosmetics) "Banking protected cosmetics before another PK outing." else
+                "PK death loss ${risk.deathLoss} exceeds allowance ${risk.maximumLoss}. Ending the trip safely.")
             return handler.combat.fleeWilderness()
         }
 

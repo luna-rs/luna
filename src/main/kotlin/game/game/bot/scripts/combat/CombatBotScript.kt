@@ -76,7 +76,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * One fight-owned switch controller retains decision timing across repeated attack and eating checks.
      */
     private val pkSwitcher = PkCombatSwitcher(bot, handler,
-        acceptsTarget = { targetAllowed() && pkSession?.allowsPursuit(it) != false })
+        acceptsTarget = { targetAllowed() && pkSession?.allowsPursuit(it) != false },
+        acceptsPurpose = { pkSession?.allowsCombatPurpose(it) != false })
     private val combatPolicy = BotCombatActionHandler(bot, handler)
 
     /**
@@ -141,6 +142,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
          * How long a fight may go on without any of the bot's attacks landing before the bot runs instead.
          */
         private val STALLED_FIGHT = 12.seconds
+
+        /**
+         * Allows initial equipment switches before abandoning a PK target that receives no attack attempts.
+         */
+        private val STALLED_PK_FIGHT = 30.seconds
 
         /**
          * The least run energy a bot needs to get away. Walking is no faster than an NPC's chase.
@@ -268,12 +274,15 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
     /**
      * The health percent at which an intelligent bot with no food leaves: [SMART_LEAVE_HP], plus up to
-     * [SMART_RISK_HP] more the bigger the share of its wealth it would drop on death.
+     * [SMART_RISK_HP] more the bigger the share of its wealth it would drop on death. Dedicated PKers keep
+     * the ordinary survival threshold without an extra retreat premium for their equipment's value.
      */
     private val riskLeaveHp by lazy {
-        val risk = PkRiskBudget.assess(bot, PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode()))
-        val share = if (risk.wealth.signum() > 0) risk.deathLoss.toDouble() / risk.wealth.toDouble() else 0.0
-        SMART_LEAVE_HP + (SMART_RISK_HP * share.coerceIn(0.0, 1.0)).roundToInt()
+        if (bot.preferences.isPker) SMART_LEAVE_HP else {
+            val risk = PkRiskBudget.assess(bot, PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode()))
+            val share = if (risk.wealth.signum() > 0) risk.deathLoss.toDouble() / risk.wealth.toDouble() else 0.0
+            SMART_LEAVE_HP + (SMART_RISK_HP * share.coerceIn(0.0, 1.0)).roundToInt()
+        }
     }
 
     /**
@@ -387,6 +396,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 return true
             }
             if (!focus.isAlive || !focus.isViewableFrom(bot)) return true
+            if (stopStalledPkFight()) return !running
             targetEnemy()
             if (isTerminated() || !focus.isAlive) return true
             talk()
@@ -545,7 +555,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * Decides by personality whether a bot with no food leaves the fight now. A greedy bot fights to the death when
      * its opponent carries a prize ([hasPrize]). A reckless one (dumb and confident) fights on until it is nearly dead,
      * then leaves only if a roll on its intelligence passes. An intelligent one also leaves once its health is down to
-     * [riskLeaveHp], which rises with what it would drop on death. Any other bot leaves once it is nervous about its
+     * [riskLeaveHp], which rises with what it would drop on death for accounts other than dedicated PKers.
+     * Any other bot leaves once it is nervous about its
      * health.
      *
      * @param nervous Whether the bot is nervous about its health.
@@ -710,6 +721,27 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         val lastAttack = bot.combat.lastAttackSent?.timestamp?.toEpochMilli() ?: 0
         return combatPolicy.opponent() != null &&
             System.currentTimeMillis() - maxOf(lastAttack, startedAt) > STALLED_FIGHT.inWholeMilliseconds
+    }
+
+    /**
+     * Bounds pursuit even before an unreachable player has established a native combat opponent.
+     * Launched attacks count as progress regardless of damage. A threatened bot enters ordinary escape handling.
+     */
+    internal fun stopStalledPkFight(now: Long = System.currentTimeMillis()): Boolean {
+        if (!usesPkSwitching) return false
+        val lastAttack = bot.combat.lastAttackSent?.timestamp?.toEpochMilli() ?: 0
+        if (now - maxOf(lastAttack, startedAt) <= STALLED_PK_FIGHT.inWholeMilliseconds) return false
+        pkSession?.avoidStalledTarget(focus as Player, now)
+        if (bot.combat.target === focus) bot.combat.target = null
+        if (bot.navigator.currentTarget === focus) {
+            bot.navigator.cancel()
+            bot.walking.clear()
+        }
+        pkSwitcher.clear()
+        gaveUp = true
+        running = bot.combat.inCombat() || focus.combat.target === bot
+        bot.log("No PK attack launched for thirty seconds. Leaving the stalled pursuit.")
+        return true
     }
 
     /**

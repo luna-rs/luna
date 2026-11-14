@@ -1,6 +1,7 @@
 package engine.bot.coordinator
 
 import api.bot.action.PkClanPolicy
+import api.bot.action.PkLoadoutPreparation
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
 import game.bot.scripts.combat.PkBotScript
@@ -27,8 +28,8 @@ object PkingCoordinator : BotCoordinator {
     }
 
     /**
-     * Makes positive PK interests three times as competitive with long skilling and NPC sessions.
-     * Dedicated PKers receive at least weight three despite legacy randomized preferences. Explicit zero,
+     * Makes positive PK interests six times as competitive with long skilling and NPC sessions.
+     * Dedicated PKers receive weight nine to twelve despite legacy randomized preferences. Explicit zero,
      * invalid weights, skillers, introductory scavengers and accounts without a PK profile remain excluded.
      * This is a decision weight only; clan, supplies, safety and risk still gate departure.
      */
@@ -37,7 +38,7 @@ object PkingCoordinator : BotCoordinator {
         if (!weight.isFinite() || weight <= 0.0 || bot.preferences.isSkiller || bot.preferences.pk == null ||
             !bot.preferences.canChooseActivity(BotActivity.PKING)) return 0.0
         val affinity = weight.coerceAtMost(1.0)
-        return if (bot.preferences.isPker) maxOf(0.75, affinity) * 4.0 else affinity * 3.0
+        return if (bot.preferences.isPker) maxOf(0.75, affinity) * 12.0 else affinity * 6.0
     }
 
     /**
@@ -56,12 +57,17 @@ object PkingCoordinator : BotCoordinator {
 
     /**
      * Preserves permanent purpose/styles/build and declines duplicate or unsafe sessions.
-     * Missing supplies enter the preparation stage, where ordinary acquisition and funding can address them.
+     * Restricted Magic accounts use shared wanted-item acquisition or earn its funding before starting an outing.
+     * Other missing supplies enter the ordinary preparation stage.
      */
     internal fun getScript(bot: Bot): BotScript? {
         if (bot.state != EntityState.ACTIVE || bot.preferences.isSkiller || bot.preferences.pk == null ||
             !bot.preferences.canChooseActivity(BotActivity.PKING) || !ActionSafety.NON_COMBAT.allows(bot) ||
             bot.scriptStack.size() > 0) return null
+        val preparation = PkLoadoutPreparation(bot, bot.actionHandler)
+        if (preparation.magicRestockRequired()) {
+            return PkRuneRestocking.getScript(bot, preparation.magicSupplyRequirements().orEmpty())
+        }
         val solo = PkClanPolicy.chooseSolo(bot)
         val clan = PkClanPolicy(bot)
         if (clan.clanOuting && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) return null

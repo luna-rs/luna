@@ -2,6 +2,7 @@ package engine.bot.coordinator.skill
 
 import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.SKILL_MAGIC
 import api.predef.SKILL_PRAYER
@@ -169,11 +170,17 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
     }
 
     override fun accept(bot: Bot) {
-        val selectedSkill = RandomUtils.weightedRoll(skillWeights(bot)) ?: return
-        val factory = factories[selectedSkill] ?: return
+        getScript(bot)?.let { bot.scriptStack.push(it) }
+    }
+
+    /**
+     * Selects a concrete activity without changing script-stack ownership, so another activity can queue a follow-up.
+     */
+    internal fun getScript(bot: Bot): BotScript? {
+        val selectedSkill = RandomUtils.weightedRoll(skillWeights(bot)) ?: return null
+        val factory = factories[selectedSkill] ?: return null
         val zones = ArrayList<SubZone>()
         bot.profitMode = !training
-        val script = factory.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
-        bot.scriptStack.push(script)
+        return factory.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
     }
 }
