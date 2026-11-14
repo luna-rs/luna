@@ -108,6 +108,8 @@ abstract class SkillingScriptFactory(val skillId: Int) {
             if (planned != null) return planned
             return when (skillId) {
                 SKILL_CRAFTING -> CraftingScriptFactory.getCollectHidesScript(bot, zones)
+                    ?: if (training) CraftingScriptFactory.getTrainingScript(bot, level, zones)
+                    else CraftingScriptFactory.getProfitScript(bot, level, zones)
                 SKILL_FLETCHING -> WoodcuttingScriptFactory.getScript(bot, bot.woodcutting.staticLevel, zones, false)
                 SKILL_HERBLORE -> game.bot.scripts.skills.HerbGatheringScript(bot,
                     game.skill.herblore.identifyHerb.Herb.GUAM_LEAF, getDuration(bot))
