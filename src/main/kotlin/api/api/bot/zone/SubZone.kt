@@ -1376,6 +1376,70 @@ enum class SubZone(
             { SEERS_VILLAGE }),
 
     /**
+     * Four maples along the north-west edge of McGrubor's Wood, using Seers banking.
+     */
+    MCGRUBORS_NORTH_WEST_MAPLES(
+        inside = Position(2657, 3519),
+        area = SimpleBoxArea.of(2648, 3515, 2667, 3524),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Eight maples north of McGrubor's Wood, separate from its eastern stands.
+     */
+    MCGRUBORS_NORTH_MAPLES(
+        inside = Position(2659, 3532),
+        area = SimpleBoxArea.of(2648, 3525, 2667, 3540),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Nine maples north-east of McGrubor's Wood, below the northern forest.
+     */
+    MCGRUBORS_NORTH_EAST_MAPLES(
+        inside = Position(2678, 3537),
+        area = SimpleBoxArea.of(2668, 3530, 2688, 3546),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Four maples east of McGrubor's Wood, using the public approach from Seers.
+     */
+    MCGRUBORS_EAST_MAPLES(
+        inside = Position(2683, 3523),
+        area = SimpleBoxArea.of(2676, 3518, 2689, 3529),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Fifteen maples in the western part of the forest north of Seers.
+     */
+    SEERS_NORTH_WEST_FOREST_MAPLES(
+        inside = Position(2685, 3556),
+        area = SimpleBoxArea.of(2666, 3547, 2701, 3569),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Eight maples in the central part of the northern forest, west of the stream.
+     */
+    SEERS_NORTH_CENTRAL_FOREST_MAPLES(
+        inside = Position(2710, 3560),
+        area = SimpleBoxArea.of(2702, 3547, 2719, 3575),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Ten maples on the eastern side of the northern forest, below the farm.
+     */
+    SEERS_NORTH_EAST_FOREST_MAPLES(
+        inside = Position(2726, 3561),
+        area = SimpleBoxArea.of(2720, 3547, 2735, 3575),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Eleven maples along the northern ridge and farm approach, using Seers banking.
+     */
+    SEERS_NORTHERN_RIDGE_MAPLES(
+        inside = Position(2713, 3587),
+        area = SimpleBoxArea.of(2687, 3576, 2735, 3599),
+        parent = { SEERS_VILLAGE }),
+
+    /**
      * The willow trees on the beach west of the Catherby bank. Intended for dexterous willow trainers.
      * - 3 willow trees
      */

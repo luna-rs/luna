@@ -265,7 +265,11 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
-        return world.locator.findObjects(searchBase, searchRadius) { it.id in treeIds }
+        // The radius search can extend beyond a rectangular stand into its neighbouring maple stands.
+        val mapleArea = if (Tree.MAPLE in trees) activeZone?.area else null
+        return world.locator.findObjects(searchBase, searchRadius) {
+            it.id in treeIds && (mapleArea == null || mapleArea.contains(it.position))
+        }
     }
 
     override fun tools(): SortedSet<SkillingTool> =
