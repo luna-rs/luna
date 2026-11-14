@@ -50451,6 +50451,7 @@
   // Shop keeper (id 555) x2
   {
     "id": 555,
+    "route_strategy": "INDOORS",
     "position": {
       "x": 2641,
       "y": 3171,
@@ -50463,6 +50464,7 @@
   },
   {
     "id": 555,
+    "route_strategy": "INDOORS",
     "position": {
       "x": 2655,
       "y": 3152,

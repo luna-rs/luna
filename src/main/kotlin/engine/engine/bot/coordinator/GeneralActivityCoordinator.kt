@@ -1,11 +1,9 @@
 package engine.bot.coordinator
 
-import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.predef.*
 import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
-import game.item.experienceLamp.ExperienceLampInterface.InterfaceSkill
 import game.bot.scripts.FillWaterBotScript
 import game.bot.scripts.RechargeGloryBotScript
 import game.bot.scripts.RechargeTeleportSuppliesBotScript
@@ -32,7 +30,7 @@ import kotlin.time.Duration.Companion.minutes
  * Owned crystal keys are used at a loaded chest, matched halves can be assembled, and empty water containers
  * are filled toward their wanted-stock target. Wanted buckets of milk and sand use the same native filling task.
  * Owned unsearched bird nests can also be opened and their contents banked. Owned experience lamps are redeemed
- * in a preferred supported skill. Depleted glories can be recharged at the native Fountain of Heroes.
+ * in the highest eligible skill below 99. Depleted glories can be recharged at the native Fountain of Heroes.
  * Owned mole claws and skins can be exchanged with Wyson before the resulting nests enter ordinary nest searching.
  * Owned oysters and fishing caskets share a native container-opening activity; oysters also require an owned chisel.
  * Explicit wanted lit or unlit stock can light or extinguish owned sources without assembling or buying new lights.
@@ -79,9 +77,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         val duration = if (bot.preferences.likesActivity(BotActivity.GENERAL_ACTIVITIES))
             rand(100, 350).minutes else rand(45, 120).minutes
         if (owned(bot, UseLampBotScript.LAMP) > 0) {
-            val eligible = InterfaceSkill.values().filter { BotCombatActionHandler.wantsToTrain(bot, it.skill) }
-            val preferred = eligible.filter { it.skill in bot.preferences.skills }
-            val skill = preferred.randomOrNull() ?: eligible.randomOrNull()
+            val skill = UseLampBotScript.selectSkill(bot)
             if (skill != null) return UseLampBotScript(bot, skill, duration)
         }
         RuneRunningCoordinator.profitScript(bot)?.let { return it }

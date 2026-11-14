@@ -21,27 +21,27 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Redeems owned experience lamps through the normal inventory and interface buttons.
  *
- * Each session explicitly selects one supported skill before confirming each lamp. The skill selection must be
+ * Each session explicitly selects a supported skill before confirming each lamp. The skill selection must be
  * acknowledged by the player's lamp varp before confirmation, preventing a delayed selection from awarding XP
  * to a previous skill. The existing player handler consumes the lamp and determines the experience reward.
  *
  * [InventoryBotScript] provides safe banking, bounded interactions, progress checks, and persistent retry budgets.
- * Missing lamps end the session without purchase requests. General activities prefer the bot's skill preferences;
- * when none match the lamp interface they choose one supported skill. Saved sessions retain that choice.
+ * Missing lamps end the session without purchase requests. Each lamp targets the highest permanent level below
+ * 99 that fits the bot's account build. The choice is refreshed between lamps, including after restoring a session.
  *
  * @param bot The bot redeeming its lamps.
- * @property skill The interface skill explicitly selected for every lamp in this session.
+ * @property skill The interface skill most recently selected for redemption.
  * @param duration Session length managed by the inherited lifecycle.
  * @param zones Existing processing zones with banking and travel support.
  * @author lare96
  */
 class UseLampBotScript(
     bot: Bot,
-    val skill: InterfaceSkill,
+    var skill: InterfaceSkill,
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
 ) : InventoryBotScript(bot, duration, zones) {
-    override val trainingSkill get() = skill.skill
+    override val trainingSkill get() = selectSkill(bot)?.skill
     override val verifiedProductionWithdrawals = true
 
     companion object {
@@ -51,12 +51,22 @@ class UseLampBotScript(
         const val CONFIRM_BUTTON = 2831
 
         /**
+         * Chooses the highest unmaxed skill without training combat skills excluded by the account build.
+         * Temporary boosts and drains do not affect lamp selection.
+         */
+        internal fun selectSkill(bot: Bot): InterfaceSkill? = InterfaceSkill.entries
+            .filter { bot.skill(it.skill).staticLevel < 99 && BotCombatActionHandler.wantsToTrain(bot, it.skill) }
+            .maxByOrNull { bot.skill(it.skill).staticLevel }
+
+        /**
          * Saved skill selection alongside inherited session configuration and retry budgets.
          *
          * @author lare96
          */
         class LampData : InventoryScriptData() {
-            /** [InterfaceSkill] enum name selected for the complete session. */
+            /**
+             * [InterfaceSkill] enum name most recently selected for redemption.
+             */
             var selectedSkill = ""
 
             override fun load(data: JsonObject) {
@@ -93,12 +103,15 @@ class UseLampBotScript(
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(LAMP in bot.inventory)
 
     override suspend fun onExecuteInZone(): Boolean {
+        skill = selectSkill(bot) ?: run { stop(); return true }
         if (!productionReady(LAMP in bot.inventory)) return true
         attemptProduction(LAMP) { startRedemption() }
         return true
     }
 
-    /** Opens the lamp, selects the saved skill, waits for acknowledgment, then confirms through player input. */
+    /**
+     * Opens the lamp, selects the current skill, waits for acknowledgment, then confirms through player input.
+     */
     private suspend fun startRedemption(): Boolean {
         if (!handler.inventory.clickItem(1, LAMP)) return false
         if (!waitFor(3.seconds) { ExperienceLampInterface::class in bot.overlays }) return false
@@ -106,7 +119,8 @@ class UseLampBotScript(
         if (!waitFor(3.seconds) {
                 bot.varpManager.getValue(PersistentVarp.XP_LAMP) == skill.varpValue
             }) return false
-        return BotCombatActionHandler.wantsToTrain(bot, skill.skill) && isActionSafe() && ExperienceLampInterface::class in bot.overlays &&
+        return bot.skill(skill.skill).staticLevel < 99 && BotCombatActionHandler.wantsToTrain(bot, skill.skill) &&
+            isActionSafe() && ExperienceLampInterface::class in bot.overlays &&
             bot.output.clickButton(CONFIRM_BUTTON)
     }
 
