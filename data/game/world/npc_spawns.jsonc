@@ -146853,7 +146853,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146865,7 +146865,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146877,7 +146877,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146889,7 +146889,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146901,7 +146901,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146913,7 +146913,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146925,7 +146925,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146937,7 +146937,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146949,7 +146949,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
