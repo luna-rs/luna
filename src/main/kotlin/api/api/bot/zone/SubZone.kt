@@ -900,6 +900,22 @@ enum class SubZone(
             { VARROCK }),
 
     /**
+     * The two safe unicorn spawns south of Varrock's south-eastern mine.
+     */
+    EAST_VARROCK_UNICORNS(
+        inside = Position(3287, 3352),
+        area = SimpleBoxArea.of(3279, 3346, 3290, 3360),
+        parent = { VARROCK }),
+
+    /**
+     * Two horn-dropping black unicorns on the walkable Rellekka mainland, outside the Wilderness.
+     */
+    RELLEKKA_BLACK_UNICORNS(
+        inside = Position(2708, 3672),
+        area = SimpleBoxArea.of(2704, 3655, 2734, 3676),
+        parent = { RELLEKKA }),
+
+    /**
      * The yew trees around the Lumber Yard north-east of Varrock. Intended for low-level and money making woodcutters.
      * - 3 yew trees
      * - Normal trees
@@ -952,6 +968,15 @@ enum class SubZone(
         inside = Position(3117, 9849),
         entrance = EDGEVILLE_DUNGEON_MINE.entrance,
         area = SimpleBoxArea.of(3090, 9820, 3128, 9855),
+        parent = { VARROCK }),
+
+    /**
+     * Five limpwurt-dropping hobgoblins reached from the same brass-key dungeon descent as the mine.
+     */
+    EDGEVILLE_DUNGEON_HOBGOBLINS(
+        inside = Position(3123, 9875),
+        entrance = EDGEVILLE_DUNGEON_MINE.entrance,
+        area = SimpleBoxArea.of(3115, 9867, 3130, 9883),
         parent = { VARROCK }),
 
     /**
@@ -1524,6 +1549,14 @@ enum class SubZone(
         inside = Position(2923, 3289),
         entrance = { Position(2923, 3293) },
         area = SimpleBoxArea.of(2911, 3264, 2938, 3292),
+        parent = { FALADOR }),
+
+    /**
+     * Two mainland snape grass spawns west of the Crafting Guild cow field.
+     */
+    CRAFTING_GUILD_SNAPE_GRASS(
+        inside = Position(2906, 3296),
+        area = SimpleBoxArea.of(2903, 3292, 2910, 3300),
         parent = { FALADOR }),
 
     /**
@@ -3108,7 +3141,7 @@ enum class SubZone(
             if (this !in bot.subZones && !canEnterTaverleyWest(bot))
                 "the western section of Taverley Dungeon needs a dusty key" else null
 
-        EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS ->
+        EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS, EDGEVILLE_DUNGEON_HOBGOBLINS ->
             // A bot without a key buys one for a coin.
             if (this !in bot.subZones && !bot.itemTracker.contains(BrassKeyDoor.KEY) &&
                 !bot.inventory.contains(Currency.COINS.id) && !bot.bank.contains(Currency.COINS.id)
@@ -3129,7 +3162,8 @@ enum class SubZone(
             TAVERLEY_DUNGEON_ZAMORAK_MONKS, TAVERLY_BLACK_DEMONS, TAVERLY_HELLHOUND,
             TAVERLY_DUNGEON_BLUE_DRAGONS -> TaverleyJailDoor.DUSTY_KEY_GATE.key
             WATERFALL_FIRE_GIANTS_WEST, WATERFALL_FIRE_GIANTS_EAST -> 295
-            EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS -> BrassKeyDoor.KEY
+            EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS,
+            EDGEVILLE_DUNGEON_HOBGOBLINS -> BrassKeyDoor.KEY
             else -> null
         }
 

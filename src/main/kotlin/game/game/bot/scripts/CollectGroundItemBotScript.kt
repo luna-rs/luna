@@ -114,12 +114,16 @@ class CollectGroundItemBotScript(
             forceBanking = true
             return false
         }
+        queueSale()
         stop()
         return true
     }
 
     override suspend fun onBankOpen(initial: Boolean) {
-        if (goalReached()) stop()
+        if (goalReached()) {
+            queueSale()
+            stop()
+        }
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GroundItem> {
@@ -148,6 +152,10 @@ class CollectGroundItemBotScript(
     override suspend fun refocus(): Boolean = true
 
     override suspend fun completed() {
+        queueSale()
+    }
+
+    private fun queueSale() {
         if (!sellOnCompletion || !BotMarketCooldown.ready(bot, BotTradePurpose.SELL)) return
         val quote = BotTradeManager.computeTargetedSaleItem(bot, BotTradePrice.computePriceStrategy(bot), itemId)
         if (quote != null && quote.totalPrice().toLong() >= BotTradeManager.MINIMUM_OFFER_VALUE) {
