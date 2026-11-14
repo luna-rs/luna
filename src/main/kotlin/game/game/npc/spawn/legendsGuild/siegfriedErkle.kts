@@ -19,7 +19,7 @@ ShopHandler.create("Legends Guild Shop of Useful Items.") {
         "Dusty key" x 50
         "Maze key" x 30
         "Shield right half" x 10
-        "Cape of legends" x 30
+        1052 x 30
     }
 
     open {
