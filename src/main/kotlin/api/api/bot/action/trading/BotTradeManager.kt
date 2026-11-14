@@ -194,6 +194,13 @@ object BotTradeManager {
     }
 
     /**
+     * Quotes one explicitly requested ordinary sale using the same transferable-stock and reserve rules as a
+     * normal marketplace visit. Targeted production sales do not inherit an unrelated merchant batch selection.
+     */
+    fun computeTargetedSaleItem(bot: Bot, priceStrategy: BotTradePrice, id: Int): BotTradeItem? =
+        computeSellItems(bot, priceStrategy, BotTradePurpose.SELL).firstOrNull { it.item.id == id }
+
+    /**
      * Applies the bot's spending reserve to transferable payment stock when preparing an actual buying session.
      * Accounting callers can still inspect all available stock through [computeOfferItems]. Sale quantities and
      * already sampled unit prices are unchanged; barter payment retains whole-item budget limits.

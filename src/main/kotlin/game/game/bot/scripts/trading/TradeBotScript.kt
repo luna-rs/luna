@@ -78,6 +78,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * @param zone The candidate zones containing the marketplace.
  * @property purchaseDeadline Optional absolute deadline for a targeted supply visit; zero keeps ordinary waits.
  * @property retryAt Optional earliest start for explicit callers; automatic retry cooldowns live on the bot.
+ * @property saleTarget Optional exact commodity for a production sale; ordinary sale safeguards still apply.
  * @author lare96
  */
 class TradeBotScript(bot: Bot,
@@ -91,8 +92,13 @@ class TradeBotScript(bot: Bot,
                      private val retryAt: Long = 0L,
                      private val reactiveSeller: Player? = null,
                      private val reactiveBuyer: Player? = null,
-                     private val reactivePrevious: BotScript? = null) :
+                     private val reactivePrevious: BotScript? = null,
+                     private val saleTarget: Int? = null) :
     ZonedBotScript(bot, duration, zone), SocialBotScript {
+
+    init {
+        require(saleTarget == null || purpose == BotTradePurpose.SELL)
+    }
 
     companion object {
 
@@ -387,7 +393,8 @@ class TradeBotScript(bot: Bot,
      * Merchant accounts also use merchant batches when selling ordinary surplus.
      */
     private val merchantSelling: Boolean
-        get() = purpose == BotTradePurpose.MERCHANT_SELL || purpose == BotTradePurpose.SELL && bot.preferences.isMerchant
+        get() = purpose == BotTradePurpose.MERCHANT_SELL ||
+            purpose == BotTradePurpose.SELL && saleTarget == null && bot.preferences.isMerchant
 
     override suspend fun onInit(resumed: Boolean): Boolean {
         if (duration <= Duration.ZERO) return false
@@ -798,7 +805,7 @@ class TradeBotScript(bot: Bot,
             return
         }
         if (ordinaryVisit) BotMarketCooldown.defer(bot, purpose)
-        if (purchaseTarget == null && !bot.preferences.isMerchant) {
+        if (purchaseTarget == null && saleTarget == null && !bot.preferences.isMerchant) {
             if (buying) bot.scriptStack.push(BuyFromStoreBotScript(bot))
             else if (bot.personality.isDumb) bot.scriptStack.push(SellToStoreBotScript(bot))
         }
@@ -1127,7 +1134,9 @@ class TradeBotScript(bot: Bot,
         actionableWants = BotTradeIntentions.purchases(bot).associateBy { it.id }
         val strategy = resolveTradePrice()
         tradePrice = strategy
-        val offers = BotTradeManager.computeBudgetedOfferItems(bot, strategy, purpose)
+        val offers = if (saleTarget != null)
+            listOfNotNull(BotTradeManager.computeTargetedSaleItem(bot, strategy, saleTarget))
+        else BotTradeManager.computeBudgetedOfferItems(bot, strategy, purpose)
             .filter { purchaseTarget == null || it.item.id == COINS }
         val wants = if (purchaseTarget == null) BotTradeManager.computeExpected(bot, strategy, purpose, offers)
         else BotTradeManager.affordablePurchases(specificDemand(), offers)

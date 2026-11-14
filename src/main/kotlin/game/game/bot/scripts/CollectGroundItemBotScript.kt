@@ -2,6 +2,11 @@ package game.bot.scripts
 
 import api.bot.script.TargetingZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.action.trading.BotMarketCooldown
+import api.bot.action.trading.BotMarketplace
+import api.bot.action.trading.BotTradeManager
+import api.bot.action.trading.BotTradePrice
+import api.bot.action.trading.BotTradePurpose
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.totalItemAmount
@@ -11,6 +16,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.bot.Bot
+import game.bot.scripts.trading.TradeBotScript
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -25,6 +31,7 @@ import kotlin.time.Duration.Companion.minutes
  *
  * @property itemId The unnoted resource to collect.
  * @property stockTarget The total owned quantity at which collection ends.
+ * @property sellOnCompletion Advertise collected surplus when this is a profit outing.
  * @author lare96
  */
 class CollectGroundItemBotScript(
@@ -32,7 +39,8 @@ class CollectGroundItemBotScript(
     val itemId: Int,
     val stockTarget: Int,
     duration: Duration,
-    zones: MutableList<SubZone>
+    zones: MutableList<SubZone>,
+    val sellOnCompletion: Boolean = false
 ) : TargetingZonedBotScript<GroundItem>(bot, duration, zones) {
 
     /**
@@ -51,23 +59,31 @@ class CollectGroundItemBotScript(
          */
         var stockTarget = 0
 
+        /**
+         * Whether this outing should offer its collected item at a marketplace when complete.
+         */
+        var sellOnCompletion = false
+
         override fun load(data: JsonObject) {
             super.load(data)
             itemId = data.get("item_id")?.asInt ?: -1
             stockTarget = data.get("stock_target")?.asInt ?: 0
+            sellOnCompletion = data.get("sell_on_completion")?.asBoolean ?: false
         }
 
         override fun save(data: JsonObject) {
             super.save(data)
             data.addProperty("item_id", itemId)
             data.addProperty("stock_target", stockTarget)
+            data.addProperty("sell_on_completion", sellOnCompletion)
         }
     }
 
     /**
      * Restores the same owned-stock goal and candidate fields after persistence.
      */
-    constructor(bot: Bot, data: CollectionData) : this(bot, data.itemId, data.stockTarget, data.duration, data.zones)
+    constructor(bot: Bot, data: CollectionData) : this(bot, data.itemId, data.stockTarget, data.duration,
+        data.zones, data.sellOnCompletion)
 
     override val targetSearchTimeout = 2.minutes
 
@@ -131,9 +147,19 @@ class CollectGroundItemBotScript(
 
     override suspend fun refocus(): Boolean = true
 
+    override suspend fun completed() {
+        if (!sellOnCompletion || !BotMarketCooldown.ready(bot, BotTradePurpose.SELL)) return
+        val quote = BotTradeManager.computeTargetedSaleItem(bot, BotTradePrice.computePriceStrategy(bot), itemId)
+        if (quote != null && quote.totalPrice().toLong() >= BotTradeManager.MINIMUM_OFFER_VALUE) {
+            bot.scriptStack.softPushHead(TradeBotScript(bot, BotTradePurpose.SELL,
+                BotMarketplace.select(bot), saleTarget = itemId))
+        }
+    }
+
     override fun snapshot(): CollectionData = CollectionData().also {
         it.itemId = itemId
         it.stockTarget = stockTarget
+        it.sellOnCompletion = sellOnCompletion
         it.duration = duration
         it.zones = originalZones.toMutableList()
     }

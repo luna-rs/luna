@@ -64,6 +64,7 @@ import game.bot.scripts.skills.WeaveTextileBotScript
 import game.bot.scripts.skills.WeaveTextileBotScript.Companion.TextileData
 import game.bot.scripts.UseLampBotScript.Companion.LampData
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
+import game.bot.scripts.VialWaterProfitBotScript.Companion.VialProfitData
 import game.bot.scripts.skills.BuryBoneBotScript
 import game.bot.scripts.skills.BuryBoneBotScript.Companion.BoneData
 import game.bot.scripts.skills.EctofuntusBotScript
@@ -238,6 +239,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<MillData>(MillFlourBotScript::class) { bot, data -> MillFlourBotScript(bot, data) }
     scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
     scriptManager.addScript<FillWaterData>(FillWaterBotScript::class) { bot, data -> FillWaterBotScript(bot, data) }
+    scriptManager.addScript<VialProfitData>(VialWaterProfitBotScript::class) { bot, data -> VialWaterProfitBotScript(bot, data) }
     scriptManager.addScript<NestData>(SearchNestBotScript::class) { bot, data -> SearchNestBotScript(bot, data) }
     scriptManager.addScript<ContainerData>(OpenContainerBotScript::class) { bot, data -> OpenContainerBotScript(bot, data) }
     scriptManager.addScript<LightData>(ToggleLightBotScript::class) { bot, data -> ToggleLightBotScript(bot, data) }
