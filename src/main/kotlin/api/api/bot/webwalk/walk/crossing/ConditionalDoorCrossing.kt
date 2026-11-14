@@ -12,6 +12,7 @@ import game.content.hardwoodGrove.HardwoodGrove
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.Doors
 import game.obj.doors.GnomeStrongholdGate
+import game.obj.doors.GrandTreeDoors
 import game.obj.doors.JewellersDoor
 import game.obj.doors.TaverleyJailDoor
 import game.obj.doors.TrollArenaGates
@@ -34,12 +35,18 @@ object ConditionalDoorCrossing : CrossingHandler {
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
         val hardwood = id == 9038 || id == 9039
+        val treeDoor = GrandTreeDoors.Leaf.entries.firstOrNull { it.closed == id }
         if (id != YanilleDoorAction.DOOR && id != ChaosDruidTowerDoorAction.DOOR && id != MiningGuild.DOOR &&
             id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != BrassKeyDoor.DOOR &&
             id != TaverleyJailDoor.DUSTY_KEY_GATE.closed && id != GnomeBall.GATE &&
             id != GnomeStrongholdGate.GATE && id != FishingGuild.DOOR && !hardwood &&
-            TrollArenaGates.GATES.none { it.id == id } && id !in TenzingDoors.IDS) {
+            TrollArenaGates.GATES.none { it.id == id } && id !in TenzingDoors.IDS && treeDoor == null) {
             return "unsupported conditional door $id"
+        }
+        if (treeDoor != null && (position != treeDoor.position ||
+                !(leg.from == treeDoor.south && leg.to == treeDoor.north ||
+                    leg.from == treeDoor.north && leg.to == treeDoor.south))) {
+            return "unsupported Grand Tree door passage"
         }
         val bot = context.bot
         repeat(20) {
