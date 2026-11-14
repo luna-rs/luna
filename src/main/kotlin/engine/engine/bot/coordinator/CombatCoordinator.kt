@@ -230,6 +230,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         /**
          * Uses the native melee loadout and camp gates to gather verified feathers, big bones or dragon bones.
          * Dragon outings require an owned anti-dragon shield and a usable one-handed melee weapon.
+         * Feather trips are available only below combat level 20.
          */
         internal fun profitDropGatheringScript(bot: Bot, duration: Duration): NpcDropGatheringScript? {
             val loadout = CombatLoadout.find(bot, BotGearPurpose.MELEE) ?: return null
@@ -237,6 +238,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             val shieldReady = bot.itemTracker.contains(1540) &&
                 loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true
             for (goal in dropGoals.shuffled()) {
+                if (!NpcDropGatheringScript.levelEligible(goal.itemId, bot.combatLevel)) continue
                 val current = bot.totalItemAmount(goal.itemId)
                 if (current >= goal.stockCap || world.economy.getPrice(goal.itemId) <= 0) continue
                 val options = camps.filter { it.zone in goal.zones && it.minimum <= readiness &&

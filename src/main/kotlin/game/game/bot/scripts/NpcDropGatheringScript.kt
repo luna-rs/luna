@@ -25,6 +25,7 @@ import kotlin.time.Duration
  * Kills named NPCs in supplied camps and banks one selected drop until the bot owns [stockTarget].
  * The inherited combat trip equips owned gear and brings food; this session never buries collected bones.
  * A profit outing advertises available stock through the normal player marketplace after banking or completion.
+ * Feather gathering is restricted to bots below combat level 20, including restored and active sessions.
  *
  * @property itemId The unnoted item collected from NPC drops.
  * @property stockTarget Total banked and carried stock at which the trip ends.
@@ -43,6 +44,21 @@ class NpcDropGatheringScript(
     private val slayerMaster: SlayerMaster? = null
 ) : NpcCombatScript(bot, duration, zones, targetNames, BotGearPurpose.MELEE, null,
     slayerTask, slayerMaster) {
+
+    /**
+     * Shares item-specific level restrictions with profit trip selection.
+     *
+     * @author lare96
+     */
+    companion object {
+        private const val FEATHERS = 314
+
+        /**
+         * Keeps feather collection below combat level 20 without restricting other NPC drops.
+         */
+        internal fun levelEligible(itemId: Int, combatLevel: Int): Boolean =
+            itemId != FEATHERS || combatLevel < 20
+    }
 
     /**
      * Persists the exact target and NPC restrictions alongside the inherited combat session.
@@ -79,8 +95,16 @@ class NpcDropGatheringScript(
     private fun carryingResource(): Boolean = itemId in bot.inventory ||
         notedItemId in bot.inventory
 
+    private fun canContinueGathering(): Boolean {
+        if (levelEligible(itemId, bot.combatLevel)) return true
+        bot.combat.target = null
+        stop()
+        return false
+    }
+
     override suspend fun onInit(resumed: Boolean): Boolean =
-        ItemDefinition.isIdValid(itemId) && stockTarget > 0 && originalZones.isNotEmpty() &&
+        levelEligible(itemId, bot.combatLevel) &&
+            ItemDefinition.isIdValid(itemId) && stockTarget > 0 && originalZones.isNotEmpty() &&
             originalZones.all { targetNames[it].isNotEmpty() } &&
             ((slayerTask == null) == (slayerMaster == null)) &&
             super.onInit(resumed)
@@ -93,6 +117,7 @@ class NpcDropGatheringScript(
     override fun buryLootedBones(): Boolean = false
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
+        if (!canContinueGathering()) return false
         if (bot.inventory.isFull || goalReached()) {
             forceBanking = true
             return false
@@ -101,6 +126,7 @@ class NpcDropGatheringScript(
     }
 
     override suspend fun beforeZoneWork(): Boolean {
+        if (!canContinueGathering()) return true
         if (goalReached()) {
             if (carryingResource()) {
                 forceBanking = true
