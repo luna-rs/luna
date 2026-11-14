@@ -63,8 +63,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Buyers carry coins and eligible surplus payment stock; sellers carry noted sale stock when possible.
  * Bot-to-bot exchanges use the seller's asking
  * prices when they fit the buyer's limits, so both participants independently calculate the same exchange.
- * Human sellers receive only carried coins for affordable wanted quantities. Bots offer items to a human only
- * for the exact commodity in that player's buying advertisement; those buyers may pay with coins or items.
+ * Human sellers receive only carried coins for affordable wanted quantities. Human buyers may request the bot's
+ * carried sale stock directly; replies to a player's buying advertisement offer only its requested commodity.
  * Scammer accounts may occasionally pause idle trading for a separately guarded misleading sale to a human.
  *
  * Negotiations apply quantity differences against explicit target baskets. Empty exchanges, unsuccessful item
@@ -1615,7 +1615,7 @@ class TradeBotScript(bot: Bot,
         val direct = if (advertised == null && !other.isRealBot())
             PlayerTradeAdvertisementMarket.live.directPurchase(this, other) else null
         if (direct != null && !direct.market.claimDirectPurchase(direct)) return
-        if (!other.isRealBot() && advertised == null && direct == null && (!buying || humanPaymentStock().isEmpty())) return
+        if (!other.isRealBot() && advertised == null && direct == null && !canOrdinaryHumanTrade()) return
         negotiating = true
         marketExperience.pause()
         pendingPartner = other
@@ -1638,7 +1638,7 @@ class TradeBotScript(bot: Bot,
                         }
                     }, canContinue = { advertisementApproachAlive(context) })
                 } else request.sendAndAwait {
-                    val proceed = if (!other.isRealBot()) buying && humanPaymentStock().isNotEmpty()
+                    val proceed = if (!other.isRealBot()) canOrdinaryHumanTrade()
                         else !hasHumanRequest() && !PlayerTradeAdvertisementMarket.live.hasPriority(this)
                     if (!proceed) yieldedToPlayer = true
                     proceed
@@ -2302,7 +2302,7 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
-     * Computes an affordable coin-only payment for a human seller.
+     * Computes carried-coin payment for a human seller or affordable carried stock for a human buyer.
      */
     private fun humanTarget(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Map<Int, Int> {
         if (buying) {
@@ -2325,7 +2325,11 @@ class TradeBotScript(bot: Bot,
             val coins = minOf(budget, (payment[COINS] ?: 0).toLong()).toInt()
             return if (coins > 0) mapOf(COINS to coins) else emptyMap()
         }
-        return emptyMap()
+        val stock = humanSaleStock()
+        if (receiving.isEmpty()) return stock
+        val budget = receivedValue(receiving, guidePrices)
+        return carriedQuantities(TradeBasket.select(quantities(stock.toItems(), true), prices(offering), budget,
+            salePriority()), stock)
     }
 
     /**
@@ -2334,9 +2338,11 @@ class TradeBotScript(bot: Bot,
     private fun salePriority(): List<Int> =
         if (merchantSelling) offering.map { it.item.id } else emptyList()
 
-    /** Ensures ordinary exchanges receive useful stock or payment, even when scrutiny is permissive. */
+    /**
+     * Ensures ordinary exchanges receive useful stock or payment, even when scrutiny is permissive.
+     */
     private fun hasUsefulReturn(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Boolean {
-        if (!buying) return false
+        if (!buying) return receivedValue(receiving, guidePrices) > 0
         val received = quantities(receiving.toItems(), true)
         val wanted = quantities(humanPurchaseDemand(receiving).map { it.item }, true)
         // Do not pay for extras beyond wanted stock or accept unrelated items in place of the advertised purchase.
@@ -2460,6 +2466,18 @@ class TradeBotScript(bot: Bot,
     private fun humanPaymentStock(): Map<Int, Int> = currentAdvertisementFunding(
         carriedOffer.filterKeys { it == COINS },
         bot.overlays[OfferTradeInterface::class]?.items?.filterNotNull().orEmpty())
+
+    /**
+     * Bounds ordinary direct sales to this trip's tradeable stock, including items already on the offer screen.
+     */
+    private fun humanSaleStock(): Map<Int, Int> = currentAdvertisementFunding(carriedOffer,
+        bot.overlays[OfferTradeInterface::class]?.items?.filterNotNull().orEmpty())
+
+    /**
+     * Allows a direct human request only when the prepared bot can offer real payment or sale stock.
+     */
+    private fun canOrdinaryHumanTrade(): Boolean =
+        if (buying) humanPaymentStock().isNotEmpty() else humanSaleStock().isNotEmpty()
 
     /**
      * Human sellers never inherit the larger budget supplied by bot-to-bot barter stock.
@@ -2642,7 +2660,7 @@ class TradeBotScript(bot: Bot,
             other.isRealBot() && (BotSocialInteractions.engaged(other) || BotConversations.engaged(other))) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
-        if (!other.isRealBot()) return buying && humanPaymentStock().isNotEmpty() ||
+        if (!other.isRealBot()) return canOrdinaryHumanTrade() ||
                 PlayerTradeAdvertisementMarket.live.directPurchase(this, other) != null
         val script = other.scriptStack.current() as? TradeBotScript ?: return false
         if (script.negotiating && other.tradingWith != bot.index && existing?.other !== bot) return false
