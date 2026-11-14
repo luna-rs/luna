@@ -512,7 +512,7 @@ public final class BotPreference {
     /**
      * Creates a preference profile from the supplied collections.
      * <p>
-     * Inserts the default general-activity weight and missing default wanted items into the
+     * Inserts default general-activity and general-profit weights and missing default wanted items into the
      * supplied maps. Activity weights are copied; the other collections are retained by reference.
      *
      * @param activities The activity weights, keyed by activity.
@@ -529,6 +529,7 @@ public final class BotPreference {
 
         // New and legacy profiles participate in general activities unless an explicit weight is provided.
         activities.putIfAbsent(BotActivity.GENERAL_ACTIVITIES, 0.25);
+        activities.putIfAbsent(BotActivity.GENERAL_PROFIT, 0.30);
 
         // Load default wanted items.
         for (WantedItemDefinition def : WantedItemDefinition.DEFAULT) {

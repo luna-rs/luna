@@ -900,6 +900,22 @@ enum class SubZone(
             { VARROCK }),
 
     /**
+     * The two safe unicorn spawns south of Varrock's south-eastern mine.
+     */
+    EAST_VARROCK_UNICORNS(
+        inside = Position(3287, 3352),
+        area = SimpleBoxArea.of(3279, 3346, 3290, 3360),
+        parent = { VARROCK }),
+
+    /**
+     * Two horn-dropping black unicorns on the walkable Rellekka mainland, outside the Wilderness.
+     */
+    RELLEKKA_BLACK_UNICORNS(
+        inside = Position(2708, 3672),
+        area = SimpleBoxArea.of(2704, 3655, 2734, 3676),
+        parent = { RELLEKKA }),
+
+    /**
      * The yew trees around the Lumber Yard north-east of Varrock. Intended for low-level and money making woodcutters.
      * - 3 yew trees
      * - Normal trees
@@ -952,6 +968,15 @@ enum class SubZone(
         inside = Position(3117, 9849),
         entrance = EDGEVILLE_DUNGEON_MINE.entrance,
         area = SimpleBoxArea.of(3090, 9820, 3128, 9855),
+        parent = { VARROCK }),
+
+    /**
+     * Five limpwurt-dropping hobgoblins reached from the same brass-key dungeon descent as the mine.
+     */
+    EDGEVILLE_DUNGEON_HOBGOBLINS(
+        inside = Position(3123, 9875),
+        entrance = EDGEVILLE_DUNGEON_MINE.entrance,
+        area = SimpleBoxArea.of(3115, 9867, 3130, 9883),
         parent = { VARROCK }),
 
     /**
@@ -1351,6 +1376,70 @@ enum class SubZone(
             { SEERS_VILLAGE }),
 
     /**
+     * Four maples along the north-west edge of McGrubor's Wood, using Seers banking.
+     */
+    MCGRUBORS_NORTH_WEST_MAPLES(
+        inside = Position(2657, 3519),
+        area = SimpleBoxArea.of(2648, 3515, 2667, 3524),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Eight maples north of McGrubor's Wood, separate from its eastern stands.
+     */
+    MCGRUBORS_NORTH_MAPLES(
+        inside = Position(2659, 3532),
+        area = SimpleBoxArea.of(2648, 3525, 2667, 3540),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Nine maples north-east of McGrubor's Wood, below the northern forest.
+     */
+    MCGRUBORS_NORTH_EAST_MAPLES(
+        inside = Position(2678, 3537),
+        area = SimpleBoxArea.of(2668, 3530, 2688, 3546),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Four maples east of McGrubor's Wood, using the public approach from Seers.
+     */
+    MCGRUBORS_EAST_MAPLES(
+        inside = Position(2683, 3523),
+        area = SimpleBoxArea.of(2676, 3518, 2689, 3529),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Fifteen maples in the western part of the forest north of Seers.
+     */
+    SEERS_NORTH_WEST_FOREST_MAPLES(
+        inside = Position(2685, 3556),
+        area = SimpleBoxArea.of(2666, 3547, 2701, 3569),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Eight maples in the central part of the northern forest, west of the stream.
+     */
+    SEERS_NORTH_CENTRAL_FOREST_MAPLES(
+        inside = Position(2710, 3560),
+        area = SimpleBoxArea.of(2702, 3547, 2719, 3575),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Ten maples on the eastern side of the northern forest, below the farm.
+     */
+    SEERS_NORTH_EAST_FOREST_MAPLES(
+        inside = Position(2726, 3561),
+        area = SimpleBoxArea.of(2720, 3547, 2735, 3575),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Eleven maples along the northern ridge and farm approach, using Seers banking.
+     */
+    SEERS_NORTHERN_RIDGE_MAPLES(
+        inside = Position(2713, 3587),
+        area = SimpleBoxArea.of(2687, 3576, 2735, 3599),
+        parent = { SEERS_VILLAGE }),
+
+    /**
      * The willow trees on the beach west of the Catherby bank. Intended for dexterous willow trainers.
      * - 3 willow trees
      */
@@ -1524,6 +1613,14 @@ enum class SubZone(
         inside = Position(2923, 3289),
         entrance = { Position(2923, 3293) },
         area = SimpleBoxArea.of(2911, 3264, 2938, 3292),
+        parent = { FALADOR }),
+
+    /**
+     * Two mainland snape grass spawns west of the Crafting Guild cow field.
+     */
+    CRAFTING_GUILD_SNAPE_GRASS(
+        inside = Position(2906, 3296),
+        area = SimpleBoxArea.of(2903, 3292, 2910, 3300),
         parent = { FALADOR }),
 
     /**
@@ -3108,7 +3205,7 @@ enum class SubZone(
             if (this !in bot.subZones && !canEnterTaverleyWest(bot))
                 "the western section of Taverley Dungeon needs a dusty key" else null
 
-        EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS ->
+        EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS, EDGEVILLE_DUNGEON_HOBGOBLINS ->
             // A bot without a key buys one for a coin.
             if (this !in bot.subZones && !bot.itemTracker.contains(BrassKeyDoor.KEY) &&
                 !bot.inventory.contains(Currency.COINS.id) && !bot.bank.contains(Currency.COINS.id)
@@ -3129,7 +3226,8 @@ enum class SubZone(
             TAVERLEY_DUNGEON_ZAMORAK_MONKS, TAVERLY_BLACK_DEMONS, TAVERLY_HELLHOUND,
             TAVERLY_DUNGEON_BLUE_DRAGONS -> TaverleyJailDoor.DUSTY_KEY_GATE.key
             WATERFALL_FIRE_GIANTS_WEST, WATERFALL_FIRE_GIANTS_EAST -> 295
-            EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS -> BrassKeyDoor.KEY
+            EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS,
+            EDGEVILLE_DUNGEON_HOBGOBLINS -> BrassKeyDoor.KEY
             else -> null
         }
 

@@ -3,6 +3,7 @@ package io.luna.game.model.mob.bot.brain;
 import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
 import engine.bot.coordinator.GeneralActivityCoordinator;
+import engine.bot.coordinator.GeneralProfitCoordinator;
 import engine.bot.coordinator.MerchantingCoordinator;
 import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.MinigameCoordinator;
@@ -42,6 +43,11 @@ public enum BotActivity {
      * Money-making through combat (e.g., killing profitable monsters, farming drops).
      */
     PROFIT_COMBAT(new CombatCoordinator(false)),
+
+    /**
+     * Money-making without skill training or initiating combat, such as errands, gathering and resale.
+     */
+    GENERAL_PROFIT(GeneralProfitCoordinator.INSTANCE),
 
     /**
      * Player-versus-player combat, including wilderness fights and PK strategies.

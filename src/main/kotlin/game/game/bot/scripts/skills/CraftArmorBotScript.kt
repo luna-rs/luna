@@ -10,7 +10,6 @@ import api.bot.script.productionBatch
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
-import engine.bot.coordinator.skill.CraftingScriptFactory
 import com.google.gson.JsonObject
 import game.skill.crafting.armorCrafting.CraftArmorActionItem
 import game.skill.crafting.armorCrafting.CraftArmorActionItem.Companion.NEEDLE_ID
@@ -149,7 +148,7 @@ class CraftArmorBotScript(
             TanHideBotScript(bot, duration)
         } else {
             if (bot.preferences.isSkiller) return false
-            CraftingScriptFactory.getCollectHidesScript(bot, mutableListOf(), pickUpHides = true)
+            TanHideBotScript(bot, duration)
         }
         bot.scriptStack.softPushHead(preparation)
         stop()

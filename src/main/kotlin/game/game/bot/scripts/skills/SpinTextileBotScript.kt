@@ -43,7 +43,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Owned inputs are withdrawn in partial or full batches and converted by [MakeTextileActionItem]. Current
  * Crafting level is checked before each interaction. [InventoryBotScript] supplies verified unnoted banking,
  * safety checks, progress detection, and persistent retry budgets. Missing wool or roots request total stock
- * targets of 1,000; minimum missing inputs first use obtainWantedItem, with flax harvesting as fallback.
+ * targets of 1,000; missing flax first uses a prepared item-market seller, then shops and harvesting.
  * Bowstring sessions below level ten pause for normal glove training and resume the same session.
  * Three prerequisite attempts without earned Crafting XP end the session; this budget survives saved state.
  *
@@ -295,20 +295,22 @@ class SpinTextileBotScript(
         val target = if (supplyTarget == 0) 28 else (supplyTarget - ownedStrings()).coerceAtLeast(1)
         if (flaxSupplyPhase == 0) {
             flaxSupplyPhase = 1
-            withTimeoutOrNull(minOf(120.seconds, supplyTime())) { handler.shop.obtainWantedItem(FLAX, target) }
+            val deadline = minOf(supplyDeadline, System.currentTimeMillis() + 120_000L)
+            val trade = TradeBotScript.buySpecific(bot, FLAX, target, deadline)
+            if (trade != null) {
+                trade.duration = minOf(45.seconds, supplyTime())
+                bot.scriptStack.pushHead(trade)
+                return false
+            }
         }
         if (supplyTime() <= Duration.ZERO || !isActionSafe()) return false
         if (ownedRaw() > 0) return true
         if (flaxSupplyPhase == 1) {
             flaxSupplyPhase = 2
-            val deadline = minOf(supplyDeadline, System.currentTimeMillis() + 120_000L)
-            val trade = TradeBotScript.buySpecific(bot, FLAX, target, deadline)
-            if (trade != null) {
-                trade.duration = minOf(120.seconds, supplyTime())
-                bot.scriptStack.pushHead(trade)
-                return false
-            }
+            withTimeoutOrNull(minOf(120.seconds, supplyTime())) { handler.shop.obtainWantedItem(FLAX, target) }
         }
+        if (supplyTime() <= Duration.ZERO || !isActionSafe()) return false
+        if (ownedRaw() > 0) return true
         if (flaxSupplyPhase == 2 && supplyTime() > Duration.ZERO) {
             flaxSupplyPhase = 3
             bot.scriptStack.pushHead(HarvestBotScript(bot, Harvestable.FLAX, duration,

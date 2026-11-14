@@ -1221,6 +1221,11 @@ open class NpcCombatScript(bot: Bot,
     }
 
     /**
+     * Lets resource-gathering combat sessions retain bones while ordinary combat keeps its prayer-training behavior.
+     */
+    protected open fun buryLootedBones(): Boolean = true
+
+    /**
      * Collects eligible drops in shared recovery, wanted-item and guide-value order, checking actual capacity per drop.
      * Supply checks still run between attempts; an item that will not fit cannot hide a later compatible stack.
      */
@@ -1244,7 +1249,8 @@ open class NpcCombatScript(bot: Bot,
             bot.naturalDelay()
         }
         for ((index, item) in bot.inventory.withIndex()) {
-            if (activeZone != SubZone.KBD_LAIR && item != null && BotCombatActionHandler.wantsToTrain(bot, SKILL_PRAYER) && Bone.ID_TO_BONE.containsKey(item.id)) {
+            if (buryLootedBones() && activeZone != SubZone.KBD_LAIR && item != null &&
+                BotCombatActionHandler.wantsToTrain(bot, SKILL_PRAYER) && Bone.ID_TO_BONE.containsKey(item.id)) {
                 handler.inventory.clickItem(1, item.id, index)
                 break
             }

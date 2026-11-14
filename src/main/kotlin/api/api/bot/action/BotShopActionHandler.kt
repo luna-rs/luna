@@ -7,6 +7,8 @@ import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
+import api.bot.script.BotScript
+import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
@@ -23,11 +25,15 @@ import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.dialogue.PlayerDialogue
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
+import java.util.WeakHashMap
 
 /**
  * A [BotActionHandler] implementation for shop related actions.
  */
 class BotShopActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
+
+    /** One market preview per missing item before the owning script falls back to a shop. */
+    private val marketAttempts = WeakHashMap<BotScript, MutableSet<Int>>()
 
     /**
      * One finite GP budget shared by every item in a guarded acquisition basket.
@@ -285,6 +291,26 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount
         }.keys
         if (acquired().size == targets.size) return targets.keys
+        if (budget == null) {
+            val owner = bot.scriptStack.current()
+            if (owner != null && owner !is TradeBotScript) {
+                val attempted = marketAttempts.getOrPut(owner) { hashSetOf() }
+                for ((id, amount) in targets) {
+                    if (id in acquired() || bot.bank.computeAmountForId(id).toLong() +
+                        bot.inventory.computeAmountForId(id) >= amount) {
+                        attempted.remove(id)
+                        continue
+                    }
+                    if (attempted.remove(id)) continue
+                    val deadline = System.currentTimeMillis() + 45_000L
+                    val trade = TradeBotScript.buySpecific(bot, id, amount, deadline) ?: continue
+                    attempted.add(id)
+                    trade.duration = 45.seconds
+                    bot.scriptStack.pushHead(trade)
+                    return acquired()
+                }
+            }
+        }
         withTimeoutOrNull(120.seconds) {
             try {
                 for ((id, amount) in targets) {

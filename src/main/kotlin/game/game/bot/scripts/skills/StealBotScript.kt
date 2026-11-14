@@ -14,6 +14,7 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotGearSet
+import engine.bot.coordinator.MerchantingCoordinator
 import game.bot.scripts.combat.CombatBotScript.InitialState
 import game.skill.thieving.stealFromStall.StealFromAction
 import game.skill.thieving.stealFromStall.ThievingStallType
@@ -59,13 +60,15 @@ import kotlin.time.Duration.Companion.seconds
  * @param stalls The stall types this script may steal from.
  * @param duration The remaining amount of time this script should run before completing normally.
  * @param zones The candidate subzones this script may operate in.
+ * @property sellOnCompletion Offer saleable surplus when this is a profit outing.
  * @author lare96
  */
 class StealBotScript(
     bot: Bot,
     val stalls: Set<ThievingStallType>,
     duration: Duration,
-    zones: MutableList<SubZone>
+    zones: MutableList<SubZone>,
+    val sellOnCompletion: Boolean = false
 ) : SkillingBotScript<GameObject>(bot, duration, zones, bot.thieving) {
 
     // Move on if stalls remain unavailable or unsafe, rather than waiting until the entire script expires.
@@ -132,6 +135,11 @@ class StealBotScript(
             var stalls = emptySet<ThievingStallType>()
 
             /**
+             * Whether a completed profit outing should offer its surplus for sale.
+             */
+            var sellOnCompletion = false
+
+            /**
              * Loads the saved zoned-script state and selected thieving stall types.
              *
              * @param data The JSON object containing this script's saved state.
@@ -139,6 +147,7 @@ class StealBotScript(
             override fun load(data: JsonObject) {
                 super.load(data)
                 stalls = loadEnumSet("stalls", data) { ThievingStallType.valueOf(it) }
+                sellOnCompletion = data.get("sell_on_completion")?.asBoolean ?: false
             }
 
             /**
@@ -149,6 +158,7 @@ class StealBotScript(
             override fun save(data: JsonObject) {
                 super.save(data)
                 saveEnumSet("stalls", data, stalls)
+                data.addProperty("sell_on_completion", sellOnCompletion)
             }
         }
     }
@@ -159,7 +169,8 @@ class StealBotScript(
      * @param bot The bot running this script.
      * @param data The saved stealing script data to restore from.
      */
-    constructor(bot: Bot, data: StealData) : this(bot, data.stalls, data.duration, data.zones)
+    constructor(bot: Bot, data: StealData) : this(bot, data.stalls, data.duration, data.zones,
+        data.sellOnCompletion)
 
     /**
      * The full-stall object ids this script can steal from.
@@ -347,9 +358,16 @@ class StealBotScript(
         }
     }
 
+    override suspend fun completed() {
+        if (sellOnCompletion) {
+            MerchantingCoordinator.getSellingScript(bot)?.let { bot.scriptStack.softPushHead(it) }
+        }
+    }
+
     override fun snapshot(): BotScriptData {
         val data = StealData()
         data.stalls = stalls
+        data.sellOnCompletion = sellOnCompletion
         data.duration = duration
         data.zones = originalZones.toMutableList()
         return data

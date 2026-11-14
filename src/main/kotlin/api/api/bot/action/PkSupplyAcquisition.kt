@@ -25,8 +25,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Funds a concrete PK kit from existing gold and non-combat belongings, then uses ordinary wanted-item purchases.
- * Actual shop quotes and inventory changes govern every sale. Missing shop stock never triggers liquidation.
+ * Funds a concrete PK kit from existing gold, then uses ordinary wanted-item purchases.
+ * Only dumb nonmerchant bots liquidate non-combat belongings for a shortfall. Missing shop stock never triggers sales.
  *
  * @author lare96
  */
@@ -110,6 +110,7 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
     internal suspend fun fund(target: Long, reserved: Set<Int>): Boolean {
         if (target < 0 || target > Int.MAX_VALUE || !safe()) return false
         if (coins() >= target) return true
+        if (bot.preferences.isMerchant || !bot.personality.isDumb) return false
         if (!handler.banking.travelToBankOpen() || !safe() || !handler.banking.depositInventory() || !safe()) return false
         val candidates = bot.bank.filterNotNull().filter { !protectedItem(it, reserved) }
             .map { it.id }.distinct().sortedByDescending { id ->

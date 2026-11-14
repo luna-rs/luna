@@ -191,6 +191,7 @@ class MakeCompostBotScript(
         val preparation = preparationSupplies() ?: return false
         FarmingSupplyPreparation.prepare(bot, handler, preparation, SITES.getValue(location),
             { isActionSafe() }, remainingDuration())
+        if (isPaused()) return false
         return supplies { BotFarmingActionHandler.portableStock(bot, it) } != null
     }
     override fun withdraw(): List<Item> = productionWithdraw(

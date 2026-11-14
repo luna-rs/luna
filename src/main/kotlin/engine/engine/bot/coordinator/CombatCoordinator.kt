@@ -2,6 +2,7 @@ package engine.bot.coordinator
 
 import api.bot.zone.SubZone
 import api.predef.*
+import api.predef.ext.totalItemAmount
 import com.google.common.collect.HashMultimap
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
@@ -9,6 +10,8 @@ import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import game.bot.scripts.NpcCombatScript
+import game.bot.scripts.NpcDropGatheringScript
+import game.bot.scripts.HerbloreSecondaryGathering
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
 import game.bot.scripts.BarrowsBotScript
@@ -45,6 +48,10 @@ import kotlin.time.Duration
  */
 class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     companion object {
+        private const val FEATHERS = 314
+        private const val BIG_BONES = 532
+        private const val DRAGON_BONES = 536
+
         /**
          * A configured spawn group and the minimum combat readiness needed for deliberate attacks.
          * Optional assignment kinds prevent a broad native category from bypassing a specialist camp's preparation.
@@ -108,6 +115,27 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.GIANT_MOLE_LAIR, 110, setOf("Giant Mole"), true),
             Camp(SubZone.CHAOS_ELEMENTAL_WILDERNESS, 110, setOf("Chaos Elemental"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
+        )
+
+        /**
+         * A verified drop and bounded owned-stock goal for an ordinary profit combat outing.
+         *
+         * @author lare96
+         */
+        private data class DropGoal(val itemId: Int, val stockCap: Int, val batch: Int,
+                                    val zones: Set<SubZone>)
+
+        private val dropGoals = listOf(
+            DropGoal(FEATHERS, 1_000, 200, setOf(SubZone.LUMBRIDGE_CHICKEN_COOP,
+                SubZone.SOUTH_FALADOR_FARM_WEST_CHICKENS, SubZone.SOUTH_FALADOR_FARM_EAST_CHICKENS)),
+            DropGoal(BIG_BONES, 112, 28, setOf(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS,
+                SubZone.TAVERLY_HILL_GIANTS, SubZone.VARROCK_SEWERS,
+                SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, SubZone.WATERFALL_FIRE_GIANTS_WEST,
+                SubZone.WATERFALL_FIRE_GIANTS_EAST, SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH,
+                SubZone.BRIMHAVEN_MOSS_GIANTS_WEST, SubZone.BRIMHAVEN_MOSS_GIANTS_CENTRAL,
+                SubZone.BRIMHAVEN_MOSS_GIANTS_PASSAGE, SubZone.BRIMHAVEN_MOSS_GIANTS_NORTH)),
+            DropGoal(DRAGON_BONES, 84, 28, setOf(SubZone.GREEN_DRAGONS,
+                SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS))
         )
 
         /** Caps camp difficulty by the current offensive levels used by this session, including melee pures. */
@@ -200,6 +228,32 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             } else null
 
         /**
+         * Uses the native melee loadout and camp gates to gather verified feathers, big bones or dragon bones.
+         * Dragon outings require an owned anti-dragon shield and a usable one-handed melee weapon.
+         */
+        internal fun profitDropGatheringScript(bot: Bot, duration: Duration): NpcDropGatheringScript? {
+            val loadout = CombatLoadout.find(bot, BotGearPurpose.MELEE) ?: return null
+            val readiness = combatReadiness(bot, BotGearPurpose.MELEE)
+            val shieldReady = bot.itemTracker.contains(1540) &&
+                loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true
+            for (goal in dropGoals.shuffled()) {
+                val current = bot.totalItemAmount(goal.itemId)
+                if (current >= goal.stockCap || world.economy.getPrice(goal.itemId) <= 0) continue
+                val options = camps.filter { it.zone in goal.zones && it.minimum <= readiness &&
+                    canUseCamp(it.zone, BotGearPurpose.MELEE, shieldReady) &&
+                    it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }
+                    .shuffled().take(3)
+                if (options.isEmpty()) continue
+                val names = HashMultimap.create<SubZone, String>()
+                options.forEach { names.putAll(it.zone, it.names) }
+                val target = minOf(goal.stockCap.toLong(), current.toLong() + goal.batch).toInt()
+                return NpcDropGatheringScript(bot, goal.itemId, target, minOf(duration, 90.minutes),
+                    options.map { it.zone }.toMutableList(), names, sellOnCompletion = true)
+            }
+            return null
+        }
+
+        /**
          * Gives ready combat trainees optional native minigame outings before ordinary camp selection.
          * Eligible Pest Control volunteers join an existing group first; every route retains its own admission rules.
          */
@@ -278,6 +332,18 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         if (!training && DagannothKingsTrip.ready(bot) && rand(0.25)) {
             bot.scriptStack.push(DagannothKingsBotScript(bot))
             return
+        }
+        if (!training && rand(0.25)) {
+            HerbloreSecondaryGathering.candidate(bot, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
+        }
+        if (!training && rand(0.35)) {
+            profitDropGatheringScript(bot, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
         }
         val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
             .filter { !training || BotCombatActionHandler.trainingPurposeEligible(bot, it) }

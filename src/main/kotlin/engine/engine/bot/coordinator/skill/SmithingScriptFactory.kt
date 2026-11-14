@@ -5,6 +5,7 @@ import api.bot.zone.SubZone
 import api.bot.zone.ProductionZones
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.BlastFurnaceBotScript
 import game.bot.scripts.skills.MakeCannonballBotScript
 import game.bot.scripts.skills.SmeltOreBotScript
 import game.bot.scripts.skills.SmithBarBotScript
@@ -15,7 +16,8 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Creates smithing scripts for bots.
  *
- * Eligible bots with owned steel bars and an ammo mould first produce cannonballs through a furnace.
+ * At a Smithing activity boundary, eligible bots with owned steel or higher ore visit the manual Blast Furnace.
+ * Otherwise, bots with owned steel bars and an ammo mould produce cannonballs through a furnace.
  * Other training sessions prefer level-appropriate equipment, then smelting. Other profit sessions prefer
  * higher-value smithable items, then smelting. Cannonball selection requires permanent level 35 and owned
  * supplies; the script rechecks current level and inventory requirements before each player interaction.
@@ -24,6 +26,16 @@ import io.luna.game.model.mob.bot.Bot
  * @author lare96
  */
 object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
+
+    /**
+     * Selects a small owned-ore Blast Furnace visit for bots that can operate every manual station.
+     * Saved furnace stock is recoverable even when no new ore is owned.
+     */
+    fun getBlastFurnaceScript(bot: Bot, level: Int): BlastFurnaceBotScript? =
+        BarType.entries.asSequence().filter { it.level in BarType.STEEL.level..level }
+            .sortedByDescending { it.level }
+            .firstOrNull { BlastFurnaceBotScript.eligible(bot, it) }
+            ?.let { BlastFurnaceBotScript(bot, it) }
 
     /**
      * Smithable item types prioritized for profit-oriented smithing.

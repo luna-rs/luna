@@ -6,6 +6,9 @@ import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.webwalk.plan.BankAccess
+import api.attr.Attr
+import api.attr.getValue
+import api.attr.setValue
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
@@ -28,19 +31,23 @@ import kotlin.time.Duration.Companion.seconds
  * The bot alternates real coke, pump, pedal, repair, cooling and dispenser actions; no worker NPC is simulated.
  * Loaded ore and earned bars belong to native saved stock, so a restored visit recovers them before adding supplies.
  *
- * Admission is local to Keldagrim and the basement until a complete boat route is supported. Banking uses the
- * ordinary upstairs bank and native stairs, never a modern furnace bank chest or a recovery teleport.
+ * Reaches Keldagrim through the native entrance, boat and stairs. Banking uses the ordinary upstairs bank,
+ * never a modern furnace bank chest or a recovery teleport.
  * Consecutive failures, two minutes without stock/machine progress and an absolute saved deadline bound the visit.
  *
  * @author lare96
  */
 class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
                             private var prepared: Boolean = false,
-                            private val deadline: Long = System.currentTimeMillis() + 480_000,
+                            private val deadline: Long = System.currentTimeMillis() + 1_200_000,
                             private var failures: Int = 0) : BotScript(bot) {
     companion object {
+        private var Bot.nextAttempt by Attr.long()
+
+        private fun defer(bot: Bot) { bot.nextAttempt = System.currentTimeMillis() + 15 * 60_000L }
+
         /**
-         * Only locations with an existing native connection to the real Keldagrim bank are selected automatically.
+         * Identifies local visits through the Keldagrim bank and basement for the minigame coordinator.
          */
         fun local(position: Position): Boolean = BlastFurnace.inside(position) ||
             (position.z == 0 && position.x in 2816..2943 && position.y in 10112..10239)
@@ -86,7 +93,9 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
 
         fun eligible(bot: Bot): Boolean = eligible(bot, BarType.STEEL)
         fun eligible(bot: Bot, bar: BarType): Boolean = bot.state == EntityState.ACTIVE &&
-            ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness() && local(bot.position) &&
+            ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness() && !bot.personality.isDumb &&
+            System.currentTimeMillis() >= bot.nextAttempt && bar.level >= BarType.STEEL.level &&
+            BotCombatActionHandler.mayGainExperience(bot, SKILL_SMITHING) &&
             operatorsReady(bot) &&
             supplies(bot, bar, BlastFurnace.totalOre(bot) + BlastFurnace.totalBars(bot) == 0) != null
     }
@@ -126,7 +135,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
 
     override suspend fun init(resumed: Boolean): Boolean {
         if (System.currentTimeMillis() >= deadline || failures >= 5 || !eligible(bot, selectedBar)) return true
-        return withTimeoutOrNull(180_000) {
+        val finished = withTimeoutOrNull(600_000) {
             val pending = BlastFurnace.totalOre(bot) + BlastFurnace.totalBars(bot) > 0
             if (!prepared || !bot.inventory.contains(BlastFurnace.HAMMER) ||
                 !bot.inventory.containsAny(BlastFurnace.SPADE, BlastFurnace.COKE_SPADE) ||
@@ -135,7 +144,8 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
                 if (!bank(plan)) return@withTimeoutOrNull true
                 prepared = true
             }
-            if (!handler.webWalkTo(BlastFurnace.ENTRY, radius = 3, bank = BankAccess.NONE, fallback = false) || !valid())
+            if (!handler.webWalkTo(BlastFurnace.ENTRY, radius = 3, attempts = 2,
+                    bank = BankAccess.NONE, fallback = false) || !valid())
                 return@withTimeoutOrNull true
             if (!BlastFurnace.hasAccess(bot)) {
                 val foreman = world.locator.findNpcs(BlastFurnace.FOREMAN, 6) { it.id == 2553 }.firstOrNull()
@@ -149,6 +159,8 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             }
             false
         } ?: true
+        if (finished) defer(bot)
+        return finished
     }
 
     private fun find(position: Position, vararg ids: Int): GameObject? =
@@ -175,9 +187,12 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     }
 
     override suspend fun run(): Boolean {
-        if (!valid() || !BlastFurnace.hasAccess(bot) || failures >= 5) return true
+        if (!valid() || !BlastFurnace.hasAccess(bot) || failures >= 5) {
+            if (System.currentTimeMillis() >= deadline || failures >= 5) defer(bot)
+            return true
+        }
         observe()
-        if (System.currentTimeMillis() - lastProgress >= 120_000) return true
+        if (System.currentTimeMillis() - lastProgress >= 120_000) { defer(bot); return true }
         val success = withTimeoutOrNull(if (bot.inventory.isFull && BlastFurnace.totalBars(bot) > 0) 120_000 else 30_000) {
             cycle()
         } == true
@@ -255,7 +270,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     private suspend fun bank(plan: List<Item>): Boolean {
         stopOperating()
         val bank = handler.webWalkToNearestBank(fallback = false) ?: return false
-        if (System.currentTimeMillis() >= deadline || !local(bot.position) || !isActionSafe()) return false
+        if (System.currentTimeMillis() >= deadline || bot.inWilderness() || !isActionSafe()) return false
         if (!handler.interactions.interact(2, bank) || !waitFor(5.seconds) { bot.bank.isOpen } ||
             !handler.banking.depositInventory()) return false
         for (item in plan) if (!handler.banking.withdraw(item)) return false

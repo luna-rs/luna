@@ -567,7 +567,7 @@
   },
   {
     "id": 227, // Vial of water
-    "initial_price": 25,
+    "initial_price": 100,
     "initial_popularity": 40
   },
   {
@@ -4152,7 +4152,7 @@
   },
   {
     "id": 1783, // Bucket of sand
-    "initial_price": 25,
+    "initial_price": 100,
     "initial_popularity": 40
   },
   {

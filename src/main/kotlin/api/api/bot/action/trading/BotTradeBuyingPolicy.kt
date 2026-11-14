@@ -19,9 +19,7 @@ import java.util.Locale
 /**
  * Quotes opportunistic player purchases separately from proactive shopping and personal sale reserves.
  *
- * Shared default supplies receive category buying ceilings without changing their saved ownership targets.
- * Custom supply requirements retain their own targets, including legacy saved overrides. Consequently there is
- * no ambiguous save migration, and a large reactive buying allowance never protects surplus from selling.
+ * Supply purchases use configured ownership targets, raised only by explicit active activity requirements.
  * Supply checks use indexed wanted-item and ownership lookups. Equipment goals are rebuilt at most once every
  * five seconds after an equipment offer; owned-slot indexes are invalidated by native container revisions.
  *
@@ -53,8 +51,6 @@ object BotTradeBuyingPolicy {
     }
 
     private val equipment = Attr.obj { EquipmentCache() }
-    private val supplyCeilings = HashMap<Int, Int>()
-    private val expandedDefaults = HashMap<Int, WantedItemDefinition>()
     private val metalNames = listOf("bronze", "iron", "steel", "black", "white", "mithril", "adamant", "rune", "dragon")
     private val equipmentFamilies = HashMap<Int, String?>()
     private val familyMembers by lazy(LazyThreadSafetyMode.NONE) {
@@ -82,13 +78,10 @@ object BotTradeBuyingPolicy {
             if (fulfilled(bot, goal, gear)) return null
             return copy(wanted, 1)
         }
-        val target = maxOf(ceiling(wanted), active?.target ?: 0)
+        val target = maxOf(wanted.target, active?.target ?: 0)
         if (bot.totalItemAmount(base) >= target) return null
         if (target == wanted.target) return wanted
-        val shared = WantedItemDefinition.DEFAULT.get(base).orElse(null)
-        return if (shared != null && sameSettings(wanted, shared) && target == ceiling(shared)) {
-            expandedDefaults.getOrPut(base) { copy(shared, target) }
-        } else copy(wanted, target)
+        return copy(wanted, target)
     }
 
     /**
@@ -152,19 +145,6 @@ object BotTradeBuyingPolicy {
      */
     fun invalidate(bot: Bot) {
         bot.attributes()[equipment.attr] = EquipmentCache()
-    }
-
-    /**
-     * Raises shared bulk-supply buying allowances while preserving every genuinely custom target.
-     */
-    internal fun ceiling(wanted: WantedItemDefinition): Int {
-        val shared = WantedItemDefinition.DEFAULT.get(wanted.id).orElse(null) ?: return wanted.target
-        if (!sameSettings(wanted, shared)) return wanted.target
-        val consumable = WantedItemTag.SKILLING_CONSUMABLE in wanted.tags ||
-                WantedItemTag.COMBAT_CONSUMABLE in wanted.tags
-        if (!consumable) return wanted.target
-        val category = supplyCeilings.getOrPut(wanted.id) { supplyCeiling(wanted.id) }
-        return maxOf(wanted.target, category)
     }
 
     private fun eligible(bot: Bot, wanted: WantedItemDefinition): Boolean {
@@ -240,42 +220,6 @@ object BotTradeBuyingPolicy {
         BotGearSelector.ALL_GEAR_IDS.value[id]?.index?.let { it != Equipment.AMMUNITION } == true &&
             bot.preferences.getWantedItem(id)?.tags?.contains(WantedItemTag.TOOL) != true &&
             WantedItemDefinition.DEFAULT.get(id).map { WantedItemTag.TOOL !in it.tags }.orElse(true)
-
-    private fun supplyCeiling(id: Int): Int {
-        val name = ItemDefinition.ALL.get(id).map { it.name.lowercase(Locale.ROOT) }.orElse("")
-        return when {
-            name.contains("essence") -> 50_000
-            name == "feather" || name.contains("arrow shaft") || name.contains("arrowhead") -> 50_000
-            name.endsWith(" rune") -> if (name.startsWith("air ") || name.startsWith("water ") ||
-                name.startsWith("earth ") || name.startsWith("fire ")) 20_000 else 10_000
-            name == "flax" -> 20_000
-            name == "bow string" -> 10_000
-            name.endsWith(" seed") -> 5_000
-            name.contains("ore") || name == "coal" -> when {
-                name.startsWith("runite") -> 1_000
-                name.startsWith("adamantite") -> 2_000
-                name.startsWith("mithril") -> 5_000
-                else -> 10_000
-            }
-            name.endsWith(" bar") -> when {
-                name.startsWith("runite") -> 1_000
-                name.startsWith("adamantite") -> 2_000
-                else -> 5_000
-            }
-            name.contains("logs") -> when {
-                name.startsWith("magic") -> 1_000
-                name.startsWith("yew") -> 2_000
-                else -> 10_000
-            }
-            name.startsWith("raw ") || name.contains("bones") -> 5_000
-            else -> 5_000
-        }
-    }
-
-    private fun sameSettings(first: WantedItemDefinition, second: WantedItemDefinition): Boolean =
-        first === second || first.id == second.id && first.min == second.min && first.target == second.target &&
-                first.skill == second.skill && first.maxLevel == second.maxLevel &&
-                first.priority == second.priority && first.tags == second.tags
 
     private fun copy(wanted: WantedItemDefinition, target: Int): WantedItemDefinition =
         WantedItemDefinition(wanted.id, wanted.min, target, wanted.skill, wanted.maxLevel, wanted.priority, wanted.tags)
