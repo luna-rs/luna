@@ -28,14 +28,14 @@ import io.luna.game.model.mob.bot.Bot
 object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
 
     /**
-     * Selects a small owned-ore Blast Furnace visit for bots that can operate every manual station.
+     * Selects repeated owned-ore Blast Furnace batches for a normal Smithing session.
      * Saved furnace stock is recoverable even when no new ore is owned.
      */
     fun getBlastFurnaceScript(bot: Bot, level: Int): BlastFurnaceBotScript? =
         BarType.entries.asSequence().filter { it.level in BarType.STEEL.level..level }
             .sortedByDescending { it.level }
             .firstOrNull { BlastFurnaceBotScript.eligible(bot, it) }
-            ?.let { BlastFurnaceBotScript(bot, it) }
+            ?.let { BlastFurnaceBotScript(bot, it, deadline = System.currentTimeMillis() + getDuration(bot).inWholeMilliseconds) }
 
     /**
      * Smithable item types prioritized for profit-oriented smithing.

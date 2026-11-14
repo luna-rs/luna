@@ -27,7 +27,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Runs one small manual furnace batch using owned ore, coal, tools and fees through normal player interactions.
+ * Repeats manual furnace batches using owned ore, coal, tools and fees through normal player interactions.
  * The bot alternates real coke, pump, pedal, repair, cooling and dispenser actions; no worker NPC is simulated.
  * Loaded ore and earned bars belong to native saved stock, so a restored visit recovers them before adding supplies.
  *
@@ -58,9 +58,13 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         private fun operatorsReady(bot: Bot): Boolean = listOf(SKILL_STRENGTH, SKILL_AGILITY, SKILL_CRAFTING, SKILL_FIREMAKING)
             .all { bot.skill(it).staticLevel >= 30 && BotCombatActionHandler.mayGainExperience(bot, it) }
 
+        private fun pendingWork(bot: Bot): Boolean = BlastFurnace.totalBars(bot) > 0 || BlastFurnace.beltCount(bot) > 0 ||
+            BarType.entries.any { bar -> bar.level <= bot.smithing.level &&
+                BlastFurnace.ingredients(bar).all { BlastFurnace.oreCount(bot, it.id) >= it.amount } }
+
         /**
-         * Reserves tools and fee space before calculating an indivisible batch of existing BarType ingredients.
-         * At most six bars keeps solo pump/pedal/cooling work short and leaves room for a return trip's bars.
+         * Reserves tools and fee space, then fills the remaining inventory with a complete recipe.
+         * Existing furnace stock contributes to the recipe; depositing ore frees room for its resulting bars.
          */
         fun supplies(bot: Bot, bar: BarType, includeOre: Boolean = true): List<Item>? {
             if (bot.smithing.staticLevel < bar.level) return null
@@ -82,11 +86,17 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             }
             if (includeOre) {
                 val recipe = BlastFurnace.ingredients(bar)
-                val slots = 28 - supplies.size - 2
-                val batches = minOf(6, slots / recipe.sumOf { it.amount },
-                    recipe.minOf { (owned(bot, it.id) / it.amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() })
-                if (batches <= 0) return null
-                supplies += recipe.map { Item(it.id, it.amount * batches) }
+                val slots = bot.inventory.capacity() - supplies.size
+                val maximum = recipe.minOf {
+                    minOf(255L / it.amount, (owned(bot, it.id) + BlastFurnace.oreCount(bot, it.id)) / it.amount).toInt()
+                }
+                val batches = (maximum downTo 1).firstOrNull { count ->
+                    recipe.sumOf { (it.amount * count - BlastFurnace.oreCount(bot, it.id)).coerceAtLeast(0) } <= slots
+                } ?: return null
+                supplies += recipe.mapNotNull {
+                    val amount = (it.amount * batches - BlastFurnace.oreCount(bot, it.id)).coerceAtLeast(0)
+                    if (amount > 0) Item(it.id, amount) else null
+                }
             }
             return supplies
         }
@@ -97,7 +107,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             System.currentTimeMillis() >= bot.nextAttempt && bar.level >= BarType.STEEL.level &&
             BotCombatActionHandler.mayGainExperience(bot, SKILL_SMITHING) &&
             operatorsReady(bot) &&
-            supplies(bot, bar, BlastFurnace.totalOre(bot) + BlastFurnace.totalBars(bot) == 0) != null
+            supplies(bot, bar, !pendingWork(bot)) != null
     }
 
     /**
@@ -133,10 +143,14 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     private fun valid(): Boolean = System.currentTimeMillis() < deadline && isActionSafe() &&
         BlastFurnace.inside(bot.position) && operatorsReady(bot)
 
+    private fun pendingWork(): Boolean = pendingWork(bot)
+
+    private fun carriedOre(): Boolean = BlastFurnace.ingredients(selectedBar).any { bot.inventory.contains(it.id) }
+
     override suspend fun init(resumed: Boolean): Boolean {
         if (System.currentTimeMillis() >= deadline || failures >= 5 || !eligible(bot, selectedBar)) return true
         val finished = withTimeoutOrNull(600_000) {
-            val pending = BlastFurnace.totalOre(bot) + BlastFurnace.totalBars(bot) > 0
+            val pending = pendingWork()
             if (!prepared || !bot.inventory.contains(BlastFurnace.HAMMER) ||
                 !bot.inventory.containsAny(BlastFurnace.SPADE, BlastFurnace.COKE_SPADE) ||
                 !bot.inventory.containsAny(BlastFurnace.BUCKET, BlastFurnace.WATER)) {
@@ -144,20 +158,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
                 if (!bank(plan)) return@withTimeoutOrNull true
                 prepared = true
             }
-            if (!handler.webWalkTo(BlastFurnace.ENTRY, radius = 3, attempts = 2,
-                    bank = BankAccess.NONE, fallback = false) || !valid())
-                return@withTimeoutOrNull true
-            if (!BlastFurnace.hasAccess(bot)) {
-                val foreman = world.locator.findNpcs(BlastFurnace.FOREMAN, 6) { it.id == 2553 }.firstOrNull()
-                    ?: return@withTimeoutOrNull true
-                if (!handler.interactions.approach(foreman, timeout = 10.seconds, allowOutOfView = true) { valid() } ||
-                    !handler.interactions.interact(1, foreman) { valid() } ||
-                    !waitFor(5.seconds) { bot.overlays.has(OptionDialogue::class.java) } ||
-                    !handler.widgets.clickDialogueOption(1) || !waitFor(5.seconds) { BlastFurnace.hasAccess(bot) })
-                    return@withTimeoutOrNull true
-                handler.widgets.clickCloseInterface()
-            }
-            false
+            !returnToFurnace()
         } ?: true
         if (finished) defer(bot)
         return finished
@@ -187,19 +188,66 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     }
 
     override suspend fun run(): Boolean {
-        if (!valid() || !BlastFurnace.hasAccess(bot) || failures >= 5) {
-            if (System.currentTimeMillis() >= deadline || failures >= 5) defer(bot)
-            return true
+        if (!valid() || failures >= 5) {
+            if (failures >= 5) defer(bot)
+            return finishBanking()
+        }
+        if (!BlastFurnace.hasAccess(bot)) {
+            val plan = supplies(bot, selectedBar, false)
+            val renewed = plan != null && withTimeoutOrNull(120_000) {
+                bank(plan) && returnToFurnace()
+            } == true
+            if (!renewed) { defer(bot); return true }
+            resetProgress()
         }
         observe()
         if (System.currentTimeMillis() - lastProgress >= 120_000) { defer(bot); return true }
+        if (!pendingWork() && !carriedOre()) return restock()
         val success = withTimeoutOrNull(if (bot.inventory.isFull && BlastFurnace.totalBars(bot) > 0) 120_000 else 30_000) {
             cycle()
         } == true
         failures = if (success) 0 else failures + 1
         delay(1.seconds)
-        return BlastFurnace.totalOre(bot) + BlastFurnace.totalBars(bot) == 0 &&
-            BlastFurnace.ingredients(selectedBar).none { bot.inventory.contains(it.id) }
+        return false
+    }
+
+    private fun resetProgress() {
+        previous = null
+        lastProgress = System.currentTimeMillis()
+    }
+
+    private suspend fun restock(): Boolean {
+        val plan = if (trainingComplete()) null else supplies(bot, selectedBar)
+        if (plan == null) return finishBanking()
+        val ready = withTimeoutOrNull(120_000) { bank(plan) && returnToFurnace() } == true
+        if (!ready) { defer(bot); return true }
+        prepared = true
+        resetProgress()
+        return false
+    }
+
+    private suspend fun finishBanking(): Boolean {
+        if (bot.state == EntityState.ACTIVE && isActionSafe() && !bot.inWilderness()) {
+            withTimeoutOrNull(120_000) { bank(emptyList(), ending = true) }
+        }
+        return true
+    }
+
+    private suspend fun returnToFurnace(): Boolean {
+        if (!handler.webWalkTo(BlastFurnace.ENTRY, radius = 3, attempts = 2,
+                bank = BankAccess.NONE, fallback = false) || !valid()) return false
+        if (BlastFurnace.hasAccess(bot)) return true
+        if (bot.inventory.computeAmountForId(995) < BlastFurnace.FEE) {
+            val plan = supplies(bot, selectedBar, false) ?: return false
+            if (!bank(plan) || !handler.webWalkTo(BlastFurnace.ENTRY, radius = 3, attempts = 2,
+                    bank = BankAccess.NONE, fallback = false) || !valid()) return false
+        }
+        val foreman = world.locator.findNpcs(BlastFurnace.FOREMAN, 6) { it.id == 2553 }.firstOrNull() ?: return false
+        if (!handler.interactions.approach(foreman, timeout = 10.seconds, allowOutOfView = true) { valid() } ||
+            !handler.interactions.interact(1, foreman) { valid() } ||
+            !waitFor(5.seconds) { bot.overlays.has(OptionDialogue::class.java) } ||
+            !handler.widgets.clickDialogueOption(1) || !waitFor(5.seconds) { BlastFurnace.hasAccess(bot) }) return false
+        return handler.widgets.clickCloseInterface() && valid()
     }
 
     private suspend fun cycle(): Boolean {
@@ -215,11 +263,10 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         }
         if (BlastFurnace.totalBars(bot) > 0) {
             if (bot.inventory.isFull) {
-                // Saved mixed stock can exceed a fresh six-bar batch. Preserve it and make as many real bank trips
+                // Saved mixed stock can exceed one inventory. Preserve it and make as many real bank trips
                 // as the saved visit budget allows; never withdraw another ore batch during claim recovery.
                 val plan = supplies(bot, selectedBar, false) ?: return false
-                return bank(plan) && handler.webWalkTo(BlastFurnace.ENTRY, radius = 3,
-                    bank = BankAccess.NONE, fallback = false) && valid()
+                return bank(plan) && returnToFurnace()
             }
             if (!click(BlastFurnace.DISPENSER, 9092, 9093, 9096) ||
                 !waitFor(5.seconds) { bot.overlays.has(BlastFurnaceInterface::class.java) }) return false
@@ -230,7 +277,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             handler.widgets.clickCloseInterface()
             return result
         }
-        if (BlastFurnace.ingredients(selectedBar).any { bot.inventory.contains(it.id) }) {
+        if (carriedOre()) {
             val before = BlastFurnace.totalOre(bot)
             return click(BlastFurnace.BELT, 9100) && waitFor(5.seconds) { BlastFurnace.totalOre(bot) > before }
         }
@@ -267,10 +314,10 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
      * Consolidates owned supplies at a native bank without the banking handler's home/recovery fallback.
      * The actual second-click bank handler must acknowledge opening before deposits and withdrawals proceed.
      */
-    private suspend fun bank(plan: List<Item>): Boolean {
+    private suspend fun bank(plan: List<Item>, ending: Boolean = false): Boolean {
         stopOperating()
         val bank = handler.webWalkToNearestBank(fallback = false) ?: return false
-        if (System.currentTimeMillis() >= deadline || bot.inWilderness() || !isActionSafe()) return false
+        if ((!ending && System.currentTimeMillis() >= deadline) || bot.inWilderness() || !isActionSafe()) return false
         if (!handler.interactions.interact(2, bank) || !waitFor(5.seconds) { bot.bank.isOpen } ||
             !handler.banking.depositInventory()) return false
         for (item in plan) if (!handler.banking.withdraw(item)) return false
