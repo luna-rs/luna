@@ -50,9 +50,9 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 
 
-Kalphite Queen content adaptations (game.combat.npcHooks.kalphiteQueen),
-player hit-sound behavior and equipment mappings (engine.player.sounds.PlayerHitSounds),
-and NPC combat sound mappings (data/game/def/npcs/npc_combat.jsonc):
+Portions of Luna's gameplay, shops, music, sound mappings and configuration data are
+adapted from Lost City Content (https://github.com/LostCityRS/Content) and Engine-TS
+(https://github.com/LostCityRS/Engine-TS), distributed under the following license:
 MIT License
 
 Copyright (c) 2023-2026 Lost City
