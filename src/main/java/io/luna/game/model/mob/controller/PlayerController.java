@@ -2,6 +2,7 @@ package io.luna.game.model.mob.controller;
 
 import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.LogoutService;
+import io.luna.game.action.impl.LockedAction;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
@@ -91,10 +92,11 @@ public class PlayerController {
     /**
      * Returns the position to persist while this controller is active.
      *
-     * @return The player's ordinary world position.
+     * @return An active traversal's safe saved position, or the player's ordinary world position.
      */
     public Position getPersistencePosition() {
-        return player.getPosition();
+        LockedAction traversal = player.getActions().first(LockedAction.class);
+        return traversal == null ? player.getPosition() : traversal.getPersistencePosition();
     }
 
     /**

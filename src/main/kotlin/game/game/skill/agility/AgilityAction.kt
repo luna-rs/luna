@@ -6,6 +6,7 @@ import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.controller.PlayerController
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.ExactMovement
 import io.luna.game.model.mob.block.PlayerModelAnimation
@@ -97,6 +98,8 @@ open class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
     private var leg = 0
     private var elapsed = 0
     private var finished = false
+    private var entry: Position? = null
+    private var entryController: PlayerController? = null
 
     /**
      * Animations held back for a tick, while the client finishes the previous leg's steps in that leg's.
@@ -121,6 +124,8 @@ open class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
     override fun beforeLock(): Boolean = valid()
 
     override fun onLock() {
+        entry = mob.position
+        entryController = mob.controllers.primary
         previousAnimation = mob.model
         mob.walking.clear()
         if (steps.first().animation == -1) mob.animation(Animation(-1))
@@ -128,6 +133,9 @@ open class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
         start()
         if (!valid() || !beginLeg()) complete()
     }
+
+    override fun getPersistencePosition(): Position =
+        if (!finished && mob.controllers.primary === entryController) entry ?: mob.position else mob.position
 
     override fun run(): Boolean {
         if (!valid()) return true
