@@ -81,6 +81,8 @@ import game.bot.scripts.skills.BonesToFoodBotScript
 import game.bot.scripts.skills.BonesToFoodBotScript.Companion.BonesToFoodData
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.AlchemyBotScript.Companion.AlchemyData
+import game.bot.scripts.skills.SplashBotScript
+import game.bot.scripts.skills.SplashBotScript.Companion.SplashData
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CollectHidesBotScript.Companion.CollectHidesData
 import game.bot.scripts.skills.CookFoodBotScript
@@ -279,4 +281,5 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }
     scriptManager.addScript<BonesToFoodData>(BonesToFoodBotScript::class) { bot, data -> BonesToFoodBotScript(bot, data) }
     scriptManager.addScript<AlchemyData>(AlchemyBotScript::class) { bot, data -> AlchemyBotScript(bot, data) }
+    scriptManager.addScript<SplashData>(SplashBotScript::class) { bot, data -> SplashBotScript(bot, data) }
 }

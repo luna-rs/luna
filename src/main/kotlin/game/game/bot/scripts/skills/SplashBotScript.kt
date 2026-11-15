@@ -1,19 +1,22 @@
 package game.bot.scripts.skills
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.CombatLoadout
 import api.bot.action.MagicOnlyCombat
+import api.bot.action.MagicSupplyPreparation
+import api.attr.Attr
+import api.attr.getValue
+import api.attr.setValue
 import api.bot.Suspendable.naturalDelay
-import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript
+import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import game.skill.magic.Rune
-import game.skill.magic.RuneRequirement
-import game.skill.magic.Staff
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Equipment.AMMUNITION
@@ -32,231 +35,142 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Uses owned runes and the existing deliberately inaccurate loadout against native low-level targets.
- * Failed searches are bounded at the arrived zone, allowing other authored rat habitats to be tried.
+ * Trains with native failed casts and an equipment-validated Magic attack bonus of at most -64.
+ * Missing bronze equipment and small rune batches use normal wanted-item acquisition. Low-level accounts
+ * manually cast without a staff when its positive bonus would prevent guaranteed splashes.
+ * Exhausted supplies trigger banking and bounded replenishment rather than physical attacks.
  *
  * @author lare96
  */
-class SplashBotScript(
-    bot: Bot,
-    duration: Duration
-) : ZonedBotScript(bot, duration, SPLASH_ZONES.toMutableList()), MagicOnlyCombat {
+class SplashBotScript(bot: Bot, duration: Duration,
+                      zones: MutableList<SubZone> = SPLASH_ZONES.toMutableList()) :
+    ZonedBotScript(bot, duration, zones), MagicOnlyCombat {
 
     override val actionSafety = ActionSafety.COMBAT
-
-    override val magicOnly: Boolean = true
-
-    override val allowsCombatResponse: Boolean = false
-
-    private data class RuneSetup(
-        val spell: CombatSpellDefinition,
-        val staffId: Int
-    )
-
+    override val magicOnly = true
+    override val allowsCombatResponse = false
     private var spell: CombatSpellDefinition? = null
     private var usingStaff: Int? = null
     private var splashEquipment: Array<Int?>? = null
-    private var runes: List<Item> = emptyList()
+    private val supplies = MagicSupplyPreparation(bot)
     private var searchingZone: SubZone? = null
     private var searchStartedAt: Long? = null
+    private var started = false
 
     companion object {
-        const val MIN_CAST_RUNES_REQUIRED = 2_000
+        const val RUNE_BATCH_CASTS = 100
         const val MAX_SPLASH_MAGIC_BONUS = -64
-
         val SPLASH_ZONES = listOf(SubZone.LUMBRIDGE_COURT_YARD, SubZone.VARROCK_SEWERS, SubZone.DRAYNOR_SEWERS)
         val ALWAYS_ALLOWED = setOf("Rat")
-
+        private val STARTER_ARMOUR = setOf(1155, 1117, 1075, 1189)
+        private var Bot.splashSessions by Attr.long().persist("splash_sessions")
+        private var Bot.splashCasts by Attr.long().persist("splash_casts")
         private val SPLASH_SPELLS = listOf(
-            CombatSpell.WIND_STRIKE,
-            CombatSpell.WATER_STRIKE,
-            CombatSpell.EARTH_STRIKE,
-            CombatSpell.FIRE_STRIKE,
-            CombatSpell.WIND_BOLT,
-            CombatSpell.WATER_BOLT,
-            CombatSpell.EARTH_BOLT,
-            CombatSpell.FIRE_BOLT,
-            CombatSpell.WIND_BLAST,
-            CombatSpell.WATER_BLAST,
-            CombatSpell.EARTH_BLAST,
-            CombatSpell.FIRE_BLAST,
-            CombatSpell.WIND_WAVE,
-            CombatSpell.WATER_WAVE,
-            CombatSpell.EARTH_WAVE,
-            CombatSpell.FIRE_WAVE
-        )
+            CombatSpell.WIND_STRIKE, CombatSpell.WATER_STRIKE, CombatSpell.EARTH_STRIKE, CombatSpell.FIRE_STRIKE,
+            CombatSpell.WIND_BOLT, CombatSpell.WATER_BOLT, CombatSpell.EARTH_BOLT, CombatSpell.FIRE_BOLT,
+            CombatSpell.WIND_BLAST, CombatSpell.WATER_BLAST, CombatSpell.EARTH_BLAST, CombatSpell.FIRE_BLAST,
+            CombatSpell.WIND_WAVE, CombatSpell.WATER_WAVE, CombatSpell.EARTH_WAVE, CombatSpell.FIRE_WAVE)
 
         /**
-         * Desired ownership target for every rune used by the normal splashing spell progression.
+         * Retains the session and interrupted shopping deadline through logout or restart.
          *
-         * The target is large enough to cast the most rune-expensive spell that uses that rune
-         * [MIN_CAST_RUNES_REQUIRED] times.
+         * @author lare96
          */
-        private val runeTargets by lazy {
-            val targets = HashMap<Rune, Int>()
-
-            for (combatSpell in SPLASH_SPELLS) {
-                for (requirement in combatSpell.def.required) {
-                    if (requirement is RuneRequirement) {
-                        val amount = requirement.amount * MIN_CAST_RUNES_REQUIRED
-                        targets[requirement.rune] = maxOf(targets[requirement.rune] ?: 0, amount)
-                    }
-                }
+        class SplashData : ZonedBotScriptData() {
+            var supplyDeadline = 0L
+            var started = false
+            override fun load(data: JsonObject) {
+                super.load(data)
+                supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
+                started = data.get("started")?.asBoolean ?: false
             }
-
-            targets
+            override fun save(data: JsonObject) {
+                super.save(data)
+                data.addProperty("supply_deadline", supplyDeadline)
+                data.addProperty("started", started)
+            }
         }
+    }
+
+    constructor(bot: Bot, data: SplashData) : this(bot, data.duration, data.zones) {
+        supplies.deadline = data.supplyDeadline
+        started = data.started
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
         clearCombat()
-        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
+        if (!BotCombatActionHandler.wantsToTrain(bot, SKILL_MAGIC)) return false
         if (!handler.combat.switchSpellbook(Spellbook.REGULAR)) return false
-        if (resumed && spell != null && usingStaff != null && splashEquipment != null) {
-            return true
+        var equipment = chooseEquipment()
+        if (equipment == null) {
+            if (!supplies.obtain(STARTER_ARMOUR.associateWith { 1 })) return false
+            equipment = chooseEquipment() ?: return false
         }
-
-        val staves = ownedStaves()
-        if (staves.isEmpty()) {
-            bot.log("No usable staff available for splashing.")
-            return false
+        splashEquipment = equipment
+        usingStaff = equipment[WEAPON]
+        spell = ownedSpell(false) ?: CombatSpell.WIND_STRIKE.def
+        if (!prepareRunes()) return false
+        if (resumed) {
+            if (!validEquipment() && !BotGearLocator(bot, equipment.copyOf()).locateAndEquip()) return false
+            forceBanking = true
         }
-
-        val runeSetups = resolveRuneSetups(staves)
-        if (runeSetups.isEmpty()) {
-            addWantedRunes()
-            bot.log("No splash spell has enough runes for $MIN_CAST_RUNES_REQUIRED casts.")
-            return false
-        }
-
-        /*
-         * Rune setups are ordered from highest spell to lowest. For equal spells, staves that save
-         * more runes are preferred.
-         *
-         * We still check every staff because its magic attack bonus affects whether -64 can be reached.
-         */
-        for (setup in runeSetups) {
-            val equipment = resolveSplashEquipment(setup.staffId) ?: continue
-
-            spell = setup.spell
-            usingStaff = setup.staffId
-            splashEquipment = equipment
-            runes = resolveRuneWithdrawList()
-            return true
-        }
-
-        bot.log(
-            "No owned equipment combination can reach $MAX_SPLASH_MAGIC_BONUS magic attack or lower."
-        )
-        return false
+        return true
     }
 
-    override suspend fun equipment(): BotGearLocator? {
-        val equipment = splashEquipment ?: return null
-        return BotGearLocator(bot, equipment.copyOf())
-    }
-
-    override suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) {
-        bot.log("Could not equip the required splashing setup.")
-        stop()
-    }
+    override suspend fun equipment(): BotGearLocator? = splashEquipment?.let { BotGearLocator(bot, it.copyOf()) }
+    override suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) { stop() }
 
     override suspend fun onBankOpen(initial: Boolean) {
-        if (!initial) {
+        clearCombat()
+        if (!validEquipment() || !prepareRunes()) {
+            if (!isPaused()) stop()
             return
         }
-
-        val magicBonus = bot.equipment.getBonus(MAGIC_ATTACK)
-        if (magicBonus > MAX_SPLASH_MAGIC_BONUS) {
-            bot.log("Splash gear is invalid. Magic attack bonus is $magicBonus.")
-            stop()
-            return
+        if (!bot.bank.isOpen && !handler.banking.travelToBankOpen()) { stop(); return }
+        handler.banking.clickBankingMode(false)
+        val selected = spell ?: return
+        for ((id, amount) in CombatLoadout.runeCosts(selected, usingStaff)) {
+            val missing = amount * RUNE_BATCH_CASTS - bot.inventory.computeAmountForId(id)
+            if (missing > 0 && id in bot.bank) handler.banking.withdraw(Item(id, missing))
         }
-
-        if (!handler.banking.withdrawAll(runes)) {
-            bot.log("Could not withdraw the required splashing runes.")
-            stop()
-            return
-        }
-
-        /*
-         * Food is only an emergency supply. Running out of food should not prevent splashing from
-         * starting, and withdrawAnyFood() will add wanted food when none is owned.
-         */
-        if (!handler.banking.withdrawAnyFood(rand(2, 7))) {
-            bot.log("No food available for splashing. Continuing without emergency food.")
-        }
-
-        val availableSpell = resolveRuntimeSpell()
+        handler.banking.withdrawAnyFood(3)
         if (bot.combat.stance == CombatStance.DEFENSIVE) {
             val style = bot.combat.weapon.typeDef.styles.firstOrNull { it.stance != CombatStance.DEFENSIVE }
                 ?: run { stop(); return }
             bot.combat.weapon.changeStyle(style.button)
         }
-        if (availableSpell == null || !handler.combat.setAutocastSpell(availableSpell)) {
-            bot.log("Could not configure a valid autocast spell after banking.")
+        if (ownedSpell(true) == null || usingStaff != null && !handler.combat.setAutocastSpell(selected)) {
             stop()
             return
         }
-
-        spell = availableSpell
+        if (!started) {
+            bot.splashSessions = (bot.splashSessions + 1).coerceAtLeast(bot.splashSessions)
+            started = true
+        }
     }
 
     override suspend fun executeInZone(): Boolean {
-        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) { stop(); return false }
-        val magicBonus = bot.equipment.getBonus(MAGIC_ATTACK)
-        if (magicBonus > MAX_SPLASH_MAGIC_BONUS) {
-            bot.log("Magic attack bonus is too high to guarantee splashes. bonus=$magicBonus")
-            stop()
+        if (!BotCombatActionHandler.wantsToTrain(bot, SKILL_MAGIC) || !validEquipment()) { stop(); return true }
+        val available = ownedSpell(true)
+        if (available == null) {
+            clearCombat()
+            forceBanking = true
             return true
         }
-
-        /*
-         * Only require enough runes for one cast here. The 2,000-cast requirement is exclusively
-         * a startup requirement.
-         *
-         * This naturally causes Fire Blast -> Earth Blast -> Air Blast -> Fire Bolt -> etc. as
-         * different rune supplies are exhausted.
-         */
-        val availableSpell = resolveRuntimeSpell()
-        if (availableSpell == null) {
-            bot.log("No usable splashing runes remain. Stopping script.")
-            stop()
-            return true
+        spell = available
+        if (usingStaff != null && (!bot.combat.magic.isAutocasting || bot.combat.magic.autocastSpell != available)) {
+            if (!handler.combat.setAutocastSpell(available)) { stop(); return true }
         }
-
-        if (availableSpell != spell ||
-            bot.combat.magic.autocastSpell != availableSpell ||
-            !bot.combat.magic.isAutocasting
-        ) {
-            if (!handler.combat.setAutocastSpell(availableSpell)) {
-                bot.log("Failed to switch autocast spell to ${availableSpell.spell}.")
-                stop()
-                return true
-            }
-
-            spell = availableSpell
-        }
-
-        /*
-         * Autocasting handles subsequent attacks once combat has started. We only need to acquire
-         * another target when combat ends.
-         */
-        val combatTarget = bot.combat.target
-        if (bot.combat.inCombat() && combatTarget is Npc && combatTarget.isAlive) {
-            return true
-        }
-
+        val current = bot.combat.target
+        if (usingStaff != null && current is Npc && current.isAlive && bot.combat.inCombat()) return true
         val area = activeZone?.area ?: return false
         if (searchingZone != activeZone) {
             searchingZone = activeZone
             searchStartedAt = null
         }
-
         val target = world.locator.findNpcs(area.centerPosition, area.tileRadius) {
             it.position in area && isValidTarget(it)
-        }.asSequence()
-            .filter { bot.isWithinDistance(it, 10) }
+        }.asSequence().filter { bot.isWithinDistance(it, 10) }
             .filter { world.collisionManager.raycast(bot.position, it.position) }
             .minByOrNull { bot.position.computeLongestDistance(it.position) }
         if (target == null) {
@@ -264,8 +178,8 @@ class SplashBotScript(
             val started = searchStartedAt ?: now.also { searchStartedAt = it }
             return now - started < 180.seconds.inWholeNanoseconds
         }
-
         searchStartedAt = null
+        if (usingStaff == null && !handler.combat.selectAndUseSpell(available.spell)) return true
         bot.combat.attack(target)
         bot.naturalDelay()
         return true
@@ -275,25 +189,28 @@ class SplashBotScript(
         searchStartedAt = null
         clearCombat()
     }
-
-    override suspend fun finish() {
-        clearCombat()
-    }
+    override suspend fun finish() { clearCombat() }
 
     override fun permitsMagicAttack(attack: CombatAttack<*>): Boolean {
-        val ready = usingStaff != null && usingStaff == bot.equipment.weapon?.id &&
-            bot.equipment.getBonus(MAGIC_ATTACK) <= MAX_SPLASH_MAGIC_BONUS &&
-            BotCombatActionHandler.isNativeMagicAttack(bot, attack)
+        val ready = validEquipment() && BotCombatActionHandler.isNativeMagicAttack(bot, attack)
         if (!ready) {
             clearCombat()
-            stop()
+            forceBanking = true
         }
         return ready
     }
 
-    /**
-     * Stops inherited or interrupted combat so an empty autocast cannot fall through to a physical attack.
-     */
+    override fun onMagicCast() {
+        bot.splashCasts = (bot.splashCasts + 1).coerceAtLeast(bot.splashCasts)
+    }
+
+    override fun snapshot(): SplashData = SplashData().also {
+        it.duration = duration
+        it.zones = originalZones.toMutableList()
+        it.supplyDeadline = supplies.deadline
+        it.started = started
+    }
+
     private fun clearCombat() {
         bot.combat.target = null
         bot.combat.autoRetaliateTarget = null
@@ -305,211 +222,43 @@ class SplashBotScript(
         magic.refreshAutocast()
     }
 
-    override fun snapshot(): BotScriptData? {
+    private fun validEquipment(): Boolean = splashEquipment != null &&
+        bot.equipment.weapon?.id == usingStaff && bot.equipment.getBonus(MAGIC_ATTACK) <= MAX_SPLASH_MAGIC_BONUS
+
+    private suspend fun prepareRunes(): Boolean {
+        val costs = CombatLoadout.runeCosts(spell ?: return false, usingStaff)
+        return supplies.obtain(costs.mapValues { it.value * RUNE_BATCH_CASTS }, costs)
+    }
+
+    private fun ownedSpell(inventoryOnly: Boolean): CombatSpellDefinition? = SPLASH_SPELLS.asSequence()
+        .map { it.def }.filter { it.spellbook == bot.spellbook && bot.magic.level >= it.level }
+        .filter { selected -> CombatLoadout.runeCosts(selected, usingStaff).all { (id, amount) ->
+            (if (inventoryOnly) bot.inventory.computeAmountForId(id) else bot.itemTracker.count(id)) >= amount
+        } }.maxByOrNull { it.level }
+
+    /**
+     * Prefers an owned staff only when the complete outfit still guarantees failure. Unarmed manual casting
+     * removes its positive bonus, so ordinary bronze armour qualifies without Ranged or Defence training.
+     */
+    internal fun chooseEquipment(): Array<Int?>? {
+        val staves = BotGearSelector.ALL_GEAR.value[WEAPON].asSequence().map { it.id }.distinct()
+            .filter { it in bot.itemTracker && equipDef(it).meetsAllRequirements(bot) }
+            .filter { WeaponDefinition.ALL[it].orElse(null)?.type == Weapon.STAFF }.toList()
+        for (staff in staves + listOf<Int?>(null)) {
+            val equipment = arrayOfNulls<Int>(14)
+            equipment[WEAPON] = staff
+            for (slot in equipment.indices) {
+                if (slot == WEAPON || slot == AMMUNITION || slot == SHIELD && staff?.let { equipDef(it).isTwoHanded } == true) continue
+                equipment[slot] = BotGearSelector.ALL_GEAR.value[slot].asSequence().map { it.id }.distinct()
+                    .filter { it in bot.itemTracker && equipDef(it).index == slot && equipDef(it).meetsAllRequirements(bot) }
+                    .filter { equipDef(it).getBonus(MAGIC_ATTACK.index) < 0 }
+                    .minByOrNull { equipDef(it).getBonus(MAGIC_ATTACK.index) }
+            }
+            if (equipment.filterNotNull().sumOf { equipDef(it).getBonus(MAGIC_ATTACK.index) } <= MAX_SPLASH_MAGIC_BONUS) return equipment
+        }
         return null
     }
 
-    /**
-     * Finds every spell/staff combination that has enough total owned runes to begin splashing.
-     *
-     * The returned list is ordered by spell level first and rune savings second.
-     */
-    private fun resolveRuneSetups(staves: List<Int>): List<RuneSetup> {
-        val setups = ArrayList<RuneSetup>()
-
-        for (combatSpell in SPLASH_SPELLS) {
-            val definition = combatSpell.def
-
-            if (definition.spellbook != bot.spellbook || bot.magic.level < definition.level) {
-                continue
-            }
-
-            for (staffId in staves) {
-                if (hasRunes(
-                        definition,
-                        staffId,
-                        MIN_CAST_RUNES_REQUIRED,
-                        inventoryOnly = false
-                    )
-                ) {
-                    setups += RuneSetup(definition, staffId)
-                }
-            }
-        }
-
-        return setups.sortedWith(
-            compareByDescending<RuneSetup> { it.spell.level }
-                .thenByDescending { runeSavings(it.spell, it.staffId) }
-        )
-    }
-
-    /**
-     * Resolves the highest-level splash spell that can currently be cast from inventory.
-     */
-    private fun resolveRuntimeSpell(): CombatSpellDefinition? {
-        val staffId = bot.equipment.weapon?.id ?: return null
-
-        return SPLASH_SPELLS.asSequence()
-            .map { it.def }
-            .filter { it.spellbook == bot.spellbook }
-            .filter { bot.magic.level >= it.level }
-            .filter { hasRunes(it, staffId, casts = 1, inventoryOnly = true) }
-            .maxByOrNull { it.level }
-    }
-
-    /**
-     * Checks whether [spell] can be cast [casts] times using [staffId].
-     *
-     * Startup checks total bot ownership. Runtime checks only the inventory because banked runes
-     * cannot be used while fighting.
-     */
-    private fun hasRunes(
-        spell: CombatSpellDefinition,
-        staffId: Int,
-        casts: Int,
-        inventoryOnly: Boolean
-    ): Boolean {
-        val represented = Staff.ID_TO_STAFF[staffId]?.represents.orEmpty()
-
-        for (requirement in spell.required) {
-            if (requirement !is RuneRequirement) {
-                return false
-            }
-
-            if (requirement.rune in represented) {
-                continue
-            }
-
-            val requiredAmount = requirement.amount * casts
-            val availableAmount = if (inventoryOnly) {
-                bot.inventory.computeAmountForId(requirement.rune.id)
-            } else {
-                bot.itemTracker.count(requirement.rune.id)
-            }
-
-            if (availableAmount < requiredAmount) {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    /**
-     * Returns how many runes per cast this staff replaces for [spell].
-     *
-     * This makes a fire staff preferable to an air staff for Fire Blast when both setups are valid,
-     * because the fire staff replaces more runes per cast.
-     */
-    private fun runeSavings(spell: CombatSpellDefinition, staffId: Int): Int {
-        val represented = Staff.ID_TO_STAFF[staffId]?.represents.orEmpty()
-
-        return spell.required
-            .filterIsInstance<RuneRequirement>()
-            .filter { it.rune in represented }
-            .sumOf { it.amount }
-    }
-
-    /**
-     * Finds every owned, equippable weapon that Luna considers a staff.
-     */
-    private fun ownedStaves(): List<Int> {
-        return BotGearSelector.ALL_GEAR.value[WEAPON]
-            .asSequence()
-            .map { it.id }
-            .distinct()
-            .filter { it in bot.itemTracker }
-            .filter { equipDef(it).meetsAllRequirements(bot) }
-            .filter { WeaponDefinition.ALL[it].orElse(null)?.type == Weapon.STAFF }
-            .toList()
-    }
-
-    /**
-     * Builds the most negative magic-attack equipment layout available for [staffId].
-     *
-     * Each slot independently chooses the owned item with the lowest magic attack bonus. Since
-     * equipment slots contribute additively, this produces the lowest possible bonus from the
-     * bot's currently owned and equippable gear.
-     */
-    private fun resolveSplashEquipment(staffId: Int): Array<Int?>? {
-        val equipment = arrayOfNulls<Int>(14)
-        val staffDefinition = equipDef(staffId)
-
-        equipment[WEAPON] = staffId
-
-        for (index in equipment.indices) {
-            if (index == WEAPON ||
-                index == AMMUNITION ||
-                index == SHIELD && staffDefinition.isTwoHanded
-            ) {
-                continue
-            }
-
-            val selected = BotGearSelector.ALL_GEAR.value[index]
-                .asSequence()
-                .filter { it.id in bot.itemTracker }
-                .filter {
-                    val definition = equipDef(it.id)
-                    definition.index == index && definition.meetsAllRequirements(bot)
-                }
-                .minByOrNull {
-                    equipDef(it.id).getBonus(MAGIC_ATTACK.index)
-                }
-                ?: continue
-
-            val magicBonus = equipDef(selected.id).getBonus(MAGIC_ATTACK.index)
-            if (magicBonus < 0) {
-                equipment[index] = selected.id
-            }
-        }
-
-        val magicBonus = equipment
-            .filterNotNull()
-            .sumOf { equipDef(it).getBonus(MAGIC_ATTACK.index) }
-
-        return if (magicBonus <= MAX_SPLASH_MAGIC_BONUS) {
-            equipment
-        } else {
-            null
-        }
-    }
-
-    /**
-     * Builds the rune inventory used for this splashing session.
-     *
-     * Every owned rune used by the splash progression is brought, up to its desired 2,000-cast
-     * target. This allows the script to downgrade naturally without returning to a bank.
-     */
-    private fun resolveRuneWithdrawList(): List<Item> {
-        return runeTargets.mapNotNull { (rune, target) ->
-            val owned = bot.itemTracker.count(rune.id)
-
-            if (owned > 0) {
-                Item(rune.id, minOf(owned, target))
-            } else {
-                null
-            }
-        }
-    }
-
-    /**
-     * Adds the complete splashing rune supply to the temporary wanted-item list.
-     */
-    private fun addWantedRunes() {
-        for ((rune, target) in runeTargets) {
-            bot.preferences.requireItem(rune.id, target)
-        }
-    }
-
-    private fun isValidTarget(npc: Npc): Boolean {
-        if (!npc.isAlive ||
-            !npc.combat.isAttackable ||
-            !bot.combat.checkMultiCombat(npc)
-        ) {
-            return false
-        }
-
-        return npc.def().name in ALWAYS_ALLOWED ||
-                npc.combatLevel < bot.combatLevel / 2
-    }
+    private fun isValidTarget(npc: Npc): Boolean = npc.isAlive && npc.combat.isAttackable &&
+        bot.combat.checkMultiCombat(npc) && (npc.def().name in ALWAYS_ALLOWED || npc.combatLevel < bot.combatLevel / 2)
 }

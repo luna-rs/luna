@@ -17,4 +17,9 @@ interface MagicOnlyCombat {
      * Validates the actual attack before costs, damage or experience and clears unsafe combat state on rejection.
      */
     fun permitsMagicAttack(attack: CombatAttack<*>): Boolean
+
+    /**
+     * Observes a spell only after its native costs and cast experience have been applied.
+     */
+    fun onMagicCast() {}
 }

@@ -104,7 +104,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         }
 
         /**
-         * Rechecks native spell identity, current staff, casting state and real costs without consuming supplies.
+         * Rechecks native spell identity, casting state and real costs without consuming supplies.
+         * Manual casts can be unarmed; autocasting still requires its compatible staff.
          * Magic training uses an offensive stance so a saved defensive staff style cannot train Defence.
          */
         internal fun isNativeMagicAttack(bot: Bot, attack: CombatAttack<*>): Boolean {
@@ -113,9 +114,20 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             return !bot.preferences.isSkiller && mayGainExperience(bot, SKILL_MAGIC) &&
                 definition != CombatSpellDefinition.NONE && definition.spellbook == bot.spellbook &&
                 canUseSpellbook(bot, definition.spellbook) && bot.magic.level >= definition.level &&
-                bot.combat.weapon.type == Weapon.STAFF && bot.combat.stance != CombatStance.DEFENSIVE &&
-                (magic.selectedSpell == definition || magic.isAutocasting && magic.autocastSpell == definition &&
+                bot.combat.stance != CombatStance.DEFENSIVE &&
+                (magic.selectedSpell == definition || bot.combat.weapon.type == Weapon.STAFF &&
+                    magic.isAutocasting && magic.autocastSpell == definition &&
                     magic.canAutocast(definition)) && Magic.checkRequirements(bot, definition, true) != null
+        }
+
+        /**
+         * Notifies the active training owner after a real native spell has paid its costs.
+         */
+        @JvmStatic
+        fun recordMagicCast(player: Player) {
+            if (player is Bot && (!player.isConnectedPlayer || player.isAutomationActive)) {
+                (player.scriptStack?.current() as? MagicOnlyCombat)?.onMagicCast()
+            }
         }
 
         /**

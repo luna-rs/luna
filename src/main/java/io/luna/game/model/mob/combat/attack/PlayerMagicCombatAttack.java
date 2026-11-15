@@ -160,6 +160,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
         }
 
         attacker.skill(Skill.MAGIC).addExperience(spellEffect.getExp());
+        api.bot.action.BotCombatActionHandler.recordMagicCast(attacker);
         return damage;
     }
 

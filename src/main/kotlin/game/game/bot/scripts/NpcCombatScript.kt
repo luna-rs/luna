@@ -5,6 +5,7 @@ import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotCombatMagic
 import api.bot.action.MagicOnlyCombat
+import api.bot.action.MagicSupplyPreparation
 import api.bot.action.PvmTactics
 import api.bot.action.BotPotionActionHandler
 import api.bot.Suspendable.delay
@@ -496,6 +497,7 @@ open class NpcCombatScript(bot: Bot,
 
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
     private var loadout: CombatLoadout? = null
+    private val magicSupplies = MagicSupplyPreparation(bot)
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
 
@@ -608,6 +610,7 @@ open class NpcCombatScript(bot: Bot,
         if (purpose == BotGearPurpose.MAGIC) {
             val spellbook = spell?.def?.spellbook ?: bot.spellbook
             if (!handler.combat.switchSpellbook(spellbook)) return false
+            if (slayerTask == null && !prepareMagicSupplies()) return false
         }
         loadout = slayerLoadout(bot, purpose, slayerTask, spell) ?: return false
         if (originalZones.any { !campSuppliesOwned(bot, it) }) return false
@@ -704,6 +707,15 @@ open class NpcCombatScript(bot: Bot,
      */
     private val antiDragonShield = item("Anti-dragon shield")
     override suspend fun onBankOpen(initial: Boolean) {
+
+        if (purpose == BotGearPurpose.MAGIC && slayerTask == null) {
+            if (!prepareMagicSupplies()) {
+                if (!isPaused()) stop()
+                return
+            }
+            if (!bot.bank.isOpen && !handler.banking.travelToBankDepositAll()) { stop(); return }
+            handler.banking.clickBankingMode(false)
+        }
 
         if (dragonTrip && 1540 !in bot.equipment &&
             !handler.banking.withdraw(antiDragonShield)) {
@@ -841,6 +853,21 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         if (queenTrip && !KalphiteQueenTrip.equipped(bot)) stop()
+    }
+
+    /**
+     * Prepares an ordinary staff and the chosen spell's actual rune costs before resolving or refilling a camp kit.
+     * Specialty Slayer equipment retains its separate admission rules.
+     */
+    private suspend fun prepareMagicSupplies(): Boolean {
+        var planned = loadout ?: CombatLoadout.find(bot, BotGearPurpose.MAGIC, spell, requireRunes = false)
+        if (planned == null) {
+            if (!magicSupplies.obtain(mapOf(1381 to 1))) return false
+            planned = CombatLoadout.find(bot, BotGearPurpose.MAGIC, spell, requireRunes = false) ?: return false
+        }
+        val staff = planned.gear[Equipment.WEAPON] ?: return false
+        if (!bot.itemTracker.contains(staff) && !magicSupplies.obtain(mapOf(staff to 1))) return false
+        return magicSupplies.obtain(planned.runes.mapValues { it.value * 100 }, planned.runes)
     }
 
     /**

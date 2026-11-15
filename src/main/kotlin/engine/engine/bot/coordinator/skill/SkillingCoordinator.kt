@@ -82,7 +82,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         /**
          * Gives eligible Magic training a larger share while retaining all other supported training choices.
          */
-        private const val MAGIC_TRAINING_WEIGHT_MULTIPLIER = 2.0
+        private const val MAGIC_TRAINING_WEIGHT_MULTIPLIER = 4.0
 
         /**
          * Gives Thieving a substantial share of profit skilling even after the first coin reserve is built.

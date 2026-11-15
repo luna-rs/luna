@@ -25,6 +25,7 @@ import game.bot.scripts.combat.RockCrabBotScript
 import game.skill.slayer.SlayerTaskType
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Spellbook
+import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -207,15 +208,15 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             ancientMagicLoadout(bot)?.let { createScript(bot, training, BotGearPurpose.MAGIC, it, duration) }
 
         /**
-         * Uses owned damage spells for Magic training without permitting another combat discipline.
-         * Spell selection, equipment, banking and rune procurement share the ordinary supplied combat path.
+         * Selects Magic training without permitting another combat discipline. Missing starter supplies are
+         * acquired during preparation; spell selection, equipment and refills share the ordinary combat path.
          */
         internal fun magicTrainingScript(bot: Bot, training: Boolean, duration: Duration): BotScript? {
             if (bot.preferences.isSkiller || !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) ||
                 training && !BotCombatActionHandler.wantsToTrain(bot, SKILL_MAGIC)) return null
             val loadout = listOf(Spellbook.REGULAR, Spellbook.ANCIENT).mapNotNull {
                 CombatLoadout.find(bot, BotGearPurpose.MAGIC, spellbook = it, minimumCasts = 1)
-            }.randomOrNull() ?: return null
+            }.randomOrNull() ?: CombatLoadout(arrayOfNulls(14), CombatSpell.WIND_STRIKE.def)
             return createScript(bot, training, BotGearPurpose.MAGIC, loadout, duration, magicOnly = true)
         }
 
@@ -310,6 +311,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         }
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
             bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
+        if (training && rand(0.25)) {
+            magicTrainingScript(bot, true, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
+        }
         if ((!training || BotCombatActionHandler.trainingPurposeEligible(bot, BotGearPurpose.MAGIC)) && rand(0.15)) {
             salarinScript(bot, duration)?.let {
                 if (training) it.trainingGoal = -1

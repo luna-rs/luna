@@ -290,32 +290,34 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         fun acquired() = targets.filter { (id, amount) ->
             bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount
         }.keys
-        if (acquired().size == targets.size) return targets.keys
-        if (budget == null) {
-            val owner = bot.scriptStack.current()
-            if (owner != null && owner !is TradeBotScript) {
-                val attempted = marketAttempts.getOrPut(owner) { hashSetOf() }
-                for ((id, amount) in targets) {
-                    if (id in acquired() || bot.bank.computeAmountForId(id).toLong() +
-                        bot.inventory.computeAmountForId(id) >= amount) {
-                        attempted.remove(id)
-                        continue
-                    }
-                    if (attempted.remove(id)) continue
-                    val deadline = System.currentTimeMillis() + 45_000L
-                    val trade = TradeBotScript.buySpecific(bot, id, amount, deadline) ?: continue
-                    attempted.add(id)
-                    trade.duration = 45.seconds
-                    bot.scriptStack.pushHead(trade)
-                    return acquired()
-                }
-            }
+        val owner = if (budget == null) bot.scriptStack.current()?.takeUnless { it is TradeBotScript } else null
+        val attempted = owner?.let { marketAttempts.getOrPut(it) { hashSetOf() } }
+        if (acquired().size == targets.size) {
+            attempted?.removeAll(targets.keys)
+            return targets.keys
         }
         withTimeoutOrNull(120.seconds) {
             try {
                 for ((id, amount) in targets) {
                     if (!ActionSafety.NON_COMBAT.await(bot)) break
+                    if (id in acquired()) {
+                        attempted?.remove(id)
+                        continue
+                    }
+                    val banked = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+                    if (attempted != null && id !in attempted && banked < amount) {
+                        val deadline = System.currentTimeMillis() + 45_000L
+                        val trade = TradeBotScript.buySpecific(bot, id, amount, deadline)
+                        if (trade != null) {
+                            attempted.add(id)
+                            trade.duration = 45.seconds
+                            bot.scriptStack.pushHead(trade)
+                            return@withTimeoutOrNull
+                        }
+                    }
+                    // Complete this item's fallback before another market child can pause the basket.
                     acquireWantedItem(id, amount, targets.keys, budget)
+                    if (id in acquired()) attempted?.remove(id)
                 }
             } finally {
                 bot.overlays.closeWindows()
