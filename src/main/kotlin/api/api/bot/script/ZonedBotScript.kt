@@ -743,7 +743,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             val targetPosition = bank.position
             // The cached bank can be a long walk from the far end of a dungeon or the Wilderness.
             val reachable = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
-                ActionSafety.NON_COMBAT.allows(bot)
+                isActionSafe()
             }
             if (!awaitActionSafety()) return
             // An async result belongs to its original positions. Retry rather than route on a stale result.
@@ -774,19 +774,22 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                     }
 
                 for (bank in sortedBanks) {
-                    if (!bankActionReady()) return
-                    if (banksElsewhere) {
+                    if (!awaitActionSafety()) return
+                    // Combat activities must be able to leave their attacker before the bank-click guard applies.
+                    if (banksElsewhere || !isActionSafe(ActionSafety.NON_COMBAT)) {
                         val reached = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
-                            ActionSafety.NON_COMBAT.allows(bot)
+                            isActionSafe()
                         }
+                        if (!awaitActionSafety()) return
                         if (!reached) {
                             bot.log("No web approach confirmed to parent bank. parent=$parent, bank=$bank")
                             break
                         }
-                        if (!bankActionReady()) return
                     }
+                    if (!bankActionReady()) return
                     val option = bankOption(bank)
-                    if (handler.interactions.interact(option, bank) && waitFor(5.seconds) { bot.bank.isOpen }) {
+                    if (handler.interactions.interact(option, bank) { ActionSafety.NON_COMBAT.allows(bot) } &&
+                        waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = bank
                         bot.log("Cached bank selected. parent=$parent, bank=$bank, option=$option")
                         break
@@ -800,9 +803,15 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 val npc = world.locator.findNpcs(activeZone.inside, activeZone.area.tileRadius)
                 { it.def().actions.contains("Bank") }.firstOrNull()
                 if (npc != null) {
+                    if (!isActionSafe(ActionSafety.NON_COMBAT)) {
+                        handler.interactions.approach(npc, timeout = 3.minutes, allowOutOfView = true) {
+                            isActionSafe()
+                        }
+                    }
                     if (!bankActionReady()) return
                     bot.log("Banking NPC ${npc.id} found!")
-                    if (handler.interactions.interact(bankOption(npc), npc) && waitFor(5.seconds) { bot.bank.isOpen }) {
+                    if (handler.interactions.interact(bankOption(npc), npc) { ActionSafety.NON_COMBAT.allows(bot) } &&
+                        waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = npc
                     }
                 }
@@ -828,7 +837,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (!bankActionReady()) return
         bot.log("Preparing to interact with bank. cachedBank=$cachedBank, bankOpen=${bot.bank.isOpen}")
         if (!bot.bank.isOpen) {
-            if (!handler.interactions.interact(bankOption(cachedBank!!), cachedBank)) {
+            if (!handler.interactions.interact(bankOption(cachedBank!!), cachedBank) {
+                    ActionSafety.NON_COMBAT.allows(bot)
+                }) {
                 bot.log("Banking aborted because cached bank interaction failed. Clearing cached bank. cachedBank=$cachedBank")
                 cachedBank = null
                 forceBanking = true

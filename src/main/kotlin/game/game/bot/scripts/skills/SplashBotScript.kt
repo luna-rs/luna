@@ -78,15 +78,18 @@ class SplashBotScript(bot: Bot, duration: Duration,
          */
         class SplashData : ZonedBotScriptData() {
             var supplyDeadline = 0L
+            var supplyInterruptedAt = 0L
             var started = false
             override fun load(data: JsonObject) {
                 super.load(data)
                 supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
+                supplyInterruptedAt = data.get("supply_interrupted_at")?.asLong ?: 0L
                 started = data.get("started")?.asBoolean ?: false
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("supply_deadline", supplyDeadline)
+                data.addProperty("supply_interrupted_at", supplyInterruptedAt)
                 data.addProperty("started", started)
             }
         }
@@ -94,6 +97,7 @@ class SplashBotScript(bot: Bot, duration: Duration,
 
     constructor(bot: Bot, data: SplashData) : this(bot, data.duration, data.zones) {
         supplies.deadline = data.supplyDeadline
+        supplies.interruptedAt = data.supplyInterruptedAt
         started = data.started
     }
 
@@ -208,6 +212,7 @@ class SplashBotScript(bot: Bot, duration: Duration,
         it.duration = duration
         it.zones = originalZones.toMutableList()
         it.supplyDeadline = supplies.deadline
+        it.supplyInterruptedAt = supplies.interruptedAt
         it.started = started
     }
 
