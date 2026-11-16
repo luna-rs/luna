@@ -8,6 +8,9 @@ import api.predef.ext.canUseWantedItem
 import api.predef.ext.totalItemAmount
 import api.predef.SKILL_MAGIC
 import api.predef.equipDef
+import api.predef.prayer
+import game.player.item.consume.potion.Potion
+import game.player.item.consume.potion.PotionFamily
 import com.google.common.collect.ImmutableSet
 import engine.bot.gear.BotEquipmentPreferences
 import engine.bot.gear.BotGearSelector
@@ -110,6 +113,9 @@ object BotTradeIntentions {
      */
     fun supplyDemandIds(bot: Bot, now: Long = System.currentTimeMillis()): Set<Int> = buildSet {
         addAll(livePlans(bot, now).keys)
+        for (family in BotPotionDemand.requestedPotionFamilies(bot, now))
+            add(if (game.skill.herblore.makePotion.FinishedPotion.entries.any { it.id == family.threeDose })
+                family.threeDose else family.fourDose)
         addAll(bot.preferences.explicitWantedItemTargets.keys.filter { explicitSupplyPlan(bot, it) != null })
         val upgrades = bot.attributes()[toolUpgrades.attr]
         upgrades.entries.removeIf { it.value.expires <= now }
@@ -177,6 +183,84 @@ object BotTradeIntentions {
     }
 
     /**
+     * Requests only potions useful for the combat trip being prepared. A bot favors ordinary boosts
+     * and cures, while advanced supplies appear for dangerous trips and experienced accounts.
+     */
+    fun requestCombatPotions(bot: Bot, purpose: BotGearPurpose, poison: Boolean, dragons: Boolean,
+                             dangerous: Boolean, prayer: Boolean) {
+        val seed = bot.username.orEmpty().hashCode()
+        val boost = when (purpose) {
+            BotGearPurpose.MELEE -> {
+                val advanced = bot.combatLevel >= 70 && Math.floorMod(mix(seed + 17), 4) != 0
+                val options = if (advanced) listOf(Potion.SUPER_STRENGTH to 4,
+                    Potion.SUPER_ATTACK to 3, Potion.SUPER_DEFENCE to 2)
+                else listOf(Potion.STRENGTH_POTION to 4, Potion.ATTACK_POTION to 3,
+                    Potion.DEFENCE_POTION to 2)
+                weightedChoice(options, seed + 31)
+            }
+            BotGearPurpose.RANGED -> Potion.RANGING_POTION
+            BotGearPurpose.MAGIC -> Potion.MAGIC_POTION
+            else -> null
+        }
+        if (boost != null) requestPotion(bot, boost)
+        val support = when {
+            dragons -> Potion.ANTI_FIRE_POTION
+            poison -> weightedChoice(listOf(Potion.ANTIPOISON_POTION to 6,
+                Potion.SUPER_ANTIPOISON to 4, Potion.ANTIDOTE_PLUS to 2,
+                Potion.ANTIDOTE_PLUS_PLUS to 1), seed + 53)
+            dangerous && bot.combatLevel >= 90 -> weightedChoice(listOf(
+                Potion.SARADOMIN_BREW to 4, Potion.SUPER_RESTORE to 4,
+                Potion.ZAMORAK_BREW to if (purpose == BotGearPurpose.MELEE) 1 else 0), seed + 71)
+            prayer && bot.prayer.staticLevel >= 30 -> weightedChoice(listOf(
+                Potion.PRAYER_POTION to 5, Potion.SUPER_RESTORE to 1), seed + 89)
+            else -> null
+        }
+        if (support != null) requestPotion(bot, support)
+    }
+
+    /**
+     * Adds a small shopping need for a potion that supports the current skilling or travel activity.
+     */
+    fun requestSupportPotion(bot: Bot, potion: Potion) = requestPotion(bot, potion)
+
+    private fun requestPotion(bot: Bot, potion: Potion) {
+        BotPotionDemand.request(bot, potion)
+    }
+
+    fun requestedPotionFamilies(bot: Bot): Set<PotionFamily> = BotPotionDemand.requestedPotionFamilies(bot)
+
+    fun reserveDoses(bot: Bot, family: PotionFamily): Int = BotPotionDemand.reserveDoses(bot, family)
+
+    /**
+     * Prevents finite resale conversion from consuming personal family reserves or literal personal wishes.
+     */
+    fun hasPersonalPotionReserve(bot: Bot, family: PotionFamily): Boolean =
+        reserveDoses(bot, family) > 0 || family.ids.any { explicitWantedTarget(bot, it) > 0 }
+
+    /**
+     * Distinguishes literal activity inputs and wishes from interchangeable activity potion doses.
+     */
+    fun hasExactSupplyDemand(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Boolean =
+        supplyPlans(bot, now)[id]?.target?.let { it > 0 } == true
+
+    private fun <T> weightedChoice(options: List<Pair<T, Int>>, seed: Int): T {
+        var roll = Math.floorMod(mix(seed), options.sumOf { it.second })
+        for ((value, weight) in options) {
+            if (roll < weight) return value
+            roll -= weight
+        }
+        return options.last().first
+    }
+
+    private fun mix(value: Int): Int {
+        var result = value xor (value ushr 16)
+        result *= 0x7feb352d
+        result = result xor (result ushr 15)
+        result *= 0x846ca68b.toInt()
+        return result xor (result ushr 16)
+    }
+
+    /**
      * Resolves active shopping needs while keeping rare cosmetic opportunities outside startup demand.
      * Personal fashion goals are one-copy purchases; equipment candidates already respect real requirements.
      */
@@ -187,6 +271,15 @@ object BotTradeIntentions {
             if (owned >= plan.target || !bot.canUseWantedItem(id)) continue
             val priority = if (owned < plan.minimum) WantedItemPriority.URGENT else WantedItemPriority.STANDARD
             result[id] = definition(id, plan.minimum, plan.target, priority)
+        }
+        val potionCoins = (BotTradeManager.transferableAmount(bot, 995).toDouble() *
+            budgetFraction(bot, BotTradePurpose.BUY)).toLong()
+        for (quote in BotPotionDemand.purchases(bot, BotTradePrice.EXACT, BotTradePurpose.BUY, potionCoins, now = now)) {
+            val id = quote.item.id
+            if (id in result) continue
+            val wanted = BotPotionDemand.demand(bot, id, now = now) ?: continue
+            result[id] = definition(id, minOf(wanted.min, bot.totalItemAmount(id) + quote.item.amount),
+                bot.totalItemAmount(id) + quote.item.amount, wanted.priority)
         }
         val completion = BotEquipmentPreferences.completionCandidates(bot)
         val completionSlots = completion.associateBy { equipDef(it).index }
@@ -276,6 +369,7 @@ object BotTradeIntentions {
      */
     fun retainedStock(bot: Bot): Map<Int, Int> {
         val retained = supplyPlans(bot, System.currentTimeMillis()).mapValuesTo(HashMap()) { it.value.target }
+        for ((id, amount) in BotPotionDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for (id in BotReusableItems.itemIds()) retained[id] = maxOf(retained[id] ?: 0, reusableReserve(bot, id))
         val combatSupplies = HashMap<Int, WantedItemDefinition>()
         addCombatSupplies(bot, BotEquipmentPreferences.progressionCandidates(bot), combatSupplies, includeSatisfied = true)
@@ -332,7 +426,8 @@ object BotTradeIntentions {
     /**
      * Rechecks newly requested supplies during a suspended sale without rebuilding every equipment layout.
      */
-    fun supplyTarget(bot: Bot, id: Int): Int = supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0
+    fun supplyTarget(bot: Bot, id: Int): Int = maxOf(supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0,
+        BotPotionDemand.retainedStock(bot)[id] ?: 0)
 
     /**
      * Reads one live sale reserve without copying or pruning the entire activity-supply map.
@@ -344,6 +439,7 @@ object BotTradeIntentions {
         val attributes = bot.attributes()
         val plan = attributes[plans.attr][id]
         var target = maxOf(reusableReserve(bot, id), if (plan != null && plan.expires > now) plan.target else 0,
+            BotPotionDemand.retainedStock(bot)[id] ?: 0,
             activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
             explicitSupplyPlan(bot, id)?.target ?: 0)
         val upgrades = attributes[toolUpgrades.attr]
@@ -383,6 +479,11 @@ object BotTradeIntentions {
             target = maxOf(target, 1)
         }
         val owned = bot.totalItemAmount(id)
+        val potion = BotPotionDemand.demand(bot, id, false, now)
+        if (potion != null) {
+            minimum = maxOf(minimum, potion.min)
+            target = maxOf(target, potion.target)
+        }
         if (target <= owned || !bot.canUseWantedItem(id)) return null
         return definition(id, minimum, target,
             if (owned < minimum) WantedItemPriority.URGENT else WantedItemPriority.STANDARD)

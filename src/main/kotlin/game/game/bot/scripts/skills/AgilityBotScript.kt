@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.ZonedBotScript
 import api.bot.webwalk.plan.BankAccess
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -258,11 +259,19 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     }
 
     override suspend fun onBankOpen(initial: Boolean) {
+        BotTradeIntentions.requestSupportPotion(bot, Potion.AGILITY_POTION)
+        BotTradeIntentions.requestSupportPotion(bot, if (bot.combatLevel >= 70)
+            Potion.SUPER_ENERGY else Potion.ENERGY_POTION)
+        if (course.isYanille) {
+            val owned = YANILLE_ANTIPOISONS.firstOrNull { bot.inventory.contains(it) || bot.bank.contains(it) }
+            BotTradeIntentions.requestSupportPotion(bot, owned?.let { Potion.DOSE_TO_POTION[it] } ?: Potion.SUPER_ANTIPOISON)
+        }
+        if (!api.bot.action.BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
+                !isPaused() && !isTerminated()
+            }) { stop(); return }
         if (course.isYanille && YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) }) {
             val cure = YANILLE_ANTIPOISONS.firstOrNull { bot.bank.contains(it) }
             if (cure == null || !handler.banking.withdraw(Item(cure)) || !bot.inventory.contains(cure)) {
-                val wanted = Potion.SUPER_ANTIPOISON.fourDose
-                if (bot.preferences.getWantedItem(wanted) == null) bot.preferences.addWantedItem(wanted, 3)
                 stop()
                 return
             }

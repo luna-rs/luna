@@ -2,6 +2,8 @@
 package api.bot.skill
 
 import api.attr.Attr
+import api.bot.action.BotPotionMaintenance
+import game.player.item.consume.potion.Potion
 import api.bot.action.trading.BotTradeIntentions
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
@@ -148,6 +150,10 @@ abstract class SkillingBotScript<E : Entity>(
 
     final override suspend fun onBankOpen(initial: Boolean) {
         reviewToolUpgrade()
+        if (skill.id == SKILL_FISHING) BotTradeIntentions.requestSupportPotion(bot, Potion.FISHING_POTION)
+        if (!BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
+                !isPaused() && !isTerminated()
+            }) { stop(); return }
         if (skill.level < levelRequired() || tools().isNotEmpty() && tool == null ||
             tool?.let { skill.level < it.skillLevel } == true) {
             stop()

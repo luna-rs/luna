@@ -15,6 +15,7 @@ import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.bot.Bot
 import java.util.Locale
+import game.player.item.consume.potion.PotionFamily
 
 /**
  * Quotes opportunistic player purchases separately from proactive shopping and personal sale reserves.
@@ -68,6 +69,13 @@ object BotTradeBuyingPolicy {
         val base = definition.unnotedId.orElse(id)
         if (base == 995 || !definition.isTradeable) return null
         val active = BotTradeIntentions.supplyDemand(bot, base)
+        val potion = PotionFamily.forId(base)
+        if (potion != null && BotTradeIntentions.hasExactSupplyDemand(bot, base))
+            return active?.takeIf { bot.totalItemAmount(base) < it.target }
+        if (potion != null && BotPotionDemand.reserveDoses(bot, potion) > 0 &&
+            !BotTradeIntentions.hasExactSupplyDemand(bot, base)) {
+            return BotPotionDemand.demand(bot, base)
+        }
         if (BotReusableItems.isReusable(base) && active == null &&
             BotTradeIntentions.explicitWantedTarget(bot, base) < 1) return null
         val wanted = bot.preferences.getWantedItem(base)?.takeIf { it.target > 0 && eligible(bot, it) }
@@ -121,6 +129,9 @@ object BotTradeBuyingPolicy {
      */
     fun groupKey(bot: Bot, id: Int): Int? {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        val potion = PotionFamily.forId(base)
+        if (potion != null && BotPotionDemand.reserveDoses(bot, potion) > 0 &&
+            !BotTradeIntentions.hasExactSupplyDemand(bot, base)) return -potion.fourDose - 1
         if (!groupedEquipment(bot, base)) return null
         return goals(bot).firstOrNull { base in it.alternatives }?.slot
     }

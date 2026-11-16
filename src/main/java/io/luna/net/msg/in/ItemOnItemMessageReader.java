@@ -31,8 +31,11 @@ public final class ItemOnItemMessageReader extends GameMessageReader<ItemOnItemE
 
     @Override
     public boolean validate(Player player, ItemOnItemEvent event) {
-        if (event.getTargetItemIndex() < 0 ||
+        if (event.getTargetItemIndex() == event.getUsedItemIndex() ||
+                event.getTargetItemIndex() < 0 ||
                 event.getUsedItemIndex() < 0 ||
+                event.getTargetItemIndex() >= player.getInventory().capacity() ||
+                event.getUsedItemIndex() >= player.getInventory().capacity() ||
                 !ItemDefinition.isIdValid(event.getTargetItemId()) ||
                     !ItemDefinition.isIdValid(event.getUsedItemId()) ||
                 event.getTargetItemInterface() < 1 ||

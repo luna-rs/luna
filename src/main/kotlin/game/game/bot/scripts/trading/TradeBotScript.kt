@@ -103,6 +103,33 @@ class TradeBotScript(bot: Bot,
     companion object {
 
         /**
+         * Reads bounded prepared potion stock for ordinary consumer basket selection.
+         * Quotes reserve nothing; travel, native inventory and both trade screens revalidate the exchange.
+         */
+        internal fun potionSupply(buyer: Bot, family: game.player.item.consume.potion.PotionFamily):
+                List<BotPotionDemand.Basket> = BotMarketplace.entries.asSequence()
+            .flatMap { it.tradingSessions().asSequence() }.filterIsInstance<TradeBotScript>().take(32)
+            .filter { seller ->
+                seller.bot !== buyer && !seller.buying && seller.prepared && !seller.browsing &&
+                    !seller.forceBanking && !seller.negotiating && seller.bot.state == EntityState.ACTIVE &&
+                    seller.bot.scriptStack.current() === seller && seller.bot.tradingWith == -1 &&
+                    !seller.bot.overlays.hasWindow() && seller.marketplace.contains(seller.bot.position) &&
+                    !seller.checkBlacklisted(buyer.username)
+            }.flatMap { seller ->
+                seller.offering.asSequence().filter { it.item.id in family.ids && it.price > 0L }.mapNotNull { quote ->
+                    val physical = seller.carriedOffer.entries.filter { (id, _) ->
+                        itemDef(id).unnotedId.orElse(id) == quote.item.id
+                    }.sumOf { (id, amount) ->
+                        minOf(amount, seller.bot.inventory.computeNonDynamicAmountForId(id)).toLong()
+                    }
+                    val quantity = minOf(quote.item.amount.toLong(), physical,
+                        BotTradeManager.saleableAmount(seller.bot, quote.item.id).toLong()).toInt()
+                    if (quantity <= 0) null else BotPotionDemand.Basket(quote.item.id, family.doses(quote.item.id),
+                        quantity, quote.price)
+                }
+            }.toList()
+
+        /**
          * Previews one nearby player-sale visit using only coins already carried. The marketplace activates only
          * its selected buyer, leaving other listeners' activities and bank balances untouched.
          */
@@ -2477,7 +2504,7 @@ class TradeBotScript(bot: Bot,
     private fun productionPurchaseQuote(quote: BotTradeItem): BotTradeItem? {
         val limit = BotTradeIntentions.productionLimit(bot, quote.item.id)
         if (limit == null) return quote.takeUnless { quote.item.id in productionQuotedIds }
-            ?.let(BotUtilityPurchases::constrain)
+            ?.let(BotUtilityPurchases::constrain)?.let(BotPotionDemand::constrain)
         if (productionQuoteExpiries[quote.item.id]?.let { it != limit.expires } == true) return null
         if (productionQuoteOwners[quote.item.id]?.let { it !== limit.identity } == true) return null
         productionQuotedIds += quote.item.id
@@ -2653,6 +2680,8 @@ class TradeBotScript(bot: Bot,
      */
     private fun productionTradeAllowed(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
         val normalized = quantities(receiving.toItems(), true)
+        if (!BotPotionDemand.allows(bot, normalized)) return false
+        if (!potionTradeAllowed(own, normalized)) return false
         if (!utilityTradeAllowed(own, normalized)) return false
         val limits = normalized.keys.mapNotNull { id ->
             BotTradeIntentions.productionLimit(bot, id)?.let { id to it }
@@ -2684,6 +2713,33 @@ class TradeBotScript(bot: Bot,
      * Rechecks concrete utility ownership and captured buying prices before either trade screen is accepted.
      * A newly available shop invalidates an older expensive quote instead of changing the agreed basket.
      */
+    private fun potionTradeAllowed(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
+        val potions = receiving.filterKeys { id ->
+            game.player.item.consume.potion.PotionFamily.forId(id)?.let {
+                BotPotionDemand.reserveDoses(bot, it) > 0
+            } == true && !BotTradeIntentions.hasExactSupplyDemand(bot, id)
+        }
+        var maximum = 0L
+        for ((id, amount) in potions) {
+            val captured = capturedPurchasePrice(id)
+            val allowed = BotPotionDemand.constrain(BotTradeItem(Item(id, amount), captured, purpose, bot))
+                ?: return false
+            if (allowed.item.amount != amount) return false
+            maximum += captured * amount
+        }
+        return potions.isEmpty() || receiving.size != potions.size || own.any { it.key != COINS && it.value > 0 } ||
+            (own[COINS] ?: 0).toLong() <= maximum
+    }
+
+    private fun capturedPurchasePrice(id: Int): Long = when {
+        purchaseTarget?.id == id -> purchasePrice
+        id in ordinaryQuotes -> ordinaryQuotes.getValue(id)
+        id in merchantQuotes -> merchantQuotes.getValue(id).price
+        id in wantedBarterPrices -> wantedBarterPrices.getValue(id)
+        else -> expected.firstOrNull { it.item.id == id }?.price
+            ?: BotMarketExperience.buy(bot, id, tradePrice.applyBuy(BotMerchantValuation.peekGuide(id)))
+    }
+
     private fun utilityTradeAllowed(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
         val utilities = receiving.filterKeys(BotReusableItems::isReusable)
         if (utilities.isEmpty()) return true

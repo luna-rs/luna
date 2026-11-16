@@ -735,6 +735,13 @@ open class NpcCombatScript(bot: Bot,
         }
         BotTradeIntentions.recordSupplies(bot,
             selected.runes.map { (id, amount) -> Item(id, amount * 28) }, stockTarget = 1_000)
+        BotTradeIntentions.requestCombatPotions(bot, purpose,
+            poison = slayerTask in POISONOUS_TASKS, dragons = dragonTrip,
+            dangerous = queenTrip || chaosTrip || moleTrip || originalZones.any { it in STRONG_FOOD_ZONES },
+            prayer = bot.prayer.staticLevel >= 30)
+        if (!api.bot.action.BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
+                !isPaused() && !isTerminated()
+            }) { stop(); return }
         if (slayerTask == SlayerTaskType.ZYGOMITE && !collectFungicide()) {
             stop()
             return
@@ -820,7 +827,8 @@ open class NpcCombatScript(bot: Bot,
         }
         if (queenTrip) {
             for ((id, amount) in KalphiteQueenTrip.supplies) {
-                if (!handler.banking.withdraw(Item(id, amount)) || bot.inventory.computeAmountForId(id) < amount) {
+                val missing = (amount - bot.inventory.computeAmountForId(id)).coerceAtLeast(0)
+                if (missing > 0 && (!handler.banking.withdraw(Item(id, missing)) || bot.inventory.computeAmountForId(id) < amount)) {
                     bot.preferences.addWantedItem(id, amount)
                     stop()
                     return

@@ -93,22 +93,32 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
         /**
          * Uses the selected inventory item on another inventory item.
          *
-         * This sends the item-on-item packet handled by [ItemOnItemMessageReader]. Both items must exist in the bot's
-         * inventory before the packet is sent.
+         * This sends the item-on-item packet handled by [ItemOnItemMessageReader]. Two matching ids use distinct
+         * inventory slots, and the builder's selected source slot is preserved.
          *
          * @param targetId The id of the inventory item that [usedId] should be used on.
          * @return `true` if both items were found and the item-on-item packet was sent.
          */
-        fun onItem(targetId: Int): Boolean {
-            val usedIndex = bot.inventory.computeIndexForId(usedId)
-            val targetIndex = bot.inventory.computeIndexForId(targetId)
-            if (usedIndex == -1 || targetIndex == -1) {
+        fun onItem(targetId: Int): Boolean = onItem(targetId, -1)
+
+        /**
+         * Uses the selected source on a specific target slot, rejecting stale ids and the same source/target slot.
+         * A target index of `-1` searches for a matching slot distinct from the selected source.
+         * Content handlers retain responsibility for validating the native items and transformation.
+         */
+        fun onItem(targetId: Int, targetIndex: Int): Boolean {
+            val inventory = bot.inventory
+            val source = if (usedIndex == -1) inventory.computeIndexForId(usedId) else usedIndex
+            val target = if (targetIndex == -1) inventory.withIndex()
+                .firstOrNull { it.index != source && it.value?.id == targetId }?.index ?: -1 else targetIndex
+            if (source !in 0 until inventory.capacity() || target !in 0 until inventory.capacity() ||
+                source == target || inventory[source]?.id != usedId || inventory[target]?.id != targetId) {
                 bot.log("I don't have ${itemName(usedId)} or ${itemName(targetId)}.")
                 return false
             }
 
             bot.log("Using ${itemName(usedId)} on ${itemName(targetId)}.")
-            bot.output.useItemOnItem(targetIndex, usedIndex, targetId, usedId)
+            bot.output.useItemOnItem(target, source, targetId, usedId)
             return true
         }
 

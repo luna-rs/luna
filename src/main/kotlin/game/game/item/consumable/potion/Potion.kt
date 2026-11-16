@@ -184,6 +184,14 @@ enum class Potion(val fourDose: Int,
         override fun effect(plr: Player) {
             plr.onRestorePotion(true)
         }
+    },
+    RESTORE_POTION(fourDose = 2430,
+                   threeDose = 127,
+                   twoDose = 129,
+                   oneDose = 131) {
+        override fun effect(plr: Player) {
+            plr.onRestorePotion(false)
+        }
     };
 
     companion object {
@@ -287,7 +295,9 @@ enum class Potion(val fourDose: Int,
             }
 
             skills.stream()
-                .filter { it.id != SKILL_PRAYER && it.id != SKILL_HITPOINTS }
+                .filter { if (superPotion) it.id != SKILL_PRAYER && it.id != SKILL_HITPOINTS else
+                    it.id == SKILL_ATTACK || it.id == SKILL_DEFENCE || it.id == SKILL_STRENGTH ||
+                        it.id == SKILL_RANGED || it.id == SKILL_MAGIC }
                 .forEach { it.adjustLevel(calculateBoost(it.staticLevel)) }
 
             if (superPotion) {
