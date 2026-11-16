@@ -25,7 +25,7 @@ import io.luna.game.model.item.Equipment
 
 /**
  * Separates ownership preferences from purchases justified by an activity or a usable equipment upgrade.
- * Supply plans expire after a personality-dependent horizon and are rebuilt by actual activity preparation.
+ * Activity supply plans expire after a personality-dependent horizon; explicit wanted targets follow preferences.
  * A large default wanted target alone never creates an ordinary marketplace shopping intention.
  *
  * @author lare96
@@ -110,6 +110,7 @@ object BotTradeIntentions {
      */
     fun supplyDemandIds(bot: Bot, now: Long = System.currentTimeMillis()): Set<Int> = buildSet {
         addAll(livePlans(bot, now).keys)
+        addAll(bot.preferences.explicitWantedItemTargets.keys.filter { explicitSupplyPlan(bot, it) != null })
         val upgrades = bot.attributes()[toolUpgrades.attr]
         upgrades.entries.removeIf { it.value.expires <= now }
         addAll(upgrades.keys)
@@ -310,7 +311,8 @@ object BotTradeIntentions {
         val attributes = bot.attributes()
         val plan = attributes[plans.attr][id]
         var target = maxOf(if (plan != null && plan.expires > now) plan.target else 0,
-            activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0)
+            activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
+            explicitSupplyPlan(bot, id)?.target ?: 0)
         val upgrades = attributes[toolUpgrades.attr]
         if (upgrades.isEmpty()) return target
         for ((requested, upgrade) in upgrades) {
@@ -331,6 +333,10 @@ object BotTradeIntentions {
         val plan = bot.attributes()[plans.attr][id]?.takeIf { it.expires > now }
         var minimum = plan?.minimum ?: 0
         var target = plan?.target ?: 0
+        explicitSupplyPlan(bot, id)?.let { explicit ->
+            minimum = maxOf(minimum, explicit.minimum)
+            target = maxOf(target, explicit.target)
+        }
         activeProductionPlan(bot, now)?.let { production ->
             val productionTarget = productionTarget(production, id)
             if (productionTarget > 0) {
@@ -354,6 +360,12 @@ object BotTradeIntentions {
      */
     private fun supplyPlans(bot: Bot, now: Long): Map<Int, SupplyPlan> {
         val result = HashMap(livePlans(bot, now))
+        for (id in bot.preferences.explicitWantedItemTargets.keys) {
+            val explicit = explicitSupplyPlan(bot, id) ?: continue
+            val existing = result[id]
+            result[id] = SupplyPlan(maxOf(explicit.minimum, existing?.minimum ?: 0),
+                maxOf(explicit.target, existing?.target ?: 0), Long.MAX_VALUE)
+        }
         activeProductionPlan(bot, now)?.let { plan ->
             for ((id, target) in plan.targets()) {
                 val existing = result[id]
@@ -380,6 +392,21 @@ object BotTradeIntentions {
             if (owned == null) upgrade.fallback?.takeIf { bot.totalItemAmount(it) > 0 }?.let { add(it, upgrade) }
         }
         return result
+    }
+
+    /**
+     * Resolves only the quantity explicitly requested, preserving definition eligibility without inheriting
+     * a larger default target. Currency and untradeable loot goals never become shopping requests.
+     */
+    private fun explicitSupplyPlan(bot: Bot, id: Int): SupplyPlan? {
+        val requested = bot.preferences.explicitWantedItemTargets[id] ?: return null
+        val wanted = bot.preferences.getWantedItem(id) ?: return null
+        val target = minOf(requested, wanted.target())
+        if (id == 995 || target <= 0 || !ItemDefinition.ALL.get(id).map { it.isTradeable }.orElse(false) ||
+            !bot.canUseWantedItem(id)) return null
+        val level = if (wanted.skill() == -1) bot.combatLevel else bot.skills.getSkill(wanted.skill()).staticLevel
+        if (wanted.maxLevel() != -1 && level > wanted.maxLevel()) return null
+        return SupplyPlan(minOf(target, wanted.min().coerceAtLeast(1)), target, Long.MAX_VALUE)
     }
 
     private fun livePlans(bot: Bot, now: Long): HashMap<Int, SupplyPlan> {

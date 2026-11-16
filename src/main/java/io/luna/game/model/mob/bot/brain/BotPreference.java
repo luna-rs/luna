@@ -497,6 +497,11 @@ public final class BotPreference {
     private final Map<Integer, WantedItemDefinition> wantedItems;
 
     /**
+     * Total ownership quantities explicitly requested at runtime, independent of larger catalogue defaults.
+     */
+    private final Map<Integer, Integer> explicitWantedItemTargets = new HashMap<>();
+
+    /**
      * The mutable set of preferred gear archetypes.
      */
     private final Set<BotGearSet> gear;
@@ -546,7 +551,7 @@ public final class BotPreference {
     /**
      * Serializes this preference profile into JSON.
      * <p>
-     * Saves activity weights, preferred skills and gear, custom wanted-item definitions and overrides,
+     * Saves activity weights, preferred skills and gear, custom wanted-item definitions, explicit shopping requests,
      * and player feelings. Unchanged wanted-item defaults are restored during construction.
      * The associated bot is not serialized.
      *
@@ -589,6 +594,15 @@ public final class BotPreference {
         });
         preferences.add("wanted_items", wantedItemsJson);
 
+        JsonArray explicitTargetsJson = new JsonArray();
+        explicitWantedItemTargets.forEach((id, target) -> {
+            JsonObject request = new JsonObject();
+            request.addProperty("id", id);
+            request.addProperty("target", target);
+            explicitTargetsJson.add(request);
+        });
+        preferences.add("explicit_wanted_item_targets", explicitTargetsJson);
+
         // Serialize preferred gear.
         JsonArray gearJson = new JsonArray();
         gear.forEach(it -> gearJson.add(it.name()));
@@ -628,7 +642,8 @@ public final class BotPreference {
      * <p>
      * Saved entries are merged without clearing current values. Wanted items lacking a minimum
      * field are skipped; missing priority or tags use their respective default values. Unchanged
-     * definitions in legacy saves reuse the shared defaults.
+     * definitions in legacy saves reuse the shared defaults. Explicit shopping requests are restored separately;
+     * older saves without that field do not activate their catalogue entries.
      *
      * @param object The JSON object containing saved preferences.
      */
@@ -670,6 +685,17 @@ public final class BotPreference {
                 wantedItems.put(id, defaultItem != null && hasSameWantedItemSettings(item, defaultItem) ? defaultItem : item);
             }
         });
+        explicitWantedItemTargets.clear();
+        if (object.has("explicit_wanted_item_targets")) {
+            object.getAsJsonArray("explicit_wanted_item_targets").forEach(it -> {
+                JsonObject request = it.getAsJsonObject();
+                int id = toUnnotedId(request.get("id").getAsInt());
+                int target = request.get("target").getAsInt();
+                if (target > 0 && wantedItems.containsKey(id)) {
+                    explicitWantedItemTargets.merge(id, target, Math::max);
+                }
+            });
+        }
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
         object.getAsJsonArray("player_feelings").forEach(it -> {
             JsonObject feelingsJson = it.getAsJsonObject();
@@ -761,13 +787,18 @@ public final class BotPreference {
      * Raises a wanted-item target without decreasing an existing target.
      * <p>
      * Creates an unrestricted wanted item if none exists. Otherwise, preserves all existing
-     * definition metadata apart from the target quantity.
+     * definition metadata apart from the target quantity. Records the explicitly requested quantity
+     * for shopping even when the existing catalogue target is already larger.
      *
      * @param id The item ID, normalized before lookup.
      * @param target The proposed total ownership target.
      */
     public void raiseWantedItemTarget(int id, int target) {
+        if (target <= 0) {
+            throw new IllegalArgumentException("Wanted-item target must be positive.");
+        }
         int unnotedId = toUnnotedId(id);
+        explicitWantedItemTargets.merge(unnotedId, target, Math::max);
         WantedItemDefinition current = wantedItems.get(unnotedId);
 
         if (current == null) {
@@ -790,15 +821,26 @@ public final class BotPreference {
     }
 
     /**
+     * Returns runtime requests without promoting untouched default definitions to shopping goals.
+     *
+     * @return An unmodifiable view of explicit total ownership targets.
+     */
+    public Map<Integer, Integer> getExplicitWantedItemTargets() {
+        return Collections.unmodifiableMap(explicitWantedItemTargets);
+    }
+
+    /**
      * Removes a wanted-item definition unless its ID belongs to the default definitions.
      * <p>
      * A default item cannot be removed even if its definition has been replaced or modified.
+     * Its explicit shopping request is cleared even when the default definition is protected.
      *
      * @param id The item ID, normalized before lookup.
      * @return {@code true} if a nondefault definition was removed.
      */
     public boolean removeWantedItem(int id) {
         int unnotedId = toUnnotedId(id);
+        explicitWantedItemTargets.remove(unnotedId);
         if (DEFAULT.get(unnotedId).isEmpty()) {
             return wantedItems.remove(unnotedId) != null;
         }
