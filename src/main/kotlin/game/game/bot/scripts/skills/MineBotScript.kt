@@ -45,7 +45,7 @@ import kotlin.time.Duration.Companion.seconds
  * A [SkillingBotScript] that trains Mining by mining configured ore types inside selected zones.
  *
  * This script supplies the Mining-specific pieces required by [SkillingBotScript], including valid rock object ids,
- * pickaxe selection, emergency pickaxe fallback, level requirements, and serialization data.
+ * pickaxe selection, real acquisition of missing tools, level requirements, and serialization data.
  *
  * Prefers configured ores within a small cluster, uses fallback ores when they are unavailable or contested, and
  * widens its visible search before scouting or moving mines. Kind, mean, complaining, and power-mining styles govern
@@ -553,8 +553,6 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     override fun tools(): TreeSet<SkillingTool> =
         Pickaxe.ID_TO_PICKAXE.values
             .mapTo(TreeSet<SkillingTool>()) { SkillingTool(it.id, it.level) }
-
-    override fun emergencyTool(): SkillingTool = SkillingTool(Pickaxe.BRONZE.id, Pickaxe.BRONZE.level)
 
     override suspend fun recoverMissingTool() {
         BotGatheringTools.recoverHead(bot, MiningRandomEvents.HANDLE,

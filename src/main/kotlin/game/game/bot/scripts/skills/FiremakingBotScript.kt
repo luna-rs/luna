@@ -301,12 +301,8 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             chopMoreLogs()
             return emptyList()
         }
-        if (TINDERBOX !in bot.itemTracker) {
-            if (bankRelief || productionPlan != null) { stop(); return emptyList() }
-            // Emergency spawn tinderbox if needed.
-            bot.bank.add(Item(TINDERBOX))
-        }
-        if (bankRelief && !bankOnly) productionWithdraw(listOf(Item(log.id)), setOf(TINDERBOX), requestMissing = false)
+        if (!bankOnly) productionWithdraw(listOf(Item(log.id)), setOf(TINDERBOX), requestMissing = !bankRelief)
+        if (bankOnly && TINDERBOX !in bot.itemTracker) { stop(); return emptyList() }
         return listOf(Item(TINDERBOX), Item(log.id, minOf(stock, LOGS_PER_TRIP)))
     }
 

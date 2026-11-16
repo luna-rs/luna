@@ -37,7 +37,7 @@ import kotlin.time.Duration.Companion.seconds
  * A [SkillingBotScript] that trains Woodcutting by chopping configured tree types inside selected zones.
  *
  * This script supplies the Woodcutting-specific pieces required by [SkillingBotScript], including valid tree object
- * ids, axe selection, emergency axe fallback, and bird nest side behavior.
+ * ids, axe selection, real acquisition of missing tools, and bird nest side behavior.
  *
  * While running, the bot searches for nearby matching tree objects and interacts with them using the normal targeting
  * flow inherited from the skilling script hierarchy. It may also pick up nearby bird nests when there is enough
@@ -276,8 +276,6 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         Axe.VALUES.values
             .mapTo(TreeSet()) { SkillingTool(it.id, it.level) }
 
-
-    override fun emergencyTool(): SkillingTool = SkillingTool(Axe.BRONZE.id, Axe.BRONZE.level)
 
     override suspend fun recoverMissingTool() {
         BotGatheringTools.recoverHead(bot, WoodcuttingRandomEvents.HANDLE,

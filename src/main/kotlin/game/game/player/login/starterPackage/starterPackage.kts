@@ -2,13 +2,7 @@ package game.player.login.starterPackage
 
 import api.predef.*
 import game.player.login.firstLogin
-import game.skill.crafting.jewelleryMaking.GoldJewelleryTable
-import game.skill.crafting.jewelleryMaking.SilverJewelleryTable
-import game.skill.farming.Farming
-import game.skill.fishing.catchFish.Tool
-import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.event.impl.LoginEvent
-import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.PlayerAppearance.DesignPlayerInterface
 
@@ -36,54 +30,29 @@ val equipmentStarter = listOf(
     item("Bronze arrow", 150))
 
 /**
- * Bank starter items. Only applicable to [Bot] types.
+ * Inventory starter items for bots. Skilling supplies are obtained through normal acquisition.
  */
-val bankStarter = listOf(
-    item("Anti-dragon shield", 1),
-    item("Air rune", 250),
-    item("Water rune", 250),
-    item("Fire rune", 250),
-    item("Earth rune", 250),
-    item("Mind rune", 500),
-    item("Cake", 100),
-    item("Chisel", 5),
-    item("Knife", 5),
-    item("Needle", 5),
-    item("Thread", 500),
-    item("Bronze pickaxe", 5),
-    item("Bronze axe", 5),
-    item("Hammer", 5),
-    item("Tinderbox", 5),
-    item("Fishing bait", 500),
-    item("Feather", 250)
-)
+val botInventoryStarter = listOf(
+    item("Coins", 10_000),
+    item("Iron scimitar"),
+    item("Shortbow"),
+    item("Staff"))
 
 /**
- * All farming bot starter items.
+ * Equipment starter items for bots.
  */
-val farmingItems = setOf(Farming.RAKE, Farming.SPADE, Farming.SEED_DIBBER, Farming.SECATEURS, Farming.EMPTY_WATERING_CAN, Farming.GARDENING_TROWEL).map { Item(it) }
-
-/**
- * Adds starter items specific to bots.
- */
-fun addBotItems(plr: Player) {
-    plr.bank.addAll(bankStarter)
-    Tool.ALL_IDS.forEach { plr.bank.add(Item(it)) }
-    SilverJewelleryTable.MOULDS.forEach { plr.bank.add(Item(it)) }
-    GoldJewelleryTable.MOULDS.forEach { plr.bank.add(Item(it)) }
-    Altar.entries.forEach { plr.bank.add(Item(it.talisman)) }
-    plr.bank.addAll(farmingItems)
-}
+val botEquipmentStarter = listOf(item("Bronze arrow", 100))
 
 /**
  * Called when the player logs in for the first time.
  */
 fun firstLogin(plr: Player) {
-    plr.inventory.addAll(inventoryStarter)
-    plr.equipment.addAll(equipmentStarter)
     if (plr.isBot) {
-        addBotItems(plr)
+        plr.inventory.addAll(botInventoryStarter)
+        plr.equipment.addAll(botEquipmentStarter)
     } else {
+        plr.inventory.addAll(inventoryStarter)
+        plr.equipment.addAll(equipmentStarter)
         plr.inventory.addAll(playerStarterTools)
     }
     plr.overlays.open(DesignPlayerInterface())
