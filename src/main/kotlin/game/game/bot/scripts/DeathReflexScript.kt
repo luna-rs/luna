@@ -4,6 +4,7 @@ import api.attr.Attr
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.action.BotCombatThreat
+import api.bot.script.ZonedBotScript
 import api.bot.script.ReflexBotScript
 import api.bot.webwalk.walk.WebWalker
 import api.bot.zone.SubZone
@@ -118,8 +119,14 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
         val (position, zone, subZones) = location
         deathLocation = null
 
+        val abandoned = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)
+            ?.recordActivityDeath() == true
         val killer = bot.lastKiller
         bot.lastKiller = null
+        if (abandoned) {
+            bot.log("Not returning for loot after repeated deaths on this activity's route.")
+            return true
+        }
         val (goesBack, reason) = decide(position, killer)
         if (!goesBack) {
             bot.log("Not going back to $position: $reason.")
