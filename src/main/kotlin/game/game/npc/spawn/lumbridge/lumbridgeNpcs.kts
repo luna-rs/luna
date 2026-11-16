@@ -7,8 +7,6 @@ import io.luna.game.model.mob.dialogue.Expression
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-// TODO@0.5.0 Make NPCs wander by file.
-
 // Hans dialogue
 npc1(0) {
     val daysPlayed = plr.timePlayed.toHours() / 24

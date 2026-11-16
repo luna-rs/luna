@@ -20,7 +20,8 @@ import io.luna.game.model.mob.bot.Bot
  */
 internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotActionHandler,
                               private val acceptsTarget: (Player) -> Boolean = { true },
-                              private val nanoTime: () -> Long = System::nanoTime) {
+                              private val nanoTime: () -> Long = System::nanoTime,
+                              private val acceptsPurpose: (BotGearPurpose) -> Boolean = { true }) {
     /**
      * Whether the caller can attack, should wait for its reaction window, or must abandon an unusable fight.
      *
@@ -64,7 +65,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     suspend fun prepare(target: Player): Result {
         if (bot.preferences.isSkiller || bot.preferences.pk == null || !validTarget(target)) return Result.UNAVAILABLE
         val now = nanoTime()
-        val current = active?.takeIf { ready(it.first, it.second) }
+        val current = active?.takeIf { acceptsPurpose(it.first) && ready(it.first, it.second) }
         if (current == null) {
             bot.combat.target = null
             clearMagic()
@@ -74,7 +75,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
         nextDecision = now + combat.pkSwitchDelay().inWholeNanoseconds
 
         val choices = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
-            .filter { it !in failed }.mapNotNull { purpose ->
+            .filter { it !in failed && acceptsPurpose(it) }.mapNotNull { purpose ->
                 selection.select(purpose, carriedOnly = true)?.also { outfit ->
                     clan.cape?.let { outfit.gear[Equipment.CAPE] = it }
                 }?.takeIf { it.gear[Equipment.WEAPON] != null }

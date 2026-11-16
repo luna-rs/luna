@@ -2,6 +2,7 @@
 package game.bot.scripts.trading
 
 import api.bot.script.DynamicBotScript
+import api.bot.action.trading.BotMarketplace
 import api.bot.action.trading.BotStoreSales
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePrice
@@ -13,11 +14,12 @@ import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Sells an ordinary bot's actual surplus to registered GP shops while the bot is at home.
+ * Sells actual surplus to registered GP shops while the bot is at home.
  *
  * Active supplies, personal cosmetic copies and useful equipment share marketplace retention rules. Broad default
  * wanted targets do not prevent gathered loot from being sold. Merchants never use this script. A trip starts only
  * when actual transferable surplus has an accepting GP shop, and its original quantities cap the entire visit.
+ * Bots without the dumb personality use shops only after all player marketplaces run out of trading space.
  *
  * Items are banked and withdrawn in batches, leaving room for proceeds. Each batch refreshes equipment retention;
  * each sale checks current ownership and newly recorded supply requirements. Equipped and dynamic items are protected.
@@ -28,15 +30,15 @@ import io.luna.game.model.mob.bot.Bot
  * This is a dynamic script because the shopping trip has no state that must survive logout or restart.
  *
  * @param bot The bot performing the selling activity.
+ * @param targetId Optional single commodity from a targeted marketplace sale.
  * @author lare96
  */
-class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
+class SellToStoreBotScript(bot: Bot, private val targetId: Int? = null) : DynamicBotScript(bot) {
 
     private val sales = BotStoreSales(bot, handler)
     private var startedTrip = false
 
     override suspend fun run(): Boolean {
-        if (bot.preferences.isMerchant) return true
         val surplus = saleCandidates()
         if (surplus.isEmpty()) return true
         startedTrip = true
@@ -44,6 +46,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             bot.log("Could not travel home to sell items.")
             return true
         }
+        if (!canUseStore()) return true
 
         sales.refreshRetention()
         for (item in surplus) {
@@ -51,7 +54,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             var remaining = item.amount
             val failedShops = HashSet<Shop>()
 
-            while (remaining > 0) {
+            while (remaining > 0 && canUseStore()) {
                 if (shopsFor(sales.saleId(id)).none { it !in failedShops }) {
                     break
                 }
@@ -79,6 +82,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
                 if (!travelHome()) {
                     return true
                 }
+                if (!canUseStore()) return true
 
                 val before = bot.inventory.computeAmountForId(saleId)
                 for (shop in shopsFor(saleId).filterNot { it in failedShops }.shuffled()) {
@@ -105,11 +109,18 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * Shares actual marketplace surplus and prices while excluding stock without an accessible shop buyer.
      */
     internal fun saleCandidates(): List<Item> {
-        if (bot.preferences.isMerchant) return emptyList()
+        if (!canUseStore()) return emptyList()
         return BotTradeManager.computeOfferItems(bot, BotTradePrice.EXACT, BotTradePurpose.SELL)
-            .filter { shopsFor(sales.saleId(it.item.id)).isNotEmpty() }
+            .filter { (targetId == null || it.item.id == targetId) &&
+                shopsFor(sales.saleId(it.item.id)).isNotEmpty() }
             .sortedByDescending { it.totalPrice() }.map { it.item }
     }
+
+    /**
+     * Rechecks trading space before preparing a shop trip and after travel or banking may have freed a market spot.
+     */
+    private fun canUseStore(): Boolean = !bot.preferences.isMerchant &&
+        (bot.personality.isDumb || BotMarketplace.entries.none { it.hasAvailableTradingSpot(bot) })
 
     /**
      * Computes the quantity of an item that can be sold without violating its retention target.
@@ -140,7 +151,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * @return The total quantity successfully sold during this invocation.
      */
     private suspend fun sellItem(shop: Shop, id: Int, maxAmount: Int): Int {
-        return sales.sellItem(shop, id, maxAmount)
+        return sales.sellItem(shop, id, maxAmount, canContinue = { canUseStore() })
     }
 
     /**

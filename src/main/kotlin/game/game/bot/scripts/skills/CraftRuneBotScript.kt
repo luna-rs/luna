@@ -211,6 +211,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
                 bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id) >= amount
             }
         }
+        if (ownedSuppliesOnly) return compatibleEssence(bot, craftingRune) != null
         val remaining = remainingDuration()
         if (remaining <= Duration.ZERO || productionRetriesExhausted() || isPaused() || isTerminated() ||
             bot.state != EntityState.ACTIVE ||
@@ -312,12 +313,6 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             return emptyList()
         }
 
-        if (!viaAbyss && !bot.itemTracker.contains(altar.talisman)) {
-            if (productionPlan != null) { stop(); return emptyList() }
-            // Emergency spawn talisman if needed.
-            bot.bank.add(altar.talisman)
-        }
-
         pouches = if (productionPlan != null) emptyList() else EssencePouch.entries.filter { pouch ->
             pouch.level <= bot.runecrafting.staticLevel && pouch.isOwnedBy(bot) &&
                     (bot.attributes()[pouch.essence] == 0 || bot.attributes()[pouch.essenceId] == essence) &&
@@ -326,6 +321,8 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         val tools = (if (viaAbyss) abyssSupplies() else listOf(Item(altar.talisman))) + pouches.map { pouch ->
             Item(pouch.ids.first { bot.itemTracker.contains(it) })
         }
+        // The shared inventory initialization obtains this real one-copy talisman through normal acquisition.
+        // Finite goals and owned-stock sessions must already own their planned supplies.
         if (isTerminated()) return emptyList()
         val amount = minOf(bot.itemTracker.count(essence!!), bot.inventory.capacity() - tools.sumOf { it.amount })
         return tools + if (amount > 0) listOf(Item(essence!!, amount)) else emptyList()

@@ -17,6 +17,7 @@ import api.predef.*
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
 import engine.bot.coordinator.MerchantingCoordinator
+import engine.bot.coordinator.ScavengingCoordinator
 import engine.controllers.WildernessLocatableController.levelAt
 import game.bot.scripts.combat.PkBotScript
 import game.bot.scripts.combat.PkBotScript.PkArea
@@ -82,7 +83,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     private var quietSince = data.quietSince
 
     /**
-     * A quiet-area departure stays final even if a PKer appears during the escape or banking.
+     * Departure for inactivity or a lost population slot stays final during escape and banking.
      */
     private var quietTimedOut = data.quietTimedOut
 
@@ -147,6 +148,12 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
      */
     fun observe(now: Long) {
         if (bot.scriptStack.current() !== this) return
+        if (!quietTimedOut && !ScavengingCoordinator.permits(bot)) {
+            quietTimedOut = true
+            collecting = false
+            bot.navigator.cancel()
+            bot.walking.clear()
+        }
         if (!collecting || quietTimedOut || !allowsPosition(bot.position)) return
         if (quietSince == 0L) {
             val goal = destination ?: return
@@ -352,7 +359,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
          */
         var quietSince = 0L
         /**
-         * Whether five minutes without visible PKers has ended this visit.
+         * Whether inactivity or a lost population slot has ended this visit.
          */
         var quietTimedOut = false
 

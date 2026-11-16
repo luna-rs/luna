@@ -8,6 +8,7 @@ import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.GnomeStrongholdGate
+import game.obj.doors.GrandTreeDoors
 import game.content.miningGuild.MiningGuild
 import game.content.fishingGuild.FishingGuild
 import game.obj.doors.BrassKeyDoor
@@ -166,6 +167,13 @@ object SpecialCrossings {
                                                                                    GnomeStrongholdGate.NORTH)))
 
     /**
+     * The Grand Tree's scenery leaves use the same central lanes as their normal player click handlers.
+     */
+    val GRAND_TREE_DOORS = CrossingSpec(ConditionalDoorCrossing.ID,
+        GrandTreeDoors.Leaf.entries.map { it.closed }.toSet(), cost = 4,
+        placements = GrandTreeDoors.Leaf.entries.map { CrossingPlacement(it.closed, it.position, it.south, it.north) })
+
+    /**
      * The Taverley Dungeon gate into the western section needs a carried dusty key from outside, the side of its own
      * tile, and opens freely from inside.
      */
@@ -273,7 +281,7 @@ object SpecialCrossings {
      */
     val ALL = listOf(BORDER_GATE, HARDWOOD_GROVE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
-        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, GRAND_TREE_DOORS, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
         ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,
         PiscatorisHoleCrossingSpec.SPEC, ShantayPassCrossingSpec.SPEC, ArandarCrossingSpec.GATE, ArandarCrossingSpec.FOREST,
         ArandarCrossingSpec.LOGS, ArandarCrossingSpec.TRIPWIRES) +

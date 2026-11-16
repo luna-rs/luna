@@ -75,7 +75,7 @@ object BotMerchantValuation {
             val reference = reference(id, guide)
             if (useful) BotMarketExperience.buy(bot, id, strategy.applyBuy(reference),
                 BotTradeIntentions.productionLimit(bot, id)?.maximumUnitPrice ?: Long.MAX_VALUE)
-            else resaleBid(reference, intelligence, greedy, rand().nextDouble())
+            else BotUtilityPurchases.price(bot, id, resaleBid(reference, intelligence, greedy, rand().nextDouble()))
         }
 
         /**

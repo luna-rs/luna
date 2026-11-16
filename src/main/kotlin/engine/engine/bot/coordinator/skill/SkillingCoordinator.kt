@@ -2,10 +2,14 @@ package engine.bot.coordinator.skill
 
 import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
-import api.predef.SKILL_PRAYER
 import api.predef.SKILL_MAGIC
+import api.predef.SKILL_PRAYER
+import api.predef.SKILL_THIEVING
+import game.player.item.consume.food.Food
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivityWeights
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.util.RandomUtils
 
@@ -78,7 +82,24 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         /**
          * Gives eligible Magic training a larger share while retaining all other supported training choices.
          */
-        private const val MAGIC_TRAINING_WEIGHT_MULTIPLIER = 2.0
+        private const val MAGIC_TRAINING_WEIGHT_MULTIPLIER = 4.0
+
+        /**
+         * Gives Thieving a substantial share of profit skilling even after the first coin reserve is built.
+         */
+        private const val THIEVING_PROFIT_WEIGHT_MULTIPLIER = 3.0
+
+        /**
+         * Further favors Thieving's direct coin methods when a cash-poor bot can supply food for the outing.
+         */
+        private const val STARTER_THIEVING_WEIGHT_MULTIPLIER = 6.0
+
+        /**
+         * Thieving scripts withdraw any recognized food from the bank after depositing carried items.
+         */
+        internal fun hasThievingFood(bot: Bot): Boolean =
+            bot.bank.any { it != null && it.id in Food.ID_TO_FOOD } ||
+                bot.inventory.any { it != null && it.id in Food.ID_TO_FOOD }
 
         /**
          * Attribute representing if this coordinator was last in profit or training mode.
@@ -106,6 +127,12 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
             SlayerScriptFactory,
             FarmingScriptFactory
         ).associateBy { it.skillId }
+
+        /**
+         * Keeps training available while any supported skill still advances the account's training goal.
+         */
+        @JvmStatic
+        fun hasTrainingSkills(bot: Bot): Boolean = factories.keys.any { BotCombatActionHandler.wantsToTrain(bot, it) }
     }
 
     /**
@@ -130,16 +157,30 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
             weights.computeIfPresent(skill) { _, old -> old + PREFERENCE_WEIGHT }
         }
 
-        if (training) weights.computeIfPresent(SKILL_MAGIC) { _, old -> old * MAGIC_TRAINING_WEIGHT_MULTIPLIER }
+        if (training) {
+            weights.computeIfPresent(SKILL_MAGIC) { _, old -> old * MAGIC_TRAINING_WEIGHT_MULTIPLIER }
+        } else {
+            val thievingMultiplier = THIEVING_PROFIT_WEIGHT_MULTIPLIER *
+                (if (BotActivityWeights.needsStarterCoins(bot) && hasThievingFood(bot))
+                    STARTER_THIEVING_WEIGHT_MULTIPLIER else 1.0)
+            weights.computeIfPresent(SKILL_THIEVING) { _, old -> old * thievingMultiplier }
+        }
 
         return weights
     }
 
     override fun accept(bot: Bot) {
-        val selectedSkill = RandomUtils.weightedRoll(skillWeights(bot)) ?: return
-        val factory = factories[selectedSkill] ?: return
+        getScript(bot)?.let { bot.scriptStack.push(it) }
+    }
+
+    /**
+     * Selects a concrete activity without changing script-stack ownership, so another activity can queue a follow-up.
+     */
+    internal fun getScript(bot: Bot): BotScript? {
+        val selectedSkill = RandomUtils.weightedRoll(skillWeights(bot)) ?: return null
+        val factory = factories[selectedSkill] ?: return null
         val zones = ArrayList<SubZone>()
         bot.profitMode = !training
-        bot.scriptStack.push(factory.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training))
+        return factory.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
     }
 }

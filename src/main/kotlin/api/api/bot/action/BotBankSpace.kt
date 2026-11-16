@@ -17,7 +17,7 @@ import io.luna.game.model.mob.varp.PersistentVarp
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Recovers real bank-slot shortages with bounded native sales of completely removable low-value stacks.
+ * Recovers dumb bots' real bank-slot shortages with bounded native sales of completely removable low-value stacks.
  * Raw item transfers never invoke maintenance. Pending deposits and retained stock survive every suspension,
  * and moving goods into inventory is not counted as a successful recovery.
  *
@@ -75,7 +75,7 @@ object BotBankSpace {
     @JvmStatic
     fun needsMaintenance(bot: Bot): Boolean {
         val current = bot.attributes()[state.attr]
-        return !bot.preferences.isMerchant && !current.active &&
+        return bot.personality.isDumb && !bot.preferences.isMerchant && !current.active &&
             bot.bank.computeRemainingSize() <= START_FREE_SLOTS && System.currentTimeMillis() >= current.nextAttempt
     }
 
@@ -135,9 +135,9 @@ object BotBankSpace {
             bot.log("Bank deposit failed without a recoverable shortage of bank slots.")
             return false
         }
-        if (current.nextAttempt > System.currentTimeMillis() || bot.preferences.isMerchant) {
+        if (current.nextAttempt > System.currentTimeMillis() || bot.preferences.isMerchant || !bot.personality.isDumb) {
             current.deferredUntil = System.currentTimeMillis() + COOLDOWN_MILLIS
-            bot.log("Bank capacity recovery deferred: cooldown or protected merchant stock.")
+            bot.log("Bank capacity recovery deferred: cooldown or store-selling policy.")
             return false
         }
         clean(bot, handler, except, protectedIds, targetFreeSlots = 4)
@@ -158,7 +158,7 @@ object BotBankSpace {
     private suspend fun clean(bot: Bot, handler: BotActionHandler, except: Set<Int>, protectedIds: Set<Int>,
                               targetFreeSlots: Int = TARGET_FREE_SLOTS): Boolean {
         val current = bot.attributes()[state.attr]
-        if (current.active || bot.preferences.isMerchant || !safe(bot)) return false
+        if (current.active || bot.preferences.isMerchant || !bot.personality.isDumb || !safe(bot)) return false
         current.active = true
         current.nextAttempt = System.currentTimeMillis() + COOLDOWN_MILLIS
         val bankingMode = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)

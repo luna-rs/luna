@@ -1,6 +1,7 @@
 package api.bot.action.trading
 
 import api.bot.script.InventoryProductionFixtures
+import engine.trade.tradingWith
 import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -80,6 +81,45 @@ class PlayerTradeCashAndBuyingTest {
         assertEquals(100, trader.bot.inventory.computeAmountForId(556))
     }
 
+    @Test fun sellingAdvertiserAcceptsAnOrdinaryHumanRequestWithoutAPlayerAdvertisement() {
+        val player = fixture.human()
+        val trader = fixture.trader(player, coins = 0, purpose = BotTradePurpose.SELL)
+        InventoryProductionFixtures.inventory(trader.bot, Item(314, 100))
+        fixture.set(trader, "carriedOffer", mapOf(314 to 100))
+        fixture.set(trader, "offering", listOf(BotTradeItem(Item(314, 100), 1, BotTradePurpose.SELL, trader.bot)))
+        player.tradingWith = trader.bot.index
+
+        val accepts = TradeBotScript::class.java.getDeclaredMethod("canAcceptRequest", Player::class.java)
+            .apply { isAccessible = true }
+        assertEquals(true, accepts.invoke(trader, player))
+        assertNull(fixture.market.registry.find(player))
+    }
+
+    @Test fun ordinaryHumanPaymentSelectsOnlyAffordableCarriedSaleStock() {
+        val player = fixture.human()
+        val trader = fixture.trader(player, coins = 0, purpose = BotTradePurpose.SELL)
+        InventoryProductionFixtures.inventory(trader.bot, Item(314, 100))
+        fixture.set(trader, "carriedOffer", mapOf(314 to 100))
+        fixture.set(trader, "offering", listOf(BotTradeItem(Item(314, 100), 1, BotTradePurpose.SELL, trader.bot)))
+
+        assertEquals(mapOf(314 to 100), target(trader, emptyMap()))
+        assertEquals(mapOf(314 to 25), target(trader, mapOf(995 to 25)))
+        assertTrue(target(trader, mapOf(995 to 0)).isEmpty())
+        assertTrue(usefulReturn(trader, mapOf(995 to 25)))
+        assertFalse(usefulReturn(trader, emptyMap()))
+    }
+
+    @Test fun ordinaryHumanPaymentKeepsCarriedNoteIdsAndNeverExceedsThePayment() {
+        val player = fixture.human()
+        val trader = fixture.trader(player, coins = 0, purpose = BotTradePurpose.SELL)
+        InventoryProductionFixtures.inventory(trader.bot, Item(1780, 10))
+        fixture.set(trader, "carriedOffer", mapOf(1780 to 10))
+        fixture.set(trader, "offering", listOf(BotTradeItem(Item(1779, 10), 5, BotTradePurpose.SELL, trader.bot)))
+
+        assertEquals(mapOf(1780 to 2), target(trader, mapOf(995 to 12)))
+        assertTrue(target(trader, mapOf(995 to 4)).isEmpty())
+    }
+
     @Test fun sellingTradersCanBuyAPlayersSaleUsingTheirActualCarriedGoldOnly() {
         val player = fixture.human()
         val trader = fixture.trader(player, coins = 100, purpose = BotTradePurpose.SELL)
@@ -124,4 +164,8 @@ class PlayerTradeCashAndBuyingTest {
     private fun target(trader: TradeBotScript, receiving: Map<Int, Int>): Map<Int, Int> =
         TradeBotScript::class.java.getDeclaredMethod("humanTarget", Map::class.java, Map::class.java)
             .apply { isAccessible = true }.invoke(trader, receiving, HashMap<Int, Long>()) as Map<Int, Int>
+
+    private fun usefulReturn(trader: TradeBotScript, receiving: Map<Int, Int>): Boolean =
+        TradeBotScript::class.java.getDeclaredMethod("hasUsefulReturn", Map::class.java, Map::class.java)
+            .apply { isAccessible = true }.invoke(trader, receiving, HashMap<Int, Long>()) as Boolean
 }

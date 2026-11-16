@@ -7,6 +7,7 @@ import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.controller.PlayerController
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.ExactMovement
 import io.luna.game.model.mob.block.PlayerModelAnimation
@@ -26,6 +27,9 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
     private var previousAnimation: PlayerModelAnimation? = null
     private var ticks = 0
     private var fallTick = 0
+    private var entry: Position? = null
+    private var entryController: PlayerController? = null
+    private var landed = false
 
     /**
      * The stone the last jump lands on. The player is only moved there when the next jump or the stumble starts, so
@@ -34,6 +38,8 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
     private var stone: Position? = null
 
     override fun onLock() {
+        entry = mob.position
+        entryController = mob.controllers.primary
         previousAnimation = mob.model
         mob.walking.clear()
         startMessage?.let { mob.sendMessage(it) }
@@ -51,6 +57,9 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
             mob.walkStraight(approach)
         }
     }
+
+    override fun getPersistencePosition(): Position =
+        if (!landed && mob.controllers.primary === entryController) entry ?: mob.position else mob.position
 
     override fun run(): Boolean {
         val approach = failure.approach
@@ -119,6 +128,7 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
      */
     private fun land() {
         mob.move(failure.landing)
+        landed = true
         if (failure.approach == null) mob.sendMessage(failure.message)
         mob.damage(failure.damage(mob.hitpoints.level))
         when (failure) {

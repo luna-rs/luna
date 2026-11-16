@@ -1,6 +1,8 @@
 package engine.bot.gear
 
 import api.predef.*
+import api.bot.action.trading.BotTradeIntentions
+import api.predef.ext.canUseWantedItem
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.HashMultimap
 import engine.bot.gear.BotGearSelector.ALL_GEAR
@@ -216,14 +218,15 @@ object BotGearSelector {
                 selected.sortByDescending { it.strength }
                 equipment[AMMUNITION] = selected.firstOrNull()?.id
                 if (equipment[AMMUNITION] == null) {
-                    // Couldn't find matching ammo, fallback to melee, give bot some emergency ammo.
-                    fill(WEAPON, setOf(BotGearPurpose.MELEE))
-                    for(ammo in AmmoDefinition.ALL.values) {
-                        if(ammo.weapons.contains(weapon)) {
-                            bot.bank.add(Item(ammo.ammo.random(), 1000))
-                            break
-                        }
+                    val wanted = AmmoDefinition.ALL.values.filter { weapon in it.weapons }
+                        .sortedByDescending { it.strength }.flatMap { it.ammo }
+                        .firstOrNull { bot.canUseWantedItem(it) }
+                    if (wanted != null) {
+                        BotTradeIntentions.recordSupplies(bot, listOf(Item(wanted)), stockTarget = 100)
                     }
+                    // An unfunded ranged loadout must use a real owned melee weapon until ammo is acquired normally.
+                    equipment[WEAPON] = null
+                    fill(WEAPON, setOf(BotGearPurpose.MELEE))
                 }
             }
         }

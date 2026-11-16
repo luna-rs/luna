@@ -5,8 +5,11 @@ import api.bot.Suspendable.delay
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotUtilityPurchases
 import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
+import api.bot.script.BotScript
+import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
@@ -23,11 +26,15 @@ import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.dialogue.PlayerDialogue
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
+import java.util.WeakHashMap
 
 /**
  * A [BotActionHandler] implementation for shop related actions.
  */
 class BotShopActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
+
+    /** One market preview per missing item before the owning script falls back to a shop. */
+    private val marketAttempts = WeakHashMap<BotScript, MutableSet<Int>>()
 
     /**
      * One finite GP budget shared by every item in a guarded acquisition basket.
@@ -284,12 +291,39 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         fun acquired() = targets.filter { (id, amount) ->
             bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount
         }.keys
-        if (acquired().size == targets.size) return targets.keys
+        val owner = if (budget == null) bot.scriptStack.current()?.takeUnless { it is TradeBotScript } else null
+        val attempted = owner?.let { marketAttempts.getOrPut(it) { hashSetOf() } }
+        if (acquired().size == targets.size) {
+            attempted?.removeAll(targets.keys)
+            return targets.keys
+        }
         withTimeoutOrNull(120.seconds) {
             try {
                 for ((id, amount) in targets) {
                     if (!ActionSafety.NON_COMBAT.await(bot)) break
-                    acquireWantedItem(id, amount, targets.keys, budget)
+                    if (id in acquired()) {
+                        attempted?.remove(id)
+                        continue
+                    }
+                    val banked = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+                    val utilitySource = BotUtilityPurchases.shopCeiling(bot, id)
+                    if (attempted != null && id !in attempted && banked < amount && utilitySource == null) {
+                        val deadline = System.currentTimeMillis() + 45_000L
+                        val trade = TradeBotScript.buySpecific(bot, id, amount, deadline)
+                        if (trade != null) {
+                            attempted.add(id)
+                            trade.duration = 45.seconds
+                            bot.scriptStack.pushHead(trade)
+                            return@withTimeoutOrNull
+                        }
+                    }
+                    // Complete this item's fallback before another market child can pause the basket.
+                    try {
+                        acquireWantedItem(id, amount, targets.keys, budget)
+                    } finally {
+                        if (utilitySource != null && id !in acquired()) BotUtilityPurchases.shopFailed(bot, id)
+                    }
+                    if (id in acquired()) attempted?.remove(id)
                 }
             } finally {
                 bot.overlays.closeWindows()

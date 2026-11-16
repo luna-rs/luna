@@ -46,6 +46,11 @@ public final class BotScriptSnapshot {
     private final JsonElement data;
 
     /**
+     * Selected training skill, minus one for combined combat, or null for ordinary work and legacy saves.
+     */
+    private final Integer trainingGoal;
+
+    /**
      * Creates a new {@link BotScriptSnapshot}.
      *
      * @param index The script's position in the stack.
@@ -54,10 +59,25 @@ public final class BotScriptSnapshot {
      * @param data The serialized state payload for the script.
      */
     public BotScriptSnapshot(int index, String scriptClass, String scriptDataClass, JsonElement data) {
+        this(index, scriptClass, scriptDataClass, data, null);
+    }
+
+    /**
+     * Creates a snapshot including the activity's training intent independently of its script-specific payload.
+     *
+     * @param index The script's position in the stack.
+     * @param scriptClass The fully qualified class name of the script.
+     * @param scriptDataClass The fully qualified class name of the script data.
+     * @param data The serialized state payload for the script.
+     * @param trainingGoal The selected skill, minus one for combat, or null for ordinary work.
+     */
+    public BotScriptSnapshot(int index, String scriptClass, String scriptDataClass, JsonElement data,
+                             Integer trainingGoal) {
         this.index = index;
         this.scriptClass = scriptClass;
         this.scriptDataClass = scriptDataClass;
         this.data = data;
+        this.trainingGoal = trainingGoal;
     }
 
     /**
@@ -86,5 +106,12 @@ public final class BotScriptSnapshot {
      */
     public JsonElement getData() {
         return data;
+    }
+
+    /**
+     * @return The saved training intent, or null for ordinary work and legacy snapshots.
+     */
+    public Integer getTrainingGoal() {
+        return trainingGoal;
     }
 }

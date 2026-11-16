@@ -72,7 +72,9 @@ object MinigameCoordinator : ProgressiveCoordinator() {
         if (BarrowsBotScript.eligible(bot) && rand(0.20)) return BarrowsBotScript(bot)
         if (FightPitBotScript.eligible(bot) && (FightPit.inside(bot.position) || rand(0.25))) return FightPitBotScript(bot)
         if (MageArenaBotScript.eligible(bot) && rand(0.25)) return MageArenaBotScript(bot)
-        val furnaceBar = BarType.entries.filter { BlastFurnaceBotScript.eligible(bot, it) }.maxByOrNull { it.level }
+        val furnaceBar = if (BlastFurnaceBotScript.local(bot.position))
+            BarType.entries.filter { BlastFurnaceBotScript.eligible(bot, it) }.maxByOrNull { it.level }
+        else null
         if (furnaceBar != null) return BlastFurnaceBotScript(bot, furnaceBar)
         if (GamesRoom.inRoom(bot.position) && GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
         if (pestReady && rand(0.25)) return PestControlBotScript(bot)

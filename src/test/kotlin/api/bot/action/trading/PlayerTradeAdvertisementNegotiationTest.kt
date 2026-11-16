@@ -74,7 +74,7 @@ class PlayerTradeAdvertisementNegotiationTest {
      */
     companion object {
         @JvmStatic @BeforeAll fun fixtures() {
-            InventoryProductionFixtures.initialize()
+            InventoryProductionFixtures.initializeCombat()
             for (id in listOf(3323, 3443)) {
                 if (WidgetDefinition.ALL.get(id).isEmpty) {
                     val definition = mock(WidgetDefinition::class.java)
@@ -87,6 +87,8 @@ class PlayerTradeAdvertisementNegotiationTest {
         private val runTask = Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }
         private val attemptTrade = TradeBotScript::class.java.getDeclaredMethod("attemptTrade", Player::class.java,
             Opportunity::class.java, Continuation::class.java).apply { isAccessible = true }
+        private val tryPlayerTrade = TradeBotScript::class.java.getDeclaredMethod("tryPlayerTrade",
+            Continuation::class.java).apply { isAccessible = true }
     }
 
     private lateinit var fixture: AdvertisementRuntimeFixture
@@ -248,6 +250,28 @@ class PlayerTradeAdvertisementNegotiationTest {
         assertEquals(25, buyer.bot.inventory.computeAmountForId(995))
         assertEquals(125, seller.inventory.computeAmountForId(314))
         assertNull(fixture.market.registry.find(seller))
+        verify(buyer.bot.output).clickButton(3546)
+    }
+
+    @Test fun anOrdinaryDirectRequestBuysAdvertisedStockThroughBothNativeScreens(): Unit = runTradeTest {
+        prepareNativeTrader(coins = 0, purpose = BotTradePurpose.SELL)
+        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 30))
+        fixture.set(buyer, "carriedOffer", mapOf(314 to 30))
+        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 30), 1, BotTradePurpose.SELL, buyer.bot)))
+        humanOffer = Item(995, 25)
+        check(seller.inventory.add(humanOffer))
+
+        dispatch(PlayerFourthClickEvent(seller, buyer.bot))
+        assertTrue(serviceIncomingRequest())
+
+        assertNull(fixture.market.registry.find(seller))
+        assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+        assertEquals(25, buyer.bot.inventory.computeAmountForId(995))
+        assertEquals(125, seller.inventory.computeAmountForId(314))
+        assertEquals(0, seller.inventory.computeAmountForId(995))
+        assertFalse(buyer.bot.overlays.hasWindow())
+        assertFalse(seller.overlays.hasWindow())
+        verify(buyer.bot.output).clickButton(3420)
         verify(buyer.bot.output).clickButton(3546)
     }
 
@@ -469,7 +493,8 @@ class PlayerTradeAdvertisementNegotiationTest {
         return fixture.market.claim(buyer)!!
     }
 
-    private fun prepareNativeTrader(id: Int = 314, target: Int = 25, coins: Int = 100) {
+    private fun prepareNativeTrader(id: Int = 314, target: Int = 25, coins: Int = 100,
+                                    purpose: BotTradePurpose = BotTradePurpose.BUY) {
         seller = fixture.human()
         `when`(seller.inventory).thenReturn(Inventory(seller))
         `when`(seller.overlays).thenReturn(AbstractOverlaySet(seller))
@@ -479,7 +504,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         `when`(seller.contextMenu.contains(TRADE)).thenReturn(true)
         check(seller.inventory.add(Item(314, 100)))
         check(seller.inventory.add(Item(1779)))
-        buyer = fixture.trader(seller, id = id, target = target, coins = coins)
+        buyer = fixture.trader(seller, id = id, target = target, coins = coins, purpose = purpose)
         val bot = buyer.bot
         `when`(bot.overlays).thenReturn(AbstractOverlaySet(bot))
         `when`(bot.type).thenReturn(EntityType.PLAYER)
@@ -519,6 +544,10 @@ class PlayerTradeAdvertisementNegotiationTest {
     private suspend fun directAttempt() {
         dispatch(PlayerFourthClickEvent(seller, buyer.bot))
         attempt(null)
+    }
+
+    private suspend fun serviceIncomingRequest(): Boolean = suspendCoroutineUninterceptedOrReturn { continuation ->
+        tryPlayerTrade.invoke(buyer, continuation)
     }
 
     private fun bridgeOutput(bot: Bot) {

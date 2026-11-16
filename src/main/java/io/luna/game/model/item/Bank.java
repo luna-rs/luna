@@ -193,6 +193,16 @@ public final class Bank extends ItemContainer {
         ), new BotItemTracker(player));
     }
 
+    @Override
+    public boolean add(int preferredIndex, Item item) {
+        return super.add(preferredIndex, toUnnoted(item));
+    }
+
+    @Override
+    public boolean remove(int preferredIndex, Item item) {
+        return super.remove(preferredIndex, toUnnoted(item));
+    }
+
     /**
      * Opens the bank overlay interface if it is not already open.
      * <p>
@@ -332,5 +342,17 @@ public final class Bank extends ItemContainer {
      */
     public boolean isOpen() {
         return bankInterface.isOpen();
+    }
+
+    /**
+     * Transforms the argued {@code item} into an unnoted {@link Item} if applicable, otherwise returns the argument
+     * itself.
+     */
+    private Item toUnnoted(Item item) {
+        ItemDefinition def = item.getItemDef();
+        if (def.isNoted()) {
+            return new Item(def.getUnnotedId().getAsInt(), item.getAmount());
+        }
+        return item;
     }
 }

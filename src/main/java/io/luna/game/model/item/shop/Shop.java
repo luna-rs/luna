@@ -56,8 +56,8 @@ public final class Shop {
         public StockPricing {
             Preconditions.checkArgument(Double.isFinite(sellMultiplier) && sellMultiplier >= 0 && sellMultiplier <= 1);
             Preconditions.checkArgument(Double.isFinite(changePerItem) && changePerItem > 0 && changePerItem <= 1);
-            // Below 1, a player could buy an item for less than the shop pays for it.
-            Preconditions.checkArgument(Double.isFinite(buyMultiplier) && buyMultiplier >= 1);
+            Preconditions.checkArgument(Double.isFinite(buyMultiplier) && buyMultiplier > 0 &&
+                    buyMultiplier >= sellMultiplier);
         }
 
         /**
@@ -564,7 +564,8 @@ public final class Shop {
         if (storeIndex != -1 && amountMap[storeIndex].isPresent()) {
             startingPrice = stockPricing != null ? stockPricing.sellMultiplier() : SP_STARTING_SELL_PRICE;
             maxPrice = MAX_PRICE;
-            minPrice = SP_MIN_PRICE;
+            // Discounted shops must also discount the selling floor, or overstock creates a buy/sell loop.
+            minPrice = stockPricing != null ? SP_MIN_PRICE * Math.min(1.0, stockPricing.buyMultiplier()) : SP_MIN_PRICE;
             priceChange = stockPricing != null ? stockPricing.changePerItem() :
                     (expectedAmount >= SP_COMM_THRESHOLD) ? SP_COMM_PRICE_CHANGE : SP_RARE_PRICE_CHANGE;
             itemsToReachMaxPrice = (int) ((maxPrice - 1) / priceChange);
@@ -658,6 +659,14 @@ public final class Shop {
      * @param shopItems The initial items for this shop.
      */
     public void init(List<PendingShopItem> shopItems) {
+        if (stockPricing != null && stockPricing.buyMultiplier() < 1.0) {
+            for (PendingShopItem item : shopItems) {
+                // At minimum stock the buy curve must still cover the sell curve; overstock only widens the gap.
+                double spread = stockPricing.buyMultiplier() - stockPricing.sellMultiplier() +
+                        item.getMaxStockAmount() * stockPricing.changePerItem() * (stockPricing.buyMultiplier() - 1.0);
+                Preconditions.checkArgument(spread >= 0, "Discounted shop pricing would allow profitable resale.");
+            }
+        }
         items.load(new ArrayList<>(shopItems));
         for (PendingShopItem item : shopItems) {
             int current = item.getAmount();

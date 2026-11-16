@@ -583,6 +583,7 @@ class FarmingBotScript(
                 purchaseSpentCoins = if (coins.toLong() > Long.MAX_VALUE - purchaseSpentCoins) Long.MAX_VALUE
                     else purchaseSpentCoins + coins
             })
+        if (isPaused()) return false
         Farming.update(bot)
         return selectSuppliedVisit()
     }

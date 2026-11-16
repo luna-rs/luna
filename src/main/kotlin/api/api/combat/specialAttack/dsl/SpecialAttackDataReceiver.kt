@@ -55,12 +55,13 @@ class SpecialAttackDataReceiver(
     /**
      * Builds the combat attack instance that should be executed for this special attack.
      *
-     * By default, this selects a standard melee or ranged attack based on [damageType].
+     * By default, this selects a standard melee or ranged attack based on [damageType]. Magic has no default, because a
+     * magic attack needs spell data. Set one with [attack].
      */
     var attackTransformer: SpecialAttackBuilderReceiver.() -> CombatAttack<Player>? = {
         when (damageType) {
             CombatDamageType.MELEE -> melee()
-            CombatDamageType.MAGIC -> melee() // TODO@0.5.0 Throw exception, or melee based magic attack?
+            CombatDamageType.MAGIC -> throw IllegalStateException("Magic specials need an attack { magic(...) } block.")
             CombatDamageType.RANGED -> ranged()
         }
     }

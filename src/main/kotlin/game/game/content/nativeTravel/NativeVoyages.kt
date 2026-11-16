@@ -3,6 +3,7 @@ package game.content.nativeTravel
 import api.predef.ext.*
 import engine.obj.LadderDestination
 import game.content.gnomeGliders.GnomeGliders
+import game.content.minecart.KeldagrimMinecart
 import game.content.sailing.Sailing
 import game.player.Jingles
 import io.luna.game.action.Action
@@ -198,6 +199,7 @@ object NativeVoyages {
             if (!LadderDestination.canLand(route.destination)) return true
             if (map != null && mob.overlays.getOverlay(StandardInterface::class.java) === map) mob.overlays.closeWindows()
             mob.move(route.destination)
+            if (route == Route.TO_KELDAGRIM) KeldagrimMinecart.markFirstBoatArrival(mob)
             route.arrivalMessage?.let { mob.sendMessage(it) }
             if (route.presentation.fadeInTicks > 0) {
                 if (route.presentation == Presentation.UNCONSCIOUS) mob.animation(Animation.CANCEL)

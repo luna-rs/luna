@@ -108,9 +108,6 @@ class SkillGuideInterface(val guide: SkillGuide) : StandardInterface(INTERFACE) 
         // The open packet makes the client reset the interface, so everything is sent after it.
         super.open(plr)
 
-        // The client has gone back to the cache's text, so the text cache no longer matches it.
-        TEXT_COMPONENTS.forEach(plr::clearText)
-
         val count = guide.categories.size
         plr.sendText(guide.name, TITLE)
         plr.sendText("", MEMBERS_TEXT)

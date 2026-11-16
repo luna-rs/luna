@@ -2,6 +2,7 @@ package engine.bot.coordinator
 
 import api.bot.zone.SubZone
 import api.predef.*
+import api.predef.ext.totalItemAmount
 import com.google.common.collect.HashMultimap
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
@@ -9,6 +10,8 @@ import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import game.bot.scripts.NpcCombatScript
+import game.bot.scripts.NpcDropGatheringScript
+import game.bot.scripts.HerbloreSecondaryGathering
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
 import game.bot.scripts.BarrowsBotScript
@@ -22,6 +25,7 @@ import game.bot.scripts.combat.RockCrabBotScript
 import game.skill.slayer.SlayerTaskType
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Spellbook
+import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -45,6 +49,10 @@ import kotlin.time.Duration
  */
 class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     companion object {
+        private const val FEATHERS = 314
+        private const val BIG_BONES = 532
+        private const val DRAGON_BONES = 536
+
         /**
          * A configured spawn group and the minimum combat readiness needed for deliberate attacks.
          * Optional assignment kinds prevent a broad native category from bypassing a specialist camp's preparation.
@@ -78,10 +86,6 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.HAM_CULT, 15, setOf("H.A.M. Guard")),
             Camp(SubZone.AL_KHARID_PALACE, 15, setOf("Al-Kharid warrior")),
             Camp(SubZone.BARBARIAN_VILLAGE, 20, setOf("Barbarian")),
-            Camp(SubZone.CHAOS_DRUID_TOWER, 25, setOf("Chaos druid"), true),
-            Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
-            Camp(SubZone.EDGEVILLE_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
-            Camp(SubZone.TAVERLEY_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
             Camp(SubZone.DRAYNOR_SEWERS, 25, setOf("Zombie", "Skeleton")),
             Camp(SubZone.VARROCK_DARK_WIZARDS, 25, setOf("Dark wizard")),
             Camp(SubZone.AL_KHARID_MINE, 25, setOf("Scorpion")),
@@ -89,15 +93,9 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Cow", "Cow calf", "Hobgoblin")),
             Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
             Camp(SubZone.TAVERLY_HILL_GIANTS, 35, setOf("Hill giant"), true),
-            Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak"), true),
-            Camp(SubZone.SOUTH_ARDOUGNE_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
-            Camp(SubZone.PATERDOMUS_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
-            Camp(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
             Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
-            Camp(SubZone.TAVERLEY_DUNGEON_ZAMORAK_MONKS, 55, setOf("Monk of Zamorak"), true),
-            Camp(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE, 55, setOf("Monk of Zamorak"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
             Camp(SubZone.TAVERLY_LESSER_DEMONS, 65, setOf("Lesser demon"), true),
             // TAVERLY_GREATER is Entrana Dungeon: ordinary armed outfits cannot pass the island's native search.
@@ -118,6 +116,27 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.GIANT_MOLE_LAIR, 110, setOf("Giant Mole"), true),
             Camp(SubZone.CHAOS_ELEMENTAL_WILDERNESS, 110, setOf("Chaos Elemental"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
+        )
+
+        /**
+         * A verified drop and bounded owned-stock goal for an ordinary profit combat outing.
+         *
+         * @author lare96
+         */
+        private data class DropGoal(val itemId: Int, val stockCap: Int, val batch: Int,
+                                    val zones: Set<SubZone>)
+
+        private val dropGoals = listOf(
+            DropGoal(FEATHERS, 1_000, 200, setOf(SubZone.LUMBRIDGE_CHICKEN_COOP,
+                SubZone.SOUTH_FALADOR_FARM_WEST_CHICKENS, SubZone.SOUTH_FALADOR_FARM_EAST_CHICKENS)),
+            DropGoal(BIG_BONES, 112, 28, setOf(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS,
+                SubZone.TAVERLY_HILL_GIANTS, SubZone.VARROCK_SEWERS,
+                SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, SubZone.WATERFALL_FIRE_GIANTS_WEST,
+                SubZone.WATERFALL_FIRE_GIANTS_EAST, SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH,
+                SubZone.BRIMHAVEN_MOSS_GIANTS_WEST, SubZone.BRIMHAVEN_MOSS_GIANTS_CENTRAL,
+                SubZone.BRIMHAVEN_MOSS_GIANTS_PASSAGE, SubZone.BRIMHAVEN_MOSS_GIANTS_NORTH)),
+            DropGoal(DRAGON_BONES, 84, 28, setOf(SubZone.GREEN_DRAGONS,
+                SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS))
         )
 
         /** Caps camp difficulty by the current offensive levels used by this session, including melee pures. */
@@ -165,7 +184,9 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
             val ordinary = preferred.filter { it.zone !in bosses }.ifEmpty { preferred }
             // Advanced alternatives supplement the established mid-game camps rather than displacing them.
-            val threshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            val tierThreshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            // Hill giants and other mid-level camps remain training alternatives as readiness increases.
+            val threshold = if (training) minOf(35, tierThreshold) else tierThreshold
             return preferred.filter { it.zone in bosses || it.minimum >= threshold ||
                 (training && it.zone in RockCrabBotScript.CAMPS) }
         }
@@ -187,15 +208,15 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             ancientMagicLoadout(bot)?.let { createScript(bot, training, BotGearPurpose.MAGIC, it, duration) }
 
         /**
-         * Uses owned damage spells for Magic training without permitting another combat discipline.
-         * Spell selection, equipment, banking and rune procurement share the ordinary supplied combat path.
+         * Selects Magic training without permitting another combat discipline. Missing starter supplies are
+         * acquired during preparation; spell selection, equipment and refills share the ordinary combat path.
          */
         internal fun magicTrainingScript(bot: Bot, training: Boolean, duration: Duration): BotScript? {
             if (bot.preferences.isSkiller || !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) ||
                 training && !BotCombatActionHandler.wantsToTrain(bot, SKILL_MAGIC)) return null
             val loadout = listOf(Spellbook.REGULAR, Spellbook.ANCIENT).mapNotNull {
                 CombatLoadout.find(bot, BotGearPurpose.MAGIC, spellbook = it, minimumCasts = 1)
-            }.randomOrNull() ?: return null
+            }.randomOrNull() ?: CombatLoadout(arrayOfNulls(14), CombatSpell.WIND_STRIKE.def)
             return createScript(bot, training, BotGearPurpose.MAGIC, loadout, duration, magicOnly = true)
         }
 
@@ -206,6 +227,34 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             if (SalarinBotScript.ready(bot)) SalarinBotScript.selectStrike(bot)?.let {
                 SalarinBotScript(bot, duration, it)
             } else null
+
+        /**
+         * Uses the native melee loadout and camp gates to gather verified feathers, big bones or dragon bones.
+         * Dragon outings require an owned anti-dragon shield and a usable one-handed melee weapon.
+         * Feather trips are available only below combat level 20.
+         */
+        internal fun profitDropGatheringScript(bot: Bot, duration: Duration): NpcDropGatheringScript? {
+            val loadout = CombatLoadout.find(bot, BotGearPurpose.MELEE) ?: return null
+            val readiness = combatReadiness(bot, BotGearPurpose.MELEE)
+            val shieldReady = bot.itemTracker.contains(1540) &&
+                loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true
+            for (goal in dropGoals.shuffled()) {
+                if (!NpcDropGatheringScript.levelEligible(goal.itemId, bot.combatLevel)) continue
+                val current = bot.totalItemAmount(goal.itemId)
+                if (current >= goal.stockCap || world.economy.getPrice(goal.itemId) <= 0) continue
+                val options = camps.filter { it.zone in goal.zones && it.minimum <= readiness &&
+                    canUseCamp(it.zone, BotGearPurpose.MELEE, shieldReady) &&
+                    it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }
+                    .shuffled().take(3)
+                if (options.isEmpty()) continue
+                val names = HashMultimap.create<SubZone, String>()
+                options.forEach { names.putAll(it.zone, it.names) }
+                val target = minOf(goal.stockCap.toLong(), current.toLong() + goal.batch).toInt()
+                return NpcDropGatheringScript(bot, goal.itemId, target, minOf(duration, 90.minutes),
+                    options.map { it.zone }.toMutableList(), names, sellOnCompletion = true)
+            }
+            return null
+        }
 
         /**
          * Gives ready combat trainees optional native minigame outings before ordinary camp selection.
@@ -235,7 +284,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             if (candidates.firstOrNull()?.zone in RockCrabBotScript.CAMPS) {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
                     zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList(),
-                    magicOnly = magicOnly)
+                    magicOnly = magicOnly).also { if (training) it.trainingGoal = if (magicOnly) SKILL_MAGIC else -1 }
             }
             val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
@@ -246,6 +295,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             selected.forEach { names.putAll(it.zone, it.names) }
             return NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
                 names, purpose, loadout.spell?.spell, magicOnly = magicOnly)
+                .also { if (training) it.trainingGoal = if (magicOnly) SKILL_MAGIC else -1 }
         }
     }
 
@@ -254,14 +304,22 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
             return
         }
+        if (training && BotCombatActionHandler.wantedCombatSkills(bot).isEmpty()) return
         if (training) trainingMinigameScript(bot)?.let {
             bot.scriptStack.push(it)
             return
         }
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
             bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
-        if (rand(0.15)) {
+        if (training && rand(0.25)) {
+            magicTrainingScript(bot, true, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
+        }
+        if ((!training || BotCombatActionHandler.trainingPurposeEligible(bot, BotGearPurpose.MAGIC)) && rand(0.15)) {
             salarinScript(bot, duration)?.let {
+                if (training) it.trainingGoal = -1
                 bot.scriptStack.push(it)
                 return
             }
@@ -284,7 +342,20 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             bot.scriptStack.push(DagannothKingsBotScript(bot))
             return
         }
+        if (!training && rand(0.25)) {
+            HerbloreSecondaryGathering.candidate(bot, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
+        }
+        if (!training && rand(0.35)) {
+            profitDropGatheringScript(bot, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
+        }
         val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
+            .filter { !training || BotCombatActionHandler.trainingPurposeEligible(bot, it) }
             .mapNotNull { purpose ->
                 val ancient = if (purpose == BotGearPurpose.MAGIC && rand(0.95)) ancientMagicLoadout(bot) else null
                 (ancient ?: CombatLoadout.find(bot, purpose))?.let { purpose to it }

@@ -252,6 +252,7 @@ class PrepareSaplingBotScript(
         if (!canPrepare()) return false
         FarmingSupplyPreparation.prepare(bot, handler, preparationSupplies(),
             soilLocation?.let { FarmingBotScript.SITES.getValue(it) }, { isActionSafe() }, remainingDuration())
+        if (isPaused()) return false
         if (!isEligible()) return false
         if (Farming.WATERING_CANS.none { owned(it) > 0 }) {
             prepareWater()

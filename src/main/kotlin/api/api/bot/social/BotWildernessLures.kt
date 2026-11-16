@@ -8,6 +8,7 @@ import api.bot.script.BotScript
 import api.bot.webwalk.plan.BankAccess
 import api.combat.death.PlayerDeathItems
 import api.predef.*
+import engine.bot.speech.BotReactions
 import engine.bot.speech.BotReactions.lastScammedBy
 import engine.bot.speech.BotScamSpeechPool
 import engine.bot.speech.BotScamSpeechPool.ScamSpeech
@@ -132,6 +133,7 @@ object BotWildernessLures {
         bot.lastScammedBy = fight.lurer
         bot.preferences.adjustFeelingsToward(fight.lurer, -0.5)
         if (fight.killer.username != fight.lurer) bot.preferences.adjustFeelingsToward(fight.killer.username, -0.5)
+        BotReactions.reactToScammed(bot)
     }
 
     /**

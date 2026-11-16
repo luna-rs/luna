@@ -32,6 +32,7 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
         fun retainedStock(bot: Bot): Map<Int, Int> {
             val retained = BotTradeIntentions.retainedStock(bot).toMutableMap()
             for (wanted in bot.preferences.wantedItems) {
+                if (BotReusableItems.isReusable(wanted.id())) continue
                 val default = WantedItemDefinition.DEFAULT.get(wanted.id()).orElse(null)
                 if (default == null || wanted.min() != default.min() || wanted.target() != default.target() ||
                     wanted.skill() != default.skill() || wanted.maxLevel() != default.maxLevel() ||
@@ -71,11 +72,12 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
         if (bot.preferences.isMerchant) return 0
         val wanted = bot.preferences.getWantedItem(id)
         val default = WantedItemDefinition.DEFAULT.get(id).orElse(null)
-        val explicit = if (wanted != null && (default == null || wanted.min() != default.min() ||
+        val explicit = if (BotReusableItems.isReusable(id)) BotTradeIntentions.reusableReserve(bot, id)
+            else if (wanted != null && (default == null || wanted.min() != default.min() ||
                 wanted.target() != default.target() || wanted.skill() != default.skill() ||
                 wanted.maxLevel() != default.maxLevel() || wanted.priority() != default.priority() ||
                 wanted.tags() != default.tags())) maxOf(wanted.min(), wanted.target(), 0) else 0
-        val reserve = maxOf(retained[id] ?: 0, BotTradeIntentions.supplyTarget(bot, id), explicit)
+        val reserve = maxOf(retained[id] ?: 0, BotTradeIntentions.saleSupplyTarget(bot, id), explicit)
         val transferable = (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
             .filter { !it.isDynamic && it.itemDef.unnotedId.orElse(it.id) == id }
             .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()

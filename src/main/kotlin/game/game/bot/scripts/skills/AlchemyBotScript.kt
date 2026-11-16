@@ -881,7 +881,7 @@ class AlchemyBotScript(
 
     /**
      * Immediately obtains a bounded affordable batch before startup rejection or a mid-session stop.
-     * One absolute deadline covers shop travel and at most one targeted marketplace visit per missing rune.
+     * One absolute deadline covers a targeted marketplace visit before shop travel for each missing rune.
      * Partial purchases remain useful, while every resumption and completed suspension refreshes target reserves.
      */
     internal suspend fun prepareSupplies(staffId: Int? = fireStaffId): Boolean {
@@ -912,6 +912,23 @@ class AlchemyBotScript(
             return false
         }
         val targets = purchaseTargets(casts, staffId)
+        for ((id, target) in targets) {
+            if (id in tradedRunes || bot.inventory.computeAmountForId(id).toLong() +
+                bot.bank.computeAmountForId(id) >= target) continue
+            tradedRunes.add(id)
+            val trade = TradeBotScript.buySpecific(bot, id, target, supplyDeadline) ?: continue
+            if (!supplySafe() || eligibleTargets(staffId).isEmpty()) return false
+            val prices = purchasePrices(targets) ?: return false
+            if (eligibleTargets(staffId, prices).isEmpty()) return false
+            runePrices[id] = maxOf(runePrices[id] ?: 0L, prices[id] ?: 0L)
+            trade.duration = minOf(duration, 30.seconds, (supplyDeadline - System.currentTimeMillis()).milliseconds)
+            if (trade.duration <= Duration.ZERO) return false
+            pendingRune = id
+            pendingRuneCount = ownedRune(id)
+            pendingCoins = ownedCoins()
+            bot.scriptStack.pushHead(trade)
+            return false
+        }
         withTimeoutOrNull((supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1)) {
             for ((id, target) in targets) {
                 val before = ownedRune(id)
@@ -930,25 +947,6 @@ class AlchemyBotScript(
         }
         if (!supplySafe() || eligibleTargets(staffId).isEmpty()) return false
         if (ownsCast(staffId)) return true
-        if (System.currentTimeMillis() >= supplyDeadline) return false
-
-        for ((id, target) in targets) {
-            if (id in tradedRunes || bot.inventory.computeAmountForId(id).toLong() +
-                bot.bank.computeAmountForId(id) >= target) continue
-            tradedRunes.add(id)
-            val trade = TradeBotScript.buySpecific(bot, id, target, supplyDeadline) ?: continue
-            if (!supplySafe() || eligibleTargets(staffId).isEmpty()) return false
-            val prices = purchasePrices(targets) ?: return false
-            if (eligibleTargets(staffId, prices).isEmpty()) return false
-            runePrices[id] = maxOf(runePrices[id] ?: 0L, prices[id] ?: 0L)
-            trade.duration = minOf(duration, (supplyDeadline - System.currentTimeMillis()).milliseconds)
-            if (trade.duration <= Duration.ZERO) return false
-            pendingRune = id
-            pendingRuneCount = ownedRune(id)
-            pendingCoins = ownedCoins()
-            bot.scriptStack.pushHead(trade)
-            return false
-        }
         return false
     }
 

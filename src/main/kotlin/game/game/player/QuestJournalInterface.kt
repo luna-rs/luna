@@ -47,12 +47,8 @@ class QuestJournalInterface(private val title: String) : StandardInterface(8134)
 
     override fun onOpen(plr: Player) {
         plr.queue(WidgetScrollPositionMessageWriter(8143, 0))
-        // The client discards widget state when an interface is closed. Refresh the
-        // server's text cache too, and overwrite unused rows from longer journals.
-        plr.clearText(TITLE_LINE)
         plr.sendText(title, TITLE_LINE)
         for ((index, id) in LINE_IDS.withIndex()) {
-            plr.clearText(id)
             plr.sendText(lines.getOrNull(index) ?: "", id)
         }
     }

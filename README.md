@@ -6,10 +6,11 @@ with **autonomous player bots** that train, trade, fight, and progress alongside
 <a href="https://luna2006.rs/"><img src="data/resources/play-luna-2006.png" alt="Play Luna 2006" width="320" height="88" border="0"></a>
 </p>
 
-**Luna 2006** is an actively hosted 2006-era experience based on this project. Come see the 
+**Luna 2006** is a free-to-play actively hosted 2006-era experience based on this project. Come see the
 gameplay for yourself!
 
 - 5x experience for players, 1x experience for bots
+- Standard economy, no item spawns
 - No character/economy wipes or resets
 
 # Meet the bots

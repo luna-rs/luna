@@ -104,7 +104,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         }
 
         /**
-         * Rechecks native spell identity, current staff, casting state and real costs without consuming supplies.
+         * Rechecks native spell identity, casting state and real costs without consuming supplies.
+         * Manual casts can be unarmed; autocasting still requires its compatible staff.
          * Magic training uses an offensive stance so a saved defensive staff style cannot train Defence.
          */
         internal fun isNativeMagicAttack(bot: Bot, attack: CombatAttack<*>): Boolean {
@@ -113,9 +114,20 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             return !bot.preferences.isSkiller && mayGainExperience(bot, SKILL_MAGIC) &&
                 definition != CombatSpellDefinition.NONE && definition.spellbook == bot.spellbook &&
                 canUseSpellbook(bot, definition.spellbook) && bot.magic.level >= definition.level &&
-                bot.combat.weapon.type == Weapon.STAFF && bot.combat.stance != CombatStance.DEFENSIVE &&
-                (magic.selectedSpell == definition || magic.isAutocasting && magic.autocastSpell == definition &&
+                bot.combat.stance != CombatStance.DEFENSIVE &&
+                (magic.selectedSpell == definition || bot.combat.weapon.type == Weapon.STAFF &&
+                    magic.isAutocasting && magic.autocastSpell == definition &&
                     magic.canAutocast(definition)) && Magic.checkRequirements(bot, definition, true) != null
+        }
+
+        /**
+         * Notifies the active training owner after a real native spell has paid its costs.
+         */
+        @JvmStatic
+        fun recordMagicCast(player: Player) {
+            if (player is Bot && (!player.isConnectedPlayer || player.isAutomationActive)) {
+                (player.scriptStack?.current() as? MagicOnlyCombat)?.onMagicCast()
+            }
         }
 
         /**
@@ -160,6 +172,22 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
          */
         @JvmStatic
         fun wantedCombatSkills(bot: Bot): Set<Int> = (0..6).filter { wantsToTrain(bot, it) }.toSet()
+
+        /**
+         * Selects combat disciplines that can advance an unfinished offensive skill or incidental Hitpoints.
+         * Prayer needs its own training activity rather than another already-completed attack discipline.
+         */
+        @JvmStatic
+        fun trainingPurposeEligible(bot: Bot, purpose: BotGearPurpose): Boolean {
+            val wanted = wantedCombatSkills(bot)
+            return when (purpose) {
+                BotGearPurpose.MAGIC -> SKILL_MAGIC in wanted || SKILL_HITPOINTS in wanted
+                BotGearPurpose.RANGED -> SKILL_RANGED in wanted || SKILL_HITPOINTS in wanted
+                BotGearPurpose.MELEE -> setOf(SKILL_ATTACK, SKILL_STRENGTH, SKILL_DEFENCE, SKILL_HITPOINTS)
+                    .any { it in wanted }
+                else -> false
+            }
+        }
 
         /**
          * Allows incidental experience in unrestricted skills, including skills already at 99.

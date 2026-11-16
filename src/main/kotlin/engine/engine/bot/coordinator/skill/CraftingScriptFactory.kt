@@ -64,6 +64,10 @@ import io.luna.util.RandomUtils.roll
  * @author lare96
  */
 object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
+    /**
+     * Cow-hide collection is an early combat activity, independent of the bot's Crafting level.
+     */
+    internal fun canCollectHides(bot: Bot): Boolean = bot.combatLevel < 35
 
     /**
      * Cow fields with a bank close by. Intelligent bots only collect hides here.
@@ -136,11 +140,12 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      *
      * @param bot The bot that will run the script.
      * @param zones The mutable zone list to populate with cow fields.
-     * @return The script.
+     * @return The script for an early combat account, or `null` once it has outgrown cow-hide collection.
      */
     internal fun getCollectHidesScript(
         bot: Bot, zones: MutableList<SubZone>, pickUpHides: Boolean? = null
-    ): BotScript {
+    ): BotScript? {
+        if (!canCollectHides(bot)) return null
         zones += if (bot.personality.isIntelligent) NEAR_BANK_COW_FIELDS else ALL_COW_FIELDS
         if (listOf(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE, Skill.RANGED, Skill.MAGIC)
                 .none { BotCombatActionHandler.mayGainExperience(bot, it) }) {

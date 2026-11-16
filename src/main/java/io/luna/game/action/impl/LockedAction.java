@@ -2,6 +2,7 @@ package io.luna.game.action.impl;
 
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
+import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -72,6 +73,16 @@ public abstract class LockedAction extends Action<Player> {
      */
     public boolean beforeLock() {
         return true;
+    }
+
+    /**
+     * Returns a safe saved position while this action is active. Traversals can return their entry tile until
+     * they finish, since the action itself is not restored on login. Instance and controller recovery take priority.
+     *
+     * @return The position to persist without moving the live player.
+     */
+    public Position getPersistencePosition() {
+        return mob.getPosition();
     }
 
     /**

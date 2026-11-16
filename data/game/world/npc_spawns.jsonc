@@ -50451,6 +50451,7 @@
   // Shop keeper (id 555) x2
   {
     "id": 555,
+    "route_strategy": "INDOORS",
     "position": {
       "x": 2641,
       "y": 3171,
@@ -50463,6 +50464,7 @@
   },
   {
     "id": 555,
+    "route_strategy": "INDOORS",
     "position": {
       "x": 2655,
       "y": 3152,
@@ -146853,7 +146855,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146865,7 +146867,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146877,7 +146879,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146889,7 +146891,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146901,7 +146903,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146913,7 +146915,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146925,7 +146927,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146937,7 +146939,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },
@@ -146949,7 +146951,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 0,
+      "radius": 5,
       "frequency": "NORMAL"
     }
   },

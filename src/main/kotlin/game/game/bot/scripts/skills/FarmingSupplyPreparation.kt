@@ -6,15 +6,18 @@ import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePurpose
 import api.bot.action.trading.BotMerchantValuation
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.world
 import game.skill.farming.Farming
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import game.bot.scripts.trading.TradeBotScript
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.ceil
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import java.util.WeakHashMap
 
 /**
  * Obtains a farming visit's real supplies before the ordinary banking and travel lifecycle starts.
@@ -27,6 +30,8 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 object FarmingSupplyPreparation {
+    private val marketAttempts = WeakHashMap<BotScript, MutableSet<Int>>()
+
     /**
      * Secures portable minimum quantities for one run. Callers add quantities consumed by separate plots before
      * invoking this method; repeated entries here describe the same reusable requirement and use their maximum.
@@ -66,6 +71,18 @@ object FarmingSupplyPreparation {
                     (BotFarmingActionHandler.portableStock(bot, item.id) + deficit).toInt()
             }.toMap()
             if (purchases.isNotEmpty()) {
+                val owner = bot.scriptStack.current()
+                if (owner != null && maximumPurchaseCoins == Long.MAX_VALUE && maximumUnitPrices == null) {
+                    val attempted = marketAttempts.getOrPut(owner) { hashSetOf() }
+                    for ((id, target) in purchases) {
+                        if (!attempted.add(id)) continue
+                        val deadline = System.currentTimeMillis() + minOf(45.seconds, budget).inWholeMilliseconds
+                        val trade = TradeBotScript.buySpecific(bot, id, target, deadline) ?: continue
+                        trade.duration = minOf(45.seconds, budget)
+                        bot.scriptStack.pushHead(trade)
+                        return@withTimeoutOrNull false
+                    }
+                }
                 val coins = BotTradeManager.transferableAmount(bot, 995)
                 val fraction = BotTradeIntentions.budgetFraction(bot, BotTradePurpose.BUY)
                 val maximumCoins = minOf(maximumPurchaseCoins,

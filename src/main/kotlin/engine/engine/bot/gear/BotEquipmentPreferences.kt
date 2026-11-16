@@ -318,6 +318,7 @@ object BotEquipmentPreferences {
 
     /**
      * Resolves a slot using usefulness first, then a bounded preference for favourite families.
+     * Dedicated PKers use their strongest candidates during PK outings instead of trading performance for taste.
      */
     internal fun select(bot: Bot, candidates: Collection<BotGearItem>, purposes: Set<BotGearPurpose>,
                         current: Int? = null): BotGearItem? {
@@ -325,7 +326,8 @@ object BotEquipmentPreferences {
         val best = candidates.maxBy { it.calculateScore() }
         val cosmeticLayout = BotGearPurpose.SHOW_OFF in purposes && purposes.none { it in combatPurposes }
         val tolerance = favouriteLevelGap(bot.personality.intelligence, bot.personality.social)
-        val favourites = candidates.filter { prefers(bot, it.id) && (cosmeticLayout || tolerance > 0 &&
+        val favourites = if (bot.preferences.isPker && BotGearPurpose.PKING in purposes) emptyList() else
+            candidates.filter { prefers(bot, it.id) && (cosmeticLayout || tolerance > 0 &&
             it.def.value.highestRequirement >= best.def.value.highestRequirement - tolerance) }
         return favourites.ifEmpty { candidates }.maxWithOrNull(compareBy<BotGearItem> { it.calculateScore() }
             .thenBy { if (it.id == current) 1 else 0 }

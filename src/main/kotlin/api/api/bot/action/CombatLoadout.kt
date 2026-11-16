@@ -76,12 +76,14 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
          * Task constraints restrict selection before scoring, so required shields never replace a two-handed weapon
          * after it was chosen. Magic Dart is considered only when explicitly requested and with its native staff.
          * An explicit spellbook plans a switch at home without changing the bot's live spellbook during selection.
+         * Disabling requireRunes is for shortage planning only; normal admission always checks real rune ownership.
          */
         fun find(bot: Bot, purpose: BotGearPurpose, requested: CombatSpell? = null,
                  carriedOnly: Boolean = false, excludingWeapons: Set<Int> = emptySet(),
                  maximumSpellHit: Int = Int.MAX_VALUE, requiredEquipment: Map<Int, Int> = emptyMap(),
                  requiredAmmo: Int? = null, allowedWeapons: Set<Int> = emptySet(),
-                 spellbook: Spellbook = bot.spellbook, minimumCasts: Int = 1): CombatLoadout? {
+                 spellbook: Spellbook = bot.spellbook, minimumCasts: Int = 1,
+                 requireRunes: Boolean = true): CombatLoadout? {
             if (minimumCasts < 1) return null
             if (purpose !in setOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)) return null
             if (bot.preferences.isSkiller) return null
@@ -107,10 +109,10 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
                         definition.required.all { it is RuneRequirement ||
                             (it is EquipmentRequirement && it.id == weapon &&
                                 equipDef(it.id).meetsAllRequirements(bot)) } &&
-                        runeCosts(definition, weapon).all { (id, amount) ->
+                        (!requireRunes || runeCosts(definition, weapon).all { (id, amount) ->
                             (if (carriedOnly) bot.inventory.computeAmountForId(id) else bot.itemTracker.count(id)).toLong() >=
                                 amount.toLong() * minimumCasts
-                        }
+                        })
                 }.maxByOrNull { it.maxHit } }
             val preferredStaff = if (purpose == BotGearPurpose.MAGIC) {
                 val stock = bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +

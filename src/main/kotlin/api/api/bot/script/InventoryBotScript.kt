@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotReusableItems
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -249,7 +250,10 @@ abstract class InventoryBotScript(
             if (!requestMissing) { stop(); return emptyList() }
             if (!ownedSuppliesOnly && productionPlan == null) items.filter { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) < it.amount }.forEach {
-                bot.preferences.raiseWantedItemTarget(it.id, if (it.id in tools) 3 else maxOf(1_000, it.amount))
+                val target = if (it.id in tools) {
+                    if (BotReusableItems.isReusable(it.id)) 1 else 3
+                } else maxOf(1_000, it.amount)
+                bot.preferences.raiseWantedItemTarget(it.id, target)
             }
         }
         startupSupplies = StartupSupplies(items, tools.toSet(), requestMissing && !ownedSuppliesOnly, prepareMissing)
@@ -442,6 +446,7 @@ abstract class InventoryBotScript(
             bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) >= it.amount
         } else obtainStartupSupplies(startup?.items ?: withdraw,
             startup?.let { plan -> { startupPurchaseTargets(plan) } })
+        if (isPaused()) return false
         if (!supplied) {
             bot.log("Could not obtain the minimum production supplies.")
             if (startup != null && isActionSafe() && startup.prepareMissing()) return false
@@ -640,14 +645,6 @@ abstract class InventoryBotScript(
         fun supplied() = if (plan.recipes.size > 1) plan.targets().all { (id, amount) -> owned(id) >= amount }
             else plan.recipe.materials.all { (id, amount) -> owned(id) >= amount } &&
                 plan.recipe.tools.all { owned(it) > 0L }
-        if (!plan.shopAttempted && now < plan.supplyDeadline) {
-            plan.shopAttempted = true
-            withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
-                if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
-                    handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
-                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
-            }
-        }
         if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
         if (!awaitActionSafety() || System.currentTimeMillis() >= plan.supplyDeadline) {
             if (queueMissingPlannedPreparation(plan)) return false
@@ -660,10 +657,20 @@ abstract class InventoryBotScript(
             if (owned(id) >= target || !plan.attemptedMarketItems.add(id)) continue
             if (!BotProductionPlanner.remainsUseful(bot, plan)) break
             val trade = TradeBotScript.buySpecific(bot, id, target, plan.supplyDeadline) ?: continue
-            trade.duration = minOf(duration, (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
+            trade.duration = minOf(duration, 30.seconds,
+                (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
             if (trade.duration <= Duration.ZERO) break
             bot.scriptStack.pushHead(trade)
             return false
+        }
+        if (!plan.shopAttempted && System.currentTimeMillis() < plan.supplyDeadline) {
+            plan.shopAttempted = true
+            withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
+                if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
+                    handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
+                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
+            }
+            if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
         }
         if (queueMissingPlannedPreparation(plan)) return false
         if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))

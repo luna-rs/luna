@@ -14,8 +14,10 @@ import io.luna.game.model.Entity
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Skill
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A base [BotScript] for bot-controlled skilling activities.
@@ -24,13 +26,13 @@ import kotlin.time.Duration
  * by [TargetingZonedBotScript]. It validates skill and script requirements, selects a usable tool, requests banking when
  * necessary, checks tool availability during execution, and delegates skill-specific behaviour to subclasses.
  *
- * Tool selection considers the bot's skill level, available items, and personality. If no suitable tool can be resolved,
- * an optional emergency tool may be added to the bot's bank. Required tools must actually be owned
- * and usable at the current level; failed provisioning stops the session. Selected tools are replaced
+ * Tool selection considers the bot's skill level, available items, and personality. Missing tools use bounded
+ * ordinary acquisition, with a short retry delay across failed sessions. Required tools must actually be owned
+ * and usable at the current level; failed acquisition stops the session. Selected tools are replaced
  * after loss or a level drain, and banked replacements are collected before native interactions.
  * Gathering-tool reviews record useful one-copy upgrades for ordinary shopping and adopt owned upgrades at banks.
  *
- * Subclasses define the required level, available tools, optional emergency tool, additional requirements, and
+ * Subclasses define the required level, available tools, additional requirements, and
  * skill-specific execution and banking behaviour.
  *
  * @param E The type of [Entity] targeted by this skilling script.
@@ -63,6 +65,11 @@ abstract class SkillingBotScript<E : Entity>(
          */
         private val toolReviews = Attr.map<Int, Triple<Int, Int, Long>>()
 
+        /**
+         * Failed acquisition delays are shared across sessions of each skill without delaying an owned replacement.
+         */
+        private val toolRetryAfter = Attr.map<Int, Long>()
+
         private val axeQuality = Axe.entries.associate { axe ->
             axe.id to axe.chances.values.sumOf { (minimum, maximum) -> minimum + maximum }
         }
@@ -91,6 +98,7 @@ abstract class SkillingBotScript<E : Entity>(
 
         recoverMissingTool()
         tool = resolveTool()
+        if (isPaused()) return false
         reviewToolUpgrade()
         if (skill.level < requiredLevel) return false
         val toolId = tool?.id
@@ -209,7 +217,7 @@ abstract class SkillingBotScript<E : Entity>(
     }
 
     /**
-     * Allows a skill to recover its real detached tool before replacement selection, shopping or emergency fallback.
+     * Allows a skill to recover its real detached tool before replacement selection or shopping.
      */
     protected open suspend fun recoverMissingTool() {}
 
@@ -264,23 +272,6 @@ abstract class SkillingBotScript<E : Entity>(
     }
 
     /**
-     * Returns an optional emergency tool to use when normal tool selection fails.
-     *
-     * If no eligible configured tool can be found or obtained, [resolveTool] may add this tool to the bot's bank and
-     * select it for the current skilling session.
-     *
-     * The fallback must meet the current skill level and be owned or successfully added to the bank.
-     * Subclasses should return a tool usable at this script's minimum level.
-     *
-     * Returning `null` disables emergency tool provisioning.
-     *
-     * @return The emergency skilling tool, or `null` if no fallback should be provided.
-     */
-    open fun emergencyTool(): SkillingTool? {
-        return null
-    }
-
-    /**
      * Checks additional requirements before this skilling script starts.
      *
      * Subclasses may use this hook to validate requirements not covered by the normal skill level check, such as
@@ -296,9 +287,9 @@ abstract class SkillingBotScript<E : Entity>(
      * Preserves configured preference and personality shuffling, filtering by current skill level.
      * Suitable owned tools are considered before shopping, so missing upgrades cannot delay a bot that already
      * has usable equipment. The same order is retained when acquisition is actually necessary.
-     * Actual ownership is verified after acquisition, including after its suspensions; a successful
-     * shop return alone cannot invent a tool. Existing emergency provisioning remains a fallback,
-     * but an unusable fallback or a failed bank insertion cannot satisfy readiness.
+     * One deadline bounds the complete shopping attempt. Paused market errands retain control, while failed
+     * attempts defer this skill briefly so another session cannot immediately repeat the same missing-tool work.
+     * Ownership and skill eligibility are rechecked after every suspension before accepting a purchased tool.
      */
     private suspend fun resolveTool(): SkillingTool? {
         val configured = tools()
@@ -311,21 +302,24 @@ abstract class SkillingBotScript<E : Entity>(
         val ordered = if (bot.personality.isDumb) candidates.shuffled() else if (quality.isEmpty()) candidates.toList()
             else candidates.sortedWith(compareByDescending<SkillingTool> { quality[it.id] ?: it.skillLevel }.thenBy { it.id })
         ordered.firstOrNull { skill.level >= it.skillLevel && ownsTool(it.id) }?.let { return it }
-        for (candidate in ordered) {
-            if (skill.level < candidate.skillLevel) continue
-            if (!ownsTool(candidate.id)) handler.shop.obtainWantedItem(candidate.id)
-            if (skill.level >= candidate.skillLevel && ownsTool(candidate.id)) {
-                bot.log("Resolved skilling tool: ${itemName(candidate.id)}.")
-                return candidate
+        val retryAfter = bot.attributes()[toolRetryAfter.attr]
+        if ((retryAfter[skill.id] ?: 0L) > System.currentTimeMillis()) return null
+        val acquired = withTimeoutOrNull(120.seconds) {
+            for (candidate in ordered) {
+                if (isPaused() || isTerminated()) return@withTimeoutOrNull null
+                if (skill.level < candidate.skillLevel) continue
+                if (!ownsTool(candidate.id)) handler.shop.obtainWantedItem(candidate.id)
+                if (isPaused() || isTerminated()) return@withTimeoutOrNull null
+                if (skill.level >= candidate.skillLevel && ownsTool(candidate.id)) {
+                    bot.log("Resolved skilling tool: ${itemName(candidate.id)}.")
+                    return@withTimeoutOrNull candidate
+                }
             }
+            null
         }
-        val emergency = emergencyTool() ?: return null
-        if (skill.level < emergency.skillLevel) return null
-        if (!ownsTool(emergency.id) && !bot.bank.add(Item(emergency.id))) {
-            bot.log("I couldn't add the emergency ${itemName(emergency.id)} to my bank.")
-            return null
-        }
-        return emergency
+        if (acquired != null) retryAfter.remove(skill.id)
+        else if (!isPaused() && !isTerminated()) retryAfter[skill.id] = System.currentTimeMillis() + 60_000L
+        return acquired
     }
 
     /**

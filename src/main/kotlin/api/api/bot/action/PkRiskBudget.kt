@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.combat.death.PlayerDeathItems
+import engine.bot.gear.BotEquipmentPreferences
 import game.skill.runecrafting.essencePouch.EssencePouch
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -10,7 +11,8 @@ import kotlin.math.roundToInt
 
 /**
  * A read-only GP assessment of the bot's current PK loadout against its owned item wealth.
- * Only items actually lost under the default death rules consume the allowance. Bank stock and retained
+ * Only items actually lost under the default death rules consume the allowance. Dedicated PKers may risk
+ * all owned functional gear, while cosmetic items remain protected. Bank stock and retained
  * tradeable items contribute to wealth, but never to death loss. Non-tradeable items have no liquid GP value.
  * Values use one cached economy guide price per unnoted item, including coins at one GP each.
  * Arbitrary precision totals avoid overflow when several maximum-size stacks are owned.
@@ -18,9 +20,11 @@ import kotlin.math.roundToInt
  * @property basisPoints Maximum wealth share in hundredths of a percent, or zero for an ineligible account.
  * @property wealth Inventory, equipment and bank wealth, including essence stored in owned pouches.
  * @property deathLoss Guide value of dropped items, destroyed pouches and their contents.
+ * @property hasProtectedCosmetics Whether a PK outfit carries cosmetic items other than its assigned team cape.
  * @author lare96
  */
-data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathLoss: BigInteger) {
+data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathLoss: BigInteger,
+                        val hasProtectedCosmetics: Boolean = false) {
     /**
      * Whole-GP allowance, rounded down so the approved percentage is never exceeded.
      */
@@ -29,7 +33,7 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
     /**
      * Whether an eligible bot can afford the current loadout's actual loss, including the exact budget boundary.
      */
-    val withinBudget: Boolean = basisPoints > 0 && deathLoss <= maximumLoss
+    val withinBudget: Boolean = basisPoints > 0 && !hasProtectedCosmetics && deathLoss <= maximumLoss
 
     companion object {
         /**
@@ -49,6 +53,7 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
          * Optional proposed containers are valued against actual owned wealth, without adding proposed items to wealth.
          * Planning may protect the cheapest guide-valued units within equal native base-value groups, bounding loss
          * across equipment-switch ordering. Live assessments retain the actual native container order.
+         * Dedicated PKers permit their full owned wealth while retaining cosmetic gear, except the assigned team cape.
          * This does not authorize ownership, withdrawals or controller-specific deaths.
          */
         fun assess(bot: Bot, losesItems: Boolean, inventory: List<Item> = bot.inventory.filterNotNull(),
@@ -84,21 +89,31 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
             val ownedPouches = (ownedInventory + bank).filter { it.id in EssencePouch.ID_TO_POUCH }
                 .distinctBy { EssencePouch.ID_TO_POUCH[it.id] }
             val wealth = value(ownedInventory + ownedEquipment + bank) + value(pouchContents(ownedPouches))
-            val share = shareOverride?.coerceIn(0, 10_000) ?: if (bot.preferences.isSkiller || bot.preferences.pk == null) 0 else basisPoints(
-                bot.personality.confidence, bot.personality.intelligence,
-                bot.preferences.activities[BotActivity.PKING] ?: 0.0)
+            val pkEligible = !bot.preferences.isSkiller && bot.preferences.pk != null
+            val share = shareOverride?.coerceIn(0, 10_000) ?: when {
+                !pkEligible -> 0
+                bot.preferences.isPker -> 10_000
+                else -> basisPoints(bot.personality.confidence, bot.personality.intelligence,
+                    bot.preferences.activities[BotActivity.PKING] ?: 0.0)
+            }
+            val protectCosmetics = shareOverride == null && pkEligible && bot.preferences.isPker
+            val clanCape by lazy { PkClanPolicy(bot).cape }
             val keepCount = keepCountOverride?.coerceIn(0, 4) ?: PlayerDeathItems.keepCount(bot)
             return { inventory, equipment, conservativeTies ->
                 val carriedPouches = inventory.filter { it.id in EssencePouch.ID_TO_POUCH }
                     .distinctBy { EssencePouch.ID_TO_POUCH[it.id] }
                 val lost = if (losesItems) {
-                    val carried = inventory.filter { it.id !in EssencePouch.ID_TO_POUCH } + equipment
+                    val carried = (inventory.filter { it.id !in EssencePouch.ID_TO_POUCH } + equipment)
+                        .filterNot { PlayerDeathItems.isProtectedBotTeamCape(bot, it) }
                     val tradeable = if (conservativeTies) carried.sortedWith(
                         Item.VALUE_COMPARATOR.thenBy { value(listOf(it.withAmount(1))) }) else carried
                     value(PlayerDeathItems.select(tradeable, keepCount).lost) +
                         value(inventory.filter { it.id in EssencePouch.ID_TO_POUCH }) + value(pouchContents(carriedPouches))
                 } else BigInteger.ZERO
-                PkRiskBudget(share, wealth, lost)
+                val hasProtectedCosmetics = protectCosmetics && (inventory + equipment).any {
+                    BotEquipmentPreferences.isCosmetic(it.id) && it.unnotedItemDef.id() != clanCape
+                }
+                PkRiskBudget(share, wealth, lost, hasProtectedCosmetics)
             }
         }
     }

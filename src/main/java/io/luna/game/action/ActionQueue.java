@@ -170,6 +170,22 @@ public final class ActionQueue {
     }
 
     /**
+     * Returns all processing and executing actions.
+     *
+     * @return All actions.
+     */
+    public <T extends Action<?>> List<T> getAll() {
+        List<T> all = new ArrayList<>();
+        for (Action<?> action : processing.values()) {
+            all.add((T) action);
+        }
+        for (Action<?> action : executing) {
+            all.add((T) action);
+        }
+        return all;
+    }
+
+    /**
      * Returns all processing and executing actions with the {@link ActionType} {@code type}.
      * <p>
      * Finished actions stay queued until the next cycle, so they are skipped here.

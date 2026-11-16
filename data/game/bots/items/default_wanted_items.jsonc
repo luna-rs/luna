@@ -1,13 +1,13 @@
 /*
 * Default wanted-item definitions used by bots to determine which items they should try to keep stocked or acquire.
 *
-* Each entry defines an item id, the minimum quantity that triggers demand, the quantity the bot should try to
-* restock toward, and optional progression restrictions that control when the item is considered relevant.
+* Each entry defines an item id, a minimum stock threshold for restocking urgency, a desired total quantity,
+* and optional progression restrictions that control when the item is considered relevant.
 *
 * Item identifiers refer to both noted and unnoted variants, but all item IDs should use the unnoted variant.
 *
-* "min" is the quantity at which the bot begins wanting more of the item. -1 means the bot always wants more.
-* "target" is the quantity the bot attempts to reach once restocking is triggered.
+* "min" is the stock threshold below which restocking becomes more urgent. -1 disables minimum-stock urgency.
+* "target" is the desired total ownership; the bot wants more whenever ownership is below this amount.
 * "skill" identifies the relevant skill used for progression checks, or -1 for combat level.
 * "max_level" is the level after which the item is no longer considered part of that progression tier, or -1 when
 * there is no upper level restriction.
@@ -31,8 +31,8 @@
   {
     "id": 556,
     // Air rune
-    "min": 1000,
-    "target": 5000,
+    "min": 3000,
+    "target": 15000,
     "skill": 6,
     "max_level": -1,
     "priority": "HIGH",
@@ -44,8 +44,8 @@
   {
     "id": 555,
     // Water rune
-    "min": 1000,
-    "target": 5000,
+    "min": 3000,
+    "target": 15000,
     "skill": 6,
     "max_level": -1,
     "priority": "HIGH",
@@ -57,8 +57,8 @@
   {
     "id": 557,
     // Earth rune
-    "min": 1000,
-    "target": 5000,
+    "min": 3000,
+    "target": 15000,
     "skill": 6,
     "max_level": -1,
     "priority": "HIGH",
@@ -70,8 +70,8 @@
   {
     "id": 554,
     // Fire rune
-    "min": 1000,
-    "target": 5000,
+    "min": 3000,
+    "target": 15000,
     "skill": 6,
     "max_level": -1,
     "priority": "HIGH",
@@ -83,8 +83,8 @@
   {
     "id": 558,
     // Mind rune
-    "min": 500,
-    "target": 3000,
+    "min": 1500,
+    "target": 9000,
     "skill": 6,
     "max_level": 35,
     "priority": "HIGH",
@@ -96,8 +96,8 @@
   {
     "id": 559,
     // Body rune
-    "min": 250,
-    "target": 1500,
+    "min": 750,
+    "target": 4500,
     "skill": 6,
     "max_level": 50,
     "priority": "HIGH",
@@ -259,8 +259,8 @@
   {
     "id": 526,
     // Bones
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": 5,
     "max_level": 30,
     "priority": "STANDARD",
@@ -487,8 +487,8 @@
   {
     "id": 1511,
     // Logs
-    "min": 100,
-    "target": 500,
+    "min": 300,
+    "target": 1500,
     "skill": 8,
     "max_level": 30,
     "priority": "LOW",
@@ -499,8 +499,8 @@
   {
     "id": 1521,
     // Oak logs
-    "min": 150,
-    "target": 750,
+    "min": 450,
+    "target": 2250,
     "skill": 8,
     "max_level": 45,
     "priority": "LOW",
@@ -511,8 +511,8 @@
   {
     "id": 1519,
     // Willow logs
-    "min": 250,
-    "target": 1500,
+    "min": 750,
+    "target": 4500,
     "skill": 8,
     "max_level": 60,
     "priority": "STANDARD",
@@ -523,8 +523,8 @@
   {
     "id": 1517,
     // Maple logs
-    "min": 300,
-    "target": 2000,
+    "min": 900,
+    "target": 6000,
     "skill": 8,
     "max_level": 75,
     "priority": "STANDARD",
@@ -559,8 +559,8 @@
   {
     "id": 436,
     // Copper ore
-    "min": 100,
-    "target": 500,
+    "min": 300,
+    "target": 1500,
     "skill": 14,
     "max_level": 30,
     "priority": "LOW",
@@ -571,8 +571,8 @@
   {
     "id": 438,
     // Tin ore
-    "min": 100,
-    "target": 500,
+    "min": 300,
+    "target": 1500,
     "skill": 14,
     "max_level": 30,
     "priority": "LOW",
@@ -583,8 +583,8 @@
   {
     "id": 440,
     // Iron ore
-    "min": 250,
-    "target": 1500,
+    "min": 750,
+    "target": 4500,
     "skill": 14,
     "max_level": 60,
     "priority": "STANDARD",
@@ -595,8 +595,8 @@
   {
     "id": 453,
     // Coal
-    "min": 500,
-    "target": 5000,
+    "min": 1500,
+    "target": 15000,
     "skill": 14,
     "max_level": -1,
     "priority": "HIGH",
@@ -643,8 +643,8 @@
   {
     "id": 2349,
     // Bronze bar
-    "min": 100,
-    "target": 500,
+    "min": 300,
+    "target": 1500,
     "skill": 13,
     "max_level": 30,
     "priority": "HIGH",
@@ -655,8 +655,8 @@
   {
     "id": 2351,
     // Iron bar
-    "min": 100,
-    "target": 500,
+    "min": 300,
+    "target": 1500,
     "skill": 13,
     "max_level": 45,
     "priority": "STANDARD",
@@ -667,8 +667,8 @@
   {
     "id": 2353,
     // Steel bar
-    "min": 200,
-    "target": 1000,
+    "min": 600,
+    "target": 3000,
     "skill": 13,
     "max_level": 60,
     "priority": "HIGH",
@@ -739,8 +739,8 @@
   {
     "id": 314,
     // Feather
-    "min": 1000,
-    "target": 10000,
+    "min": 3000,
+    "target": 30000,
     "skill": 9,
     "max_level": -1,
     "priority": "STANDARD",
@@ -751,8 +751,8 @@
   {
     "id": 52,
     // Arrow shaft
-    "min": 1000,
-    "target": 10000,
+    "min": 3000,
+    "target": 30000,
     "skill": 9,
     "max_level": -1,
     "priority": "HIGH",
@@ -763,8 +763,8 @@
   {
     "id": 53,
     // Headless arrow
-    "min": 1000,
-    "target": 10000,
+    "min": 3000,
+    "target": 30000,
     "skill": 9,
     "max_level": -1,
     "priority": "HIGH",
@@ -775,8 +775,8 @@
   {
     "id": 1777,
     // Bow string
-    "min": 250,
-    "target": 2500,
+    "min": 750,
+    "target": 7500,
     "skill": 9,
     "max_level": -1,
     "priority": "HIGH",
@@ -787,8 +787,8 @@
   {
     "id": 39,
     // Bronze arrowtips
-    "min": 250,
-    "target": 2000,
+    "min": 750,
+    "target": 6000,
     "skill": 9,
     "max_level": 30,
     "priority": "STANDARD",
@@ -799,8 +799,8 @@
   {
     "id": 40,
     // Iron arrowtips
-    "min": 300,
-    "target": 2500,
+    "min": 900,
+    "target": 7500,
     "skill": 9,
     "max_level": 40,
     "priority": "HIGH",
@@ -811,8 +811,8 @@
   {
     "id": 41,
     // Steel arrowtips
-    "min": 400,
-    "target": 3000,
+    "min": 1200,
+    "target": 9000,
     "skill": 9,
     "max_level": 50,
     "priority": "STANDARD",
@@ -859,8 +859,8 @@
   {
     "id": 313,
     // Fishing bait
-    "min": 500,
-    "target": 5000,
+    "min": 1500,
+    "target": 15000,
     "skill": 10,
     "max_level": 40,
     "priority": "STANDARD",
@@ -871,8 +871,8 @@
   {
     "id": 317,
     // Raw shrimps
-    "min": 50,
-    "target": 250,
+    "min": 150,
+    "target": 750,
     "skill": 10,
     "max_level": 20,
     "priority": "STANDARD",
@@ -883,8 +883,8 @@
   {
     "id": 335,
     // Raw trout
-    "min": 100,
-    "target": 500,
+    "min": 300,
+    "target": 1500,
     "skill": 10,
     "max_level": 35,
     "priority": "STANDARD",
@@ -895,8 +895,8 @@
   {
     "id": 331,
     // Raw salmon
-    "min": 125,
-    "target": 600,
+    "min": 375,
+    "target": 1800,
     "skill": 10,
     "max_level": 45,
     "priority": "STANDARD",
@@ -907,8 +907,8 @@
   {
     "id": 359,
     // Raw tuna
-    "min": 150,
-    "target": 750,
+    "min": 450,
+    "target": 2250,
     "skill": 10,
     "max_level": 55,
     "priority": "STANDARD",
@@ -955,8 +955,8 @@
   {
     "id": 1436,
     // Rune essence
-    "min": 500,
-    "target": 5000,
+    "min": 1500,
+    "target": 15000,
     "skill": 20,
     "max_level": 30,
     "priority": "HIGH",
@@ -967,8 +967,8 @@
   {
     "id": 7936,
     // Pure essence
-    "min": 1000,
-    "target": 10000,
+    "min": 3000,
+    "target": 30000,
     "skill": 20,
     "max_level": -1,
     "priority": "HIGH",
@@ -11013,8 +11013,8 @@
   {
     "id": 221,
     // Eye of newt
-    "min": 100,
-    "target": 1000,
+    "min": 300,
+    "target": 3000,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11049,8 +11049,8 @@
   {
     "id": 227,
     // Vial of water
-    "min": 200,
-    "target": 2000,
+    "min": 600,
+    "target": 6000,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11169,8 +11169,8 @@
   {
     "id": 249,
     // Guam leaf
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11181,8 +11181,8 @@
   {
     "id": 251,
     // Marrentill
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11193,8 +11193,8 @@
   {
     "id": 253,
     // Tarromin
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11205,8 +11205,8 @@
   {
     "id": 255,
     // Harralander
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11397,8 +11397,8 @@
   {
     "id": 321,
     // Raw anchovies
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -11421,8 +11421,8 @@
   {
     "id": 327,
     // Raw sardine
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -11445,8 +11445,8 @@
   {
     "id": 341,
     // Raw cod
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11458,8 +11458,8 @@
   {
     "id": 345,
     // Raw herring
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11471,8 +11471,8 @@
   {
     "id": 349,
     // Raw pike
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11484,8 +11484,8 @@
   {
     "id": 353,
     // Raw mackerel
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11560,8 +11560,8 @@
   {
     "id": 592,
     // Ashes
-    "min": 100,
-    "target": 1000,
+    "min": 300,
+    "target": 3000,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11584,8 +11584,8 @@
   {
     "id": 819,
     // Bronze dart tip
-    "min": 100,
-    "target": 750,
+    "min": 300,
+    "target": 2250,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11596,8 +11596,8 @@
   {
     "id": 820,
     // Iron dart tip
-    "min": 100,
-    "target": 750,
+    "min": 300,
+    "target": 2250,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -11608,8 +11608,8 @@
   {
     "id": 821,
     // Steel dart tip
-    "min": 100,
-    "target": 750,
+    "min": 300,
+    "target": 2250,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12316,8 +12316,8 @@
   {
     "id": 1734,
     // Thread
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12340,8 +12340,8 @@
   {
     "id": 1737,
     // Wool
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12352,8 +12352,8 @@
   {
     "id": 1739,
     // Cowhide
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12364,8 +12364,8 @@
   {
     "id": 1741,
     // Leather
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12376,8 +12376,8 @@
   {
     "id": 1743,
     // Hard leather
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12460,8 +12460,8 @@
   {
     "id": 1759,
     // Ball of wool
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12472,8 +12472,8 @@
   {
     "id": 1761,
     // Soft clay
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12484,8 +12484,8 @@
   {
     "id": 1775,
     // Molten glass
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12496,8 +12496,8 @@
   {
     "id": 1779,
     // Flax
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12508,8 +12508,8 @@
   {
     "id": 1781,
     // Soda ash
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12520,8 +12520,8 @@
   {
     "id": 1783,
     // Bucket of sand
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12544,8 +12544,8 @@
   {
     "id": 1927,
     // Bucket of milk
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12556,8 +12556,8 @@
   {
     "id": 1929,
     // Bucket of water
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12568,8 +12568,8 @@
   {
     "id": 1933,
     // Pot of flour
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12580,8 +12580,8 @@
   {
     "id": 1937,
     // Jug of water
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12592,8 +12592,8 @@
   {
     "id": 1939,
     // Swamp tar
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12604,8 +12604,8 @@
   {
     "id": 1944,
     // Egg
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12616,8 +12616,8 @@
   {
     "id": 1946,
     // Flour
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12628,8 +12628,8 @@
   {
     "id": 1973,
     // Chocolate bar
-    "min": 100,
-    "target": 1000,
+    "min": 300,
+    "target": 3000,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12640,8 +12640,8 @@
   {
     "id": 1975,
     // Chocolate dust
-    "min": 100,
-    "target": 1000,
+    "min": 300,
+    "target": 3000,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12652,8 +12652,8 @@
   {
     "id": 1985,
     // Cheese
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12676,8 +12676,8 @@
   {
     "id": 2132,
     // Raw beef
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12688,8 +12688,8 @@
   {
     "id": 2134,
     // Raw rat meat
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12700,8 +12700,8 @@
   {
     "id": 2136,
     // Raw bear meat
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12712,8 +12712,8 @@
   {
     "id": 2138,
     // Raw chicken
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12724,8 +12724,8 @@
   {
     "id": 2283,
     // Pizza base
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12736,8 +12736,8 @@
   {
     "id": 2307,
     // Bread dough
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -12844,8 +12844,8 @@
   {
     "id": 2514,
     // Raw shrimps
-    "min": 50,
-    "target": 300,
+    "min": 150,
+    "target": 900,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -12928,8 +12928,8 @@
   {
     "id": 3150,
     // Raw karambwanji
-    "min": 200,
-    "target": 1500,
+    "min": 600,
+    "target": 4500,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13024,8 +13024,8 @@
   {
     "id": 5096,
     // Marigold seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13036,8 +13036,8 @@
   {
     "id": 5097,
     // Rosemary seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13048,8 +13048,8 @@
   {
     "id": 5098,
     // Nasturtium seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13060,8 +13060,8 @@
   {
     "id": 5099,
     // Woad seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13444,8 +13444,8 @@
   {
     "id": 5305,
     // Barley seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13456,8 +13456,8 @@
   {
     "id": 5306,
     // Jute seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13468,8 +13468,8 @@
   {
     "id": 5307,
     // Hammerstone seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13480,8 +13480,8 @@
   {
     "id": 5308,
     // Asgarnian seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13492,8 +13492,8 @@
   {
     "id": 5309,
     // Yanillian seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13576,8 +13576,8 @@
   {
     "id": 5318,
     // Potato seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13588,8 +13588,8 @@
   {
     "id": 5319,
     // Onion seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13624,8 +13624,8 @@
   {
     "id": 5322,
     // Tomato seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13648,8 +13648,8 @@
   {
     "id": 5324,
     // Cabbage seed
-    "min": 10,
-    "target": 75,
+    "min": 30,
+    "target": 225,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -13780,8 +13780,8 @@
   {
     "id": 6032,
     // Compost
-    "min": 25,
-    "target": 150,
+    "min": 75,
+    "target": 450,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -13804,8 +13804,8 @@
   {
     "id": 6036,
     // Plant cure
-    "min": 25,
-    "target": 150,
+    "min": 75,
+    "target": 450,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -20302,8 +20302,8 @@
   {
     "id": 199,
     // Herb
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -20314,8 +20314,8 @@
   {
     "id": 201,
     // Herb
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -20326,8 +20326,8 @@
   {
     "id": 203,
     // Herb
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -20338,8 +20338,8 @@
   {
     "id": 205,
     // Herb
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -20470,8 +20470,8 @@
   {
     "id": 91,
     // Unfinished potion
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -20482,8 +20482,8 @@
   {
     "id": 93,
     // Unfinished potion
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -20494,8 +20494,8 @@
   {
     "id": 95,
     // Unfinished potion
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -20506,8 +20506,8 @@
   {
     "id": 97,
     // Unfinished potion
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -21658,8 +21658,8 @@
   {
     "id": 434,
     // Clay
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -21694,8 +21694,8 @@
   {
     "id": 2862,
     // Achey tree logs
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -22331,8 +22331,8 @@
   {
     "id": 401,
     // Seaweed
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -22647,8 +22647,8 @@
   {
     "id": 1953,
     // Pastry dough
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -22659,8 +22659,8 @@
   {
     "id": 2315,
     // Pie shell
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "HIGH",
@@ -22875,8 +22875,8 @@
   {
     "id": 1921,
     // Bowl of water
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23055,8 +23055,8 @@
   {
     "id": 1951,
     // Redberries
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23067,8 +23067,8 @@
   {
     "id": 1955,
     // Cooking apple
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23079,8 +23079,8 @@
   {
     "id": 1982,
     // Tomato
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23091,8 +23091,8 @@
   {
     "id": 1957,
     // Onion
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23103,8 +23103,8 @@
   {
     "id": 1965,
     // Cabbage
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23115,8 +23115,8 @@
   {
     "id": 1942,
     // Potato
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23163,8 +23163,8 @@
   {
     "id": 2007,
     // Spice
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
@@ -23247,8 +23247,8 @@
   {
     "id": 4458,
     // Cup of water
-    "min": 40,
-    "target": 250,
+    "min": 120,
+    "target": 750,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",

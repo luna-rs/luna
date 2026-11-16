@@ -567,7 +567,7 @@
   },
   {
     "id": 227, // Vial of water
-    "initial_price": 25,
+    "initial_price": 100,
     "initial_popularity": 40
   },
   {
@@ -2411,11 +2411,6 @@
     "initial_popularity": 1
   },
   {
-    "id": 1052, // Cape of legends
-    "initial_price": 450,
-    "initial_popularity": 10
-  },
-  {
     "id": 1053, // Green h'ween mask
     "initial_price": 50000000,
     "initial_popularity": 1
@@ -4152,7 +4147,7 @@
   },
   {
     "id": 1783, // Bucket of sand
-    "initial_price": 25,
+    "initial_price": 100,
     "initial_popularity": 40
   },
   {
@@ -6076,17 +6071,7 @@
     "initial_popularity": 10
   },
   {
-    "id": 2714, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
     "id": 2715, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2717, // Casket
     "initial_price": 50,
     "initial_popularity": 5
   },
@@ -6096,192 +6081,7 @@
     "initial_popularity": 5
   },
   {
-    "id": 2720, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
     "id": 2721, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2724, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2726, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2728, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2730, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2732, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2734, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2736, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2738, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2740, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2742, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2744, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2746, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2748, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2775, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2777, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2779, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2781, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2784, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2787, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2789, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2791, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2802, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2804, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2806, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2808, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2810, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2812, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2814, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2816, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2818, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2820, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2822, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2824, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2826, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2828, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 2830, // Casket
     "initial_price": 50,
     "initial_popularity": 5
   },
@@ -7516,11 +7316,6 @@
     "initial_popularity": 5
   },
   {
-    "id": 3519, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
     "id": 3521, // Casket
     "initial_price": 50,
     "initial_popularity": 5
@@ -7531,152 +7326,7 @@
     "initial_popularity": 5
   },
   {
-    "id": 3527, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3529, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3531, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3533, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3535, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3537, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3539, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3541, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3543, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3545, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3547, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3549, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3551, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3553, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3555, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3557, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3559, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3561, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3563, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
     "id": 3581, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3583, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3585, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3587, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3589, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3591, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3593, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3595, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3597, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3600, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 3603, // Casket
     "initial_price": 50,
     "initial_popularity": 5
   },
@@ -13126,11 +12776,6 @@
     "initial_popularity": 5
   },
   {
-    "id": 7237, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
     "id": 7240, // Casket
     "initial_price": 50,
     "initial_popularity": 5
@@ -13147,96 +12792,6 @@
   },
   {
     "id": 7246, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7257, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7259, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7261, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7263, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7265, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7267, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7287, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7289, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7291, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7293, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7295, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7306, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7308, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7310, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7312, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7314, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7316, // Casket
-    "initial_price": 50,
-    "initial_popularity": 5
-  },
-  {
-    "id": 7318, // Casket
     "initial_price": 50,
     "initial_popularity": 5
   },

@@ -58,17 +58,12 @@ object BotRuneRunningSpeechPool : BotSpeechPool<BotRuneRunningSpeechPool.Event>(
     }
 
     /**
-     * Selects all turns together. The optional fare suffix disappears for the free Air and Law journeys.
+     * Selects all turns together. The optional fare suffix disappears for journeys without a native fare.
      */
     fun select(runner: Bot, crafter: Bot, event: Event, altar: Altar,
                runes: Int = 25, fare: Int = 0): List<String>? {
         if (runes <= 0 || fare < 0) return null
-        val rune = when (altar) {
-            Altar.NATURE -> "nature"
-            Altar.LAW -> "law"
-            Altar.AIR -> "air"
-            else -> return null
-        }
+        val rune = altar.name.lowercase()
         val choices = exchanges[event].orEmpty()
         val selected = choices.filter { it != runner.lastSelections[event] && it != crafter.lastSelections[event] }
             .ifEmpty { choices }.randomOrNull() ?: return null

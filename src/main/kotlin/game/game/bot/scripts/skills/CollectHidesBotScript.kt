@@ -4,6 +4,7 @@ import api.bot.zone.SubZone
 import com.google.common.collect.ImmutableSetMultimap
 import com.google.common.collect.SetMultimap
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.CraftingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.NpcCombatScript.Companion.NpcCombatData
@@ -88,6 +89,9 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
      */
     constructor(bot: Bot, data: CollectHidesData) : this(bot, data.duration, data.zones, data.pickUpHides)
 
+    override suspend fun onInit(resumed: Boolean): Boolean =
+        CraftingScriptFactory.canCollectHides(bot) && super.onInit(resumed)
+
     // Picking up hides between fights counts towards this, and other bots can leave minutes' worth on the ground.
     override val targetSearchTimeout: Duration = 10.minutes
 
@@ -101,6 +105,10 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
     }
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
+        if (!CraftingScriptFactory.canCollectHides(bot)) {
+            stop()
+            return false
+        }
         if (bot.inventory.isFull) {
             // Bank before attacking another cow. A fight started now cancels the walk out of the field.
             forceBanking = true

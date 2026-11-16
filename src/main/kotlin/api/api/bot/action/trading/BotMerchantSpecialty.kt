@@ -32,6 +32,7 @@ enum class BotMerchantSpecialty(val advertisement: String, private val category:
      * Accepts tradeable stock within this advertised category, normalizing notes to the actual commodity.
      */
     fun accepts(id: Int): Boolean {
+        if (BotReusableItems.isReusable(id)) return false
         val categories = categories(id)
         return categories >= 0 && (this == GENERAL || categories and category != 0)
     }

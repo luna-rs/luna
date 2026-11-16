@@ -36,5 +36,6 @@ ShopHandler.create("Varrock Swordshop") {
 
     open {
         npc2 += 551
+        npc2 += 552
     }
 }

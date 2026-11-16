@@ -4,7 +4,6 @@ import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScript.ActionSafety
 import api.combat.death.PlayerDeathItems
 import api.predef.ext.allSuitableFood
-import api.predef.rand
 import engine.bot.gear.BotGearPurpose
 import engine.controllers.Controllers.inWilderness
 import game.player.item.consume.food.Food
@@ -17,14 +16,13 @@ import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.item.ItemContainer.StackPolicy
-import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 
 /**
  * Packs compact, owned PK switches through ordinary banking and equipment actions.
- * Every saved discipline receives its weapon and usable consumables. Body/leg switches are optional;
- * other slots share gear. Food is filled towards sixteen before optional armour and longer supply stacks.
+ * One supplied saved discipline is enough to depart; additional weapons and body/leg switches are optional.
+ * Other slots share gear. Food is filled towards sixteen before optional armour and longer supply stacks.
  * Two inventory slots remain free in every modeled outfit for native equipment displacement.
  *
  * @author lare96
@@ -40,15 +38,22 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     data class Plan(val equipment: List<Item>, val inventory: List<Item>)
 
     /**
-     * Tests all permanently assigned disciplines against carried weapons, ammunition and at least one spell cast.
+     * Tests for any permanently assigned discipline with a carried weapon and its actual ammunition or spell cast.
      * Food exhaustion triggers a return to bank; no saved identity is changed because stock ran out.
      */
     fun ready(): Boolean {
         val purposes = purposes()
         return clan.wearingCape() && purposes.isNotEmpty() && bot.inventory.any {
             it != null && Food.ID_TO_FOOD[it.id]?.heal?.let { heal -> heal > 0 } == true
-        } && purposes.all { selection.select(it, carriedOnly = true)?.gear?.get(Equipment.WEAPON) != null }
+        } && purposes.any { selection.select(it, carriedOnly = true)?.gear?.get(Equipment.WEAPON) != null }
     }
+
+    /**
+     * Captures whether the prepared carried outfit has fifty actual Magic casts before an outing starts.
+     * Ongoing readiness continues to accept one remaining cast after the departure supplies have been consumed.
+     */
+    fun hasCarriedMagicForDeparture(): Boolean = selection.select(BotGearPurpose.MAGIC, carriedOnly = true,
+        minimumCasts = PkLoadoutSelection.MIN_CASTS) != null
 
     /**
      * Resolves saved disciplines without treating a build's incidental training skills as additional PK styles.
@@ -58,23 +63,86 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     }
 
     /**
-     * Keeps owned weapons before considering purchases, with enough top-spell runes/arrows for a real outing.
+     * A Magic profile short of fifty supplied casts can fall back only to its permitted melee discipline.
+     * Ranged-only profiles retain their ordinary departure rules.
+     */
+    private fun departurePurposes(spellbook: Spellbook): List<BotGearPurpose> {
+        val purposes = purposes()
+        return if (BotGearPurpose.MAGIC in purposes && selection.select(BotGearPurpose.MAGIC, spellbook = spellbook) == null)
+            purposes.filter { it == BotGearPurpose.MELEE } else purposes
+    }
+
+    /**
+     * Eligible spellbooks are inspected without changing the bot's live book or its permanent profile.
+     */
+    private fun magicSpellbooks(): List<Spellbook> =
+        listOf(bot.spellbook, Spellbook.REGULAR, Spellbook.ANCIENT).distinct().filter {
+            BotCombatActionHandler.canUseSpellbook(bot, it)
+        }
+
+    /**
+     * Returns full rune stock targets for fifty casts, preserving an eligible physically owned staff first.
+     * Staffless accounts request a legitimate staff and its runes through shared wanted-item acquisition.
+     * An empty map means an eligible spellbook is already supplied; null means no eligible procurement target exists.
+     */
+    fun magicSupplyRequirements(): Map<Int, Int>? {
+        if (BotGearPurpose.MAGIC !in purposes()) return null
+        val books = magicSpellbooks()
+        if (books.any { selection.select(BotGearPurpose.MAGIC, spellbook = it) != null }) return emptyMap()
+        val owned = books.mapNotNull { spellbook ->
+            selection.select(BotGearPurpose.MAGIC, desired = true, spellbook = spellbook, preferOwned = true)
+                ?.takeIf { outfit -> outfit.gear[Equipment.WEAPON]?.let { selection.owned(it) > 0 } == true }
+                ?.runes?.mapValues { (_, amount) -> amount * PkLoadoutSelection.MIN_CASTS }
+        }
+        val candidates = owned.ifEmpty {
+            books.mapNotNull { spellbook ->
+                selection.select(BotGearPurpose.MAGIC, desired = true, spellbook = spellbook,
+                    preferCheapest = true, purchasePlanning = true)?.let { outfit ->
+                    linkedMapOf((outfit.gear[Equipment.WEAPON] ?: return@let null) to 1).also { required ->
+                        outfit.runes.forEach { (id, amount) -> required[id] = amount * PkLoadoutSelection.MIN_CASTS }
+                    }
+                }
+            }
+        }
+        return candidates.minByOrNull { required -> required.entries.sumOf { (id, amount) ->
+            bot.world.economy.getPrice(id).coerceAtLeast(0).toDouble() *
+                (amount - selection.owned(id)).coerceAtLeast(0)
+        } }
+    }
+
+    /**
+     * Directs a supply-starved Magic account to shared wanted-item acquisition when no physically owned melee fallback
+     * can be used. Stock in any eligible spellbook satisfies the fifty-cast departure requirement.
+     */
+    fun magicRestockRequired(): Boolean = BotGearPurpose.MAGIC in purposes() &&
+        magicSpellbooks().none { selection.select(BotGearPurpose.MAGIC, spellbook = it) != null } &&
+        selection.select(BotGearPurpose.MELEE) == null
+
+    /**
+     * Keeps a supplied owned discipline before considering purchases for one essential weapon and its supplies.
      * One edible food is essential; the owned planner fills towards sixteen without requiring optional purchases.
      * Supplies covered by the selected staff are omitted. Food quality respects the available risk allowance.
      */
     internal fun supplyRequirements(spellbook: Spellbook = bot.spellbook): Map<Int, Int>? {
-        val purposes = purposes().takeIf { it.isNotEmpty() } ?: return null
-        val required = linkedMapOf<Int, Int>()
-        for (purpose in purposes) {
-            val outfit = selection.select(purpose, desired = true, spellbook = spellbook, preferOwned = true) ?: return null
+        val purposes = departurePurposes(spellbook).takeIf { it.isNotEmpty() } ?: return null
+        fun requirements(outfit: CombatLoadout): LinkedHashMap<Int, Int>? {
+            val required = linkedMapOf<Int, Int>()
             required[outfit.gear[Equipment.WEAPON] ?: return null] = 1
             outfit.gear[Equipment.AMMUNITION]?.let { required[it] = PkLoadoutSelection.MIN_AMMUNITION }
             for ((id, amount) in outfit.runes) {
                 required[id] = maxOf(required[id] ?: 0, amount * PkLoadoutSelection.MIN_CASTS)
             }
+            return required
         }
+        val supplied = purposes.firstNotNullOfOrNull { selection.select(it, spellbook = spellbook) }
+        val required = supplied?.let(::requirements) ?: purposes.mapNotNull {
+            selection.select(it, desired = true, spellbook = spellbook, preferOwned = true)?.let(::requirements)
+        }.minByOrNull { candidate -> candidate.entries.sumOf { (id, amount) ->
+            bot.world.economy.getPrice(id).coerceAtLeast(0).toDouble() *
+                (amount - selection.owned(id)).coerceAtLeast(0)
+        } } ?: return null
         val risk = handler.combat.pkRiskBudget()
-        val foodAllowance = risk.maximumLoss.divide(java.math.BigInteger.valueOf(64))
+        val foodAllowance = risk.maximumLoss
         val food = Food.ID_TO_FOOD.entries.filter { it.value.heal > 0 && selection.available(it.key) &&
             java.math.BigInteger.valueOf(bot.world.economy.getPrice(it.key).coerceAtLeast(0)) <= foodAllowance }
             .maxWithOrNull(compareBy<Map.Entry<Int, Food>> { if (selection.owned(it.key) > 0) 1 else 0 }
@@ -89,11 +157,11 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * Scavenging detours may address stock shortages, but must not bypass unrelated PK policies.
      */
     fun missingSupplies(): Boolean {
-        val purposes = purposes().takeIf { it.isNotEmpty() } ?: return false
+        if (purposes().isEmpty()) return false
         val noFood = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
             .none { Food.ID_TO_FOOD[it.unnotedItemDef.id()]?.heal?.let { it > 0 } == true }
-        val suppliedBook = listOf(Spellbook.REGULAR, Spellbook.ANCIENT).any { spellbook ->
-            BotCombatActionHandler.canUseSpellbook(bot, spellbook) && purposes.all {
+        val suppliedBook = magicSpellbooks().any { spellbook ->
+            departurePurposes(spellbook).any {
                 selection.select(it, spellbook = spellbook)?.gear?.get(Equipment.WEAPON) != null
             }
         }
@@ -103,12 +171,12 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     /**
      * Plans synchronously from owned stock. A coordinator may project the one authorized missing clan cape;
      * the actual cape is only replenished when the script runs. Other supplies always require physical stock.
-     * Strong spells and weapons remain fixed; an unaffordable minimum kit must restock instead of quietly
-     * downgrading to Wind Strike or an ineffective melee weapon. Initiating PKers budget for losing every carried item.
-     * Extra food/armour/supplies are admitted only when every modeled switch fits both space and the risk cap.
+     * A supplied weapon and one food suffice, with fifty casts before a Magic departure. Optional disciplines cannot
+     * block a usable outing, and all selected switches must fit both space and the account's risk policy.
+     * Initiating PKers budget for losing every carried item.
      */
     fun plan(allowMissingClanCape: Boolean = false, spellbook: Spellbook = bot.spellbook): Plan? {
-        val purposes = purposes().takeIf { it.isNotEmpty() } ?: return null
+        val purposes = departurePurposes(spellbook).takeIf { it.isNotEmpty() } ?: return null
         val stock = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
             .groupBy { it.unnotedItemDef.id() }.mapValues { (_, items) -> items.sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }
             .toMutableMap()
@@ -118,8 +186,11 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
         if (foods.isEmpty()) return null
         val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
         val assess = PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)
-        run {
-            val selected = purposes.associateWith { selection.select(it, spellbook = spellbook) ?: return null }
+        val available = purposes.mapNotNull { purpose ->
+            selection.select(purpose, spellbook = spellbook)?.let { purpose to it }
+        }.toMap()
+        fun build(selected: Map<BotGearPurpose, CombatLoadout>): Plan? {
+            val purposes = selected.keys.toList()
             val quantities = linkedMapOf<Int, Int>()
             clan.cape?.let { quantities[it] = 1 }
             selected.values.forEach { quantities[it.gear[Equipment.WEAPON] ?: return null] = 1 }
@@ -152,6 +223,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                 if (EquipmentDefinition.ALL.retrieve(layout[Equipment.WEAPON]!!).isTwoHanded) layout[Equipment.SHIELD] = null
             }
             fun snapshot(layout: Array<Int?>): Plan? {
+                if (quantities.any { (id, amount) -> amount < 0 || amount > (stock[id] ?: 0) }) return null
                 val remaining = quantities.toMutableMap()
                 val worn = layout.mapIndexedNotNull { slot, id -> id?.let {
                     val amount = if (slot == Equipment.AMMUNITION || it == ammunition) quantities.getValue(it) else 1
@@ -199,18 +271,19 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             }
             fun extend(costs: Map<Int, Int>, limit: Int) {
                 if (costs.isEmpty()) return
-                var low = costs.maxOf { (id, cost) -> (quantities[id] ?: cost) / cost }
+                val baseline = quantities.toMap()
+                var low = costs.minOf { (id, cost) -> (baseline[id] ?: 0) / cost }
                 var high = minOf(limit, costs.minOf { (id, cost) -> stock.getValue(id) / cost })
                 while (low < high) {
                     val middle = low + (high - low + 1) / 2
                     val before = quantities.toMap()
-                    costs.forEach { (id, cost) -> quantities[id] = cost * middle }
+                    costs.forEach { (id, cost) -> quantities[id] = maxOf(baseline[id] ?: 0, cost * middle) }
                     val accepted = fits()
                     quantities.clear()
                     quantities.putAll(before)
                     if (accepted) low = middle else high = middle - 1
                 }
-                costs.forEach { (id, cost) -> quantities[id] = cost * low }
+                costs.forEach { (id, cost) -> quantities[id] = maxOf(baseline[id] ?: 0, cost * low) }
             }
             ammunition?.let { extend(mapOf(it to 1), 500) }
             magic?.let { outfit ->
@@ -222,19 +295,32 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             magic?.let { extend(it.runes, 500) }
             return snapshot(layout(purposes.first()))
         }
+        // There are at most three assigned disciplines. Try supplied switches together, then smaller usable kits.
+        val choices = available.entries.toList()
+        val combinations = (1 until (1 shl choices.size)).sortedByDescending { Integer.bitCount(it) }
+        for (mask in combinations) {
+            val selected = choices.filterIndexed { index, _ -> mask and (1 shl index) != 0 }
+                .associate { it.key to it.value }
+            build(selected)?.let { return it }
+        }
+        // A strongest weapon can consume the remaining allowance before food or runes. One cheapest essential kit
+        // per assigned style bounds fallback work while preserving an affordable owned outing.
+        for (purpose in available.keys) {
+            val fallback = selection.select(purpose, spellbook = spellbook, preferCheapest = true) ?: continue
+            build(mapOf(purpose to fallback))?.let { return it }
+        }
+        return null
     }
 
     /**
-     * Strongly prefers Ancient Magicks for eligible Magic PKers while retaining regular magic as a supplied fallback.
+     * Uses an already supplied kit and the current spellbook before procuring missing essentials for another book.
      * Both choices are projected without changing live spell state; switching at home happens before banking.
      */
     private fun preparationSpellbooks(): List<Spellbook> {
-        if (BotGearPurpose.MAGIC !in purposes()) return listOf(
-            bot.spellbook.takeIf { BotCombatActionHandler.canUseSpellbook(bot, it) } ?: Spellbook.REGULAR)
-        val books = listOf(Spellbook.ANCIENT, Spellbook.REGULAR).filter {
-            selection.select(BotGearPurpose.MAGIC, desired = true, spellbook = it) != null
+        val books = listOf(bot.spellbook, Spellbook.REGULAR, Spellbook.ANCIENT).distinct().filter {
+            BotCombatActionHandler.canUseSpellbook(bot, it)
         }
-        return if (books.size == 2 && !rand(0.95)) books.reversed() else books
+        return books.sortedBy { if (plan(allowMissingClanCape = true, spellbook = it) != null) 0 else 1 }
     }
 
     /**
@@ -252,6 +338,13 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * Wilderness entry; a failed preparation finishes at the bank rather than retrying an impossible kit forever.
      */
     suspend fun prepare(): Boolean {
+        if (magicRestockRequired()) {
+            magicSupplyRequirements()?.takeIf { it.isNotEmpty() }?.let { required ->
+                BotTradeIntentions.recordSupplies(bot, required.map { (id, amount) -> Item(id, amount) })
+                required.forEach { (id, amount) -> bot.preferences.raiseWantedItemTarget(id, amount) }
+                return false
+            }
+        }
         for (spellbook in preparationSpellbooks()) {
             if (bot.state != EntityState.ACTIVE || !ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness()) return false
             if (plan(allowMissingClanCape = true, spellbook = spellbook) == null) {

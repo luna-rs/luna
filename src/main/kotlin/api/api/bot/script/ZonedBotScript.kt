@@ -1,5 +1,6 @@
 package api.bot.script
 
+import api.attr.Attr
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
@@ -70,6 +71,12 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones)
 
     companion object {
+
+        private val activityDeaths = Attr.map<SubZone, ArrayDeque<Long>>()
+        private val deathCooldowns = Attr.map<SubZone, Long>()
+        private val DEATH_WINDOW = 10.minutes.inWholeMilliseconds
+        private const val MAX_ACTIVITY_DEATHS = 3
+
 
         /**
          * How many bank trips in a row, each with no work done since the one before, end a script.
@@ -208,6 +215,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         }
 
         if (!awaitActionSafety()) return true
+        if (!avoidRepeatedDeaths()) {
+            bot.log("Every candidate zone has caused repeated deaths. Choosing another activity.")
+            return true
+        }
+        if (duration <= Duration.ZERO) return true
         if (!onInit(resumed)) {
             bot.log("Initialization hook returned false. Stopping script.")
             return true
@@ -331,6 +343,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     final override fun paused() {
+        remainingDuration()
+        timestamp = 0L
         if (this is InventoryBotScript) pausePlannedProduction()
         bot.log("Pausing script. Clearing cached bank and active zone.")
 
@@ -353,6 +367,37 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (zone !in zones || zone.entryBlocker(bot) != null) return
         activeZone = zone
         bot.log("Resuming the bank trip the pause interrupted. activeZone=$zone")
+    }
+
+    /**
+     * Records a death against the work destination, including deaths on the way there. Three deaths within ten
+     * minutes exclude that destination for ten minutes across this bot's activities. Idle queued work is not charged.
+     *
+     * @return Whether this death exhausted the destination's retry allowance.
+     */
+    fun recordActivityDeath(now: Long = System.currentTimeMillis()): Boolean {
+        val zone = activeZone ?: travelZone ?: interruptedZone ?: return false
+        val histories = bot.attributes()[activityDeaths.attr]
+        histories.entries.removeIf { (_, deaths) -> deaths.isEmpty() || now - deaths.last() >= DEATH_WINDOW }
+        val deaths = histories.getOrPut(zone) { ArrayDeque() }
+        while (deaths.isNotEmpty() && now - deaths.first() >= DEATH_WINDOW) deaths.removeFirst()
+        deaths.addLast(now)
+        if (deaths.size < MAX_ACTIVITY_DEATHS) return false
+        bot.attributes()[deathCooldowns.attr][zone] = now + DEATH_WINDOW
+        histories.remove(zone)
+        bot.log("Repeated deaths travelling to or working in $zone. Avoiding it for ten minutes.")
+        return true
+    }
+
+    /**
+     * Applies the bot's destination cooldown before setup, so replacement activities cannot immediately retry it.
+     */
+    private fun avoidRepeatedDeaths(): Boolean {
+        val now = System.currentTimeMillis()
+        val cooldowns = bot.attributes()[deathCooldowns.attr]
+        cooldowns.entries.removeIf { it.value <= now }
+        zones.removeAll { it in cooldowns }
+        return zones.isNotEmpty()
     }
 
     /**
@@ -619,6 +664,10 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 return false
             }
 
+            if ((bot.attributes()[deathCooldowns.attr][newZone] ?: 0L) > System.currentTimeMillis()) {
+                zones.remove(newZone)
+                continue
+            }
             val blocker = newZone.entryBlocker(bot)
             if (blocker != null) {
                 zones.remove(newZone)
@@ -743,7 +792,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             val targetPosition = bank.position
             // The cached bank can be a long walk from the far end of a dungeon or the Wilderness.
             val reachable = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
-                ActionSafety.NON_COMBAT.allows(bot)
+                isActionSafe()
             }
             if (!awaitActionSafety()) return
             // An async result belongs to its original positions. Retry rather than route on a stale result.
@@ -774,19 +823,22 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                     }
 
                 for (bank in sortedBanks) {
-                    if (!bankActionReady()) return
-                    if (banksElsewhere) {
+                    if (!awaitActionSafety()) return
+                    // Combat activities must be able to leave their attacker before the bank-click guard applies.
+                    if (banksElsewhere || !isActionSafe(ActionSafety.NON_COMBAT)) {
                         val reached = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
-                            ActionSafety.NON_COMBAT.allows(bot)
+                            isActionSafe()
                         }
+                        if (!awaitActionSafety()) return
                         if (!reached) {
                             bot.log("No web approach confirmed to parent bank. parent=$parent, bank=$bank")
                             break
                         }
-                        if (!bankActionReady()) return
                     }
+                    if (!bankActionReady()) return
                     val option = bankOption(bank)
-                    if (handler.interactions.interact(option, bank) && waitFor(5.seconds) { bot.bank.isOpen }) {
+                    if (handler.interactions.interact(option, bank) { ActionSafety.NON_COMBAT.allows(bot) } &&
+                        waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = bank
                         bot.log("Cached bank selected. parent=$parent, bank=$bank, option=$option")
                         break
@@ -800,9 +852,15 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 val npc = world.locator.findNpcs(activeZone.inside, activeZone.area.tileRadius)
                 { it.def().actions.contains("Bank") }.firstOrNull()
                 if (npc != null) {
+                    if (!isActionSafe(ActionSafety.NON_COMBAT)) {
+                        handler.interactions.approach(npc, timeout = 3.minutes, allowOutOfView = true) {
+                            isActionSafe()
+                        }
+                    }
                     if (!bankActionReady()) return
                     bot.log("Banking NPC ${npc.id} found!")
-                    if (handler.interactions.interact(bankOption(npc), npc) && waitFor(5.seconds) { bot.bank.isOpen }) {
+                    if (handler.interactions.interact(bankOption(npc), npc) { ActionSafety.NON_COMBAT.allows(bot) } &&
+                        waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = npc
                     }
                 }
@@ -828,7 +886,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (!bankActionReady()) return
         bot.log("Preparing to interact with bank. cachedBank=$cachedBank, bankOpen=${bot.bank.isOpen}")
         if (!bot.bank.isOpen) {
-            if (!handler.interactions.interact(bankOption(cachedBank!!), cachedBank)) {
+            if (!handler.interactions.interact(bankOption(cachedBank!!), cachedBank) {
+                    ActionSafety.NON_COMBAT.allows(bot)
+                }) {
                 bot.log("Banking aborted because cached bank interaction failed. Clearing cached bank. cachedBank=$cachedBank")
                 cachedBank = null
                 forceBanking = true

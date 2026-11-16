@@ -16,6 +16,7 @@ import engine.bot.coordinator.RuneRunningCoordinator.BATCH
 import engine.bot.coordinator.RuneRunningCoordinator.COINS
 import engine.bot.coordinator.RuneRunningCoordinator.NATURE_FARE
 import game.skill.runecrafting.enterAltar.Altar
+import game.obj.entrances.Zanaris
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -35,7 +36,8 @@ import kotlin.time.Duration.Companion.seconds
 class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBotScript {
 
     val altar = data.altar
-    private val essence = RuneRunningCoordinator.essence(altar)
+    val essenceId = data.essenceId
+    private val essence get() = essenceId
     val introductory = data.introductory
     private val deadline = data.deadline
     private var seedUsed = data.seedUsed
@@ -50,8 +52,10 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
     /**
      * Creates a bounded job; offline time cannot renew its absolute expiry.
      */
-    constructor(bot: Bot, altar: Altar, introductory: Boolean, duration: Duration) : this(bot, RunnerData().also {
+    constructor(bot: Bot, altar: Altar, introductory: Boolean, duration: Duration,
+                essenceId: Int = RuneRunningCoordinator.essence(altar)) : this(bot, RunnerData().also {
         it.altar = altar
+        it.essenceId = essenceId
         it.introductory = introductory
         it.deadline = System.currentTimeMillis() + duration.inWholeMilliseconds
     })
@@ -66,7 +70,8 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
     } == true
 
     override suspend fun init(resumed: Boolean): Boolean {
-        if (ending() || RuneRunningCoordinator.reserve(bot, altar) == null) return true
+        if (ending() || !RuneRunningCoordinator.validEssence(altar, essence) ||
+            RuneRunningCoordinator.reserve(bot, altar, essence) == null) return true
         if (!guardsInstalled) {
             previousCombatDisabled = bot.combat.isDisabled
             bot.combat.isDisabled = true
@@ -101,7 +106,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
             if (!pack()) return failedAttempt()
             prepared = true
         }
-        val reached = withTimeoutOrNull(3.minutes) {
+        val reached = withTimeoutOrNull(RuneRunningCoordinator.tripTimeout(altar)) {
             handler.webWalkTo(altar.exit, radius = 2, bank = BankAccess.NONE, fallback = false)
         } == true
         if (!reached || !isActionSafe(ActionSafety.NON_COMBAT)) return failedAttempt()
@@ -147,15 +152,17 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
 
     /**
      * Banks earned runes and unnotes replacement essence through ordinary banking controls.
-     * Nature trips carry their real return fare; free mainland and Entrana routes need no starting coins.
+     * Nature trips carry their real return fare; Cosmic trips retain their owned dramen staff for native entry.
      */
-    private suspend fun pack(): Boolean = withTimeoutOrNull(3.minutes) {
+    private suspend fun pack(): Boolean = withTimeoutOrNull(RuneRunningCoordinator.tripTimeout(altar)) {
         val previous = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)
         try {
             if (!isActionSafe(ActionSafety.NON_COMBAT) || !openBank() ||
                 !handler.banking.depositInventory() || !handler.equipment.unequipAll() ||
                 !handler.banking.depositInventory()) return@withTimeoutOrNull false
             handler.banking.clickBankingMode(false)
+            if (altar == Altar.COSMIC && (!handler.banking.withdraw(Item(Zanaris.STAFF)) ||
+                    !bot.inventory.contains(Zanaris.STAFF))) return@withTimeoutOrNull false
             if (altar == Altar.NATURE) {
                 if (bot.bank.computeAmountForId(COINS) < NATURE_FARE ||
                     !handler.banking.withdraw(Item(COINS, NATURE_FARE)) ||
@@ -237,6 +244,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
 
     override fun snapshot(): BotScriptData = RunnerData().also {
         it.altar = altar
+        it.essenceId = essence
         it.introductory = introductory
         it.deadline = deadline
         it.seedUsed = seedUsed
@@ -250,6 +258,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
      */
     class RunnerData : BotScriptData() {
         var altar = Altar.AIR
+        var essenceId = 1436
         var introductory = false
         var deadline = 0L
         var seedUsed = false
@@ -257,6 +266,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
 
         override fun load(data: JsonObject) {
             altar = Altar.valueOf(data.get("altar").asString)
+            essenceId = data.get("essenceId")?.asInt ?: RuneRunningCoordinator.legacyEssence(altar)
             introductory = data.get("introductory")?.asBoolean ?: false
             deadline = data.get("deadline")?.asLong ?: 0L
             seedUsed = data.get("seedUsed")?.asBoolean ?: false
@@ -265,6 +275,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
 
         override fun save(data: JsonObject) {
             data.addProperty("altar", altar.name)
+            data.addProperty("essenceId", essenceId)
             data.addProperty("introductory", introductory)
             data.addProperty("deadline", deadline)
             data.addProperty("seedUsed", seedUsed)

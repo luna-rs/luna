@@ -3,7 +3,7 @@ package io.luna.game.model.mob.bot.brain;
 import api.bot.script.BotScript;
 import api.bot.action.BotBankSpace;
 import engine.bot.coordinator.BankResourceCoordinator;
-import engine.bot.coordinator.PkingCoordinator;
+import engine.bot.coordinator.GeneralProfitCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
 import engine.bot.coordinator.RuneRunningCoordinator;
 import game.bot.scripts.CannonBotSupport;
@@ -14,8 +14,8 @@ import game.bot.scripts.skills.FarmingReturnBotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
-import java.util.HashMap;
 import java.util.function.Consumer;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The high-level decision-making center for a {@link Bot}.
@@ -30,6 +30,12 @@ import java.util.function.Consumer;
  * @author lare96
  */
 public class BotBrain {
+
+    /**
+     * Next optional starter profit check for this bot's brain. A failed roll also waits, so idle bots
+     * cannot turn a per-visit chance into a guaranteed dispatch over several consecutive ticks.
+     */
+    private long nextStarterProfitAt;
 
     /**
      * A high-level behavior controller for a {@link Bot}.
@@ -56,7 +62,7 @@ public class BotBrain {
         if (CannonBotSupport.needsRecovery(bot)) {
             return owner -> owner.getScriptStack().push(new RecoverCannonBotScript(owner));
         }
-        if (bot.getPreferences().getScavenging().isIntroductory()) {
+        if (ScavengingCoordinator.INSTANCE.canDispatch(bot)) {
             return ScavengingCoordinator.INSTANCE;
         }
         if (bot.getPreferences().getRuneRunning().isIntroductory() && RuneRunningCoordinator.INSTANCE.canDispatch(bot)) {
@@ -77,19 +83,27 @@ public class BotBrain {
         if (farmingReturn != null) {
             return owner -> owner.getScriptStack().pushTail(farmingReturn);
         }
-        var map = new HashMap<>(bot.getPreferences().getActivities());
-        map.computeIfPresent(BotActivity.PKING, (key, value) -> PkingCoordinator.INSTANCE.activityWeight(bot));
-        if (bot.getTimePlayed().toDays() < 2) {
-            // New bots have an additional chance to do combat activities.
-            map.computeIfPresent(BotActivity.TRAINING_COMBAT, (key, value) -> value + 0.35);
-            map.computeIfPresent(BotActivity.PROFIT_COMBAT, (key, value) -> value + 0.25);
+        BotScript runeCrafter = RuneRunningCoordinator.INSTANCE.introductoryCrafterScript(bot);
+        if (runeCrafter != null) {
+            return owner -> owner.getScriptStack().push(runeCrafter);
         }
-        map.keySet().removeIf(activity -> !bot.getPreferences().canChooseActivity(activity));
+        long now = System.currentTimeMillis();
+        if (bot.getCombatLevel() <= 10 && bot.getTimePlayed().toHours() < 48 &&
+                now >= nextStarterProfitAt && bot.getPreferences().canChooseActivity(BotActivity.GENERAL_PROFIT)) {
+            nextStarterProfitAt = now + 45L * 60_000;
+            Double interest = bot.getPreferences().getActivities().get(BotActivity.GENERAL_PROFIT);
+            if (interest != null && Double.isFinite(interest) && interest > 0.0 &&
+                    ThreadLocalRandom.current().nextDouble() < 0.25) {
+                BotScript starterProfit = GeneralProfitCoordinator.INSTANCE.starterVials(bot);
+                if (starterProfit != null) {
+                    return owner -> owner.getScriptStack().push(starterProfit);
+                }
+            }
+        }
+        var map = BotActivityWeights.weights(bot);
         BotActivity activity = RandomUtils.weightedRoll(map);
         if (activity == null) {
-            activity = RandomUtils.random(BotActivity.ALL.stream()
-                    .filter(bot.getPreferences()::canChooseActivity)
-                    .filter(it -> it != BotActivity.PKING || PkingCoordinator.INSTANCE.activityWeight(bot) > 0.0).toList());
+            return BotActivity.SOCIALIZING.getCoordinator();
         }
         return activity.getCoordinator();
     }

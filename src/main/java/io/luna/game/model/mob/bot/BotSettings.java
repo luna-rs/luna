@@ -77,29 +77,29 @@ public final class BotSettings {
     private final int baseLootValue;
 
     /**
-     * Optional new-account scavenger fraction. Omitted settings use two percent.
+     * Legacy introductory scavenger fraction, now assigned to rune running. Omitted settings use zero.
      */
     private Double newAccountScavengingChance;
 
     /**
-     * Optional new-account rune-runner fraction. Omitted settings use two percent.
+     * Optional new-account rune-runner fraction. Omitted settings use twenty-five percent.
      */
     private Double newAccountRuneRunningChance;
 
     /**
-     * Returns the configured one-to-three percent fraction; zero explicitly disables assignment.
+     * Returns the configured introductory runner fraction; legacy scavenging odds are added separately.
      */
     public double newAccountRuneRunningChance() {
-        if (newAccountRuneRunningChance == null || !Double.isFinite(newAccountRuneRunningChance)) return 0.02;
-        return newAccountRuneRunningChance == 0 ? 0 : Math.clamp(newAccountRuneRunningChance, 0.01, 0.03);
+        if (newAccountRuneRunningChance == null || !Double.isFinite(newAccountRuneRunningChance)) return 0.25;
+        return Math.clamp(newAccountRuneRunningChance, 0.0, 1.0);
     }
 
     /**
-     * Returns the configured one-to-three percent fraction; zero explicitly disables assignment.
+     * Returns the legacy fraction to transfer to introductory rune running.
      */
     public double newAccountScavengingChance() {
-        if (newAccountScavengingChance == null || !Double.isFinite(newAccountScavengingChance)) return 0.02;
-        return newAccountScavengingChance == 0 ? 0 : Math.clamp(newAccountScavengingChance, 0.01, 0.03);
+        if (newAccountScavengingChance == null || !Double.isFinite(newAccountScavengingChance)) return 0.0;
+        return Math.clamp(newAccountScavengingChance, 0.0, 1.0);
     }
 
     /**

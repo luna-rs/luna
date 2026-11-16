@@ -187,15 +187,22 @@ class TanHideBotScript(
             val stock = Hide.HIDE_TO_HIDE.keys.sumOf { bot.itemTracker.count(it).toLong() }
             if (stock < CollectHidesBotScript.hideTarget(bot)) {
                 if (allowGathering) {
-                    allowGathering = false
-                    bot.scriptStack.softPushHead(TanHideBotScript(bot, duration, allowGathering = false))
                     val supply = TradeBotScript.buySpecific(bot, CollectHidesBotScript.COWHIDE,
                         CollectHidesBotScript.hideTarget(bot))
                         ?: CraftingScriptFactory.getCollectHidesScript(bot, mutableListOf(), pickUpHides = true)
-                    bot.scriptStack.softPushHead(supply)
+                    if (supply != null) {
+                        allowGathering = false
+                        bot.scriptStack.softPushHead(TanHideBotScript(bot, duration, allowGathering = false))
+                        bot.scriptStack.softPushHead(supply)
+                        stop()
+                        return emptyList()
+                    }
                 }
-                stop()
-                return emptyList()
+                if (stock == 0L || CraftingScriptFactory.canCollectHides(bot)) {
+                    stop()
+                    requestMissingSupplies()
+                    return emptyList()
+                }
             }
             started = true
         }

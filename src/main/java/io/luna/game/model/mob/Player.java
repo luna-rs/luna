@@ -146,11 +146,6 @@ public class Player extends Mob {
     private final GameTabSet tabs = new GameTabSet(this);
 
     /**
-     * Cache of widget text values keyed by widget id, used to avoid redundant text packets.
-     */
-    private final Map<Integer, String> textCache = new HashMap<>();
-
-    /**
      * Player privacy options (PM, trade, etc.).
      */
     private PlayerPrivacy privacyOptions = new PlayerPrivacy();
@@ -643,7 +638,7 @@ public class Player extends Mob {
         if (varbits.isEmpty()) {
             return;
         } else if (varbits.size() == 1) {
-            sendVarbit(varbits.iterator().next());
+            sendVarbit(varbits.getFirst());
             return;
         }
         int parentValue = cachedVarps.getOrDefault(parentId, 0);
@@ -670,22 +665,7 @@ public class Player extends Mob {
      * @param id The widget id to update.
      */
     public void sendText(Object msg, int id) {
-        // Retrieve the text that's already on the interface.
-        String pending = msg.toString();
-        String previous = textCache.put(id, pending);
-        if (!pending.equals(previous)) {
-            // Only queue the packet if we're sending different text.
-            queue(new WidgetTextMessageWriter(pending, id));
-        }
-    }
-
-    /**
-     * Clears the cached widget text for the given id.
-     *
-     * @param id The widget identifier to clear.
-     */
-    public void clearText(int id) {
-        textCache.remove(id);
+        queue(new WidgetTextMessageWriter(msg, id));
     }
 
     /**

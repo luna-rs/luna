@@ -32,7 +32,7 @@ import io.luna.util.RandomUtils
  * Non-skillers can also use the shared NPC camp preparation with an enforced Magic-only combat discipline.
  * Missing alchemy and wine runes are prepared after selection; protected supplies are never alchemy targets.
  * Unavailable methods are removed before another choice, so a missing recipe cannot starve the remaining methods.
- * Training retains city teleports and TeleOther as lower-weight alternatives and splashing as a fallback.
+ * Training gives splashing a direct weighted opportunity and retains city teleports and TeleOther alternatives.
  * Profit selection excludes those rune-spending fallbacks and requires alchemy's positive net margin.
  *
  * @author lare96
@@ -45,7 +45,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * @author lare96
      */
     internal enum class Method {
-        COMBAT, ALCHEMY, WINE, ORBS, ENCHANTING, SUPERHEAT, BONES, TELEPORT, TELEOTHER
+        COMBAT, SPLASH, ALCHEMY, WINE, ORBS, ENCHANTING, SUPERHEAT, BONES, TELEPORT, TELEOTHER
     }
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
@@ -73,7 +73,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             .takeIf { it.isEligible() }
 
     /**
-     * Weights unlocked methods before their owned-input, account and location checks are resolved lazily.
+     * Weights unlocked methods before their input preparation, account and location checks are resolved lazily.
      * Alchemy and wine are intentional choices; food conversion cannot always displace them.
      */
     internal fun methodWeights(bot: Bot, level: Int, profit: Boolean): Map<Method, Double> = buildMap {
@@ -85,6 +85,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
         if (level >= SuperheatItemAction.LEVEL) put(Method.SUPERHEAT, 1.0)
         if (level >= 15) put(Method.BONES, 1.0)
         if (!profit) {
+            if (!bot.preferences.isSkiller) put(Method.SPLASH, 4.0)
             if (level >= 25) put(Method.TELEPORT, 1.0)
             if (level >= 74) put(Method.TELEOTHER, 0.5)
         }
@@ -102,6 +103,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             remaining.remove(method)
             val script = when (method) {
                 Method.COMBAT -> CombatCoordinator.magicTrainingScript(bot, !profit, getDuration(bot))
+                Method.SPLASH -> SplashBotScript(bot, getDuration(bot))
                 Method.ALCHEMY -> getAlchemyScript(bot, level, profit)
                 Method.WINE -> getTelegrabScript(bot, profit)
                 Method.ORBS -> BotProductionPlanner.select(bot, SKILL_MAGIC, level, !profit,

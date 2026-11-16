@@ -1277,7 +1277,7 @@
   {
     "id": 1052, // Cape of legends
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 1053, // Green h'ween mask
@@ -3717,7 +3717,7 @@
   {
     "id": 2528, // Lamp
     "weight": 0.1,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2529, // Orb of light
@@ -3932,7 +3932,7 @@
   {
     "id": 2714, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2715, // Casket
@@ -3942,7 +3942,7 @@
   {
     "id": 2717, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2718, // Casket
@@ -3952,7 +3952,7 @@
   {
     "id": 2720, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2721, // Casket
@@ -3962,182 +3962,182 @@
   {
     "id": 2724, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2726, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2728, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2730, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2732, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2734, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2736, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2738, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2740, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2742, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2744, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2746, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2748, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2775, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2777, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2779, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2781, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2784, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2787, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2789, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2791, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2802, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2804, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2806, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2808, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2810, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2812, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2814, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2816, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2818, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2820, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2822, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2824, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2826, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2828, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2830, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2859, // Wolf bones
@@ -5042,7 +5042,7 @@
   {
     "id": 3519, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3521, // Casket
@@ -5057,97 +5057,97 @@
   {
     "id": 3527, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3529, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3531, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3533, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3535, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3537, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3539, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3541, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3543, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3545, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3547, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3549, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3551, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3553, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3555, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3557, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3559, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3561, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3563, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3581, // Casket
@@ -5157,52 +5157,52 @@
   {
     "id": 3583, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3585, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3587, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3589, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3591, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3593, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3595, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3597, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3600, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3603, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3667, // Lifeboat
@@ -9767,7 +9767,7 @@
   {
     "id": 6796, // Lamp
     "weight": 0.1,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6809, // Granite legs
@@ -10217,7 +10217,7 @@
   {
     "id": 7237, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7240, // Casket
@@ -10242,92 +10242,92 @@
   {
     "id": 7257, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7259, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7261, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7263, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7265, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7267, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7287, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7289, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7291, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7293, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7295, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7306, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7308, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7310, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7312, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7314, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7316, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7318, // Casket
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7332, // Black kiteshield(h)
@@ -11698,5 +11698,949 @@
     "id": 7946, // Monkfish
     "weight": 0.4,
     "tradeable": true
+  },
+  {
+    "id": 2677, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2678, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2679, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2680, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2681, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2682, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2683, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2684, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2685, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2686, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2687, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2688, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2689, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2690, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2691, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2692, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2693, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2694, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2695, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2696, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2697, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2698, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2699, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2700, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2701, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2702, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2703, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2704, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2705, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2706, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2707, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2708, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2709, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2710, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2711, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2712, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2713, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2716, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2719, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2722, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2723, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2725, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2727, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2729, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2731, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2733, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2735, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2737, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2739, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2741, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2743, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2745, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2747, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2773, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2774, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2776, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2778, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2780, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2782, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2783, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2785, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2786, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2788, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2790, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2792, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2793, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2794, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2796, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2797, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2799, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2801, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2803, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2805, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2807, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2809, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2811, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2813, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2815, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2817, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2819, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2821, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2823, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2825, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2827, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2829, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2831, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2833, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2835, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2837, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2839, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2841, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2843, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2845, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2847, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2848, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2849, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2851, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2853, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2855, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2856, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2857, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 2858, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3490, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3491, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3492, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3493, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3494, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3495, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3496, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3497, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3498, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3499, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3500, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3501, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3502, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3503, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3504, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3505, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3506, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3507, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3508, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3509, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3510, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3512, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3513, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3514, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3515, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3516, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3518, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3520, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3522, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3524, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3525, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3526, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3528, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3530, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3532, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3534, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3536, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3538, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3540, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3542, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3544, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3546, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3548, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3550, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3552, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3554, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3556, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3558, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3560, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3562, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3564, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3566, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3568, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3570, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3572, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3573, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3574, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3575, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3577, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3579, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3580, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3582, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3584, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3586, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3588, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3590, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3592, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3594, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3596, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3598, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3599, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3601, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3602, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3604, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3605, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3607, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3609, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3610, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3611, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3612, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3613, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3614, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3615, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3616, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3617, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 3618, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7236, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7238, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7239, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7241, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7243, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7245, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7247, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7248, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7249, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7250, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7251, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7252, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7253, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7254, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7255, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7256, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7258, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7260, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7262, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7264, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7266, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7268, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7270, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7272, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7274, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7276, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7278, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7280, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7282, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7284, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7286, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7288, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7290, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7292, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7294, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7296, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7298, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7300, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7301, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7303, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7304, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7305, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7307, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7309, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7311, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7313, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7315, // Clue scroll
+    "tradeable": false
+  },
+  {
+    "id": 7317, // Clue scroll
+    "tradeable": false
   }
 ]
