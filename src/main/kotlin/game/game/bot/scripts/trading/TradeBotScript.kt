@@ -169,6 +169,8 @@ class TradeBotScript(bot: Bot,
         fun buySpecific(bot: Bot, id: Int, target: Int, deadlineMillis: Long = 0L): TradeBotScript? {
             require(target > 0 && id != COINS)
             if (deadlineMillis > 0L && System.currentTimeMillis() >= deadlineMillis) return null
+            if (BotReusableItems.isReusable(id))
+                BotTradeIntentions.recordSupplies(bot, listOf(Item(id, target)), stockTarget = target)
             val guide = world.economy.getPrice(id)
             if (guide <= 0) return null
             val price = BotMarketExperience.buy(bot, id,
@@ -1572,7 +1574,8 @@ class TradeBotScript(bot: Bot,
             val missing = (wanted.target.toLong() - bot.totalItemAmount(id)).coerceIn(0, Int.MAX_VALUE.toLong()).toInt()
             if (missing > 0) return missing to false
         }
-        return if (curiousVisit && (curiosityRemaining ?: 0) > 0) Int.MAX_VALUE to true else 0 to false
+        return if (!BotReusableItems.isReusable(id) && curiousVisit && (curiosityRemaining ?: 0) > 0)
+            Int.MAX_VALUE to true else 0 to false
     }
 
     /**
@@ -1598,7 +1601,8 @@ class TradeBotScript(bot: Bot,
                 productionQuoteExpiries[id] = production.expires
                 productionQuoteOwners[id] = production.identity
             }
-            val maximum = minOf(normalMaximum, production?.maximumUnitPrice ?: Long.MAX_VALUE)
+            val maximum = BotUtilityPurchases.price(bot, id, normalMaximum,
+                production?.maximumUnitPrice ?: Long.MAX_VALUE)
             PlayerTradeAdvertisementPolicy.quote(concreteAdvertisement(advertised, id), maximum, profile,
                 rand().nextDouble(), rand().nextDouble())
                 ?.let { Pricing(id, maximum, it, profile) }
@@ -2454,6 +2458,8 @@ class TradeBotScript(bot: Bot,
      * their resale category. Broad default buying ceilings do not turn every specialty into a general merchant.
      */
     private fun merchantPersonalDemand(id: Int): Int {
+        if (BotReusableItems.isReusable(id)) return if (bot.canUseWantedItem(id))
+            BotUtilityPurchases.deficit(bot, id) else 0
         val wanted = BotTradeIntentions.supplyDemand(bot, id) ?: actionableWants[id] ?: return 0
         if (!bot.canUseWantedItem(id)) return 0
         return (wanted.target.toLong() - bot.totalItemAmount(id)).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
@@ -2471,6 +2477,7 @@ class TradeBotScript(bot: Bot,
     private fun productionPurchaseQuote(quote: BotTradeItem): BotTradeItem? {
         val limit = BotTradeIntentions.productionLimit(bot, quote.item.id)
         if (limit == null) return quote.takeUnless { quote.item.id in productionQuotedIds }
+            ?.let(BotUtilityPurchases::constrain)
         if (productionQuoteExpiries[quote.item.id]?.let { it != limit.expires } == true) return null
         if (productionQuoteOwners[quote.item.id]?.let { it !== limit.identity } == true) return null
         productionQuotedIds += quote.item.id
@@ -2535,6 +2542,8 @@ class TradeBotScript(bot: Bot,
      */
     private fun personalDemand(id: Int): Int {
         if (id == COINS) return 0
+        if (BotReusableItems.isReusable(id)) return if (bot.canUseWantedItem(id))
+            BotUtilityPurchases.deficit(bot, id) else 0
         return actionableWants[id]?.let {
             (it.target.toLong() - bot.totalItemAmount(id)).coerceIn(0, Int.MAX_VALUE.toLong()).toInt()
         } ?: 0
@@ -2600,7 +2609,7 @@ class TradeBotScript(bot: Bot,
         fun unchanged() = !purchaseExpired() && (!ordinaryVisit || !visitBudget.expired(System.currentTimeMillis())) &&
                 original.revision == ownRevision && original.otherOffer.revision == otherRevision &&
                 bot.inventory.hasSpaceForAll(theirs) && offer.other.inventory.hasSpaceForAll(mine) &&
-                productionTradeAllowed(own, receiving) && validate()
+                BotTradeManager.outgoingAllowed(bot, mine) && productionTradeAllowed(own, receiving) && validate()
         original.guardNativeTrade(validate = {
             bot.scriptStack.current() === this && !purchaseExpired() && unchanged()
         }, settle = {
@@ -2644,6 +2653,7 @@ class TradeBotScript(bot: Bot,
      */
     private fun productionTradeAllowed(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
         val normalized = quantities(receiving.toItems(), true)
+        if (!utilityTradeAllowed(own, normalized)) return false
         val limits = normalized.keys.mapNotNull { id ->
             BotTradeIntentions.productionLimit(bot, id)?.let { id to it }
         }.toMap()
@@ -2668,6 +2678,34 @@ class TradeBotScript(bot: Bot,
             allowance = minOf(allowance, limit.maximumCoins)
         }
         return coins <= maximum && coins <= allowance
+    }
+
+    /**
+     * Rechecks concrete utility ownership and captured buying prices before either trade screen is accepted.
+     * A newly available shop invalidates an older expensive quote instead of changing the agreed basket.
+     */
+    private fun utilityTradeAllowed(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
+        val utilities = receiving.filterKeys(BotReusableItems::isReusable)
+        if (utilities.isEmpty()) return true
+        var maximum = 0L
+        for ((id, amount) in utilities) {
+            if (amount < 1 || amount > BotUtilityPurchases.deficit(bot, id)) return false
+            val captured = when {
+                purchaseTarget?.id == id -> purchasePrice
+                id in ordinaryQuotes -> ordinaryQuotes.getValue(id)
+                id in merchantQuotes -> merchantQuotes.getValue(id).price
+                id in wantedBarterPrices -> wantedBarterPrices.getValue(id)
+                else -> expected.firstOrNull { it.item.id == id }?.price
+                    ?: BotMarketExperience.buy(bot, id, tradePrice.applyBuy(BotMerchantValuation.peekGuide(id)))
+            }
+            val ceiling = BotUtilityPurchases.price(bot, id, captured,
+                refundableCoins = (own[COINS] ?: 0).toLong())
+            if (captured > ceiling) return false
+            val value = if (ceiling > Long.MAX_VALUE / amount) Long.MAX_VALUE else ceiling * amount
+            maximum = if (value > Long.MAX_VALUE - maximum) Long.MAX_VALUE else maximum + value
+        }
+        return receiving.size != utilities.size || own.any { it.key != COINS && it.value > 0 } ||
+            (own[COINS] ?: 0).toLong() <= maximum
     }
 
     /**

@@ -18,9 +18,11 @@ object BotMarketExperience {
     /**
      * Applies an unsuccessful buyer's bounded premium within the caller's actual per-unit spending ceiling.
      */
-    fun buy(bot: Bot, id: Int, price: Long, maxUnitPrice: Long = Long.MAX_VALUE): Long =
-        history(bot)?.quote(id, true, price, System.currentTimeMillis(), maximum = maxUnitPrice)
-            ?: price.coerceIn(1L, maxUnitPrice.coerceAtLeast(1L))
+    fun buy(bot: Bot, id: Int, price: Long, maxUnitPrice: Long = Long.MAX_VALUE): Long {
+        val maximum = BotUtilityPurchases.price(bot, id, maxUnitPrice, maxUnitPrice)
+        return history(bot)?.quote(id, true, price, System.currentTimeMillis(), maximum = maximum)
+            ?: price.coerceIn(1L, maximum.coerceAtLeast(1L))
+    }
 
     /**
      * Discounts unsold stock while respecting any independently established liquidation floor.

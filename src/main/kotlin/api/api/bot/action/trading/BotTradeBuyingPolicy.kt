@@ -68,6 +68,8 @@ object BotTradeBuyingPolicy {
         val base = definition.unnotedId.orElse(id)
         if (base == 995 || !definition.isTradeable) return null
         val active = BotTradeIntentions.supplyDemand(bot, base)
+        if (BotReusableItems.isReusable(base) && active == null &&
+            BotTradeIntentions.explicitWantedTarget(bot, base) < 1) return null
         val wanted = bot.preferences.getWantedItem(base)?.takeIf { it.target > 0 && eligible(bot, it) }
             ?: active ?: return null
         if (!bot.canUseWantedItem(base)) return null
@@ -78,7 +80,8 @@ object BotTradeBuyingPolicy {
             if (fulfilled(bot, goal, gear)) return null
             return copy(wanted, 1)
         }
-        val target = maxOf(wanted.target, active?.target ?: 0)
+        val target = if (BotReusableItems.isReusable(base)) BotUtilityPurchases.target(bot, base)
+            else maxOf(wanted.target, active?.target ?: 0)
         if (bot.totalItemAmount(base) >= target) return null
         if (target == wanted.target) return wanted
         return copy(wanted, target)

@@ -5,6 +5,7 @@ import api.bot.Suspendable.delay
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotUtilityPurchases
 import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
@@ -305,7 +306,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         continue
                     }
                     val banked = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
-                    if (attempted != null && id !in attempted && banked < amount) {
+                    val utilitySource = BotUtilityPurchases.shopCeiling(bot, id)
+                    if (attempted != null && id !in attempted && banked < amount && utilitySource == null) {
                         val deadline = System.currentTimeMillis() + 45_000L
                         val trade = TradeBotScript.buySpecific(bot, id, amount, deadline)
                         if (trade != null) {
@@ -316,7 +318,11 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         }
                     }
                     // Complete this item's fallback before another market child can pause the basket.
-                    acquireWantedItem(id, amount, targets.keys, budget)
+                    try {
+                        acquireWantedItem(id, amount, targets.keys, budget)
+                    } finally {
+                        if (utilitySource != null && id !in acquired()) BotUtilityPurchases.shopFailed(bot, id)
+                    }
                     if (id in acquired()) attempted?.remove(id)
                 }
             } finally {

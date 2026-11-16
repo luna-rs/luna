@@ -307,15 +307,16 @@ object BotTradeManager {
 
     /**
      * Applies a finite production goal's total ownership, unit-price and shared coin limits to a captured bid.
-     * Ordinary market wishes keep their existing quantity and valuation policy.
+     * Reviewed utilities also require a concrete deficit and respect currently usable shop alternatives.
      */
     internal fun capProductionPurchase(quote: BotTradeItem): BotTradeItem? {
-        val limit = BotTradeIntentions.productionLimit(quote.bot, quote.item.id) ?: return quote
+        val current = BotUtilityPurchases.constrain(quote) ?: return null
+        val limit = BotTradeIntentions.productionLimit(current.bot, current.item.id) ?: return current
         if (limit.maximumUnitPrice < 1L || limit.maximumCoins < 1L) return null
-        val price = minOf(quote.price.coerceAtLeast(1L), limit.maximumUnitPrice)
-        val deficit = (limit.target.toLong() - quote.bot.totalItemAmount(quote.item.id)).coerceAtLeast(0L)
-        val count = minOf(quote.item.amount.toLong(), deficit, limit.maximumCoins / price).toInt()
-        return if (count < 1) null else BotTradeItem(Item(quote.item.id, count), price, quote.purpose, quote.bot)
+        val price = minOf(current.price.coerceAtLeast(1L), limit.maximumUnitPrice)
+        val deficit = (limit.target.toLong() - current.bot.totalItemAmount(current.item.id)).coerceAtLeast(0L)
+        val count = minOf(current.item.amount.toLong(), deficit, limit.maximumCoins / price).toInt()
+        return if (count < 1) null else BotTradeItem(Item(current.item.id, count), price, current.purpose, current.bot)
     }
 
     /**
@@ -485,6 +486,41 @@ object BotTradeManager {
         return (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
             .filter { !it.isDynamic && itemDef(it.id).unnotedId.orElse(it.id) == id }
             .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+    }
+
+    /**
+     * Rechecks current transferable surplus, restoring goods already removed into this bot's native trade offer.
+     * Equipped copies can satisfy ownership retention but never become transferable sale stock themselves.
+     */
+    fun saleableAmount(bot: Bot, id: Int, offered: Collection<Item> = emptyList()): Int =
+        saleableAmount(bot, id, offered, BotTradeIntentions.retainedStock(bot))
+
+    /**
+     * Applies the same current reserves to every outgoing commodity before either native trade acceptance.
+     * Coins retain their independent spending policy; offered goods are counted exactly once across notes.
+     */
+    fun outgoingAllowed(bot: Bot, offered: Collection<Item>): Boolean {
+        val quantities = offered.asSequence().filter { it.id != 995 && it.amount > 0 }
+            .groupBy { itemDef(it.id).unnotedId.orElse(it.id) }
+        if (quantities.isEmpty()) return true
+        val reserves = BotTradeIntentions.retainedStock(bot)
+        return quantities.all { (id, items) ->
+            items.none { it.isDynamic } && items.sumOf { it.amount.toLong() } <=
+                saleableAmount(bot, id, offered, reserves)
+        }
+    }
+
+    private fun saleableAmount(bot: Bot, id: Int, offered: Collection<Item>, reserves: Map<Int, Int>): Int {
+        val definition = ItemDefinition.ALL.get(id).orElse(null) ?: return 0
+        val base = definition.unnotedId.orElse(id)
+        if (base == 995 || !definition.isTradeable) return 0
+        val onOffer = offered.asSequence().filter {
+            !it.isDynamic && itemDef(it.id).unnotedId.orElse(it.id) == base
+        }.sumOf { it.amount.toLong() }
+        val owned = bot.totalItemAmount(base).toLong() + onOffer
+        val transferable = transferableAmount(bot, base).toLong() + onOffer
+        val reserve = (reserves[base] ?: 0).coerceAtLeast(0)
+        return minOf(transferable, (owned - reserve).coerceAtLeast(0L), Int.MAX_VALUE.toLong()).toInt()
     }
 
 }

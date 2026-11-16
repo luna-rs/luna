@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotReusableItems
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -249,7 +250,10 @@ abstract class InventoryBotScript(
             if (!requestMissing) { stop(); return emptyList() }
             if (!ownedSuppliesOnly && productionPlan == null) items.filter { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) < it.amount }.forEach {
-                bot.preferences.raiseWantedItemTarget(it.id, if (it.id in tools) 3 else maxOf(1_000, it.amount))
+                val target = if (it.id in tools) {
+                    if (BotReusableItems.isReusable(it.id)) 1 else 3
+                } else maxOf(1_000, it.amount)
+                bot.preferences.raiseWantedItemTarget(it.id, target)
             }
         }
         startupSupplies = StartupSupplies(items, tools.toSet(), requestMissing && !ownedSuppliesOnly, prepareMissing)
