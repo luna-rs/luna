@@ -123,7 +123,7 @@ object BotProductionPlanner {
         fun describe(entry: ProductionCatalogue.Entry): ProductionRecipe? {
             if (described.containsKey(entry)) return described[entry]
             val native = entry.describe(bot)
-            val recipe = native?.takeIf { bot.skill(it.skill).staticLevel >= it.level &&
+            val recipe = native?.takeIf { (!entry.profitOnly || !training) && bot.skill(it.skill).staticLevel >= it.level &&
                 bot.skill(it.skill).level >= it.level && (it.skill != skill || it.level <= level) &&
                 BotCombatActionHandler.mayGainExperience(bot, it.skill) &&
                 (!training || it.experience == 0.0 || BotCombatActionHandler.wantsToTrain(bot, it.skill)) }
@@ -366,6 +366,7 @@ object BotProductionPlanner {
             candidate.skill == recipe.skill && candidate.describe(bot)?.let {
                 it.key == recipe.key && it.level == recipe.level && it.materials == recipe.materials &&
                     it.tools == recipe.tools && it.products == recipe.products &&
+                    it.zeroValueByproducts == recipe.zeroValueByproducts &&
                     it.experience >= recipe.experience && it.productProbability >= recipe.productProbability &&
                     it.coinCost == recipe.coinCost
             } == true

@@ -32,10 +32,12 @@ object ProductionChainEconomics {
         val external = LinkedHashMap<Int, Long>()
         val products = LinkedHashMap<Int, Long>()
         val tools = LinkedHashSet<Int>()
+        val zeroValueByproducts = LinkedHashSet<Int>()
         var experience = 0.0
         var coinCost = 0L
         for ((recipe, operations) in stages) {
             tools += recipe.tools
+            zeroValueByproducts += recipe.zeroValueByproducts
             for ((id, amount) in recipe.materials) {
                 val required = amount.toLong() * operations
                 val available = products[id] ?: 0L
@@ -60,6 +62,6 @@ object ProductionChainEconomics {
         val first = stages.first().recipe
         return ProductionRecipe("chain:${first.key}:${stages.last().recipe.key}".take(128), first.skill, first.level,
             external.mapValues { it.value.toInt() }, tools, products.mapValues { it.value.toInt() }, experience,
-            stages.last().recipe.productProbability, coinCost)
+            stages.last().recipe.productProbability, coinCost, zeroValueByproducts.intersect(products.keys))
     }
 }

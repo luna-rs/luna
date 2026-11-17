@@ -456,6 +456,7 @@ abstract class InventoryBotScript(
 
     final override suspend fun onInit(resumed: Boolean): Boolean {
         settlePlannedProduction()
+        if (!inventorySupplyInitAllowed(resumed)) { recordProductionOutcome(Reason.CANCELLED); stop(); return false }
         // A paused attempt belongs to its recorded site, not whichever candidate is selected on resume.
         zones.removeAll(failedProductionZones)
         if (failedProductionZone != null) resetProductionFailures()
@@ -632,6 +633,11 @@ abstract class InventoryBotScript(
      * Allows bounded native inventory maintenance after the last action settles, before a finite goal can stop.
      */
     protected open suspend fun afterProductionSettled() {}
+
+    /**
+     * Rejects interrupted compound rounds before initialization can purchase supplies again.
+     */
+    protected open fun inventorySupplyInitAllowed(resumed: Boolean): Boolean = true
 
     /**
      * Pauses interrupt native production before a temporary trade or other child can alter the measured inventory.

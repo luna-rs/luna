@@ -1,10 +1,12 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.*
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.ProductionZones
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.*
+import game.player.item.consume.potion.PotionFamily
 import game.obj.resource.fillable.WaterResource
 import game.skill.Skills
 import game.skill.cooking.cookFood.Food
@@ -58,7 +60,8 @@ internal object ProductionCatalogue {
      * @author lare96
      */
     data class Entry(val skill: Int, val describe: (Bot) -> ProductionRecipe?,
-                     val create: (Bot, Duration) -> InventoryBotScript, val outputs: Set<Int>, val inputs: Set<Int>)
+                     val create: (Bot, Duration) -> InventoryBotScript, val outputs: Set<Int>, val inputs: Set<Int>,
+                     val profitOnly: Boolean = false)
 
     private fun materials(items: List<Item>): Map<Int, Int> = items.groupBy { it.id }
         .mapValues { (_, values) -> values.sumOf { it.amount } }
@@ -202,6 +205,13 @@ internal object ProductionCatalogue {
                 add(fixed(recipe("potion:${potion.name}", SKILL_HERBLORE, potion.level,
                     listOf(potion.unfItem, potion.secondaryItem), potion.id, potion.exp),
                     { bot, duration -> MakePotionBotScript(bot, potion, duration) }))
+            }
+            PotionFamily.ALL.forEach { family ->
+                val decant = DecantPotionBotScript.recipe(family)
+                add(Entry(SKILL_HERBLORE, { bot ->
+                    decant.takeUnless { BotTradeIntentions.hasPersonalPotionReserve(bot, family) }
+                }, { bot, duration -> DecantPotionBotScript(bot, family, duration) }, decant.valuedProducts.keys,
+                    decant.materials.keys, profitOnly = true))
             }
             Ingredient.entries.forEach { ingredient ->
                 add(fixed(recipe("grind:${ingredient.name}", SKILL_HERBLORE, 1,

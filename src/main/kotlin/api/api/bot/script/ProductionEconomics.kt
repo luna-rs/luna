@@ -19,8 +19,14 @@ data class ProductionRecipe(
     val products: Map<Int, Int>,
     val experience: Double,
     val productProbability: Double = 1.0,
-    val coinCost: Long = 0L
+    val coinCost: Long = 0L,
+    val zeroValueByproducts: Set<Int> = emptySet()
 ) {
+    /**
+     * Keeps physical byproducts in the recipe without using them to justify a profitable conversion.
+     */
+    val valuedProducts: Map<Int, Int> get() = products.filterKeys { it !in zeroValueByproducts }
+
     init {
         require(key.isNotBlank() && key.length <= 128)
         require(skill >= 0 && level in 1..99)
@@ -30,6 +36,7 @@ data class ProductionRecipe(
         require(experience.isFinite() && experience >= 0.0)
         require(productProbability.isFinite() && productProbability in 0.0..1.0)
         require(coinCost >= 0L)
+        require(zeroValueByproducts.all { it in products })
     }
 }
 
@@ -95,10 +102,10 @@ object ProductionEconomics {
         val materialValue = value(recipe.materials, inputUnitPrices) ?: return reject(Reason.INVALID_REQUEST)
         val input = saturatingAdd(materialValue, recipe.coinCost)
         if (input == Long.MAX_VALUE) return reject(Reason.INVALID_REQUEST)
-        val usefulOutput = recipe.products.keys.associateWith { id ->
+        val usefulOutput = recipe.valuedProducts.keys.associateWith { id ->
             maxOf(recoverableOutputPrices[id] ?: 0L, personalUsePrices[id] ?: 0L)
         }
-        val output = ((value(recipe.products, usefulOutput, allowMissing = true)
+        val output = ((value(recipe.valuedProducts, usefulOutput, allowMissing = true)
             ?: return reject(Reason.INVALID_REQUEST)) * recipe.productProbability).toLong().coerceAtLeast(0L)
         val permittedLoss = if (training)
             (recipe.experience * AlchemyPolicy.MAX_TRAINING_GP_PER_XP).toLong().coerceAtLeast(0L) else 0L

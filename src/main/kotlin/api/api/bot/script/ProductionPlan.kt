@@ -24,7 +24,8 @@ class ProductionPlan(
     personalUsePrices: Map<Int, Long> = emptyMap()
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
-        materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap()) }
+        materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
+        zeroValueByproducts = native.zeroValueByproducts.toSet()) }
     val maximumUnitPrices = maximumUnitPrices.toMap()
     val personalUsePrices = personalUsePrices.toMap()
     var currentStageIndex = currentStageIndex
@@ -172,6 +173,7 @@ class ProductionPlan(
             data.add("materials", quantities(recipe.materials))
             data.add("products", quantities(recipe.products))
             data.add("tools", JsonArray().also { array -> recipe.tools.forEach { array.add(it) } })
+            data.add("zero_value_byproducts", JsonArray().also { array -> recipe.zeroValueByproducts.forEach { array.add(it) } })
         }
 
         private fun loadRecipe(data: JsonObject): ProductionRecipe {
@@ -182,10 +184,13 @@ class ProductionPlan(
             }
             val tools = data.getAsJsonArray("tools")
             require(tools.size() <= 8)
+            val byproducts = data.getAsJsonArray("zero_value_byproducts") ?: JsonArray()
+            require(byproducts.size() <= 8)
             return ProductionRecipe(data.get("key").asString, data.get("skill").asInt,
                 data.get("level").asInt, amounts("materials"), tools.map { it.asInt }.toSet(),
                 amounts("products"), data.get("experience").asDouble,
-                data.get("product_probability")?.asDouble ?: 1.0, data.get("coin_cost")?.asLong ?: 0L)
+                data.get("product_probability")?.asDouble ?: 1.0, data.get("coin_cost")?.asLong ?: 0L,
+                byproducts.map { it.asInt }.toSet())
         }
     }
 }
