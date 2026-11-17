@@ -165,6 +165,16 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
 
     override fun canSocialize(): Boolean = canTalkWhileWorking()
 
+    override fun profitGatheringReady(): Boolean {
+        val goal = profitGathering
+        if (goal != null && Ore.RUNE_ESSENCE in ores) {
+            val actual = if (bot.mining.level >= Ore.PURE_ESSENCE.level) Ore.PURE_ESSENCE.item
+                else Ore.RUNE_ESSENCE.item
+            if (actual != goal.itemId) return false
+        }
+        return super.profitGatheringReady()
+    }
+
     override fun canTalkWhileWorking(): Boolean = !forceBanking && !bot.inventory.isFull &&
         bot.combat.target == null && !bot.combat.inCombat() &&
         duration > Duration.ZERO && cluster != null && activeZone?.area?.contains(bot.position) == true
@@ -481,7 +491,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
 
     override suspend fun interactWithTarget(option: Int, target: GameObject): Boolean {
         val experience = bot.mining.experience
-        val clicked = handler.interactions.interact(option, target) { canStart(target) }
+        val clicked = handler.interactions.interact(option, target) { canStart(target) && profitGatheringReady() }
         // A click can reach the rock without starting mining. Confirm the native action, not an ore success deadline.
         if (clicked) {
             waitFor(3.seconds) {

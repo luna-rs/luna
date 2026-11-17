@@ -257,7 +257,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * Recovery time is excluded from the search timeout.
      */
     private fun targetActionReady(candidate: E? = null): Boolean {
-        if (!isTerminated() && !isPaused() && !forceBanking && isActionSafe()) return true
+        if (!isTerminated() && !isPaused() && !forceBanking && isActionSafe() && profitGatheringReady()) return true
         searchStartedAt = null
         searchTimes = 0
         if (candidate != null) lastOptions.add(candidate)
@@ -364,7 +364,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * Dispatches a selected interaction. Subclasses may retain live eligibility checks during navigation.
      */
     protected open suspend fun interactWithTarget(option: Int, target: E): Boolean =
-        handler.interactions.interact(option, target)
+        if (profitGathering == null) handler.interactions.interact(option, target)
+        else handler.interactions.interact(option, target) { profitGatheringReady() }
 
     /**
      * Runs script-specific logic during each zone execution cycle.

@@ -1,6 +1,12 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
+import api.bot.script.ProfitGatheringGoal
+import api.bot.script.VoidBotScript
+import api.bot.action.trading.ProfitGatheringDemand
+import game.skill.Skills
+import game.skill.mining.Pickaxe
+import game.skill.mining.Mining
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
@@ -65,7 +71,45 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         createScript(bot, level, zones, true)
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        createScript(bot, level, zones, false)
+        profitScript(bot, level, zones)
+
+    private fun profitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        val pickaxe = Pickaxe.entries.filter { it.level <= bot.mining.level &&
+            ProfitGatheringGoal.physical(bot, it.id) > 0L }.minByOrNull { it.speed }
+            ?: return VoidBotScript(bot)
+        val available = activities(bot, minOf(level, bot.mining.level), false).filter {
+            it.zones.any { zone -> zone.entryBlocker(bot) == null && bot.recentEscape?.avoids(zone) != true }
+        }.let { all -> all.filterNot { method -> method.zones.all { bot.recentlyFull(it) } }.ifEmpty { all } }
+        val quotes = linkedMapOf<Ore, ProfitGatheringDemand.Quote>()
+        for (ore in available.flatMap { it.tokens }.distinct()) {
+            if (ore == GEM_ROCK || ore.sizes.isNotEmpty()) continue
+            val output = if (ore == RUNE_ESSENCE && bot.mining.level >= PURE_ESSENCE.level) PURE_ESSENCE else ore
+            val gemChance = if (ore.rollsGems) (69.0 / 70.0) /
+                (if (Mining.hasChargedGlory(bot)) 86.0 else 256.0) else 0.0
+            val probability = if (ore == RUNE_ESSENCE) 1.0 else
+                Skills.successRate(ore.chance.first, ore.chance.second, bot.mining.level)
+                    .coerceIn(0.0, 1.0) * (1.0 - gemChance)
+            if (probability <= 0.0) continue
+            ProfitGatheringDemand.quote(bot, output.item, pickaxe.speed.toDouble() / probability)?.let {
+                quotes[ore] = it
+            }
+        }
+        val ore = ProfitGatheringDemand.select(bot, quotes) ?: return VoidBotScript(bot)
+        val locations = available.filter { ore in it.tokens }.flatMap { it.zones }.distinct().filter {
+            it.entryBlocker(bot) == null && bot.recentEscape?.avoids(it) != true
+        }
+        zones.clear()
+        zones.addAll(if (bot.personality.isDextrous) locations.sortedBy {
+            bot.position.computeLongestDistance(it.inside)
+        } else locations.shuffled())
+        val duration = getDuration(bot, skillId)
+        return MineBotScript(bot, setOf(ore), duration, zones, setOf(ore), profitMining = true).also {
+            it.profitGathering = ProfitGatheringGoal.create(bot, quotes.getValue(ore), duration,
+                if (ore == RUNE_ESSENCE) setOf(RUNE_ESSENCE.item, PURE_ESSENCE.item) else
+                    setOf(quotes.getValue(ore).itemId) +
+                        if (ore.rollsGems) setOf(1623, 1621, 1619, 1617) else emptySet())
+        }
+    }
 
     /**
      * Selects a complete mining activity with the existing personality rule.
@@ -118,7 +162,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
     internal fun activities(bot: Bot, level: Int, training: Boolean): List<BotSkillingActivity<Ore>> {
         val powerTraining = training && level >= IRON.level && MiningBehavior.styleOf(bot.personality) == Style.POWER_MINER
         val efficient = bot.personality.isDextrous || bot.personality.isIntelligent
-        val desired = (if (training) trainingOres(bot, level) else profitOres(bot, level)).let {
+        val desired = (if (training) trainingOres(bot, level) else rocks.values.flatten().toSet()).let {
             if (level >= GEM_ROCK.level && (!training || !efficient)) it + GEM_ROCK else it
         }.let {
             // Coal cushions scarcity for metal collectors; essence and gem-only methods remain separate.
@@ -186,34 +230,4 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         return setOf(IRON, COAL, GOLD, MITHRIL, ADAMANT, RUNE)
     }
 
-    /**
-     * Chooses profit ores using the existing level progression and intelligence rolls.
-     */
-    private fun profitOres(bot: Bot, level: Int): Set<Ore> {
-        if (level < GOLD.level) {
-            if (!rand(bot.personality.intelligence)) {
-                return setOf(RUNE_ESSENCE)
-            }
-            if (level >= COAL.level) {
-                return setOf(COAL)
-            }
-            if (level >= IRON.level) {
-                return setOf(IRON)
-            }
-            return setOf(COPPER, TIN)
-        }
-        if (level < MITHRIL.level) {
-            if (rand(bot.personality.intelligence)) {
-                return setOf(GOLD)
-            }
-            return setOf(COAL, RUNE_ESSENCE)
-        }
-        if (level < ADAMANT.level) {
-            if (rand(bot.personality.intelligence)) {
-                return setOf(COAL, MITHRIL)
-            }
-            return setOf(GOLD, SILVER, COAL)
-        }
-        return setOf(MITHRIL, ADAMANT, RUNE)
-    }
 }

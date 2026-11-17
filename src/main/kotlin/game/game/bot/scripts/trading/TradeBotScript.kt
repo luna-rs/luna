@@ -298,6 +298,41 @@ class TradeBotScript(bot: Bot,
     private var prepared = false
 
     /**
+     * Reads one still-funded personal purchase without changing the prepared trade or its payment.
+     */
+    internal fun profitGatheringPurchase(id: Int): BotTradeItem? {
+        if (purpose != BotTradePurpose.BUY || bot.preferences.isMerchant || !prepared || forceBanking ||
+            negotiating || pendingPartner != null || activeTrade != null || reactivePlayer != null ||
+            bot.scriptStack.current() !== this || !marketplace.contains(bot.position)) return null
+        var coins = minOf(carriedOffer[COINS] ?: 0,
+            bot.inventory.computeNonDynamicAmountForId(COINS)).toLong()
+        for (quote in expected) {
+            if (quote.price <= 0L) continue
+            val output = unnotedId(quote.item.id)
+            val wanted = BotTradeBuyingPolicy.demand(bot, output) ?: continue
+            val missing = (wanted.target().toLong() - ProfitGatheringDemand.owned(bot, output)).coerceAtLeast(0L)
+            val amount = minOf(quote.item.amount.toLong(), missing, coins / quote.price).toInt()
+            coins -= amount.toLong() * quote.price
+            if (output == id) return if (amount > 0)
+                BotTradeItem(Item(id, amount), quote.price, purpose, bot) else null
+        }
+        return null
+    }
+
+    /**
+     * Counts physical advertised competition without assuming an unprepared bank stack is for sale.
+     */
+    internal fun profitGatheringSupply(id: Int): BotTradeItem? {
+        if (buying || !prepared || forceBanking || bot.scriptStack.current() !== this ||
+            !marketplace.contains(bot.position)) return null
+        val quote = offering.firstOrNull { unnotedId(it.item.id) == id && it.price > 0L } ?: return null
+        val amount = carriedOffer.filterKeys { unnotedId(it) == id }.entries.sumOf { (heldId, amount) ->
+            minOf(amount, bot.inventory.computeNonDynamicAmountForId(heldId))
+        }
+        return if (amount > 0) BotTradeItem(Item(id, amount), quote.price, purpose, bot) else null
+    }
+
+    /**
      * Affinity supplies occasional local advertising hints; neutral bots retain their usual stock selection.
      */
     private val scanAdvertisedGoods = BotMarketPreference.shouldScan(bot)

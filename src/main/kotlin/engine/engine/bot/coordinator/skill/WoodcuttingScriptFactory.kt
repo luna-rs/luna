@@ -1,6 +1,14 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
+import api.bot.script.ProfitGatheringGoal
+import api.bot.script.VoidBotScript
+import api.bot.script.recentEscape
+import api.bot.action.trading.ProfitGatheringDemand
+import game.skill.Skills
+import game.skill.woodcutting.cutTree.Axe
+import io.luna.Luna
+import game.content.hardwoodGrove.HardwoodGrove
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CutTreeBotScript
@@ -52,10 +60,41 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
     )
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        createScript(bot, level, zones, true)
+        createScript(bot, level, zones)
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        createScript(bot, level, zones, false)
+        profitScript(bot, level, zones)
+
+    private fun profitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        val axes = Axe.entries.filter { it.level <= bot.woodcutting.level &&
+            ProfitGatheringGoal.physical(bot, it.id) > 0L }
+        if (axes.isEmpty()) return VoidBotScript(bot)
+        val options = linkedMapOf<Tree, ProfitGatheringDemand.Quote>()
+        for ((tree, locations) in routes) {
+            if (tree.level > minOf(level, bot.woodcutting.level) ||
+                tree in setOf(TEAK, MAHOGANY) &&
+                    ProfitGatheringGoal.physical(bot, HardwoodGrove.STICKS) < HardwoodGrove.FEE ||
+                locations.none { it.entryBlocker(bot) == null && bot.recentEscape?.avoids(it) != true }) continue
+            val chance = axes.maxOf { axe ->
+                val rates = axe.chances.getValue(tree)
+                Skills.successRate(rates.first, rates.second, minOf(99, bot.woodcutting.level)).coerceIn(0.0, 1.0)
+            }
+            if (chance <= 0.0) continue
+            val ticks = Luna.settings().skills().woodcuttingSpeed().toDouble() / chance
+            val preliminary = ProfitGatheringDemand.quote(bot, tree.logId, ticks) ?: continue
+            val cost = if (tree in setOf(TEAK, MAHOGANY)) HardwoodGrove.FEE *
+                ProfitGatheringDemand.inputPrice(bot, HardwoodGrove.STICKS) / minOf(28, preliminary.quantity) else 0.0
+            ProfitGatheringDemand.quote(bot, tree.logId, ticks, cost)?.let { options[tree] = it }
+        }
+        val tree = ProfitGatheringDemand.select(bot, options) ?: return VoidBotScript(bot)
+        zones.clear()
+        zones.addAll(routes.getValue(tree).filter { it.entryBlocker(bot) == null &&
+            bot.recentEscape?.avoids(it) != true })
+        val duration = getDuration(bot, skillId)
+        return CutTreeBotScript(bot, setOf(tree), duration, zones).also {
+            it.profitGathering = ProfitGatheringGoal.create(bot, options.getValue(tree), duration)
+        }
+    }
 
     /**
      * Gathers mapped logs usable by both skills and retains Firemaking as the continuation's purpose.
@@ -76,8 +115,8 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
     /**
      * Keeps the existing training/profit tree choices attached to their supported routes.
      */
-    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): CutTreeBotScript {
-        val trees = if (training) trainingTrees(bot, level) else profitTrees(bot, level)
+    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>): CutTreeBotScript {
+        val trees = trainingTrees(bot, level)
         val activities = ArrayList<BotSkillingActivity<Tree>>()
         for (tree in trees) {
             if (tree in setOf(TEAK, MAHOGANY) && !CutTreeBotScript.groveSuppliesOwned(bot)) continue
@@ -106,34 +145,4 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         return routes.keys
     }
 
-    /**
-     * Advances profit targets by level while retaining the casual alternatives.
-     */
-    private fun profitTrees(bot: Bot, level: Int): Set<Tree> {
-        if (level < WILLOW.level) {
-            return if (bot.personality.isDumb) setOf(NORMAL, ACHEY) else setOf(NORMAL)
-        }
-        val trees = linkedSetOf<Tree>()
-        if (level < YEW.level) {
-            trees.addAll(setOf(WILLOW, TEAK, MAPLE, MAHOGANY))
-            if (bot.personality.isDumb) {
-                trees.add(OAK)
-            }
-        } else if (level < MAGIC.level) {
-            trees.add(YEW)
-            if (bot.personality.isDumb) {
-                trees.addAll(setOf(WILLOW, MAPLE))
-            }
-        } else {
-            trees.add(MAGIC)
-            if (bot.personality.isDumb) {
-                trees.addAll(setOf(WILLOW, MAPLE, YEW))
-            }
-        }
-        if (bot.personality.isDumb) {
-            trees.add(ACHEY)
-            trees.add(HOLLOW)
-        }
-        return trees
-    }
 }

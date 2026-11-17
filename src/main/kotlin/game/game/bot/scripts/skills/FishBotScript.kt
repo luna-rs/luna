@@ -247,6 +247,7 @@ class FishBotScript(
         if (baitId !in bot.itemTracker) {
             bot.log("We do not have the required bait to use this tool.")
             stop()
+            if (profitGathering != null) return
             if (selectedTool == Tool.KARAMBWAN_VESSEL) {
                 queueBaitGathering()
                 return
@@ -345,7 +346,7 @@ class FishBotScript(
     override suspend fun onAssignFocus(newFocus: Npc): Boolean = canFishSpot(newFocus)
 
     override suspend fun interactWithTarget(option: Int, target: Npc): Boolean =
-        handler.interactions.interact(option, target) { canFishSpot(target) }
+        handler.interactions.interact(option, target) { canFishSpot(target) && profitGatheringReady() }
 
     override fun snapshot(): BotScriptData {
         val data = FishData()

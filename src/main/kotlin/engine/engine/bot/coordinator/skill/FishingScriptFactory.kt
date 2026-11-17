@@ -1,10 +1,16 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
+import api.bot.script.ProfitGatheringGoal
+import api.bot.script.VoidBotScript
+import api.bot.script.recentEscape
+import api.bot.action.trading.ProfitGatheringDemand
+import game.skill.Skills
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.FishBotScript
 import game.skill.fishing.catchFish.Tool
+import game.skill.fishing.catchFish.Fish
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.GiantMoleTrip
 import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
@@ -214,7 +220,47 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        return getTrainingScript(bot, level, zones)
+        val choices = linkedMapOf<Tool, ProfitGatheringDemand.Quote>()
+        val destinations = HashMap<Tool, List<SubZone>>()
+        for (tool in BOT_TOOLS) {
+            val baitId = if (tool == KARAMBWAN_VESSEL) Fish.KARAMBWANJI.id else tool.bait
+            val ownsTool = ProfitGatheringGoal.physical(bot, tool.id) > 0L ||
+                tool == KARAMBWAN_VESSEL && ProfitGatheringGoal.physical(bot, Tool.EMPTY_KARAMBWAN_VESSEL) > 0L
+            if (tool == BIG_NET || tool.level > minOf(level, bot.fishing.level) || !ownsTool ||
+                baitId?.let { ProfitGatheringGoal.physical(bot, it) < 1L } == true ||
+                tool == LAVA_EEL_FISHING_ROD && !bot.itemTracker.contains(tool.id) ||
+                tool == CAVE_EEL_FISHING_ROD && (!GiantMoleTrip.lightOwned(bot) ||
+                    !bot.swampCavesRoped && !bot.itemTracker.contains(954))) continue
+            val locations = getZones(bot, tool).filter { it.entryBlocker(bot) == null &&
+                bot.recentEscape?.avoids(it) != true }
+            if (locations.isEmpty()) continue
+            val probabilities = linkedMapOf<Int, Double>()
+            var remaining = 1.0
+            for (fish in tool.fish.filter { it.level <= bot.fishing.level }) {
+                val native = Skills.successRate(fish.chance.first, fish.chance.second, bot.fishing.level)
+                    .coerceIn(0.0, 1.0)
+                probabilities[fish.id] = native * remaining
+                remaining *= 1.0 - native
+            }
+            val bait = baitId?.let { ProfitGatheringDemand.inputPrice(bot, it) } ?: 0.0
+            val baitPerAttempt = bait * if (tool == KARAMBWAN_VESSEL) 1.0 else probabilities.values.sum()
+            val outputs = probabilities.mapNotNull { (id, probability) ->
+                if (probability <= 0.0) null else ProfitGatheringDemand.quote(bot, id,
+                    tool.delay.toDouble() / probability, baitPerAttempt / probability)
+            }
+            val best = outputs.maxByOrNull { it.score } ?: continue
+            choices[tool] = best.copy(score = outputs.sumOf { it.score })
+            destinations[tool] = locations
+        }
+        val tool = ProfitGatheringDemand.select(bot, choices) ?: return VoidBotScript(bot)
+        zones.clear()
+        zones.addAll(destinations.getValue(tool))
+        if (zones.isEmpty()) return VoidBotScript(bot)
+        val duration = getDuration(bot, skillId)
+        return FishBotScript(bot, tool, duration, zones).also {
+            it.profitGathering = ProfitGatheringGoal.create(bot, choices.getValue(tool), duration,
+                tool.fish.mapTo(linkedSetOf()) { fish -> fish.id })
+        }
     }
 
     /**

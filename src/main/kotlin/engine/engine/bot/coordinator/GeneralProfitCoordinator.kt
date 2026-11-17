@@ -3,6 +3,8 @@ package engine.bot.coordinator
 import api.bot.action.trading.BotMarketplace
 import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript
+import api.bot.script.ProfitGatheringGoal
+import api.bot.action.trading.ProfitGatheringDemand
 import api.bot.script.BotScript.ActionSafety
 import api.bot.zone.ProductionZones
 import api.bot.zone.SubZone
@@ -131,32 +133,45 @@ object GeneralProfitCoordinator : BotCoordinator {
 
     private fun rawFlax(bot: Bot): BotScript? {
         val current = owned(bot, FLAX)
-        if (current >= MAX_RAW_FLAX_STOCK || world.economy.getPrice(FLAX) <= 0) return null
-        val target = minOf(MAX_RAW_FLAX_STOCK.toLong(), current + 56).toInt()
-        return HarvestBotScript(bot, HarvestBotScript.Companion.Harvestable.FLAX, rand(20, 40).minutes,
-            ProductionZones.FLAX.toMutableList(), targetAmount = target, rawProfit = true)
+        if (current >= MAX_RAW_FLAX_STOCK) return null
+        val quote = ProfitGatheringDemand.quote(bot, FLAX, ticks = 4.0) ?: return null
+        val target = minOf(MAX_RAW_FLAX_STOCK.toLong(), current + quote.quantity).toInt()
+        val duration = rand(20, 40).minutes
+        return HarvestBotScript(bot, HarvestBotScript.Companion.Harvestable.FLAX, duration,
+            ProductionZones.FLAX.toMutableList(), targetAmount = target, rawProfit = true).also {
+            it.profitGathering = ProfitGatheringGoal.create(bot, quote, duration)
+        }
     }
 
     private fun collectEggs(bot: Bot): BotScript? {
         val current = owned(bot, EGG)
-        if (current >= MAX_EGG_STOCK || world.economy.getPrice(EGG) <= 0) return null
-        val target = minOf(MAX_EGG_STOCK.toLong(), current + 16).toInt()
-        return CollectGroundItemBotScript(bot, EGG, target, rand(15, 30).minutes,
-            mutableListOf(SubZone.LUMBRIDGE_CHICKEN_COOP), sellOnCompletion = true)
+        if (current >= MAX_EGG_STOCK) return null
+        val quote = ProfitGatheringDemand.quote(bot, EGG, ticks = 6.0) ?: return null
+        val target = minOf(MAX_EGG_STOCK.toLong(), current + minOf(16, quote.quantity)).toInt()
+        val duration = rand(15, 30).minutes
+        return CollectGroundItemBotScript(bot, EGG, target, duration,
+            mutableListOf(SubZone.LUMBRIDGE_CHICKEN_COOP), sellOnCompletion = true).also {
+            it.profitGathering = ProfitGatheringGoal.create(bot, quote, duration)
+        }
     }
 
     private fun collectGroundSecondaries(bot: Bot): BotScript? = groundSecondaries.shuffled().firstNotNullOfOrNull {
         secondary ->
         if (bot.combatLevel < secondary.minimumCombat ||
             secondary.minimumCombat > 3 && bot.preferences.isSkiller ||
-            secondary.zone.entryBlocker(bot) != null || world.economy.getPrice(secondary.itemId) <= 0) {
+            secondary.zone.entryBlocker(bot) != null) {
             return@firstNotNullOfOrNull null
         }
         val current = owned(bot, secondary.itemId)
         if (current >= secondary.stockCap) return@firstNotNullOfOrNull null
-        val target = minOf(secondary.stockCap.toLong(), current + secondary.batch).toInt()
-        CollectGroundItemBotScript(bot, secondary.itemId, target, rand(20, 40).minutes,
-            mutableListOf(secondary.zone), sellOnCompletion = true)
+        val quote = ProfitGatheringDemand.quote(bot, secondary.itemId, ticks = 6.0)
+            ?: return@firstNotNullOfOrNull null
+        val target = minOf(secondary.stockCap.toLong(), current + minOf(secondary.batch, quote.quantity)).toInt()
+        val duration = rand(20, 40).minutes
+        CollectGroundItemBotScript(bot, secondary.itemId, target, duration,
+            mutableListOf(secondary.zone), sellOnCompletion = true).also {
+            it.profitGathering = ProfitGatheringGoal.create(bot, quote, duration)
+        }
     }
 
     private fun fillOwnedContainers(bot: Bot): BotScript? {
@@ -165,19 +180,22 @@ object GeneralProfitCoordinator : BotCoordinator {
                 for (empty in source.emptyIds) {
                     if (empty == 229 || source == Source.SAND && empty == 1925) continue
                     val filled = source.resource.getFilled(empty) ?: continue
-                    val available = owned(bot, empty)
+                    val available = ProfitGatheringGoal.physical(bot, empty)
                     val current = owned(bot, filled)
                     if (available < 1 || current >= Int.MAX_VALUE) continue
-                    val outputPrice = world.economy.getPrice(filled)
-                    if (outputPrice <= 0 || outputPrice <= world.economy.getPrice(empty)) continue
-                    val target = minOf(Int.MAX_VALUE.toLong(), current + minOf(available, 56)).toInt()
-                    add(FillWaterBotScript(bot, empty, target, rand(20, 40).minutes, source))
+                    val quote = ProfitGatheringDemand.quote(bot, filled, ticks = 4.0,
+                        unitCost = ProfitGatheringDemand.inputPrice(bot, empty)) ?: continue
+                    val target = minOf(Int.MAX_VALUE.toLong(), current + minOf(available, quote.quantity.toLong())).toInt()
+                    val duration = rand(20, 40).minutes
+                    add(Triple(FillWaterBotScript(bot, empty, target, duration, source), quote, duration))
                 }
             }
         }
-        return opportunities.randomOrNull()
+        val selected = opportunities.randomOrNull() ?: return null
+        return selected.first.also {
+            it.profitGathering = ProfitGatheringGoal.create(bot, selected.second, selected.third)
+        }
     }
 
-    private fun owned(bot: Bot, id: Int): Long = bot.bank.computeAmountForId(id).toLong() +
-        bot.inventory.computeAmountForId(id)
+    private fun owned(bot: Bot, id: Int): Long = ProfitGatheringGoal.physical(bot, id)
 }

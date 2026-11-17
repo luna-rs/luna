@@ -53,6 +53,25 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
         }
 
     /**
+     * Explicit elective gathering purpose, absent from training and personal input acquisition.
+     */
+    var profitGathering: ProfitGatheringGoal? = null
+
+    /**
+     * Allows an existing native action to settle before a failed economic review ends the session.
+     */
+    open fun profitGatheringReady(): Boolean = profitGathering?.canContinue(bot) != false
+
+    private fun releaseProfitGathering() {
+        val goal = profitGathering ?: return
+        if (bot.scriptStack.current() === this) {
+            goal.observe(bot)
+            bot.actions.interruptWeak()
+        }
+        goal.release()
+    }
+
+    /**
      * Ends training when its selected skill or combat build no longer needs experience.
      * The shared policy preserves competitive skillers' maximum-experience goals beyond level 99.
      */
@@ -248,11 +267,15 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
              */
             val job = GameCoroutineScope.launch(start = CoroutineStart.LAZY) {
                 try {
-                    if (bot.state != EntityState.ACTIVE || !awaitActionSafety() || init(wasPaused)) {
+                    if (!profitGatheringReady() || bot.state != EntityState.ACTIVE || !awaitActionSafety() || init(wasPaused)) {
                         return@launch
                     }
                     while (bot.state == EntityState.ACTIVE && isActive) {
                         yield()
+                            if (!profitGatheringReady()) {
+                                if (bot.scriptStack.current() === this@BotScript) bot.actions.interruptWeak()
+                                break
+                            }
                         if (bot.state != EntityState.ACTIVE || !awaitActionSafety()) break
                         if (actionSafety == ActionSafety.NON_COMBAT && handler.potions.drinkSupport(potionSkillId)) {
                             bot.naturalMicroDelay()
@@ -279,10 +302,12 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     try {
                         finish()
                     } finally {
+                        releaseProfitGathering()
                         if (this@BotScript is InventoryBotScript) finishPlannedProduction()
                     }
                     if (normalExit) {
-                        completed()
+                        val gathering = profitGathering
+                        if (gathering != null) gathering.completed(bot) else completed()
                     }
                 }
             }
@@ -306,6 +331,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
      */
     fun pause(): Boolean {
         if (isRunning()) {
+            releaseProfitGathering()
             bot.log("Pausing script {${javaClass.name}}.")
             paused()
             progress?.cancel()
@@ -325,6 +351,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
      * @return `true` if the script wasn't already terminated and termination was requested, otherwise `false`.
      */
     fun stop(): Boolean {
+        releaseProfitGathering()
         if (isRunning() || isPaused()) {
             bot.log("Terminating script {${javaClass.name}}.")
             terminated = true

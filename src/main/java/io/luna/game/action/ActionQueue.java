@@ -4,6 +4,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.bot.Bot;
+import api.bot.script.BotScript;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -287,6 +289,13 @@ public final class ActionQueue {
             if (action.isFinished()) {
                 continue;
             }
+            if (action.actionType == ActionType.WEAK && mob instanceof Bot bot) {
+                BotScript owner = bot.getScriptStack().current();
+                if (owner != null && owner.getProfitGathering() != null && !owner.profitGatheringReady()) {
+                    action.interrupt();
+                    continue;
+                }
+            }
             if (afterMovement && action.processed) {
                 if (skipForInterface) {
                     continue;
@@ -304,6 +313,12 @@ public final class ActionQueue {
                 action.onProcess();
                 if (!skipForInterface && !action.isFinished() && action.isComplete()) {
                     action.complete();
+                }
+            }
+            if (action.actionType == ActionType.WEAK && mob instanceof Bot bot) {
+                BotScript owner = bot.getScriptStack().current();
+                if (owner != null && owner.getProfitGathering() != null) {
+                    owner.getProfitGathering().observe(bot);
                 }
             }
         }

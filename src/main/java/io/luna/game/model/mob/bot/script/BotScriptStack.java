@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.script;
 
 import api.bot.script.BotScript;
+import api.bot.script.ProfitGatheringGoal;
 import api.bot.script.BotScriptData;
 import api.bot.script.VoidBotScript;
 import com.google.gson.JsonElement;
@@ -128,6 +129,10 @@ public final class BotScriptStack {
                 BotScript restored = scriptManager.loadScript(scriptClass, bot, dataClass);
                 if (restored != null) {
                     restored.setTrainingGoal(snapshot.getTrainingGoal());
+                    JsonObject savedProfit = scriptData.getAsJsonObject().getAsJsonObject("profit_gathering");
+                    if (savedProfit != null) {
+                        restored.setProfitGathering(ProfitGatheringGoal.load(savedProfit));
+                    }
                 }
                 loadedScripts[snapshot.getIndex()] = restored;
             } catch (Exception e) {
@@ -168,6 +173,10 @@ public final class BotScriptStack {
             }
             JsonObject data = new JsonObject();
             snapshot.save(data);
+            if (script.getProfitGathering() != null) {
+                script.getProfitGathering().observe(bot);
+                data.add("profit_gathering", script.getProfitGathering().save());
+            }
             snapshots.add(new BotScriptSnapshot(index++, script.getClass().getName(),
                     snapshot.getClass().getName(), data, script.getTrainingGoal()));
         }
