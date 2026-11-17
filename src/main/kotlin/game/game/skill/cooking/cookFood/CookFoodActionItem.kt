@@ -77,6 +77,7 @@ class CookFoodActionItem(plr: Player,
      */
     private fun computeFoodBurnt(): Boolean {
         val level = mob.cooking.level
+        if (food == Food.KARAMBWAN) return !rand(KarambwanCooking.successRate(level, usingFire))
         var burnLevel = food.burnStopLvl
         // Cooking gauntlets decreases burn chance.
         if (mob.equipment.contains(775)) {

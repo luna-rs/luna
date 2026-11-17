@@ -19,6 +19,7 @@ val cookingGuide = skillGuide("Cooking") {
         row(20, 351, "Pike")
         row(25, 329, "Salmon")
         row(30, 361, "Tuna")
+        row(30, 3144, "Cooked karambwan")
         row(38, 379, "Lobster")
         row(43, 365, "Bass")
         row(45, 373, "Swordfish")

@@ -231,7 +231,14 @@ enum class Food(val raw: Int,
                lvl = 20,
                chance = 128 to 355,
                burnStopLvl = 54,
-               exp = 52.0);
+               exp = 52.0),
+    KARAMBWAN(raw = 3142,
+              cooked = 3144,
+              burnt = 3148,
+              lvl = 30,
+              chance = 90 to 215,
+              burnStopLvl = 100,
+              exp = 190.0);
 
     companion object {
 

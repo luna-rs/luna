@@ -1,10 +1,10 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDecisionDelay
-import api.bot.Suspendable.naturalDelay
+import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
+import api.bot.script.productionBatch
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
@@ -17,13 +17,14 @@ import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.cooking.cookFood.Cooking.COOKING_OBJECTS
 import game.skill.cooking.cookFood.CookingInterface
+import game.skill.cooking.cookFood.CookFoodActionItem
 import game.skill.cooking.cookFood.Food
-import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.item.Item
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Bot script for cooking raw food.
@@ -39,6 +40,10 @@ import kotlin.time.Duration
  * This script supports normal bank-based cooking zones as well as Rogues' Den, which uses a custom cached banker NPC
  * instead of the default bank lookup. The NPC is resolved again for each banking request; if it is absent,
  * the inherited bank lookup and travel fallback can proceed.
+ *
+ * Verified unnoted withdrawals and the shared interaction retry budget bound failed facilities and menus.
+ * Real raw-food consumption confirms progress, including burns. Current level and the selected recipe/source
+ * are checked before the ordinary cook-all button. Finishing interrupts only this recipe's cooking action.
  *
  * @author lare96
  */
@@ -56,6 +61,8 @@ class CookFoodBotScript(
     zones: MutableList<SubZone>
 ) : InventoryBotScript(bot, duration, zones) {
     override val ambientProductionTopic = ConversationSpeech.COOKING
+    override val verifiedProductionWithdrawals = true
+    override val trainingSkill = SKILL_COOKING
 
 
     companion object {
@@ -116,7 +123,10 @@ class CookFoodBotScript(
         return BotGearSelector.find(bot, purpose).replace(HANDS, 775).buildLocator()
     }
 
-    override fun bankWithdraw(): List<Item> = withdraw()
+    override fun bankWithdraw(): List<Item> {
+        val selected = withdraw().firstOrNull() ?: return emptyList()
+        return bot.productionBatch(listOf(Item(selected.id)))
+    }
 
     override fun withdraw(): List<Item> {
         cooking = null
@@ -146,17 +156,14 @@ class CookFoodBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         val zone = activeZone!!
-
-        if (cooking == null) {
+        val food = cooking
+        if (food == null) {
             bot.log("No food for cooking configured.")
             stop()
             return true
         }
 
-        if (!bot.inventory.contains(cooking!!.raw) && bot.actions.size(ActionType.WEAK) == 0) {
-            forceBanking = true
-            return true
-        }
+        if (!productionReady(bot.inventory.contains(food.raw), bot.cooking.level >= food.lvl)) return true
 
         // A lit fire burns out and leaves the world, so look again once the cached object is gone.
         if (cookingObject?.state != EntityState.ACTIVE) {
@@ -169,35 +176,23 @@ class CookFoodBotScript(
         bot.log("Attempting to interact with cooking object.")
 
         val cookObj = cookingObject
-        if (cookObj == null) {
-            bot.log("No cooking object found in zone area.")
-            stop()
-            return true
+        fun permitted() = !isPaused() && !isTerminated() && isActionSafe() &&
+            cookObj?.state == EntityState.ACTIVE && bot.inventory.contains(food.raw) && bot.cooking.level >= food.lvl
+        attemptProduction(food.raw, available = cookObj != null) {
+            if (cookObj == null || !handler.inventory.useItem(food.raw).onObject(cookObj, ::permitted)) {
+                return@attemptProduction false
+            }
+            if (!waitFor(3.seconds) { CookingInterface::class in bot.overlays }) return@attemptProduction false
+            val menu = bot.overlays[CookingInterface::class]
+            if (menu?.food != food || menu.cookObj != cookObj || !permitted()) return@attemptProduction false
+            output.clickButton(13717)
         }
-
-        if (!handler.inventory.useItem(cooking!!.raw).onObject(cookObj)) {
-            bot.log("Could not interact with cooking object. Trying again next cycle.")
-            cookingObject = null
-            return true
-        }
-
-        bot.naturalDelay()
-
-        if (CookingInterface::class !in bot.overlays) {
-            bot.log("Cooking interface was not opened. Trying again next cycle.")
-            cookingObject = null
-            return true
-        }
-
-        output.clickButton(13717)
-        bot.naturalDecisionDelay()
+        if (failures > 0) cookingObject = null
         return true
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {
-        if (!forceBanking && cooking?.let { it.raw in bot.inventory } == true) {
-            return false
-        }
+        if (!requestProductionBank(cooking?.let { it.raw in bot.inventory } == true)) return false
         if (activeZone == SubZone.ROGUES_DEN) {
             cachedBank = world.locator.findViewableNpcs(SubZone.ROGUES_DEN.inside) { it.id == 2271 }.firstOrNull()
         }
@@ -207,6 +202,10 @@ class CookFoodBotScript(
     override fun snapshot(): CookFoodData = CookFoodData().also {
         saveInventoryState(it)
         it.food = selectedFood
+    }
+
+    override suspend fun finish() {
+        bot.actions.first(CookFoodActionItem::class.java)?.takeIf { it.food == cooking }?.interrupt()
     }
 
     override suspend fun onNewActiveZone(lastZone: SubZone?) {
