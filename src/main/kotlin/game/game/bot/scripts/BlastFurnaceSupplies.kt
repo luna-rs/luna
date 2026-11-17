@@ -43,8 +43,9 @@ object BlastFurnaceSupplies {
             }) return null
         val toolIds = tools.mapTo(linkedSetOf()) { it.id }
         val fee = if (BlastFurnace.hasAccess(bot)) 0 else BlastFurnace.FEE
+        val reserve = if (bot.smithing.staticLevel >= 60) 0 else BlastFurnace.FEE
         val slots = bot.inventory.capacity() - toolIds.size - if (fee > 0) 1 else 0
-        val budget = (owned(bot, 995) - fee).coerceIn(0L, MAXIMUM_COINS)
+        val budget = (owned(bot, 995) - reserve).coerceIn(0L, MAXIMUM_COINS)
         if (slots < 1 || owned(bot, 995) < fee) return null
         val ids = ingredients.mapTo(linkedSetOf()) { it.id } + toolIds
         val strategy = BotTradePrice.computePriceStrategy(bot)

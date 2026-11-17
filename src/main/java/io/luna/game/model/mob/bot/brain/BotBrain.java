@@ -10,6 +10,7 @@ import game.bot.scripts.CannonBotSupport;
 import game.bot.scripts.RecoverCannonBotScript;
 import game.bot.scripts.BankCleanupBotScript;
 import game.bot.scripts.BankRecoveryWaitBotScript;
+import game.bot.scripts.BlastFurnaceBotScript;
 import game.bot.scripts.skills.FarmingReturnBotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
@@ -82,6 +83,10 @@ public class BotBrain {
         FarmingReturnBotScript farmingReturn = FarmingReturnBotScript.poll(bot);
         if (farmingReturn != null) {
             return owner -> owner.getScriptStack().pushTail(farmingReturn);
+        }
+        BotScript furnaceRepair = BlastFurnaceBotScript.repairCandidate(bot);
+        if (furnaceRepair != null) {
+            return owner -> owner.getScriptStack().push(furnaceRepair);
         }
         BotScript runeCrafter = RuneRunningCoordinator.INSTANCE.introductoryCrafterScript(bot);
         if (runeCrafter != null) {

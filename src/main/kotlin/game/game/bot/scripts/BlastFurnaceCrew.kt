@@ -16,7 +16,7 @@ import java.util.WeakHashMap
  */
 object BlastFurnaceCrew {
     private const val RESERVATION_MILLIS = 10_000L
-    private const val TRAVEL_MILLIS = 600_000L
+    private const val TRAVEL_MILLIS = 20 * 60_000L
     private const val ACTIVE_MILLIS = 120_000L
     private val crews = WeakHashMap<World, MutableMap<Bot, Assignment>>()
 
@@ -42,7 +42,7 @@ object BlastFurnaceCrew {
      *
      * @author lare96
      */
-    private class Assignment(val script: BlastFurnaceBotScript, val role: Role, val deadline: Long,
+    private class Assignment(val script: BlastFurnaceBotScript, val role: Role, var deadline: Long,
                              val reservedUntil: Long, var leaseUntil: Long)
 
     private fun crew(bot: Bot, now: Long = System.currentTimeMillis()): MutableMap<Bot, Assignment> {
@@ -75,8 +75,16 @@ object BlastFurnaceCrew {
             else -> null
         }
         if (operator != null && operator !== bot) return true
-        return members(bot).any { it.bot !== bot && it.role == role && (!arrivedOnly || it.arrived) }
+        return members(bot).any { it.bot !== bot && it.role == role && (!arrivedOnly ||
+            it.arrived && BlastFurnace.hasAccess(it.bot) && (role != Role.REPAIR ||
+                it.bot.crafting.level >= 30 && it.bot.inventory.contains(BlastFurnace.HAMMER))) }
     }
+
+    /**
+     * Keeps an active furnace staffed before ordinary activity selection leaves a repair vacancy unattended.
+     */
+    fun needsRepairer(bot: Bot): Boolean = !occupied(bot, Role.REPAIR) &&
+        (members(bot).isNotEmpty() || BlastFurnace.damage(bot) != null)
 
     /**
      * Registers every smelter and reserves each exclusive worker station before selection can suspend.
@@ -88,6 +96,7 @@ object BlastFurnaceCrew {
         val existing = crew[bot]
         if (existing != null && existing.script !== script) return false
         if (existing != null && existing.script === script && existing.role == role) {
+            existing.deadline = deadline
             refresh(bot, script)
             return true
         }
@@ -100,9 +109,9 @@ object BlastFurnaceCrew {
     /**
      * Renews an active script's bounded lease; preparations and bank trips retain a travel allowance.
      */
-    fun refresh(bot: Bot, script: BlastFurnaceBotScript) {
+    fun refresh(bot: Bot, script: BlastFurnaceBotScript, travelling: Boolean = false) {
         val assignment = crew(bot)[bot]?.takeIf { it.script === script } ?: return
-        val allowance = if (BlastFurnace.present(bot)) ACTIVE_MILLIS else TRAVEL_MILLIS
+        val allowance = if (!travelling && BlastFurnace.present(bot)) ACTIVE_MILLIS else TRAVEL_MILLIS
         assignment.leaseUntil = minOf(assignment.deadline, System.currentTimeMillis() + allowance)
     }
 

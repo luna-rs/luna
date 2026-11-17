@@ -3,6 +3,9 @@ package game.bot.scripts
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.BotSupplySources
+import api.bot.isRealBot
+import api.bot.zone.SubZone
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.script.ProductionPlan
@@ -13,6 +16,7 @@ import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.SkillingScriptFactory
 import engine.controllers.Controllers.inWilderness
 import game.content.blastFurnace.BlastFurnace
 import game.content.blastFurnace.BlastFurnaceInterface
@@ -44,11 +48,18 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
                             private var prepared: Boolean = false,
-                            private val deadline: Long = System.currentTimeMillis() + 1_200_000,
+                            private var deadline: Long = System.currentTimeMillis() + 1_200_000,
                             private var failures: Int = 0,
                             val role: Role = Role.SMELTER,
-                            private var supplyPlan: ProductionPlan? = null) : BotScript(bot) {
+                            private var supplyPlan: ProductionPlan? = null,
+                            private var workDuration: Long = 0L,
+                            private var toolTripDeadline: Long = 0L,
+                            private var toolPurchaseDeadline: Long = 0L,
+                            private var shopPurchaseDeadline: Long = 0L) : BotScript(bot) {
     companion object {
+        private const val TRAVEL_MILLIS = 20 * 60_000L
+        private const val PURCHASE_MILLIS = 120_000L
+        private const val PREPARATION_MILLIS = 30 * 60_000L
         private var Bot.nextAttempt by Attr.long()
 
         private fun defer(bot: Bot) { bot.nextAttempt = System.currentTimeMillis() + 15 * 60_000L }
@@ -67,21 +78,35 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness() &&
             System.currentTimeMillis() >= bot.nextAttempt
 
-        private fun tools(bot: Bot, role: Role): List<Item> = when (role) {
-            Role.SMELTER -> listOf(Item(if (owned(bot, BlastFurnace.WATER) > 0) BlastFurnace.WATER else BlastFurnace.BUCKET))
-            Role.STOVE -> listOf(Item(if (owned(bot, BlastFurnace.COKE_SPADE) > 0) BlastFurnace.COKE_SPADE else BlastFurnace.SPADE))
-            Role.REPAIR -> listOf(Item(BlastFurnace.HAMMER))
-            else -> emptyList()
+        private fun tools(bot: Bot, role: Role): List<Item> {
+            val required = when (role) {
+                Role.SMELTER -> listOf(Item(if (owned(bot, BlastFurnace.WATER) > 0) BlastFurnace.WATER else BlastFurnace.BUCKET))
+                Role.STOVE -> listOf(Item(if (owned(bot, BlastFurnace.COKE_SPADE) > 0) BlastFurnace.COKE_SPADE else BlastFurnace.SPADE))
+                Role.REPAIR -> listOf(Item(BlastFurnace.HAMMER))
+                else -> emptyList()
+            }
+            return if (role != Role.REPAIR && canWork(bot, Role.REPAIR) && owned(bot, BlastFurnace.HAMMER) > 0L)
+                required + Item(BlastFurnace.HAMMER) else required
+        }
+
+        /**
+         * Fills an active furnace's repair vacancy at a normal idle decision boundary.
+         */
+        @JvmStatic
+        fun repairCandidate(bot: Bot): BlastFurnaceBotScript? {
+            if (!bot.isRealBot() || !available(bot) || !canWork(bot, Role.REPAIR) ||
+                !BlastFurnaceCrew.needsRepairer(bot)) return null
+            return select(bot, SKILL_CRAFTING)
         }
 
         /**
          * Reserves missing crew jobs before travel, or admits an ore owner for a normal Smithing session.
          * A first smelter may arrive before its crew so an empty furnace can assemble without a circular gate.
          */
-        fun select(bot: Bot, skillId: Int? = null, durationMillis: Long = 1_200_000): BlastFurnaceBotScript? {
+        fun select(bot: Bot, skillId: Int? = null, durationMillis: Long = 0L): BlastFurnaceBotScript? {
             if (!available(bot)) return null
             val roles = Role.entries.filter { skillId == null || it.skillId == skillId }
-                .sortedBy { if (it == Role.SMELTER) 1 else 0 }
+                .sortedBy { when (it) { Role.REPAIR -> 0; Role.SMELTER -> 2; else -> 1 } }
             for (role in roles) {
                 if (!canWork(bot, role) || role != Role.SMELTER && BlastFurnaceCrew.occupied(bot, role)) continue
                 if (!BlastFurnace.hasAccess(bot) && owned(bot, 995) < BlastFurnace.FEE) continue
@@ -92,9 +117,11 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
                         ?: choices.firstOrNull { eligible(bot, it) } ?: continue
                 } else BarType.STEEL
                 if (tools(bot, role).any { owned(bot, it.id) == 0L } &&
-                    owned(bot, 995) <= if (BlastFurnace.hasAccess(bot)) 0 else BlastFurnace.FEE) continue
+                    owned(bot, 995) <= if (bot.smithing.staticLevel >= 60) 0 else BlastFurnace.FEE) continue
                 val script = BlastFurnaceBotScript(bot, bar,
-                    deadline = System.currentTimeMillis() + durationMillis, role = role)
+                    deadline = System.currentTimeMillis() + PREPARATION_MILLIS, role = role,
+                    workDuration = if (durationMillis > 0L) durationMillis
+                        else SkillingScriptFactory.getDuration(bot, role.skillId).inWholeMilliseconds)
                 if (BlastFurnaceCrew.claim(bot, script, role, script.deadline)) {
                     bot.log("Blast Furnace: reserved $role.")
                     return script
@@ -157,6 +184,10 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         var failures = 0
         var role = Role.SMELTER
         var supplyPlan: ProductionPlan? = null
+        var workDuration = 0L
+        var toolTripDeadline = 0L
+        var toolPurchaseDeadline = 0L
+        var shopPurchaseDeadline = 0L
         override fun load(data: JsonObject) {
             bar = BarType.valueOf(data.get("bar").asString)
             prepared = data.get("prepared").asBoolean
@@ -164,6 +195,10 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             failures = data.get("failures")?.asInt ?: 0
             role = data.get("role")?.asString?.let { runCatching { Role.valueOf(it) }.getOrNull() } ?: Role.SMELTER
             supplyPlan = data.getAsJsonObject("supplies")?.let(ProductionPlan::load)
+            workDuration = data.get("work_duration")?.asLong ?: 0L
+            toolTripDeadline = data.get("tool_trip_deadline")?.asLong ?: 0L
+            toolPurchaseDeadline = data.get("tool_purchase_deadline")?.asLong ?: 0L
+            shopPurchaseDeadline = data.get("shop_purchase_deadline")?.asLong ?: 0L
         }
         override fun save(data: JsonObject) {
             data.addProperty("bar", bar.name)
@@ -172,10 +207,15 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             data.addProperty("failures", failures)
             data.addProperty("role", role.name)
             supplyPlan?.let { data.add("supplies", it.save()) }
+            data.addProperty("work_duration", workDuration)
+            data.addProperty("tool_trip_deadline", toolTripDeadline)
+            data.addProperty("tool_purchase_deadline", toolPurchaseDeadline)
+            data.addProperty("shop_purchase_deadline", shopPurchaseDeadline)
         }
     }
 
-    constructor(bot: Bot, data: FurnaceData) : this(bot, data.bar, data.prepared, data.deadline, data.failures, data.role, data.supplyPlan)
+    constructor(bot: Bot, data: FurnaceData) : this(bot, data.bar, data.prepared, data.deadline, data.failures,
+        data.role, data.supplyPlan, data.workDuration, data.toolTripDeadline, data.toolPurchaseDeadline, data.shopPurchaseDeadline)
     private var lastProgress = System.currentTimeMillis()
     private var previous: List<Any?>? = null
     override val allowsCombatResponse = false
@@ -189,13 +229,56 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     private suspend fun prepareTools(): Boolean {
         val missing = tools(bot, role).filter { owned(bot, it.id) == 0L }.associate { it.id to 1 }
         if (missing.isNotEmpty()) {
-            val reserve = if (BlastFurnace.hasAccess(bot)) 0 else BlastFurnace.FEE
+            val reserve = if (bot.smithing.staticLevel >= 60) 0 else BlastFurnace.FEE
             val budget = (owned(bot, 995) - reserve).coerceIn(0L, 1_000L).toInt()
-            withTimeoutOrNull(minOf(120_000L, (deadline - System.currentTimeMillis()).coerceAtLeast(1L))) {
-                handler.shop.obtainWantedItems(missing, budget, missing.keys.associateWith { 1_000L })
+            val prices = missing.keys.associateWith { 1_000L }
+            if (toolTripDeadline == 0L) toolTripDeadline = minOf(deadline, System.currentTimeMillis() + TRAVEL_MILLIS)
+            if (toolPurchaseDeadline == 0L) {
+                if (!stageShop(missing, budget, prices, toolTripDeadline)) {
+                    bot.log("Blast Furnace: $role tool preparation could not reach a funded shop source.")
+                    return false
+                }
+                toolPurchaseDeadline = minOf(deadline, System.currentTimeMillis() + PURCHASE_MILLIS)
+            }
+            val remaining = toolPurchaseDeadline - System.currentTimeMillis()
+            if (remaining <= 0L) return false
+            withTimeoutOrNull(remaining) {
+                handler.shop.obtainWantedItems(missing, spendingBudget(budget.toLong()), prices)
             }
         }
-        return tools(bot, role).all { owned(bot, it.id) > 0L }
+        val ready = tools(bot, role).all { owned(bot, it.id) > 0L }
+        if (ready) { toolTripDeadline = 0L; toolPurchaseDeadline = 0L }
+        else bot.log("Blast Furnace: $role tool purchase did not complete.")
+        return ready
+    }
+
+    private fun hasShopSupply(targets: Map<Int, Int>, budget: Int, prices: Map<Int, Long>): Boolean =
+        budget > 0 && targets.any { (id, amount) -> owned(bot, id) < amount &&
+            BotSupplySources.quote(bot, id, 1)?.let {
+                it.totalCoins <= budget && it.maximumUnitPrice <= (prices[id] ?: 0L)
+            } == true }
+
+    private fun spendingBudget(maximum: Long): Int = minOf(maximum,
+        (owned(bot, 995) - if (bot.smithing.staticLevel >= 60) 0 else BlastFurnace.FEE).coerceAtLeast(0L))
+        .coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+
+    /**
+     * Travels and stages purchase funds before the short shop-interaction clock starts.
+     * The caller's saved absolute travel deadline prevents pauses or restarts extending the trip.
+     */
+    private suspend fun stageShop(targets: Map<Int, Int>, budget: Int, prices: Map<Int, Long>,
+                                  travelDeadline: Long): Boolean {
+        if (!hasShopSupply(targets, budget, prices)) return false
+        val remaining = minOf(deadline, travelDeadline) - System.currentTimeMillis()
+        if (remaining <= 0L) return false
+        BlastFurnaceCrew.refresh(bot, this, travelling = true)
+        prepared = false
+        return withTimeoutOrNull(remaining) {
+            if (!isActionSafe() || !handler.webWalkTo(SubZone.HOME, radius = 2, attempts = 2,
+                    bank = BankAccess.NONE, fallback = false)) return@withTimeoutOrNull false
+            val funds = spendingBudget(budget.toLong())
+            funds > 0 && bank(listOf(Item(995, funds)))
+        } == true
     }
 
     /**
@@ -214,28 +297,41 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         val purchase = supplyPlan
         if (purchase == null && plan() != null) return true
         val acquisition = purchase ?: BlastFurnaceSupplies.create(bot, selectedBar, tools(bot, role),
-            minOf(deadline, System.currentTimeMillis() + 120_000L))?.also { supplyPlan = it } ?: return false
+            minOf(deadline, System.currentTimeMillis() + TRAVEL_MILLIS + 2 * PURCHASE_MILLIS))
+            ?.also { supplyPlan = it } ?: return false
+        if (acquisition.supplyDeadline == 0L)
+            acquisition.supplyDeadline = minOf(acquisition.deadline, System.currentTimeMillis() + PURCHASE_MILLIS)
         BotTradeIntentions.recordProductionPlan(bot, acquisition, this)
         fun supplied() = plan() != null
-        if (!supplied() && System.currentTimeMillis() < acquisition.deadline) {
+        if (!supplied() && System.currentTimeMillis() < acquisition.supplyDeadline) {
             for ((id, target) in acquisition.targets()) {
                 if (owned(bot, id) >= target || !acquisition.attemptedMarketItems.add(id)) continue
-                val remaining = acquisition.deadline - System.currentTimeMillis()
+                val remaining = acquisition.supplyDeadline - System.currentTimeMillis()
                 if (remaining <= 0L) break
-                val trade = TradeBotScript.buySpecific(bot, id, target, acquisition.deadline) ?: continue
+                val trade = TradeBotScript.buySpecific(bot, id, target, acquisition.supplyDeadline) ?: continue
                 trade.duration = minOf(30_000L, remaining).milliseconds
                 prepared = false
                 bot.scriptStack.pushHead(trade)
                 return false
             }
-            if (!acquisition.shopAttempted && !supplied() && System.currentTimeMillis() < acquisition.deadline) {
-                acquisition.shopAttempted = true
-                withTimeoutOrNull((acquisition.deadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
-                    handler.shop.obtainWantedItems(acquisition.targets(), acquisition.remainingCoins
-                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), acquisition.maximumUnitPrices)
+        }
+        if (!acquisition.shopAttempted && !supplied() && System.currentTimeMillis() < acquisition.deadline &&
+            hasShopSupply(acquisition.targets(), (acquisition.maximumCoins - acquisition.spentCoins)
+                .coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
+                acquisition.maximumUnitPrices)) {
+            val budget = acquisition.remainingCoins.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            if (stageShop(acquisition.targets(), budget, acquisition.maximumUnitPrices, acquisition.deadline)) {
+                if (shopPurchaseDeadline == 0L)
+                    shopPurchaseDeadline = minOf(acquisition.deadline, System.currentTimeMillis() + PURCHASE_MILLIS)
+                val remaining = shopPurchaseDeadline - System.currentTimeMillis()
+                if (remaining > 0L) withTimeoutOrNull(remaining) {
+                    handler.shop.obtainWantedItems(acquisition.targets(), spendingBudget(acquisition.remainingCoins),
+                        acquisition.maximumUnitPrices)
                 }
             }
+            acquisition.shopAttempted = true
         }
+        if (!supplied()) bot.log("Blast Furnace: $role supply acquisition ended without a complete recipe.")
         return retireSupplies() && supplied()
     }
 
@@ -243,6 +339,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         val acquisition = supplyPlan ?: return true
         BotTradeIntentions.clearProductionPlan(bot, acquisition, this)
         supplyPlan = null
+        shopPurchaseDeadline = 0L
         return true
     }
 
@@ -254,17 +351,24 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         if (System.currentTimeMillis() >= deadline || failures >= 5 || !available(bot) || !canWork(bot, role) ||
             !BlastFurnaceCrew.claim(bot, this, role, deadline)) return true
         BlastFurnaceCrew.refresh(bot, this)
-        val finished = withTimeoutOrNull(600_000) {
+        val finished = withTimeoutOrNull((deadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
             if (!prepareSupplies()) return@withTimeoutOrNull true
             if (!prepared || tools(bot, role).any { !bot.inventory.contains(it.id) }) {
                 val plan = plan(!pendingWork()) ?: return@withTimeoutOrNull true
                 if (!bank(plan)) return@withTimeoutOrNull true
                 prepared = true
             }
-            !returnToFurnace()
+            withTimeoutOrNull(minOf(TRAVEL_MILLIS, (deadline - System.currentTimeMillis()).coerceAtLeast(1L))) {
+                !returnToFurnace()
+            } ?: true
         } ?: true
         if (finished) { if (!isPaused()) defer(bot) }
-        else { resetProgress(); bot.log("Blast Furnace: arrived as $role.") }
+        else {
+            if (workDuration > 0L) { deadline = System.currentTimeMillis() + workDuration; workDuration = 0L }
+            if (!BlastFurnaceCrew.claim(bot, this, role, deadline)) return true
+            resetProgress()
+            bot.log("Blast Furnace: arrived as $role.")
+        }
         return finished
     }
 
@@ -300,7 +404,8 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         }
         if (!BlastFurnace.hasAccess(bot)) {
             val plan = plan(false)
-            val renewed = plan != null && withTimeoutOrNull(120_000) {
+            val renewed = plan != null && withTimeoutOrNull(minOf(TRAVEL_MILLIS,
+                (deadline - System.currentTimeMillis()).coerceAtLeast(1L))) {
                 bank(plan) && returnToFurnace()
             } == true
             if (!renewed) { defer(bot); return true }
@@ -341,7 +446,8 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         }
         val plan = if (trainingComplete()) null else plan()
         if (plan == null) return finishBanking()
-        val ready = withTimeoutOrNull(120_000) { bank(plan) && returnToFurnace() } == true
+        val ready = withTimeoutOrNull(minOf(TRAVEL_MILLIS,
+            (deadline - System.currentTimeMillis()).coerceAtLeast(1L))) { bank(plan) && returnToFurnace() } == true
         if (!ready) { defer(bot); return true }
         prepared = true
         resetProgress()
@@ -358,6 +464,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     }
 
     private suspend fun returnToFurnace(): Boolean {
+        BlastFurnaceCrew.refresh(bot, this, travelling = true)
         if (!handler.webWalkTo(BlastFurnace.ENTRY, radius = 3, attempts = 2,
                 bank = BankAccess.NONE, fallback = false) || !valid()) return false
         if (BlastFurnace.hasAccess(bot)) return true
@@ -456,7 +563,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
      * The actual second-click bank handler must acknowledge opening before deposits and withdrawals proceed.
      */
     private suspend fun bank(plan: List<Item>, ending: Boolean = false): Boolean {
-        BlastFurnaceCrew.refresh(bot, this)
+        BlastFurnaceCrew.refresh(bot, this, travelling = true)
         stopOperating()
         val bank = handler.webWalkToNearestBank(fallback = false) ?: return false
         if ((!ending && System.currentTimeMillis() >= deadline) || bot.inWilderness() || !isActionSafe()) return false
@@ -477,5 +584,9 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     override fun snapshot() = FurnaceData().also {
         it.bar = selectedBar; it.prepared = prepared; it.deadline = deadline; it.failures = failures; it.role = role
         it.supplyPlan = supplyPlan
+        it.workDuration = workDuration
+        it.toolTripDeadline = toolTripDeadline
+        it.toolPurchaseDeadline = toolPurchaseDeadline
+        it.shopPurchaseDeadline = shopPurchaseDeadline
     }
 }
