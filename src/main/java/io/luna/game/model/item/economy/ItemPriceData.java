@@ -119,7 +119,8 @@ public final class ItemPriceData {
     /**
      * The time this price snapshot was created, in epoch milliseconds.
      * <p>
-     * Since price updates create new snapshots, this also represents the update time for this instance.
+     * Since price updates create new snapshots, this also represents the update time for this instance. A value of
+     * {@code 0} means legacy SQL data did not retain its observation time.
      */
     public final long lastUpdated;
 
@@ -133,13 +134,35 @@ public final class ItemPriceData {
      * @param lastSamples The previous total effective sample count.
      */
     public ItemPriceData(int id, double price, double lastPrice, long samples, long lastSamples) {
+        this(id, price, lastPrice, samples, lastSamples, System.currentTimeMillis());
         checkPrice(id, price);
+    }
+
+    /**
+     * Restores a price snapshot without inventing a new observation time.
+     * Persisted observations keep their original values even when configured minimum prices later change.
+     *
+     * @param id The item id this price snapshot belongs to.
+     * @param price The current internal guide price.
+     * @param lastPrice The guide price before the most recent update.
+     * @param samples The total effective sample count.
+     * @param lastSamples The previous total effective sample count.
+     * @param lastUpdated The original epoch millisecond timestamp, or zero when it is unknown.
+     */
+    ItemPriceData(int id, double price, double lastPrice, long samples, long lastSamples, long lastUpdated) {
+        checkState(id >= 0 && id <= 65535, "Invalid persisted item identity.");
+        checkState(Double.isFinite(price) && price > 0 && price <= Integer.MAX_VALUE,
+                "Invalid persisted price.");
+        checkState(Double.isFinite(lastPrice) && lastPrice > 0 && lastPrice <= Integer.MAX_VALUE,
+                "Invalid persisted previous price.");
+        checkState(samples >= 0 && lastSamples >= 0 && lastSamples <= samples, "Invalid persisted sample counts.");
+        checkState(lastUpdated >= 0, "Invalid persisted price timestamp.");
         this.id = id;
         this.price = price;
         this.lastPrice = lastPrice;
         this.samples = samples;
         this.lastSamples = lastSamples;
-        lastUpdated = System.currentTimeMillis();
+        this.lastUpdated = lastUpdated;
     }
 
     /**
@@ -203,7 +226,15 @@ public final class ItemPriceData {
      * snapshot.
      */
     public ItemPriceData setCalculatedPrice(double tradePrice, SampleType type, Item samplesFrom) {
-        long additionalSamples = calculateSamplesFrom(samplesFrom);
+        return samplesFrom.isDynamic() ? this : setCalculatedPrice(tradePrice, type, (long) samplesFrom.getAmount());
+    }
+
+    /**
+     * Samples a normalized commodity quantity using this guide's base item rather than its note presentation.
+     */
+    ItemPriceData setCalculatedPrice(double tradePrice, SampleType type, long amount) {
+        checkState(Double.isFinite(tradePrice) && tradePrice > 0, "<tradePrice> must be finite and positive.");
+        long additionalSamples = calculateSamplesFrom(amount);
         if (additionalSamples > 0L) {
             long effectiveSamples = calculateEffectiveSamples(type, additionalSamples);
             if (effectiveSamples < 1L) {
@@ -216,9 +247,30 @@ public final class ItemPriceData {
                     Luna.settings().economy().minimumPrice();
             double newPrice = Math.min(Integer.MAX_VALUE, Math.max(minimumPrice, calculatedPrice));
             newPrice = price + (newPrice - price) * type.getMovementMultiplier();
-            return new ItemPriceData(id, newPrice, price, addSamples(effectiveSamples), samples);
+            checkCalculatedPrice(newPrice, price);
+            return new ItemPriceData(id, newPrice, price, addSamples(effectiveSamples), samples, System.currentTimeMillis());
         }
         return this;
+    }
+
+    /**
+     * Preserves the calculated observation's counters and timestamp while applying the whole-cycle movement limit.
+     */
+    ItemPriceData withCalculatedPrice(double newPrice) {
+        checkCalculatedPrice(newPrice, lastPrice);
+        return new ItemPriceData(id, newPrice, lastPrice, samples, lastSamples, lastUpdated);
+    }
+
+    /**
+     * Allows a legacy price below today's floor to approach it without moving backward or resetting history.
+     * Fresh seeds and explicit assignments continue to use the full configured-floor validation.
+     */
+    private void checkCalculatedPrice(double newPrice, double previousPrice) {
+        boolean stackable = ItemDefinition.ALL.retrieve(id).isStackable();
+        int minimumPrice = stackable ? Luna.settings().economy().minimumStackablePrice() :
+                Luna.settings().economy().minimumPrice();
+        checkState(newPrice >= minimumPrice || (previousPrice < minimumPrice && newPrice >= previousPrice),
+                "A calculated price below the configured floor must preserve a legacy transition.");
     }
 
     /**
@@ -247,14 +299,15 @@ public final class ItemPriceData {
      * Stackable items use the square root of their amount. This allows larger stacks to provide more confidence while
      * preventing huge stacks from dominating the guide price. Non-stackable items contribute one sample per item.
      *
-     * @param item The item stack being sampled.
+     * @param amount The normalized commodity quantity being sampled.
      * @return The raw sample count contributed by this stack.
      */
-    private int calculateSamplesFrom(Item item) {
-        int amount = item.getAmount();
-        if (item.getItemDef().isStackable()) {
-            int scaledSamples = (int) Math.floor(Math.sqrt(amount));
-            return Math.max(0, scaledSamples);
+    private long calculateSamplesFrom(long amount) {
+        if (amount <= 0) return 0;
+        var definition = ItemDefinition.ALL.retrieve(id);
+        definition = ItemDefinition.ALL.retrieve(definition.getUnnotedId().orElse(id));
+        if (definition.isStackable()) {
+            return (long) Math.floor(Math.sqrt(amount));
         }
         return amount;
     }

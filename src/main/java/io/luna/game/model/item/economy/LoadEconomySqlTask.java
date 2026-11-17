@@ -34,9 +34,10 @@ public final class LoadEconomySqlTask extends SqlTask {
                     int itemId = results.getInt("item_id");
                     double price = results.getDouble("price");
                     double lastPrice = results.getDouble("last_price");
-                    int samples = results.getInt("samples");
-                    int lastSamples = results.getInt("last_samples");
-                    world.getEconomy().prices.put(itemId, new ItemPriceData(itemId, price, lastPrice, samples, lastSamples));
+                    long samples = results.getLong("samples");
+                    long lastSamples = results.getLong("last_samples");
+                    world.getEconomy().prices.put(itemId,
+                            new ItemPriceData(itemId, price, lastPrice, samples, lastSamples, 0));
                 }
             }
         }

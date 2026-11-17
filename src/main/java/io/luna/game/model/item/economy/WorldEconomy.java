@@ -7,8 +7,8 @@ import io.luna.game.model.World;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.ItemEconomyDefinition;
 import io.luna.game.model.item.Item;
+import io.luna.game.model.item.economy.NormalizedTrade.Commodity;
 import io.luna.util.GsonUtils;
-import kotlin.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.LongSupplier;
 
-import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -83,7 +82,7 @@ public final class WorldEconomy extends AbstractScheduledService {
     private final LongSupplier currentTime;
 
     /**
-     * Fixed-size direct-coin evidence per observed commodity, owned exclusively by this service.
+     * Bounded admission and actual-payment evidence per commodity, owned exclusively by this service.
      * Runtime evidence deliberately restarts empty without changing the persisted guide-price format.
      */
     private final Map<Integer, RecentTradeWindow> recentTrades = new HashMap<>();
@@ -248,20 +247,6 @@ public final class WorldEconomy extends AbstractScheduledService {
         }
     }
 
-    /**
-     * Processes queued trades and persists any resulting price changes.
-     * <p>
-     * Trades are classified by offer shape:
-     * <ul>
-     *     <li>One item stack for coins is handled by {@link #itemForCoins(Item, Item, SampleType, CompletedTradeData)}.</li>
-     *     <li>One item stack for one other item stack is handled by {@link #itemForItem(Item, Item)}.</li>
-     *     <li>Multiple item stacks for coins are handled by {@link #multiItemForCoins(List, double)}.</li>
-     *     <li>All other mixed trades are handled by {@link #bartering(List, List)}.</li>
-     * </ul>
-     * Price updates are persisted after all currently queued trades have been processed.
-     *
-     * @throws Exception If trade processing or persistence fails.
-     */
     @Override
     protected void runOneIteration() throws Exception {
         if (trades.isEmpty() && shopPurchases.isEmpty() && guidePriceEdits.isEmpty() &&
@@ -278,40 +263,7 @@ public final class WorldEconomy extends AbstractScheduledService {
                 break;
             }
 
-            List<Item> sideA = tradeData.getSideA();
-            List<Item> sideB = tradeData.getSideB();
-
-            // Gifts and bot trust-trade transfers have no exchange price to sample.
-            if (sideA.isEmpty() || sideB.isEmpty()) {
-                continue;
-            }
-
-            if (sideA.size() == 1 && sideB.size() == 1) {
-                Item itemA = sideA.getFirst();
-                Item itemB = sideB.getFirst();
-                if (itemA.getId() == itemB.getId()) {
-                    continue;
-                }
-
-                if (itemA.getId() == 995 || itemB.getId() == 995) {
-                    itemForCoins(itemA, itemB, SampleType.ITEM_FOR_COINS, tradeData);
-                } else {
-                    itemForItem(itemA, itemB);
-                }
-            } else if (sideA.size() == 1 || sideB.size() == 1) {
-                List<Item> barterItems = sideA.size() > 1 ? sideA : sideB;
-                List<Item> coinItem = sideA != barterItems ? sideA : sideB;
-
-                if ((barterItems == sideA && sideB.getFirst().getId() != 995) ||
-                        (barterItems == sideB && sideA.getFirst().getId() != 995)) {
-                    bartering(sideA, sideB);
-                    continue;
-                }
-
-                multiItemForCoins(barterItems, coinItem.getFirst().getAmount());
-            } else {
-                bartering(sideA, sideB);
-            }
+            processTrade(tradeData);
         }
 
         for (ShopPurchase purchase; (purchase = shopPurchases.poll()) != null; ) {
@@ -338,6 +290,27 @@ public final class WorldEconomy extends AbstractScheduledService {
             throw error;
         }
         logger.info("A total of {} economy prices have been updated.", box(updates));
+    }
+
+    /**
+     * Classifies net ordinary exchanges while preserving the original accepted trade and its receipt identity.
+     */
+    private void processTrade(CompletedTradeData tradeData) {
+        NormalizedTrade normalized = NormalizedTrade.from(tradeData);
+        if (normalized == null) return;
+        List<Commodity> sideA = normalized.sideA(), sideB = normalized.sideB();
+        if (sideA.isEmpty() || sideB.isEmpty()) return;
+        if (sideA.size() == 1 && sideB.size() == 1) {
+            Commodity itemA = sideA.getFirst(), itemB = sideB.getFirst();
+            if (itemA.id() == 995 || itemB.id() == 995) itemForCoins(itemA, itemB, SampleType.ITEM_FOR_COINS, tradeData);
+            else itemForItem(itemA, itemB, tradeData);
+        } else if (sideA.size() == 1 && sideA.getFirst().id() == 995) {
+            multiItemForCoins(sideB, sideA.getFirst().amount(), tradeData);
+        } else if (sideB.size() == 1 && sideB.getFirst().id() == 995) {
+            multiItemForCoins(sideA, sideB.getFirst().amount(), tradeData);
+        } else {
+            bartering(sideA, sideB, tradeData);
+        }
     }
 
     @Override
@@ -485,199 +458,129 @@ public final class WorldEconomy extends AbstractScheduledService {
     }
 
     /**
-     * Processes a trade where one side offered coins and the other side offered a single item stack.
-     * <p>
-     * The observed per-item offer price is calculated from the coin amount divided by the traded item amount. The
-     * sample is ignored if the observed price is outside the configured acceptable trade range.
-     *
-     * @param itemA The first trade offer.
-     * @param itemB The second trade offer.
-     * @param type The source of the observed coin payment.
+     * Samples successful shop purchases without treating a shop as an independent player-trade participant.
      */
     private void itemForCoins(Item itemA, Item itemB, SampleType type, CompletedTradeData trade) {
-        Item tradedItem = itemA.getId() != 995 ? itemA : itemB;
-        Item coins = itemA.getId() == 995 ? itemA : itemB;
-        double offerPrice = (double) coins.getAmount() / (double) tradedItem.getAmount();
+        if (itemA.isDynamic() || itemB.isDynamic() || itemA.getAmount() <= 0 || itemB.getAmount() <= 0) return;
+        itemForCoins(new Commodity(itemA.getId(), itemA.getAmount()),
+                new Commodity(itemB.getId(), itemB.getAmount()), type, trade);
+    }
 
-        ItemPriceData data = resolvePriceData(tradedItem.getId());
-        if (data == null) {
-            return;
-        }
+    /**
+     * Samples one net commodity payment. Extreme actual payments require sustained corroboration before learning.
+     */
+    private void itemForCoins(Commodity itemA, Commodity itemB, SampleType type, CompletedTradeData trade) {
+        Commodity tradedItem = itemA.id() != 995 ? itemA : itemB;
+        Commodity coins = itemA.id() == 995 ? itemA : itemB;
+        if (tradedItem.amount() <= 0 || coins.amount() <= 0) return;
+        double offerPrice = (double) coins.amount() / tradedItem.amount();
+        ItemPriceData data = resolvePriceData(tradedItem.id());
+        if (data == null || !Double.isFinite(offerPrice) || offerPrice <= 0) return;
 
         double realPrice = data.price;
-        if (!Double.isFinite(offerPrice) || offerPrice <= 0.0 || tradedItem.getAmount() <= 0) return;
         if (trade != null) {
             long now = currentTime.getAsLong();
-            // Extremely distant prices remain outliers even if several related accounts repeat them.
-            if (offerPrice < realPrice / 8.0 || offerPrice > realPrice * 8.0) return;
+            boolean extreme = offerPrice < realPrice / 8.0 || offerPrice > realPrice * 8.0;
             var window = recentTrades.computeIfAbsent(data.id, key -> new RecentTradeWindow());
             if (!window.record(trade.getTraderA(), trade.getTraderB(), offerPrice, trade.getTimestamp(),
-                    now, tradeCycle)) return;
+                    now, tradeCycle, extreme)) return;
+            boolean accepted = extreme ? window.corroboratesExtreme(offerPrice, trade.getTimestamp(), now, tradeCycle) :
+                    withinRange(offerPrice, realPrice) || window.corroborates(offerPrice, now);
             publishRecentReference(data.id, window, now);
-            if (!withinRange(offerPrice, realPrice) && !window.corroborates(offerPrice, now)) return;
+            if (!accepted) return;
         } else if (!withinRange(offerPrice, realPrice)) {
             return;
         }
 
-        applyPriceSample(data, offerPrice, type, tradedItem);
+        applyPriceSample(data, offerPrice, type, tradedItem.amount());
     }
 
     /**
-     * Processes a direct item-for-item trade.
-     * <p>
-     * Each item stack is valued using current guide prices. If the two sides are within the configured acceptable trade
-     * range, each item is moved toward the per-item value implied by the opposite side.
-     *
-     * @param itemA The item stack from the first side.
-     * @param itemB The item stack from the second side.
+     * Infers reciprocal prices from two net ordinary commodities, retaining the existing low barter confidence.
      */
-    private void itemForItem(Item itemA, Item itemB) {
-        ItemPriceData dataA = resolvePriceData(itemA.getId());
-        ItemPriceData dataB = resolvePriceData(itemB.getId());
-        if (dataA == null || dataB == null) {
-            return;
-        }
-
-        double valueA = dataA.price * itemA.getAmount();
-        double valueB = dataB.price * itemB.getAmount();
-        if (!withinRange(valueA, valueB)) {
-            return;
-        }
-
-        double tradePriceA = valueB / itemA.getAmount();
-        double tradePriceB = valueA / itemB.getAmount();
-
-        applyPriceSample(dataA, tradePriceA, SampleType.ITEM_FOR_ITEM, itemA);
-        applyPriceSample(dataB, tradePriceB, SampleType.ITEM_FOR_ITEM, itemB);
+    private void itemForItem(Commodity itemA, Commodity itemB, CompletedTradeData trade) {
+        ItemPriceData dataA = resolvePriceData(itemA.id());
+        ItemPriceData dataB = resolvePriceData(itemB.id());
+        if (dataA == null || dataB == null) return;
+        double valueA = dataA.price * itemA.amount();
+        double valueB = dataB.price * itemB.amount();
+        if (!withinRange(valueA, valueB)) return;
+        applyInferredSample(dataA, valueB / itemA.amount(), SampleType.ITEM_FOR_ITEM, itemA, trade);
+        applyInferredSample(dataB, valueA / itemB.amount(), SampleType.ITEM_FOR_ITEM, itemB, trade);
     }
 
     /**
-     * Processes a trade where multiple item stacks were exchanged for coins.
-     * <p>
-     * The total guide value of the item side is compared against the coin offer. If the trade is within the accepted
-     * range, each non-coin item is moved proportionally toward the observed coin-side value.
-     *
-     * @param barterItems The item side of the trade.
-     * @param totalCoins The number of coins offered by the opposite side.
+     * Allocates a net coin payment across genuinely different commodities using their existing guide-value shares.
      */
-    private void multiItemForCoins(List<Item> barterItems, double totalCoins) {
-        double totalValue = 0.0;
-        for (Item item : barterItems) {
-            totalValue += item.getId() == 995 ? item.getAmount() : getRealTotalPrice(item);
-        }
-
-        if (!withinRange(totalValue, totalCoins) || totalValue <= 0.0 || totalCoins <= 0) {
-            return;
-        }
-
-        for (Item item : barterItems) {
-            if (item.getId() == 995) {
-                continue;
-            }
-
-            ItemPriceData data = resolvePriceData(item.getId());
-            if (data == null) {
-                return;
-            }
-
+    private void multiItemForCoins(List<Commodity> barterItems, long totalCoins, CompletedTradeData trade) {
+        double totalValue = totalValue(barterItems);
+        if (!withinRange(totalValue, totalCoins) || totalValue <= 0 || totalCoins <= 0) return;
+        for (Commodity item : barterItems) {
+            if (item.id() == 995) continue;
+            ItemPriceData data = resolvePriceData(item.id());
+            if (data == null) continue;
             double tradePrice = data.price * (totalCoins / totalValue);
-            applyPriceSample(data, tradePrice, SampleType.MULTI_ITEM_FOR_COINS, item);
+            applyInferredSample(data, tradePrice, SampleType.MULTI_ITEM_FOR_COINS, item, trade);
         }
     }
 
     /**
-     * Processes a mixed item barter trade.
-     * <p>
-     * Exact same-item, same-amount entries are treated as cancelled-out trade components and ignored. Partial overlaps
-     * are intentionally left in the bundle because barter trades are treated as whole-trade price signals rather than
-     * strict net-item exchanges.
-     * <p>
-     * The higher-value side is moved downward toward the lower-value side, while the lower-value side is moved upward
-     * toward the higher-value side.
-     *
-     * @param sideA The first trade side.
-     * @param sideB The second trade side.
+     * Infers weak basket prices only after identical returned commodities and coins have been cancelled out.
      */
-    private void bartering(List<Item> sideA, List<Item> sideB) {
-        var excludedA = sideA.stream().collect(toMap(Item::getId, Item::getAmount, Integer::sum));
-        var excludedB = sideB.stream().collect(toMap(Item::getId, Item::getAmount, Integer::sum));
+    private void bartering(List<Commodity> sideA, List<Commodity> sideB, CompletedTradeData trade) {
+        double valueA = totalValue(sideA);
+        double valueB = totalValue(sideB);
+        if (valueA == valueB || !withinRange(valueA, valueB)) return;
+        applyBarterSide(sideA, valueB / valueA, trade);
+        applyBarterSide(sideB, valueA / valueB, trade);
+    }
 
-        double totalValueA = 0.0;
-        double totalValueB = 0.0;
-
-        for (Item item : sideA) {
-            int id = item.getId();
-            if (excludedB.getOrDefault(id, 0) == item.getAmount()) {
-                continue;
-            }
-            excludedB.remove(id);
-            totalValueA += id == 995 ? item.getAmount() : getRealTotalPrice(item);
+    /**
+     * Values a normalized basket without converting its potentially large quantities back to integer stacks.
+     */
+    private double totalValue(List<Commodity> items) {
+        double total = 0;
+        for (Commodity item : items) {
+            total += (item.id() == 995 ? 1.0 : getRealPrice(item.id())) * item.amount();
         }
+        return total;
+    }
 
-        for (Item item : sideB) {
-            int id = item.getId();
-            if (excludedA.getOrDefault(id, 0) == item.getAmount()) {
-                continue;
-            }
-            excludedA.remove(id);
-            totalValueB += id == 995 ? item.getAmount() : getRealTotalPrice(item);
+    /**
+     * Moves the non-coin components of one basket toward its opposite side's implied value.
+     */
+    private void applyBarterSide(List<Commodity> items, double multiplier, CompletedTradeData trade) {
+        for (Commodity item : items) {
+            if (item.id() == 995) continue;
+            ItemPriceData data = resolvePriceData(item.id());
+            if (data != null) applyInferredSample(data, data.price * multiplier, SampleType.BARTERING, item, trade);
         }
+    }
 
-        if (totalValueA == totalValueB || !withinRange(totalValueA, totalValueB)) {
-            return;
-        }
-
-        var itemsValueA = new Triple<>(totalValueA, sideA, excludedB);
-        var itemsValueB = new Triple<>(totalValueB, sideB, excludedA);
-        var winner = itemsValueA.getFirst() > itemsValueB.getFirst() ? itemsValueA : itemsValueB;
-        var loser = itemsValueA != winner ? itemsValueA : itemsValueB;
-
-        double winnerPriceMultiplier = loser.getFirst() / winner.getFirst();
-        double loserPriceMultiplier = winner.getFirst() / loser.getFirst();
-
-        for (Item item : winner.getSecond()) {
-            if (winner.getThird().containsKey(item.getId()) || item.getId() == 995) {
-                continue;
-            }
-
-            ItemPriceData data = resolvePriceData(item.getId());
-            if (data == null) {
-                continue;
-            }
-
-            double tradePrice = data.price * winnerPriceMultiplier;
-            applyPriceSample(data, tradePrice, SampleType.BARTERING, item);
-        }
-
-        for (Item item : loser.getSecond()) {
-            if (loser.getThird().containsKey(item.getId()) || item.getId() == 995) {
-                continue;
-            }
-
-            ItemPriceData data = resolvePriceData(item.getId());
-            if (data == null) {
-                continue;
-            }
-
-            double tradePrice = data.price * loserPriceMultiplier;
-            applyPriceSample(data, tradePrice, SampleType.BARTERING, item);
+    /**
+     * Shares direct-trade admission limits without turning a guide-inferred value into real sale evidence.
+     */
+    private void applyInferredSample(ItemPriceData data, double tradePrice, SampleType type, Commodity item,
+                                     CompletedTradeData trade) {
+        if (!Double.isFinite(tradePrice) || tradePrice <= 0) return;
+        var window = recentTrades.computeIfAbsent(data.id, key -> new RecentTradeWindow());
+        if (window.admit(trade.getTraderA(), trade.getTraderB(), trade.getTimestamp(), currentTime.getAsLong(), tradeCycle)) {
+            applyPriceSample(data, tradePrice, type, item.amount());
         }
     }
 
     /**
      * Applies a bounded observation without allowing many transactions to compound past the cycle's movement cap.
      */
-    private void applyPriceSample(ItemPriceData data, double tradePrice, SampleType type, Item item) {
-        var updated = data.setCalculatedPrice(tradePrice, type, item);
+    private void applyPriceSample(ItemPriceData data, double tradePrice, SampleType type, long amount) {
+        var updated = data.setCalculatedPrice(tradePrice, type, amount);
         if (updated == data) return;
         double opening = cycleOpeningPrices.computeIfAbsent(data.id, key -> data.price);
         double movement = Math.max(0.0, Math.min(1.0, settings.maximumPriceMovement()));
         double lower = opening * (1.0 - movement);
         double upper = Math.min(Integer.MAX_VALUE, opening * (1.0 + movement));
         double bounded = Math.max(lower, Math.min(upper, updated.price));
-        if (bounded != updated.price) {
-            updated = new ItemPriceData(data.id, bounded, data.price, updated.samples, data.samples);
-        }
+        if (bounded != updated.price) updated = updated.withCalculatedPrice(bounded);
         prices.put(data.id, updated);
         priceUpdates.put(data.id, updated);
         historyUpdates.add(updated);
