@@ -8,6 +8,7 @@ import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.BASE_SKILLING_DURATION_MINUTES
+import game.bot.scripts.BlastFurnaceBotScript
 import kotlin.math.floor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -97,9 +98,10 @@ abstract class SkillingScriptFactory(val skillId: Int) {
 
     private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
         if (training && !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
+        if (skillId in setOf(SKILL_SMITHING, SKILL_AGILITY, SKILL_FIREMAKING, SKILL_CRAFTING)) {
+            BlastFurnaceBotScript.select(bot, skillId, getDuration(bot).inWholeMilliseconds)?.let { return it }
+        }
         if (skillId in setOf(SKILL_CRAFTING, SKILL_FLETCHING, SKILL_HERBLORE, SKILL_SMITHING, SKILL_COOKING)) {
-            if (skillId == SKILL_SMITHING)
-                SmithingScriptFactory.getBlastFurnaceScript(bot, level)?.let { return it }
             if (skillId == SKILL_HERBLORE)
                 HerbloreScriptFactory.getOwnedGatheringScript(bot, training)?.let { return it }
             if (skillId == SKILL_COOKING && !training)

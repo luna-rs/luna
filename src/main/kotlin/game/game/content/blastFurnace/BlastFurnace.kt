@@ -123,6 +123,24 @@ object BlastFurnace {
     fun damage(player: Player): Damage? = machine(player.world).damage
 
     /**
+     * Includes every present ore owner's belt, including human participants outside the bot crew.
+     */
+    fun hasBeltWork(player: Player): Boolean = machine(player.world).players.any {
+        present(it) && beltCount(it) > 0
+    }
+
+    /**
+     * Reports an actual native station operator, including humans, after validating its current action.
+     */
+    fun operator(player: Player, role: BlastFurnaceWorkAction.Role): Player? {
+        val machine = machine(player.world)
+        val operator = if (role == BlastFurnaceWorkAction.Role.PUMP) machine.pump else machine.pedals
+        return operator?.takeIf { present(it) && hasAccess(it) && operatorLevel(it, role) &&
+            it.position.isWithinDistance(role.position, 4) &&
+            it.actions.first(BlastFurnaceWorkAction::class.java)?.role == role }
+    }
+
+    /**
      * Reuses Smithing recipes, halving only coal. Iron is guaranteed; no normal-furnace failure roll is used.
      */
     fun ingredients(bar: BarType): List<Item> = bar.oreList.map {

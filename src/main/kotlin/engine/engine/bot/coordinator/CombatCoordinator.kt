@@ -19,6 +19,7 @@ import game.bot.scripts.HerbloreSecondaryGathering
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
 import game.bot.scripts.BarrowsBotScript
+import game.bot.scripts.BlastFurnaceBotScript
 import game.bot.scripts.FightCaveBotScript
 import game.bot.scripts.PestControlBotScript
 import game.content.pestControl.PestControl
@@ -323,6 +324,13 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return
         }
         if (training && BotCombatActionHandler.wantedCombatSkills(bot).isEmpty()) return
+        if (training && BotCombatActionHandler.wantsToTrain(bot, SKILL_STRENGTH)) {
+            BlastFurnaceBotScript.select(bot, SKILL_STRENGTH, 45.minutes.inWholeMilliseconds)?.let {
+                it.trainingGoal = SKILL_STRENGTH
+                bot.scriptStack.push(it)
+                return
+            }
+        }
         EquipmentDropJobs.candidate(bot)?.let {
             bot.scriptStack.push(it)
             return
