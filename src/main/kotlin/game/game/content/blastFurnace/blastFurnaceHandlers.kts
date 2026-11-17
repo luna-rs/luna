@@ -23,13 +23,12 @@ object1(9089) {
         plr.overlays.open(StandardInterface(14594))
     }
 }
-object1(9143) { BlastFurnace.fillBucket(plr) }
+object1(9143) { BlastFurnace.fillBucket(plr, gameObject) }
 object1(BlastFurnaceAnvilGate.CLOSED) { BlastFurnaceAnvilGate.open(plr, gameObject) }
 for (id in listOf(9092, 9093, 9095, 9096)) object1(id) { BlastFurnace.openStock(plr) }
 for (damage in BlastFurnace.Damage.entries) object1(damage.broken) { BlastFurnace.repair(plr, damage) }
 useItem(1929).onObject(9092) { BlastFurnace.cool(plr) }
 useItem(1929).onObject(9095) { BlastFurnace.cool(plr) }
-useItem(1925).onObject(9143) { BlastFurnace.fillBucket(plr) }
 for (bar in BlastFurnaceInterface.order) {
     button(BlastFurnaceInterface.ID + 1 + BlastFurnaceInterface.single.getValue(bar)) {
         plr.overlays.getOverlay(BlastFurnaceInterface::class.java)?.take(plr, bar, false)

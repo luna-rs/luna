@@ -25,8 +25,8 @@ import kotlin.time.Duration.Companion.seconds
  * The original script and data class names are retained so saved water tasks continue to load.
  *
  * [InventoryBotScript] supplies banking, travel and persistent retry budgets. [Source] pairs each native
- * resource with supported containers and existing processing zones. Item-on-object interactions and the
- * make dialogue start [FillActionItem]; only that native action converts items. Each bank batch is capped
+ * resource with supported containers and existing processing zones. Item-on-object interactions start single
+ * water fills; the make dialogue selects batch quantities. [FillActionItem] converts items. Each bank batch is capped
  * by owned empties, inventory capacity and the remaining total filled-stock target across bank and inventory.
  * Missing empties, three failed interactions or unresolved banking requests end the task.
  *
@@ -162,9 +162,18 @@ class FillWaterBotScript(
             }.firstOrNull()
         }
         attemptProduction(empty, dexterityDelay = false, available = resourceObject != null) { before ->
-            if (resourceObject == null || !handler.inventory.useItem(empty).onObject(resourceObject) ||
-                !waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return@attemptProduction false
-            handler.widgets.clickMakeItem(0, minOf(before, remaining()))
+            if (resourceObject == null || !handler.inventory.useItem(empty).onObject(resourceObject)) {
+                return@attemptProduction false
+            }
+            val started = waitFor(3.seconds) {
+                bot.inventory.computeAmountForId(empty) < before || MakeItemDialogue::class in bot.overlays
+            }
+            if (!started) return@attemptProduction false
+            if (MakeItemDialogue::class in bot.overlays) {
+                val amount = minOf(bot.inventory.computeAmountForId(empty), remaining())
+                if (amount < 1) return@attemptProduction false
+                handler.widgets.clickMakeItem(0, amount)
+            }
             true
         }
         return true

@@ -14,6 +14,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectType
 import kotlinx.coroutines.withTimeoutOrNull
@@ -151,7 +152,7 @@ internal class CastleWarsBotSupport(private val bot: Bot, private val playing: (
         if (bot.inventory.contains(1925)) {
             val tap = objects.filter { it.id == 4482 && ownHalf(it.position, team) }
                 .minByOrNull { bot.position.computeLongestDistance(it.position) }
-            if (tap != null && use(1925, tap, team) { bot.inventory.contains(1929) }) return true
+            if (tap != null && fillBucket(tap, team)) return true
         }
         if (role in setOf(Role.ENGINEER, Role.DEFENDER, Role.MEDIC) && repair(team, objects)) return true
         if (barricades(team)) return true
@@ -160,6 +161,24 @@ internal class CastleWarsBotSupport(private val bot: Bot, private val playing: (
         if (role == Role.ENGINEER && shoot(team, objects)) return true
         if (role in setOf(Role.DEFENDER, Role.ENGINEER) && placeBarricade(team)) return true
         return false
+    }
+
+    private suspend fun fillBucket(tap: GameObject, team: Team): Boolean {
+        val before = bot.inventory.computeAmountForId(1929)
+        val filled = { bot.inventory.computeAmountForId(1929) > before }
+        return attempt(tap, filled) {
+            if (!bot.actionHandler.inventory.useItem(1925).onObject(tap) { allowed(team) && current(tap) }) {
+                return@attempt false
+            }
+            if (!waitFor(3.seconds) { filled() || bot.overlays.has(MakeItemDialogue::class.java) }) {
+                return@attempt false
+            }
+            if (!filled()) {
+                if (!allowed(team) || !current(tap)) return@attempt false
+                bot.actionHandler.widgets.clickMakeItem(0, 1)
+            }
+            true
+        }
     }
 
     /**

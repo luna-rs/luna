@@ -14,6 +14,11 @@ import io.luna.game.model.`object`.GameObject
 abstract class FillableResource : GameResource() {
 
     /**
+     * Whether one matching container can be filled without a quantity selection.
+     */
+    protected open val autoFillSingle = false
+
+    /**
      * Retrieves the id of [empty] filled with this resource.
      */
     abstract fun getFilled(empty: Int): Int?
@@ -26,19 +31,22 @@ abstract class FillableResource : GameResource() {
     }
 
     /**
-     * Open an interface that allows for filling [emptyId] with this resource, for [plr].
+     * Starts a single fill when supported, or offers a quantity selection for [emptyId].
      */
     fun fill(plr: Player, emptyId: Int, resourceObject: GameObject) {
-        val filled = getFilled(emptyId)
-        if (filled != null) {
-            plr.overlays.open(object : MakeItemDialogue(filled) {
-                override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
-                    val emptyItem = Item(emptyId)
-                    val filledItem = Item(filled)
-                    plr.submitAction(FillActionItem(plr, emptyItem, filledItem, this@FillableResource,
-                        resourceObject, forAmount))
-                }
-            })
+        val filled = getFilled(emptyId) ?: return
+        val count = plr.inventory.computeAmountForId(emptyId)
+        if (count == 0) return
+
+        fun start(player: Player, amount: Int) {
+            player.submitAction(FillActionItem(player, Item(emptyId), Item(filled), this, resourceObject, amount))
         }
+        if (autoFillSingle && count == 1) {
+            start(plr, 1)
+            return
+        }
+        plr.overlays.open(object : MakeItemDialogue(filled) {
+            override fun make(player: Player, id: Int, index: Int, forAmount: Int) = start(player, forAmount)
+        })
     }
 }

@@ -3,6 +3,7 @@ package game.content.castleWars
 import api.predef.*
 import api.predef.ext.*
 import game.content.castleWars.CastleWarsMatch.Team
+import game.obj.resource.fillable.WaterResource
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFifthClickEvent
@@ -88,7 +89,7 @@ object1(4411) {
     }
 }
 useItem(1925).onObject(4482) {
-    if (CastleWars.game.match.isPlaying(plr)) plr.inventory.replace(1925, 1929)
+    if (CastleWars.game.match.isPlaying(plr)) WaterResource.fill(plr, 1925, gameObject)
 }
 for (id in listOf(4446, 4447)) useItem(954).onObject(id) { CastleWars.siege.rope(plr, gameObject) }
 object1(4444) { CastleWars.siege.climbRope(plr, gameObject) }

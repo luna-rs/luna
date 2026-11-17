@@ -5,6 +5,7 @@ import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
 import api.predef.ext.*
+import game.obj.resource.fillable.WaterResource
 import game.skill.smithing.BarType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -236,10 +237,8 @@ object BlastFurnace {
         return true
     }
 
-    fun fillBucket(player: Player): Boolean {
-        if (!allowed(player, SINK)) return false
-        player.actions.interruptWeak()
-        return player.inventory.replace(BUCKET, WATER)
+    fun fillBucket(player: Player, sink: GameObject) {
+        if (allowed(player, SINK)) WaterResource.fill(player, BUCKET, sink)
     }
 
     fun cool(player: Player): Boolean {

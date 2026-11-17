@@ -16,6 +16,8 @@ import io.luna.game.model.`object`.GameObject
  */
 object WaterResource : FillableResource() {
 
+    override val autoFillSingle = true
+
     /**
      * A [HashBiMap] of all empty container ids and their filled counterpart ids.
      */

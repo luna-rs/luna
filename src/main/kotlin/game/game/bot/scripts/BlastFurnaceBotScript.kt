@@ -29,6 +29,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.withTimeoutOrNull
@@ -483,8 +484,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
 
     private suspend fun cycle(): Boolean {
         if (BlastFurnace.hot(bot)) {
-            if (!bot.inventory.contains(BlastFurnace.WATER) &&
-                (!click(BlastFurnace.SINK, 9143) || !waitFor(5.seconds) { bot.inventory.contains(BlastFurnace.WATER) })) return false
+            if (!bot.inventory.contains(BlastFurnace.WATER) && !fillCoolingBucket()) return false
             val dispenser = find(BlastFurnace.DISPENSER, 9092, 9095) ?: return false
             return handler.inventory.useItem(BlastFurnace.WATER).onObject(dispenser) &&
                 waitFor(5.seconds) { !BlastFurnace.hot(bot) }
@@ -510,6 +510,16 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             return click(BlastFurnace.BELT, 9100) && waitFor(5.seconds) { BlastFurnace.totalOre(bot) > before }
         }
         return maintain()
+    }
+
+    private suspend fun fillCoolingBucket(): Boolean {
+        if (!click(BlastFurnace.SINK, 9143)) return false
+        if (!waitFor(5.seconds) {
+                bot.inventory.contains(BlastFurnace.WATER) || bot.overlays.has(MakeItemDialogue::class.java)
+            }) return false
+        if (bot.inventory.contains(BlastFurnace.WATER)) return true
+        handler.widgets.clickMakeItem(0, 1)
+        return waitFor(5.seconds) { bot.inventory.contains(BlastFurnace.WATER) }
     }
 
     private fun handles(work: Role): Boolean = canWork(bot, work) &&
