@@ -26,6 +26,7 @@ import game.bot.scripts.DagannothKingsBotScript
 import game.bot.scripts.DagannothKingsTrip
 import game.bot.scripts.SalarinBotScript
 import game.bot.scripts.combat.RockCrabBotScript
+import game.bot.scripts.skills.HerbGatheringScript
 import game.skill.slayer.SlayerTaskType
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Spellbook
@@ -102,6 +103,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
             Camp(SubZone.TAVERLY_LESSER_DEMONS, 65, setOf("Lesser demon"), true),
+            Camp(SubZone.DEEP_WILDERNESS_GREATER_DEMONS, 75, setOf("Greater demon"), true),
             // TAVERLY_GREATER is Entrana Dungeon: ordinary armed outfits cannot pass the island's native search.
             Camp(SubZone.TAVERLY_HELLHOUND, 85, setOf("Hellhound"), true),
             Camp(SubZone.TAVERLY_BLACK_DEMONS, 110, setOf("Black Demon"), true),
@@ -177,6 +179,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             val eligible = camps.filter { it.minimum <= level &&
                 (!training || it.zone !in setOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE,
                     SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE,
+                    SubZone.DEEP_WILDERNESS_GREATER_DEMONS,
                     SubZone.CHAOS_ELEMENTAL_WILDERNESS)) &&
                 (!training || (it.zone !in setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR) &&
                     it.zone !in NpcCombatScript.DRAGON_ZONES)) &&
@@ -261,6 +264,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         }
 
         /**
+         * Keeps herb camps out of general combat and offers their focused gathering lifecycle only for profit.
+         */
+        internal fun herbGatheringScript(bot: Bot, training: Boolean, duration: Duration): HerbGatheringScript? =
+            if (training) null else HerbGatheringScript.profitCandidate(bot, duration)
+
+        /**
          * Gives ready combat trainees optional native minigame outings before ordinary camp selection.
          * Eligible Pest Control volunteers join an existing group first; every route retains its own admission rules.
          */
@@ -339,6 +348,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         if ((!training || BotCombatActionHandler.trainingPurposeEligible(bot, BotGearPurpose.MAGIC)) && rand(0.15)) {
             salarinScript(bot, duration)?.let {
                 if (training) it.trainingGoal = -1
+                bot.scriptStack.push(it)
+                return
+            }
+        }
+        if (!training && rand(0.25)) {
+            herbGatheringScript(bot, training, duration)?.let {
                 bot.scriptStack.push(it)
                 return
             }

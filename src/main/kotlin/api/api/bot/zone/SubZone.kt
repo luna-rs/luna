@@ -2783,6 +2783,15 @@ enum class SubZone(
         parent = { EDGEVILLE }),
 
     /**
+     * Deep-Wilderness ruins containing four native greater demon spawn anchors. Only dumb, confident bots
+     * choose this exposed camp; ordinary Wilderness combat, travel risk and escape remain authoritative.
+     */
+    DEEP_WILDERNESS_GREATER_DEMONS(
+        inside = Position(3293, 3883),
+        area = SimpleBoxArea.of(3274, 3864, 3312, 3902),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
+
+    /**
      * The icy chamber beneath Asgarnia, containing 14 ice warriors and ice giants for their respective
      * assignments.
      */
@@ -2806,6 +2815,24 @@ enum class SubZone(
     BRIMHAVEN_RED(
         inside = Position(2711, 9515),
         area = SimpleBoxArea.of(2687, 9491, 2740, 9537),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
+
+    /**
+     * Northern Brimhaven upper cavern containing four native greater demon spawn anchors. The plane-2
+     * chamber is reached through the existing dungeon stairs; banking returns through Ardougne.
+     */
+    BRIMHAVEN_GREATER_DEMONS_NORTH(
+        inside = Position(2636, 9509, 2),
+        area = SimpleBoxArea.of(2626, 9490, 2649, 9513, 2),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
+
+    /**
+     * Southern Brimhaven upper cavern containing three native greater demon spawn anchors. The passage
+     * to the northern chamber shares its native stair access and ordinary dungeon admission.
+     */
+    BRIMHAVEN_GREATER_DEMONS_SOUTH(
+        inside = Position(2636, 9481, 2),
+        area = SimpleBoxArea.of(2625, 9472, 2653, 9489, 2),
         parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
@@ -3186,6 +3213,10 @@ enum class SubZone(
      * @return Why [bot] can't get in, or `null` if nothing stops it.
      */
     fun entryBlocker(bot: Bot): String? = when (this) {
+        DEEP_WILDERNESS_GREATER_DEMONS ->
+            if (bot.personality.isStupidlyConfident) null
+            else "the deep-Wilderness greater demon camp needs a dumb, confident personality"
+
         CHAOS_DRUID_TOWER, CHAOS_DRUID_TOWER_DUNGEON ->
             if (bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL &&
                 CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones

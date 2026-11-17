@@ -118,6 +118,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         taskCamp(SubZone.ASGARNIAN_ICE, 50, SlayerTaskType.ICE_GIANT),
         taskCamp(SubZone.LEGENDS_SHADOW, 65, SlayerTaskType.SHADOW_WARRIOR),
         taskCamp(SubZone.BRIMHAVEN_RED, 95, SlayerTaskType.RED_DRAGON),
+        taskCamp(SubZone.BRIMHAVEN_GREATER_DEMONS_NORTH, 75, SlayerTaskType.GREATER_DEMON),
+        taskCamp(SubZone.BRIMHAVEN_GREATER_DEMONS_SOUTH, 75, SlayerTaskType.GREATER_DEMON),
         taskCamp(SubZone.BRIMHAVEN_METAL, 110, SlayerTaskType.IRON_DRAGON),
         taskCamp(SubZone.BRIMHAVEN_METAL, 120, SlayerTaskType.STEEL_DRAGON),
         taskCamp(SubZone.MORTTON_SURFACE, 65, SlayerTaskType.SHADE),

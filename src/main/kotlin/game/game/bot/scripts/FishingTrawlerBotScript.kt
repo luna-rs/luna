@@ -1,5 +1,8 @@
 package game.bot.scripts
 
+import api.attr.Attr
+import api.attr.getValue
+import api.attr.setValue
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScript
@@ -19,7 +22,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Uses existing owned supplies for one trawler trip, repairing visible damage and bailing the hold.
+ * Obtains missing supplies for one trawler trip, repairing visible damage and bailing the hold.
  * Interrupted trips are abandoned without a reward; persisted catches remain available at the net.
  *
  * @author lare96
@@ -27,23 +30,37 @@ import kotlin.time.Duration.Companion.seconds
 class FishingTrawlerBotScript(bot: Bot, private var boarded: Boolean = false,
                               private val deadline: Long = System.currentTimeMillis() + 1_200_000) : BotScript(bot) {
     companion object {
+        private var Bot.supplyRetryAt by Attr.long()
+
+        private fun owned(bot: Bot, id: Int): Long = bot.inventory.computeAmountForId(id).toLong() +
+            bot.bank.computeAmountForId(id)
+
+        /**
+         * Replenishes the existing withdrawal reserves before a voyage.
+         * A filled bailing bucket is reusable and must not create a second empty-bucket purchase.
+         */
+        internal fun missingSupplies(bot: Bot): Map<Int, Int> {
+            val targets = linkedMapOf(583 to 1, 954 to 20, 1941 to 200)
+            if (owned(bot, 585) > 0) targets.remove(583)
+            return targets.filter { (id, amount) -> owned(bot, id) < amount }
+        }
+
         fun eligible(bot: Bot): Boolean {
             if (!ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness() || bot.fishing.level < 15) return false
             if (bot.catchRolls > 0 || bot.unclaimedCatch.isNotEmpty()) return true
-            return supplies(bot) != null
+            return supplies(bot) != null ||
+                bot.supplyRetryAt <= System.currentTimeMillis() && owned(bot, 995) > 0
         }
 
         /**
          * Reserves owned supplies across both containers, leaving room for the bucket and catch.
          */
         internal fun supplies(bot: Bot): List<Item>? {
-            fun owned(id: Int): Long = bot.inventory.computeAmountForId(id).toLong() +
-                bot.bank.computeAmountForId(id)
-            val paste = owned(1941).coerceAtMost(200).toInt()
-            val ropes = owned(954).coerceAtMost(20).toInt()
+            val paste = owned(bot, 1941).coerceAtMost(200).toInt()
+            val ropes = owned(bot, 954).coerceAtMost(20).toInt()
             val bucket = when {
-                owned(583) > 0 -> 583
-                owned(585) > 0 -> 585
+                owned(bot, 583) > 0 -> 583
+                owned(bot, 585) > 0 -> 585
                 else -> return null
             }
             if (paste <= 0 || ropes <= 0) return null
@@ -70,13 +87,37 @@ class FishingTrawlerBotScript(bot: Bot, private var boarded: Boolean = false,
 
     constructor(bot: Bot, data: VoyageData) : this(bot, data.boarded, data.deadline)
 
+    /**
+     * Obtains the missing kit through ordinary wanted-item acquisition within one shared supply deadline.
+     * Partial purchases stay owned, and a failed attempt backs off before another fresh voyage is offered.
+     */
+    internal suspend fun prepareSupplies(): Boolean {
+        if (!isActionSafe() || bot.inWilderness() || bot.fishing.level < 15 ||
+            System.currentTimeMillis() >= deadline) return false
+        if (missingSupplies(bot).isEmpty()) return true
+        val budget = minOf(120_000L, deadline - System.currentTimeMillis())
+        withTimeoutOrNull(budget) {
+            for ((id, amount) in missingSupplies(bot)) {
+                if (!isActionSafe() || System.currentTimeMillis() >= deadline) break
+                handler.shop.obtainWantedItem(id, amount)
+            }
+        }
+        val ready = System.currentTimeMillis() < deadline && isActionSafe() && supplies(bot) != null
+        if (!ready) bot.supplyRetryAt = System.currentTimeMillis() + 300_000L
+        return ready
+    }
+
     override suspend fun init(resumed: Boolean): Boolean {
         if (!isActionSafe()) return true
         if (System.currentTimeMillis() >= deadline) return true
         if (boarded && bot.catchRolls <= 0 && bot.unclaimedCatch.isEmpty()) return true
         if (bot.fishing.level < 15) return true
         if (bot.inWilderness()) return true
-        return withTimeoutOrNull(180_000) {
+        if (bot.catchRolls <= 0 && bot.unclaimedCatch.isEmpty() && !prepareSupplies()) return true
+        // Shopping has its own budget; it must not consume the existing banking, travel and boarding allowance.
+        val boardingBudget = minOf(180_000L, deadline - System.currentTimeMillis())
+        if (boardingBudget <= 0L) return true
+        return withTimeoutOrNull(boardingBudget) {
             if (bot.catchRolls > 0 || bot.unclaimedCatch.isNotEmpty()) {
                 return@withTimeoutOrNull !handler.webWalkTo(FishingTrawler.DOCK, radius = 3)
             }
