@@ -18,6 +18,7 @@ import game.skill.agility.AgilityEntrances
 import game.skill.agility.Stile
 import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
 import api.bot.webwalk.walk.crossing.IsafdarForestCrossing
+import api.bot.webwalk.walk.crossing.MortMyreBridgeCrossing
 import api.predef.ctx
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
@@ -29,6 +30,7 @@ import api.bot.webwalk.walk.crossing.WebCrossing
 import engine.obj.HamTrapdoor
 import game.npc.spawn.alKharid.BorderGate
 import game.obj.webs.Web
+import game.skill.agility.MortMyreBridge
 import io.luna.game.cache.map.MapIndexTable
 import io.luna.game.model.Position
 
@@ -277,12 +279,21 @@ object SpecialCrossings {
                                                              Position(2657, 3347))))
 
     /**
+     * Each bank uses its own tree click to start the same native bridge traversal.
+     */
+    val MORT_MYRE_BRIDGE = CrossingSpec(MortMyreBridgeCrossing.ID, setOf(MortMyreBridge.TREE),
+        bidirectional = false, cost = MortMyreBridge.TICKS,
+        placements = MortMyreBridge.End.entries.map {
+            CrossingPlacement(MortMyreBridge.TREE, it.tree, it.bank, it.opposite.bank)
+        })
+
+    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HARDWOOD_GROVE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
         GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, GRAND_TREE_DOORS, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
-        ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,
+        ARDOUGNE_STILES, MORT_MYRE_BRIDGE, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,
         PiscatorisHoleCrossingSpec.SPEC, ShantayPassCrossingSpec.SPEC, ArandarCrossingSpec.GATE, ArandarCrossingSpec.FOREST,
         ArandarCrossingSpec.LOGS, ArandarCrossingSpec.TRIPWIRES) +
         ProductionAccessCrossingSpec.ALL + SubzoneEntranceSpec.ALL + LighthouseBridgeSpec.ALL +

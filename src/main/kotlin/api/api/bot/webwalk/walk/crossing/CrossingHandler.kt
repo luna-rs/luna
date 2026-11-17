@@ -67,6 +67,7 @@ object CrossingHandlers {
                                                                NativeAccessCrossing.ID to NativeAccessCrossing,
                                                                PyramidRockSlideCrossing.ID to PyramidRockSlideCrossing,
                                                                KaramjaLogCrossing.ID to KaramjaLogCrossing,
+                                                               MortMyreBridgeCrossing.ID to MortMyreBridgeCrossing,
                                                                TrollSlopeCrossing.ID to TrollSlopeCrossing,
                                                                HangarExitCrossing.ID to HangarExitCrossing,
                                                                ApeGateCrossing.ID to ApeGateCrossing,
