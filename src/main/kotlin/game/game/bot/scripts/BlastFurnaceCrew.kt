@@ -18,7 +18,6 @@ object BlastFurnaceCrew {
     private const val RESERVATION_MILLIS = 10_000L
     private const val TRAVEL_MILLIS = 600_000L
     private const val ACTIVE_MILLIS = 120_000L
-    private const val MAX_SMELTERS = 12
     private val crews = WeakHashMap<World, MutableMap<Bot, Assignment>>()
 
     /**
@@ -80,7 +79,7 @@ object BlastFurnaceCrew {
     }
 
     /**
-     * Reserves a station before selection can suspend or another bot can choose the same vacancy.
+     * Registers every smelter and reserves each exclusive worker station before selection can suspend.
      */
     fun claim(bot: Bot, script: BlastFurnaceBotScript, role: Role, deadline: Long): Boolean {
         val now = System.currentTimeMillis()
@@ -92,9 +91,7 @@ object BlastFurnaceCrew {
             refresh(bot, script)
             return true
         }
-        if (role == Role.SMELTER) {
-            if (crew.count { it.key !== bot && it.value.role == Role.SMELTER } >= MAX_SMELTERS) return false
-        } else if (occupied(bot, role)) return false
+        if (role != Role.SMELTER && occupied(bot, role)) return false
         crew[bot] = Assignment(script, role, deadline, now + RESERVATION_MILLIS,
             minOf(deadline, now + TRAVEL_MILLIS))
         return true
