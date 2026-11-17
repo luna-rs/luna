@@ -3,7 +3,6 @@ package api.bot.action
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScript.ActionSafety
 import api.combat.death.PlayerDeathItems
-import api.predef.ext.allSuitableFood
 import engine.bot.gear.BotGearPurpose
 import engine.controllers.Controllers.inWilderness
 import game.player.item.consume.food.Food
@@ -329,7 +328,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     private fun requestMissingFood() {
         if ((bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull()).none {
                 Food.ID_TO_FOOD[it.unnotedItemDef.id()]?.heal?.let { it > 0 } == true
-            }) bot.preferences.allSuitableFood().forEach { bot.preferences.raiseWantedItemTarget(it.id, 750) }
+            }) BotTradeIntentions.requestFood(bot, 16, minimumHeal = 1)
     }
 
     /**
@@ -397,9 +396,10 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                     id in Rune.ID_TO_RUNE || EquipmentDefinition.ALL.get(id).map { it.index == Equipment.AMMUNITION }.orElse(false) ||
                         WeaponDefinition.ALL.get(id).map { it.type in CombatLoadout.thrown }.orElse(false) ->
                         bot.preferences.raiseWantedItemTarget(id, maxOf(1000, amount * 2))
-                    id in Food.ID_TO_FOOD -> bot.preferences.raiseWantedItemTarget(id, 750)
                 }
             }
+            val foodCount = (plan.inventory + plan.equipment).filter { it.id in Food.ID_TO_FOOD }.sumOf { it.amount }
+            if (foodCount > 0) BotTradeIntentions.requestFood(bot, foodCount, minimumHeal = 1)
             handler.banking.clickBankingMode(noted = false)
             for (item in plan.equipment) {
                 if (!safe() || !bot.bank.isOpen || !handler.banking.withdraw(item) || !safe() ||

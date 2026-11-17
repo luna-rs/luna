@@ -6,6 +6,7 @@ import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.action.trading.BotGearDemand
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotUtilityPurchases
 import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
@@ -44,7 +45,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     private class PurchaseBudget(var remainingCoins: Int, val maximumUnitPrices: Map<Int, Long>,
                                  val recordSpending: (Int) -> Unit,
-                                 val productionLimits: Map<Int, BotTradeIntentions.ProductionPurchaseLimit>)
+                                 val productionLimits: Map<Int, BotTradeIntentions.ProductionPurchaseLimit>,
+                                 val foodIdentities: Map<Int, String>)
 
     /**
      * Executes one price-protected GP purchase on the game thread through the native shop transaction.
@@ -61,12 +63,16 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * cannot turn a partial batch into an oversized purchase. Successful purchases yield before the next batch.
      */
     suspend fun buyUpTo(shop: Shop, id: Int, maxAmount: Int, maxTotalCost: Int,
-                        expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null): Boolean {
+                        expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null,
+                        expectedFoodIdentity: String? = null): Boolean {
         val production = BotTradeIntentions.productionLimit(bot, id)
         if (expectedProduction != null && (production == null ||
             production.identity !== expectedProduction.identity || production.expires != expectedProduction.expires)) return false
+        if (expectedFoodIdentity != null && (expectedFoodIdentity != BotFoodDemand.identity(bot) ||
+                !BotFoodDemand.handles(bot, id) || shop.currency != Currency.COINS)) return false
         val wallet = minOf(maxTotalCost.toLong(), bot.inventory.computeAmountForId(shop.currency.id).toLong(),
-            production?.maximumCoins ?: Long.MAX_VALUE).toInt()
+            production?.maximumCoins ?: Long.MAX_VALUE,
+            if (expectedFoodIdentity == null) Long.MAX_VALUE else BotFoodDemand.allowance(bot).toLong()).toInt()
         if (maxAmount < 1 || wallet < 1) return false
         if (production != null && shop.currency != Currency.COINS) return false
         val capacity = if (itemDef(id).isStackable) Int.MAX_VALUE else bot.inventory.computeRemainingSize()
@@ -74,11 +80,14 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             Int.MAX_VALUE - bot.inventory.computeAmountForId(id))
         if (production != null) quantity = minOf(quantity,
             (production.target.toLong() - bot.totalItemAmount(id)).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
+        if (expectedFoodIdentity != null) quantity = minOf(quantity, BotFoodDemand.deficit(bot))
         while (quantity > 0) {
             val quote = shop.computeBuyValue(id, quantity).orElse(-1)
             if (quote in 1..wallet && bot.inventory.hasSpaceFor(Item(id, quantity)) &&
-                (production == null || (quote.toLong() + quantity - 1L) / quantity <= production.maximumUnitPrice)) {
-                val bought = buyExact(shop, id, quantity, quote, expectedProduction ?: production)
+                (production == null || (quote.toLong() + quantity - 1L) / quantity <= production.maximumUnitPrice) &&
+                (expectedFoodIdentity == null || (quote.toLong() + quantity - 1L) / quantity <=
+                    BotFoodDemand.priceCeiling(bot, id, quantity))) {
+                val bought = buyExact(shop, id, quantity, quote, expectedProduction ?: production, expectedFoodIdentity)
                 if (bought) delay(1.seconds)
                 return bought
             }
@@ -91,7 +100,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Applies an exact quantity and currency ceiling to one native shop transaction without suspending.
      */
     private fun buyExact(shop: Shop, id: Int, amount: Int, maxTotalCost: Int,
-                         expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null): Boolean {
+                         expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null,
+                         expectedFoodIdentity: String? = null): Boolean {
         if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, id) && BotGearDemand.forItem(bot, id) != null &&
             (!BotGearDemand.usableNow(bot, id) || BotGearDemand.hasUsableOwned(bot, id))) return false
         if (amount !in 1..100 || maxTotalCost < 1 || !ActionSafety.NON_COMBAT.allows(bot) ||
@@ -114,6 +124,10 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         if (production != null && (currency != Currency.COINS.id ||
             bot.totalItemAmount(id).toLong() + amount > production.target || quoted.toLong() > production.maximumCoins ||
             (quoted.toLong() + amount - 1L) / amount > production.maximumUnitPrice)) return false
+        if (expectedFoodIdentity != null && (expectedFoodIdentity != BotFoodDemand.identity(bot) ||
+                !BotFoodDemand.handles(bot, id) || currency != Currency.COINS.id ||
+                amount > BotFoodDemand.deficit(bot) || quoted > BotFoodDemand.allowance(bot) ||
+                (quoted.toLong() + amount - 1L) / amount > BotFoodDemand.priceCeiling(bot, id, amount))) return false
         val before = bot.inventory.computeAmountForId(id)
         val bought = shop.buy(bot, index, amount)
         val spent = (coins - bot.inventory.computeAmountForId(currency)).coerceAtLeast(0)
@@ -319,7 +333,9 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             BotTradeIntentions.productionLimit(bot, id)?.let { id to it }
         }.toMap()
         return obtainWantedItems(amounts,
-            PurchaseBudget(maximumCoins, maximumUnitPrices.toMap(), recordSpending, limits))
+            PurchaseBudget(maximumCoins, maximumUnitPrices.toMap(), recordSpending, limits,
+                amounts.keys.mapNotNull { id -> BotFoodDemand.identity(bot)?.takeIf { BotFoodDemand.handles(bot, id) }
+                    ?.let { id to it } }.toMap()))
     }
 
     private suspend fun obtainWantedItems(amounts: Map<Int, Int>, budget: PurchaseBudget?): Set<Int> {
@@ -486,11 +502,15 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                     production.identity !== captured.identity)) break
                 val deficit = production?.let { (it.target.toLong() - bot.totalItemAmount(id)).coerceAtLeast(0L) }
                     ?: Int.MAX_VALUE.toLong()
+                val foodIdentity = budget.foodIdentities[id]
+                if (foodIdentity != null && (foodIdentity != BotFoodDemand.identity(bot) || !BotFoodDemand.handles(bot, id))) break
+                val foodDeficit = if (foodIdentity == null) Long.MAX_VALUE else BotFoodDemand.deficit(bot).toLong()
                 val unitCeiling = minOf(ceiling, production?.maximumUnitPrice ?: Long.MAX_VALUE)
                 val maximum = minOf((amount - before).coerceAtLeast(0L),
-                    shop.items.computeAmountForId(id).toLong(), 100L, deficit).toInt()
+                    shop.items.computeAmountForId(id).toLong(), 100L, deficit, foodDeficit).toInt()
                 val wallet = minOf(budget.remainingCoins.toLong(), bot.inventory.computeAmountForId(coins).toLong(),
-                    production?.maximumCoins ?: Long.MAX_VALUE).toInt()
+                    production?.maximumCoins ?: Long.MAX_VALUE,
+                    if (foodIdentity == null) Long.MAX_VALUE else BotFoodDemand.allowance(bot).toLong()).toInt()
                 var quantity = maximum
                 var quote = -1
                 while (quantity > 0) {

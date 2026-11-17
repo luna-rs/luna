@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.script.BotScript.ActionSafety
+import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.SubZone
 import api.predef.ext.get
@@ -56,14 +57,29 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
      */
     suspend fun obtain(required: Map<Int, Int>): Boolean = withTimeoutOrNull(5.minutes) {
         if (!safe()) return@withTimeoutOrNull false
-        BotTradeIntentions.recordSupplies(bot, required.map { (id, amount) -> Item(id, amount) })
-        for ((id, amount) in required) bot.preferences.raiseWantedItemTarget(id, amount)
+        val exact = required.filterKeys { it !in Food.ID_TO_FOOD }
+        BotTradeIntentions.recordSupplies(bot, exact.map { (id, amount) -> Item(id, amount) })
+        for ((id, amount) in exact) bot.preferences.raiseWantedItemTarget(id, amount)
+        val foodCount = required.filterKeys { it in Food.ID_TO_FOOD }.values.sum()
+        if (foodCount > 0) BotTradeIntentions.requestFood(bot, foodCount, minimumHeal = 1)
         try {
             // Quote all missing items together so funding does not repeatedly sell and return to the bank.
             val cost = quoteMissing(required)
             if (cost != null && coins() < cost && !fund(cost, required.keys)) return@withTimeoutOrNull false
             for ((id, amount) in required) {
-                if (!safe() || !handler.shop.obtainWantedItem(id, amount) || !safe()) return@withTimeoutOrNull false
+                if (!safe()) return@withTimeoutOrNull false
+                val obtained = if (id in Food.ID_TO_FOOD && !BotTradeIntentions.hasLiteralSupplyDemand(bot, id)) {
+                    val owned = selection.owned(id)
+                    val missing = (amount - owned).coerceAtLeast(0)
+                    if (missing > 0 && (!BotFoodDemand.handles(bot, id) || BotFoodDemand.deficit(bot) < missing))
+                        return@withTimeoutOrNull false
+                    BotTradeIntentions.requestFood(bot, foodCount, minimumHeal = 1)
+                    val allowance = BotFoodDemand.allowance(bot)
+                    val ceiling = if (missing > 0) BotFoodDemand.priceCeiling(bot, id, missing) else 0L
+                    val ceilings = if (ceiling > 0L) mapOf(id to ceiling) else emptyMap()
+                    id in handler.shop.obtainWantedItems(mapOf(id to amount), allowance, ceilings)
+                } else handler.shop.obtainWantedItem(id, amount)
+                if (!obtained || !safe()) return@withTimeoutOrNull false
                 if (bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) < amount) {
                     return@withTimeoutOrNull false
                 }

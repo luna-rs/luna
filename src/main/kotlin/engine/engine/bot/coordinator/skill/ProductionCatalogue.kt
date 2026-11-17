@@ -8,6 +8,7 @@ import game.bot.scripts.skills.*
 import game.obj.resource.fillable.WaterResource
 import game.skill.Skills
 import game.skill.cooking.cookFood.Food
+import game.skill.cooking.cookFood.CookingSuccess
 import game.skill.cooking.prepareFood.IncompleteFood
 import game.skill.crafting.armorCrafting.HideArmor
 import game.skill.crafting.battlestaffCrafting.Battlestaff
@@ -226,8 +227,7 @@ internal object ProductionCatalogue {
 
             Food.entries.forEach { food ->
                 add(Entry(SKILL_COOKING, { bot ->
-                    val rate = if (bot.cooking.level >= food.burnStopLvl) 1.0 else
-                        Skills.successRate(food.chance.first, food.chance.second, bot.cooking.level).coerceIn(0.0, 1.0)
+                    val rate = CookingSuccess.successRate(food, bot.cooking.level, usingFire = true)
                     recipe("cook:${food.name}", SKILL_COOKING, food.lvl, listOf(Item(food.raw)),
                         food.cooked, food.exp * rate).copy(productProbability = rate)
                 }, { bot, duration -> CookFoodBotScript(bot, food, duration, ProductionZones.RANGES.toMutableList()) },

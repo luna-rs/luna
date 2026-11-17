@@ -1,5 +1,6 @@
 package api.bot.action
 
+import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
@@ -432,6 +433,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         retry: Boolean = true
     ): Boolean {
         var currentAmount = amount.coerceAtLeast(1)
+        val previousFood = bot.inventory.filterNotNull().filter { it.id in Food.ID_TO_FOOD }.sumOf { it.amount }
 
         fun resolveWithdrawList(min: Int, max: Int): List<Item> {
             val withdraw = ArrayList<Item>()
@@ -469,10 +471,16 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             }
         }
 
-        if (!success) {
-            // We have no food. Ensure the bot starts looking for some.
-            bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
-            BotTradeIntentions.requestFood(bot, amount)
+        val requested = amount.coerceAtLeast(1)
+        val moved = (bot.inventory.filterNotNull().filter { it.id in Food.ID_TO_FOOD }.sumOf { it.amount } -
+            previousFood).coerceAtLeast(0)
+        if (!success || moved < requested || BotFoodDemand.active(bot)) {
+            val minimum = if (retry) 0 else minimumHeal
+            val carried = bot.inventory.filterNotNull().filter {
+                Food.ID_TO_FOOD[it.id]?.heal?.let { heal -> heal in minimum..maximumHeal } == true
+            }.sumOf { it.amount }
+            BotTradeIntentions.requestFood(bot, maxOf(requested, carried + (requested - moved).coerceAtLeast(0)),
+                minimum, maximumHeal)
         }
         return success
     }

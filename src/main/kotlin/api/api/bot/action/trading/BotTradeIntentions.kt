@@ -9,6 +9,7 @@ import api.predef.ext.totalItemAmount
 import api.predef.SKILL_MAGIC
 import api.predef.equipDef
 import api.predef.prayer
+import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import game.player.item.consume.potion.PotionFamily
 import com.google.common.collect.ImmutableSet
@@ -114,6 +115,7 @@ object BotTradeIntentions {
      */
     fun supplyDemandIds(bot: Bot, now: Long = System.currentTimeMillis()): Set<Int> = buildSet {
         addAll(livePlans(bot, now).keys)
+        BotFoodDemand.selectedId(bot)?.let { add(it) }
         for (family in BotPotionDemand.requestedPotionFamilies(bot, now))
             add(if (game.skill.herblore.makePotion.FinishedPotion.entries.any { it.id == family.threeDose })
                 family.threeDose else family.fourDose)
@@ -185,12 +187,11 @@ object BotTradeIntentions {
     }
 
     /**
-     * Requests one sensible food type after an activity actually runs out, rather than every food in its tier.
+     * Records one generated meal reserve with native per-bite limits and varied affordable substitutes.
      */
-    fun requestFood(bot: Bot, minimum: Int = 14) {
-        val food = bot.preferences.allSuitableFood().maxByOrNull { it.heal } ?: return
-        recordSupplies(bot, listOf(Item(food.id, minimum.coerceAtLeast(1))), stockTarget = 250)
-    }
+    fun requestFood(bot: Bot, minimum: Int = 14, minimumHeal: Int = 0,
+                    maximumHeal: Int = Int.MAX_VALUE): Food? =
+        BotFoodDemand.request(bot, minimum, minimumHeal, maximumHeal)
 
     /**
      * Requests only potions useful for the combat trip being prepared. A bot favors ordinary boosts
@@ -262,6 +263,14 @@ object BotTradeIntentions {
             activeProductionPlan(bot, now)?.target(id)?.let { it > 0 } == true
 
     /**
+     * Reads exact allocations before generated food can reserve the same physical ingredients.
+     */
+    fun literalSupplyTarget(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Int =
+        maxOf(bot.attributes()[plans.attr][id]?.takeIf { it.expires > now }?.target ?: 0,
+            explicitSupplyPlan(bot, id)?.target ?: 0,
+            activeProductionPlan(bot, now)?.target(id) ?: 0)
+
+    /**
      * Personal exact requirements exclude the current manufacturing plan's own inputs and future proceeds.
      */
     fun hasUnmetPersonalSupplyDemand(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Boolean =
@@ -309,6 +318,17 @@ object BotTradeIntentions {
             if (owned >= plan.target || !bot.canUseWantedItem(id)) continue
             val priority = if (owned < plan.minimum) WantedItemPriority.URGENT else WantedItemPriority.STANDARD
             result[id] = definition(id, plan.minimum, plan.target, priority)
+        }
+        val foodOnly = HashSet<Int>()
+        for (quote in BotFoodDemand.purchases(bot, BotTradePrice.EXACT, BotTradePurpose.BUY,
+            BotFoodDemand.allowance(bot).toLong())) {
+            val wanted = BotFoodDemand.demand(bot, quote.item.id, true) ?: continue
+            if (quote.item.id !in result) {
+                result[quote.item.id] = if (true) definition(quote.item.id,
+                    minOf(wanted.min, bot.totalItemAmount(quote.item.id) + quote.item.amount),
+                    bot.totalItemAmount(quote.item.id) + quote.item.amount, wanted.priority) else wanted
+                foodOnly += quote.item.id
+            }
         }
         val potionCoins = (BotTradeManager.transferableAmount(bot, 995).toDouble() *
             budgetFraction(bot, BotTradePurpose.BUY)).toLong()
@@ -429,6 +449,7 @@ object BotTradeIntentions {
         val retained = supplyPlans(bot, System.currentTimeMillis()).mapValuesTo(HashMap()) { it.value.target }
         for ((id, amount) in BotGearDemand.retained(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotPotionDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
+        for ((id, amount) in BotFoodDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for (id in BotReusableItems.itemIds()) retained[id] = maxOf(retained[id] ?: 0, reusableReserve(bot, id))
         val combatSupplies = HashMap<Int, WantedItemDefinition>()
         addCombatSupplies(bot, BotEquipmentPreferences.progressionCandidates(bot), combatSupplies, includeSatisfied = true)
@@ -486,7 +507,7 @@ object BotTradeIntentions {
      * Rechecks newly requested supplies during a suspended sale without rebuilding every equipment layout.
      */
     fun supplyTarget(bot: Bot, id: Int): Int = maxOf(supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0,
-        BotPotionDemand.retainedStock(bot)[id] ?: 0)
+        BotPotionDemand.retainedStock(bot)[id] ?: 0, BotFoodDemand.retained(bot, id))
 
     /**
      * Reads one live sale reserve without copying or pruning the entire activity-supply map.
@@ -498,7 +519,7 @@ object BotTradeIntentions {
         val attributes = bot.attributes()
         val plan = attributes[plans.attr][id]
         var target = maxOf(BotGearDemand.retained(bot)[id] ?: 0, reusableReserve(bot, id), if (plan != null && plan.expires > now) plan.target else 0,
-            BotPotionDemand.retainedStock(bot)[id] ?: 0,
+            BotPotionDemand.retainedStock(bot)[id] ?: 0, BotFoodDemand.retained(bot, id),
             activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
             explicitSupplyPlan(bot, id)?.target ?: 0)
         val upgrades = attributes[toolUpgrades.attr]
@@ -538,6 +559,11 @@ object BotTradeIntentions {
             target = maxOf(target, 1)
         }
         val owned = bot.totalItemAmount(id)
+        val food = BotFoodDemand.demand(bot, id, false)
+        if (food != null) {
+            minimum = maxOf(minimum, food.min)
+            target = maxOf(target, food.target)
+        }
         val potion = BotPotionDemand.demand(bot, id, false, now)
         if (potion != null) {
             minimum = maxOf(minimum, potion.min)

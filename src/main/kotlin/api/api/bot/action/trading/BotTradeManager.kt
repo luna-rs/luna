@@ -281,9 +281,12 @@ object BotTradeManager {
         val selected = ArrayList<BotTradeItem>()
         val productionBudgets = HashMap<Bot, Long>()
         val potionFamilies = HashSet<Pair<Bot, PotionFamily>>()
+        val foodConsumers = HashSet<Bot>()
         for (original in candidates) {
             val candidate = capProductionPurchase(original) ?: continue
             val id = candidate.item.id
+            val personalFood = BotFoodDemand.handles(candidate.bot, id)
+            if (personalFood && candidate.bot in foodConsumers) continue
             val personalFamily = PotionFamily.forId(id)?.takeIf {
                 BotPotionDemand.reserveDoses(candidate.bot, it) > 0 &&
                     !BotTradeIntentions.hasExactSupplyDemand(candidate.bot, id)
@@ -301,6 +304,7 @@ object BotTradeManager {
             selected += BotTradeItem(Item(id, exchange.first.getValue(id)), candidate.price,
                 candidate.purpose, candidate.bot)
             if (personalFamily != null) potionFamilies += candidate.bot to personalFamily
+            if (personalFood) foodConsumers += candidate.bot
             if (production != null) {
                 productionBudgets[candidate.bot] =
                     (budget - TradeBasket.value(exchange.second, paymentPrices)).coerceAtLeast(0L)
@@ -319,7 +323,7 @@ object BotTradeManager {
      * Reviewed utilities also require a concrete deficit and respect currently usable shop alternatives.
      */
     internal fun capProductionPurchase(quote: BotTradeItem): BotTradeItem? {
-        val current = BotUtilityPurchases.constrain(quote)?.let(BotPotionDemand::constrain)?.let(BotGearDemand::constrain) ?: return null
+        val current = BotUtilityPurchases.constrain(quote)?.let(BotPotionDemand::constrain)?.let(BotGearDemand::constrain)?.let { BotFoodDemand.constrain(it) } ?: return null
         val limit = BotTradeIntentions.productionLimit(current.bot, current.item.id) ?: return current
         if (limit.maximumUnitPrice < 1L || limit.maximumCoins < 1L) return null
         val price = minOf(current.price.coerceAtLeast(1L), limit.maximumUnitPrice)
@@ -402,6 +406,7 @@ object BotTradeManager {
     private fun computeBuyItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose,
                                 coins: Long): List<BotTradeItem> {
         val potionPurchases = BotPotionDemand.purchases(bot, priceStrategy, purpose, coins)
+        val foodPurchases = BotFoodDemand.purchases(bot, priceStrategy, purpose, coins)
         if (purpose == BotTradePurpose.SELL || purpose == BotTradePurpose.MERCHANT_SELL) {
             throw IllegalStateException("Must be a valid BUY based purpose.")
         } else if (purpose == BotTradePurpose.MERCHANT_BUY) {
@@ -421,6 +426,7 @@ object BotTradeManager {
                 if (id == 995 || id == 0 || definition.isNoted || !definition.isTradeable) continue
                 if (PotionFamily.forId(id)?.let { BotPotionDemand.reserveDoses(bot, it) > 0 } == true &&
                     !BotTradeIntentions.hasExactSupplyDemand(bot, id)) continue
+                if (BotFoodDemand.handles(bot, id)) continue
                 val resale = BotMerchantSpecialty.accepts(bot, id)
                 if (id !in useful && !resale) continue
                 val quantity = if (resale) Int.MAX_VALUE else useful[id]?.let {
@@ -430,17 +436,18 @@ object BotTradeManager {
                 val quote = pricing.buy(id, BotMerchantValuation.peekGuide(id), id in useful, priceStrategy)
                 candidates += BotTradeItem(Item(id, quantity), quote.coerceAtLeast(1), purpose, bot)
             }
-            return prioritizePurchases(bot, candidates + potionPurchases)
+            return prioritizePurchases(bot, candidates + potionPurchases + foodPurchases)
         }
 
         // Otherwise, buy any wanted items we need to acquire.
         val wantedItems = BotTradeIntentions.purchases(bot).filterNot {
+            BotFoodDemand.handles(bot, it.id) ||
             PotionFamily.forId(it.id)?.let { family -> BotPotionDemand.reserveDoses(bot, family) > 0 } == true &&
                 !BotTradeIntentions.hasExactSupplyDemand(bot, it.id)
         }
         if (wantedItems.isEmpty()) {
             // Bot has nothing they want to buy.
-            return prioritizePurchases(bot, potionPurchases)
+            return prioritizePurchases(bot, potionPurchases + foodPurchases)
         } else {
             // Ownership targets describe total holdings, so buy only the current deficit.
             val candidates = ArrayList<BotTradeItem>()
@@ -464,7 +471,7 @@ object BotTradeManager {
                                                bot)
                 }
             }
-            return prioritizePurchases(bot, candidates + potionPurchases.filterNot { potion ->
+            return prioritizePurchases(bot, candidates + foodPurchases + potionPurchases.filterNot { potion ->
                 candidates.any { it.item.id == potion.item.id }
             })
         }
@@ -521,6 +528,9 @@ object BotTradeManager {
         val quantities = offered.asSequence().filter { it.id != 995 && it.amount > 0 }
             .groupBy { itemDef(it.id).unnotedId.orElse(it.id) }
         if (quantities.isEmpty()) return true
+        val foodOffered = offered.filter { !it.isDynamic }.groupBy { itemDef(it.id).unnotedId.orElse(it.id) }
+            .mapValues { (_, items) -> items.sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }
+        if (!BotFoodDemand.outgoingAllowed(bot, foodOffered)) return false
         val reserves = BotTradeIntentions.retainedStock(bot)
         val potionFamilies = offered.asSequence().filter { !it.isDynamic && it.amount > 0 }
             .mapNotNull { PotionFamily.forId(it.id) }.distinct().toList()
@@ -557,7 +567,10 @@ object BotTradeManager {
                 (before - minOf(before, wanted)).coerceAtLeast(0L) / family.doses(base)
             }
         } ?: Long.MAX_VALUE
-        return minOf(transferable, (owned - reserve).coerceAtLeast(0L), potionLimit, Int.MAX_VALUE.toLong()).toInt()
+        val foodOffered = offered.filter { !it.isDynamic }.groupBy { itemDef(it.id).unnotedId.orElse(it.id) }
+            .mapValues { (_, items) -> items.sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }
+        return minOf(transferable, (owned - reserve).coerceAtLeast(0L), potionLimit,
+            BotFoodDemand.saleableLimit(bot, base, foodOffered), Int.MAX_VALUE.toLong()).toInt()
     }
 
 }

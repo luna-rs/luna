@@ -3,6 +3,7 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.InventoryBotScript
+import api.bot.action.BotPieMaintenance
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.productionBatch
 import engine.bot.speech.BotConversationPool.ConversationSpeech
@@ -189,6 +190,12 @@ class CookFoodBotScript(
         }
         if (failures > 0) cookingObject = null
         return true
+    }
+
+    override suspend fun afterProductionSettled() {
+        if (cooking?.let { it.raw in bot.inventory } == true ||
+            bot.actions.first(CookFoodActionItem::class.java) != null) return
+        BotPieMaintenance.recycleCarried(bot) { !isPaused() && !isTerminated() }
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {

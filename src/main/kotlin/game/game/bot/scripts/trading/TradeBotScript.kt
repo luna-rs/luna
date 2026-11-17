@@ -6,6 +6,7 @@ import engine.controllers.Controllers.inWilderness
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.action.trading.*
+import game.player.item.consume.food.Food
 import api.bot.action.trading.BotTradeManager.tradeRequests
 import api.bot.action.trading.PlayerTradeAdvertisementMarket.Opportunity
 import api.bot.action.trading.PlayerTradeAdvertisementMarket.Pricing
@@ -128,6 +129,31 @@ class TradeBotScript(bot: Bot,
                         quantity, quote.price)
                 }
             }.toList()
+
+        /**
+         * Reads at most thirty-two prepared native sellers for the bounded personal food decision.
+         * Quotes reserve nothing; native stock, payment and both acceptance screens still revalidate.
+         */
+        internal fun foodSupply(buyer: Bot, ids: Set<Int>): List<BotFoodDemand.Basket> =
+            BotMarketplace.entries.asSequence().flatMap { it.tradingSessions().asSequence() }
+                .filterIsInstance<TradeBotScript>().take(32).filter { seller ->
+                    seller.bot !== buyer && !seller.buying && seller.prepared && !seller.browsing &&
+                        !seller.forceBanking && !seller.negotiating && seller.bot.state == EntityState.ACTIVE &&
+                        seller.bot.scriptStack.current() === seller && seller.bot.tradingWith == -1 &&
+                        !seller.bot.overlays.hasWindow() && seller.marketplace.contains(seller.bot.position) &&
+                        !seller.checkBlacklisted(buyer.username)
+                }.flatMap { seller ->
+                    seller.offering.asSequence().filter { it.item.id in ids && it.price > 0L }.mapNotNull { quote ->
+                        val physical = seller.carriedOffer.entries.filter { (id, _) ->
+                            itemDef(id).unnotedId.orElse(id) == quote.item.id
+                        }.sumOf { (id, amount) ->
+                            minOf(amount, seller.bot.inventory.computeNonDynamicAmountForId(id)).toLong()
+                        }
+                        val quantity = minOf(quote.item.amount.toLong(), physical,
+                            BotTradeManager.saleableAmount(seller.bot, quote.item.id).toLong()).toInt()
+                        if (quantity <= 0) null else BotFoodDemand.Basket(quote.item.id, quantity, quote.price)
+                    }
+                }.toList()
 
         /**
          * Previews one nearby player-sale visit using only coins already carried. The marketplace activates only
@@ -291,6 +317,7 @@ class TradeBotScript(bot: Bot,
     private var completedExposure: BotMarketExperience.Failure? = null
     private var nextExperienceSample = 0L
     private val productionQuotedIds = hashSetOf<Int>()
+    private val foodQuoteIdentities = hashMapOf<Int, String>()
     private val productionQuoteExpiries = hashMapOf<Int, Long>()
     private val productionQuoteOwners = hashMapOf<Int, Any>()
 
@@ -1171,6 +1198,9 @@ class TradeBotScript(bot: Bot,
         val specificOwner = purchaseTarget?.id?.let { productionQuoteOwners[it] }
         val specificExpiry = purchaseTarget?.id?.let { productionQuoteExpiries[it] }
         productionQuotedIds.clear()
+        expected.filter { BotFoodDemand.handles(bot, it.item.id) }.forEach {
+            BotFoodDemand.identity(bot)?.let { identity -> foodQuoteIdentities.putIfAbsent(it.item.id, identity) }
+        }
         productionQuoteExpiries.clear()
         productionQuoteOwners.clear()
         if (purchaseTarget != null && specificOwner != null && specificExpiry != null) {
@@ -2504,13 +2534,24 @@ class TradeBotScript(bot: Bot,
     private fun productionPurchaseQuote(quote: BotTradeItem): BotTradeItem? {
         val limit = BotTradeIntentions.productionLimit(bot, quote.item.id)
         if (limit == null) return quote.takeUnless { quote.item.id in productionQuotedIds }
-            ?.let(BotUtilityPurchases::constrain)?.let(BotPotionDemand::constrain)
+            ?.let(BotUtilityPurchases::constrain)?.let(BotPotionDemand::constrain)?.let(::foodPurchaseQuote)
         if (productionQuoteExpiries[quote.item.id]?.let { it != limit.expires } == true) return null
         if (productionQuoteOwners[quote.item.id]?.let { it !== limit.identity } == true) return null
         productionQuotedIds += quote.item.id
         productionQuoteExpiries[quote.item.id] = limit.expires
         productionQuoteOwners[quote.item.id] = limit.identity
         return BotTradeManager.capProductionPurchase(quote)
+    }
+
+    /**
+     * Keeps a generated food quote tied to its current activity instead of promoting it to a literal target.
+     */
+    private fun foodPurchaseQuote(quote: BotTradeItem): BotTradeItem? {
+        val id = quote.item.id
+        if (foodQuoteIdentities[id]?.let { it != BotFoodDemand.identity(bot) } == true) return null
+        if (BotFoodDemand.handles(bot, id))
+            foodQuoteIdentities.putIfAbsent(id, BotFoodDemand.identity(bot) ?: return null)
+        return BotFoodDemand.constrain(quote)
     }
 
     /**
@@ -2681,6 +2722,7 @@ class TradeBotScript(bot: Bot,
     private fun productionTradeAllowed(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
         val normalized = quantities(receiving.toItems(), true)
         if (!BotPotionDemand.allows(bot, normalized)) return false
+        if (!BotFoodDemand.allows(bot, normalized) || !foodTradeAllowed(own, normalized)) return false
         if (!potionTradeAllowed(own, normalized)) return false
         if (!utilityTradeAllowed(own, normalized)) return false
         val limits = normalized.keys.mapNotNull { id ->
@@ -2707,6 +2749,29 @@ class TradeBotScript(bot: Bot,
             allowance = minOf(allowance, limit.maximumCoins)
         }
         return coins <= maximum && coins <= allowance
+    }
+
+    /**
+     * Rechecks the shared piece reserve, captured prices and actual offered cash on both native trade screens.
+     */
+    private fun foodTradeAllowed(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
+        val foods = receiving.filterKeys { it in Food.ID_TO_FOOD &&
+            !BotTradeIntentions.hasLiteralSupplyDemand(bot, it) }
+        if (foods.isEmpty()) return true
+        if (!BotFoodDemand.active(bot)) return foods.keys.none { it in foodQuoteIdentities } &&
+            purpose == BotTradePurpose.MERCHANT_BUY
+        val offeredCoins = (own[COINS] ?: 0).toLong()
+        var maximum = 0L
+        for ((id, amount) in foods) {
+            if (foodQuoteIdentities[id]?.let { it != BotFoodDemand.identity(bot) } == true) return false
+            val price = capturedPurchasePrice(id)
+            val allowed = BotFoodDemand.constrain(BotTradeItem(Item(id, amount), price, purpose, bot), offeredCoins)
+                ?: return false
+            if (allowed.item.amount != amount) return false
+            maximum += price * amount
+        }
+        return maximum <= BotFoodDemand.allowance(bot, offeredCoins) &&
+            (foods.size != receiving.size || own.any { it.key != COINS && it.value > 0 } || offeredCoins <= maximum)
     }
 
     /**

@@ -15,6 +15,7 @@ import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.bot.Bot
 import java.util.Locale
+import game.player.item.consume.food.Food
 import game.player.item.consume.potion.PotionFamily
 
 /**
@@ -71,6 +72,7 @@ object BotTradeBuyingPolicy {
         val active = BotTradeIntentions.supplyDemand(bot, base)
         if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base))
             return active?.takeIf { bot.totalItemAmount(base) < it.target }
+        if (base in Food.ID_TO_FOOD) return BotFoodDemand.demand(bot, base)
         val generated = BotGearDemand.forItem(bot, base)
         if (generated != null) {
             if (!BotGearDemand.usableNow(bot, base) || BotGearDemand.deficit(bot, base) < 1) return null
@@ -111,6 +113,7 @@ object BotTradeBuyingPolicy {
     fun alternatives(bot: Bot, id: Int): Set<Int> {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
         if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) return emptySet()
+        if (BotFoodDemand.handles(bot, base)) return BotFoodDemand.alternatives(bot)
         if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) BotGearDemand.forItem(bot, base)?.let { need ->
             return need.alternatives.filterTo(linkedSetOf()) { BotGearDemand.usableNow(bot, it) &&
                 BotGearDemand.deficit(bot, it) > 0 }
@@ -131,6 +134,7 @@ object BotTradeBuyingPolicy {
     fun buyingAdvertisement(bot: Bot, id: Int): String? {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
         if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) return null
+        if (BotFoodDemand.handles(bot, base)) return "Buying food!"
         if (!groupedEquipment(bot, base)) return null
         val goal = goals(bot).firstOrNull { base in it.alternatives } ?: return null
         val family = goal.family ?: return null
@@ -145,6 +149,7 @@ object BotTradeBuyingPolicy {
     fun groupKey(bot: Bot, id: Int): Int? {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
         if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) return null
+        if (BotFoodDemand.handles(bot, base)) return Int.MIN_VALUE + 7
         if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) BotGearDemand.forItem(bot, base)?.let {
             return it.key.hashCode()
         }

@@ -1,6 +1,7 @@
 package api.bot.script
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.BotSupplySources
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotReusableItems
 import api.bot.Suspendable.naturalDexterityDelay
@@ -8,6 +9,7 @@ import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.itemDef
+import api.predef.SKILL_COOKING
 import api.bot.social.SocialBotScript
 import api.predef.ext.*
 import com.google.gson.JsonObject
@@ -472,6 +474,8 @@ abstract class InventoryBotScript(
             return false
         }
         settlePlannedProduction()
+        afterProductionSettled()
+        if (isPaused() || isTerminated()) return false
         if (!plannedGoalAvailable()) return false
         return onInventoryBankRequested()
     }
@@ -484,6 +488,8 @@ abstract class InventoryBotScript(
             return true
         }
         settlePlannedProduction()
+        afterProductionSettled()
+        if (isPaused() || isTerminated()) return true
         if (!plannedGoalAvailable()) return true
         if (failedProductionZone != null) {
             if (activeZone == failedProductionZone) {
@@ -582,6 +588,11 @@ abstract class InventoryBotScript(
     }
 
     /**
+     * Allows bounded native inventory maintenance after the last action settles, before a finite goal can stop.
+     */
+    protected open suspend fun afterProductionSettled() {}
+
+    /**
      * Pauses interrupt native production before a temporary trade or other child can alter the measured inventory.
      */
     internal fun pausePlannedProduction() {
@@ -652,6 +663,20 @@ abstract class InventoryBotScript(
                 BotProductionPlanner.unavailable(bot, plan)
             stopPlannedProduction()
             return false
+        }
+        if (plan.recipe.skill == SKILL_COOKING && !plan.shopAttempted && plan.remainingCoins > 0L &&
+            plan.targets().any { (id, target) -> owned(id) < target &&
+                BotSupplySources.quote(bot, id, (target.toLong() - owned(id)).coerceAtMost(100L).toInt())?.let {
+                    it.maximumUnitPrice <= (plan.maximumUnitPrices[id] ?: 0L) &&
+                        it.maximumUnitPrice <= plan.remainingCoins
+                } == true }) {
+            plan.shopAttempted = true
+            withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
+                if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
+                    handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
+                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
+            }
+            if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
         }
         for ((id, target) in plan.targets()) {
             if (owned(id) >= target || !plan.attemptedMarketItems.add(id)) continue

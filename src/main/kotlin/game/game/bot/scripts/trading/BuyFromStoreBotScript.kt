@@ -1,6 +1,7 @@
 package game.bot.scripts.trading
 
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotTradeSelection
 import api.bot.script.DynamicBotScript
 import api.bot.zone.SubZone
@@ -33,6 +34,22 @@ import kotlin.random.Random
  * @author lare96
  */
 class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) : DynamicBotScript(bot) {
+
+    /**
+     * Keeps one ordinary shopping visit within its first generated food policy and original food allowance.
+     *
+     * @author lare96
+     */
+    private class FoodBudget(val identity: String, var remainingCoins: Int)
+
+    /**
+     * Retains a generated candidate's policy and allowance before opening a shop or attempting any purchase.
+     *
+     * @author lare96
+     */
+    private class WantedPurchase(val wanted: WantedItemDefinition, val foodIdentity: String?, val foodCoins: Int)
+
+    private var foodBudget: FoodBudget? = null
 
     companion object {
 
@@ -125,8 +142,9 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         val blockedWantedItems = HashSet<Int>()
 
         while (remainingBudget > 0) {
-            val wanted = nextWantedItem(shops, blockedWantedItems, remainingBudget) ?: break
-            val spent = buyWantedItem(shops, wanted, remainingBudget)
+            val purchase = nextWantedItem(shops, blockedWantedItems, remainingBudget) ?: break
+            val wanted = purchase.wanted
+            val spent = buyWantedItem(shops, wanted, remainingBudget, purchase.foodIdentity, purchase.foodCoins)
 
             if (spent < 1) {
                 // Avoid selecting an impossible wanted item forever during this shopping trip.
@@ -208,7 +226,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
     /**
      * Returns the next wanted item that still needs ownership and is stocked by an accessible shop.
      */
-    private fun nextWantedItem(shops: List<Shop>, blocked: Set<Int>, budget: Int): WantedItemDefinition? {
+    private fun nextWantedItem(shops: List<Shop>, blocked: Set<Int>, budget: Int): WantedPurchase? {
         val candidates = BotTradeIntentions.purchases(bot)
             .filterNot { it.id in blocked || it.id == COINS_ID }
             .filter { wanted -> shopsFor(shops, wanted.id).any { canBuyOne(it, wanted.id, budget) } }
@@ -217,7 +235,10 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             .sortedWith(compareByDescending<WantedItemDefinition> {
                 it.priority == WantedItemDefinition.WantedItemPriority.URGENT
             }
-                .thenByDescending { bot.canUseWantedItem(it.id) }).firstOrNull()
+                .thenByDescending { bot.canUseWantedItem(it.id) }).firstOrNull()?.let { wanted ->
+                val identity = BotFoodDemand.identity(bot)?.takeIf { BotFoodDemand.handles(bot, wanted.id) }
+                WantedPurchase(wanted, identity, if (identity == null) 0 else BotFoodDemand.allowance(bot))
+            }
     }
 
     /**
@@ -240,14 +261,23 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
     /**
      * Attempts to complete one wanted-item target before moving to another wanted item.
      */
-    private suspend fun buyWantedItem(shops: List<Shop>, wanted: WantedItemDefinition, budget: Int): Int {
+    private suspend fun buyWantedItem(shops: List<Shop>, wanted: WantedItemDefinition, budget: Int,
+                                      foodIdentity: String?, foodCoins: Int): Int {
         val production = BotTradeIntentions.productionLimit(bot, wanted.id)
+        val food = if (foodIdentity == null) null else {
+            val previous = foodBudget
+            if (previous != null && previous.identity != foodIdentity) return 0
+            previous ?: FoodBudget(foodIdentity, foodCoins.coerceAtLeast(0)).also { foodBudget = it }
+        }
         var spent = 0
         val failedShops = HashSet<Shop>()
 
         while (spent < budget) {
+            if (food != null && (food.identity != BotFoodDemand.identity(bot) || !BotFoodDemand.handles(bot, wanted.id) ||
+                    food.remainingCoins < 1)) break
             val owned = bot.totalItemAmount(wanted.id)
-            val amountNeeded = wanted.target - owned
+            val amountNeeded = minOf(wanted.target - owned,
+                if (food == null) Int.MAX_VALUE else BotFoodDemand.deficit(bot))
 
             if (amountNeeded < 1) {
                 break
@@ -268,11 +298,13 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 shop = shop,
                 id = wanted.id,
                 maxAmount = amountNeeded,
-                budget = budget - spent,
-                expectedProduction = production
+                budget = minOf(budget - spent, food?.remainingCoins ?: Int.MAX_VALUE),
+                expectedProduction = production,
+                expectedFoodIdentity = food?.identity
             )
 
             spent += amountSpent
+            if (food != null) food.remainingCoins = (food.remainingCoins - amountSpent).coerceAtLeast(0)
 
             // If this shop produced no ownership increase, trying it repeatedly would create an infinite loop.
             if (bot.totalItemAmount(wanted.id) <= ownedBefore) {
@@ -411,7 +443,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         id: Int,
         maxAmount: Int,
         budget: Int,
-        expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null
+        expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null,
+        expectedFoodIdentity: String? = null
     ): Int {
         val production = expectedProduction ?: BotTradeIntentions.productionLimit(bot, id)
         var remainingAmount = maxAmount
@@ -427,7 +460,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             val coinsBefore = bot.inventory.computeAmountForId(COINS_ID)
             val itemsBefore = bot.inventory.computeAmountForId(id)
 
-            val bought = handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget, production)
+            val bought = handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget, production, expectedFoodIdentity)
 
             val coinsAfter = bot.inventory.computeAmountForId(COINS_ID)
             val itemsAfter = bot.inventory.computeAmountForId(id)
