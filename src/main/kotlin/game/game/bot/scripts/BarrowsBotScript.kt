@@ -42,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Completes one native Barrows run using owned combat equipment, food, prayer doses and a spade.
- * Strong single-style accounts may attend; compatible weapon and torso switches counter Ahrim when available.
+ * Prepared single-style accounts may attend; compatible weapon and torso switches counter Ahrim when available.
  * Native varps own brother defeats, maze locks and chest rewards. Digging, coffins, doors, puzzle answers,
  * attacks and rewards use ordinary player interactions. Internal walks disable recovery teleports and bank detours.
  * Saved visits retain their absolute budget and return intent, then re-read native progress and physical supplies.
@@ -95,11 +95,26 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
                                  val requirements: Map<Int, Int>)
 
         /**
-         * Requires substantial permanent and current stats before considering the equipment itself.
+         * Requires permanent health and protection-prayer access, with sufficient unboosted and current Defence.
+         * Each attack style has its own admission check rather than an additional overall combat-level floor.
          */
-        internal fun levelsReady(bot: Bot): Boolean = !bot.preferences.isSkiller && bot.combatLevel >= 95 &&
-            bot.hitpoints.staticLevel >= 75 && bot.defence.level >= 70 && bot.prayer.staticLevel >= 50 &&
+        internal fun levelsReady(bot: Bot): Boolean = !bot.preferences.isSkiller &&
+            bot.hitpoints.staticLevel >= 60 && minOf(bot.defence.staticLevel, bot.defence.level) >= 50 &&
+            bot.prayer.staticLevel >= 43 &&
             BotCombatActionHandler.mayGainExperience(bot, Skill.HITPOINTS)
+
+        /**
+         * Rune-tier melee weapons and moderate physical armour suffice for a protected Barrows visit.
+         * Check the final shared outfit as well as the standalone selection, since switches may lose a shield
+         * or retain another style's legs. Queen-specific weapon and armour requirements do not apply here.
+         */
+        internal fun meleeGearReady(gear: Array<Int?>): Boolean {
+            val weapon = gear[Equipment.WEAPON]?.let(::equipDef) ?: return false
+            if ((0..2).maxOf { weapon.getBonus(it) } < 40 ||
+                weapon.getBonus(EquipmentBonus.STRENGTH.index) < 40) return false
+            if (gear[Equipment.CHEST] == null || gear[Equipment.LEGS] == null) return false
+            return (5..7).minOf { bonus -> gear.filterNotNull().sumOf { equipDef(it).getBonus(bonus) } } >= 100
+        }
 
         /**
          * Counts physical unnoted stock, including smaller remaining prayer doses after an earlier visit.
@@ -150,9 +165,10 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
             val choices = linkedMapOf<BotGearPurpose, CombatLoadout>()
             for (purpose in listOf(BotGearPurpose.MAGIC, BotGearPurpose.RANGED, BotGearPurpose.MELEE)) {
                 val level = when (purpose) {
-                    BotGearPurpose.MAGIC -> bot.magic.level >= 80
-                    BotGearPurpose.RANGED -> bot.ranged.level >= 85
-                    else -> bot.attack.level >= 85 && bot.strength.level >= 85
+                    BotGearPurpose.MAGIC -> minOf(bot.magic.staticLevel, bot.magic.level) >= 60
+                    BotGearPurpose.RANGED -> minOf(bot.ranged.staticLevel, bot.ranged.level) >= 70
+                    else -> minOf(bot.attack.staticLevel, bot.attack.level,
+                        bot.strength.staticLevel, bot.strength.level) >= 70
                 }
                 if (!level) continue
                 var selected = CombatLoadout.find(bot, purpose, carriedOnly = carriedOnly) ?: continue
@@ -168,7 +184,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
                 if (selected.gear[Equipment.CHEST] == null || selected.gear[Equipment.LEGS] == null) continue
                 val weapon = selected.gear[Equipment.WEAPON] ?: continue
                 if (purpose == BotGearPurpose.MAGIC && (selected.spell?.maxHit ?: 0) < 15) continue
-                if (purpose == BotGearPurpose.MELEE && !KalphiteQueenTrip.gearReady(selected.gear)) continue
+                if (purpose == BotGearPurpose.MELEE && !meleeGearReady(selected.gear)) continue
                 val attacks = if (carriedOnly) 20 else 500
                 if (selected.runes.any { (id, amount) -> count(bot, id, carriedOnly) < amount * attacks }) continue
                 if (purpose == BotGearPurpose.RANGED && count(bot, selected.gear[Equipment.AMMUNITION] ?: weapon,
@@ -189,7 +205,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
                 when (purpose) {
                     BotGearPurpose.MAGIC -> bonus(EquipmentBonus.MAGIC_ATTACK.index) < 0
                     BotGearPurpose.RANGED -> bonus(EquipmentBonus.RANGED_ATTACK.index) < 20
-                    else -> !KalphiteQueenTrip.gearReady(mixed)
+                    else -> !meleeGearReady(mixed)
                 }
             }
             if (choices.isEmpty() || count(bot, SPADE, carriedOnly) == 0) return null
