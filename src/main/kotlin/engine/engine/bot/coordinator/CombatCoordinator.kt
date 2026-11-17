@@ -305,6 +305,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return
         }
         if (training && BotCombatActionHandler.wantedCombatSkills(bot).isEmpty()) return
+        EquipmentDropJobs.candidate(bot)?.let {
+            bot.scriptStack.push(it)
+            return
+        }
         if (training) trainingMinigameScript(bot)?.let {
             bot.scriptStack.push(it)
             return

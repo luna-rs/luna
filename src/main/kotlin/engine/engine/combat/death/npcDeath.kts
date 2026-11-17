@@ -27,6 +27,7 @@ DeathHookHandler.setDefaultHook(Npc::class) {
         }
         if (source.isRealBot()) BotReactions.reactToKill(source, victim)
         drop()
+        if (source is Bot) engine.bot.coordinator.EquipmentDropJobs.creditedKill(source, victim)
         victim.move(Position(1, 1))
     }
 

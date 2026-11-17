@@ -3,6 +3,7 @@ package engine.bot.gear
 import api.predef.*
 import api.bot.action.trading.BotTradeIntentions
 import api.predef.ext.canUseWantedItem
+import api.predef.ext.totalItemAmount
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.HashMultimap
 import engine.bot.gear.BotGearSelector.ALL_GEAR
@@ -100,7 +101,11 @@ object BotGearSelector {
      * @param bot The bot whose ownership and equipment requirements are being checked.
      * @param equipment The desired equipment layout, indexed by equipment slot.
      */
-    class BotGearSelectorFill(val bot: Bot, val equipment: Array<Int?>) {
+    class BotGearSelectorFill @JvmOverloads constructor(
+        val bot: Bot,
+        val equipment: Array<Int?>,
+        private val purposes: Set<BotGearPurpose> = emptySet()
+    ) {
 
         /**
          * Attempts to fill every empty equipment slot with gear matching the supplied purposes.
@@ -249,7 +254,7 @@ object BotGearSelector {
         fun buildLocator(): BotGearLocator {
             fillAmmo()
             check2hWeapon()
-            return BotGearLocator(bot, equipment)
+            return BotGearLocator(bot, equipment, purposes)
         }
     }
 
@@ -361,7 +366,7 @@ object BotGearSelector {
                 hats.firstOrNull()?.let { equipment[HEAD] = it }
             }
         }
-        return BotGearSelectorFill(bot, equipment)
+        return BotGearSelectorFill(bot, equipment, purposes)
     }
 
     /**
@@ -385,7 +390,7 @@ object BotGearSelector {
             }
         }
 
-        return BotGearSelectorFill(bot, equipment)
+        return BotGearSelectorFill(bot, equipment, set.purposes)
     }
 
     /**
@@ -421,7 +426,7 @@ object BotGearSelector {
      *
      * An item is valid only when:
      *
-     * - The bot owns the item according to [Bot.itemTracker].
+     * - The bot owns the item or its note, which the locator converts through normal banking.
      * - The bot meets all equipment requirements.
      * - The item's real equipment slot matches the requested [index].
      *
@@ -433,6 +438,6 @@ object BotGearSelector {
      */
     private fun valid(bot: Bot, index: Int, id: Int): Boolean {
         val def = equipDef(id)
-        return bot.itemTracker.contains(id) && def.meetsAllRequirements(bot) && index == def.index
+        return bot.totalItemAmount(id) > 0 && def.meetsAllRequirements(bot) && index == def.index
     }
 }

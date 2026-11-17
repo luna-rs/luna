@@ -1,91 +1,116 @@
 package engine.bot.gear
 
-import api.bot.Suspendable.naturalDelay
-import api.bot.Suspendable.naturalMicroDelay
-import io.luna.game.model.mob.bot.Bot
-import api.predef.*
+import api.bot.script.BotScript.ActionSafety
+import api.predef.itemDef
+import io.luna.game.model.EntityState
+import io.luna.game.model.def.EquipmentDefinition
+import io.luna.game.model.item.Equipment.SHIELD
+import io.luna.game.model.item.Equipment.WEAPON
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.bot.Bot
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * Locates and equips a resolved bot equipment layout.
+ * Obtains real selected equipment before replacing working worn pieces through native equip actions.
+ * Missing withdrawals leave the previous piece equipped while other valid replacements can still succeed.
+ * Notes are deposited and withdrawn unnoted; all displaced or interrupted cargo remains owned.
  *
- * This class represents the execution side of bot gear selection. The selector decides which item ids should be worn,
- * while this locator handles moving the bot to a bank, clearing current equipment, withdrawing the selected items, and
- * equipping them.
+ * Null slots retain compatible worn pieces. Purpose-based layouts may remove an incompatible piece only
+ * after all requested replacements are ready; exact partial layouts do not clear unrelated slots.
+ * Strict encounter layouts can explicitly clear unselected slots after their replacements succeed.
  *
- * The [equipment] array is indexed by equipment slot. Each non-null entry is the item id that should be equipped in that
- * slot. Null entries are ignored, allowing selectors to request partial loadouts when a full outfit is not required.
- *
- * @param bot The bot that should locate and equip the selected gear.
- * @param equipment The desired equipment item ids, indexed by equipment slot.
+ * @param bot The account preparing its gear.
+ * @param equipment Concrete unnoted equipment ids indexed by native equipment slot.
+ * @param purposes The primary purposes of a selected outfit, or empty for an exact partial layout.
+ * @param clearUnselected Whether a strict complete outfit must remove every unselected old piece.
  * @author lare96
  */
-class BotGearLocator(val bot: Bot, val equipment: Array<Int?>) {
+class BotGearLocator @JvmOverloads constructor(
+    val bot: Bot,
+    val equipment: Array<Int?>,
+    private val purposes: Set<BotGearPurpose> = emptySet(),
+    private val clearUnselected: Boolean = false
+) {
+    /**
+     * Applies the available valid pieces within a bounded bank visit, retaining working gear on partial failure.
+     */
+    suspend fun locateAndEquip(): Boolean = locateAndEquip { true }
 
     /**
-     * Locates the selected equipment and equips it onto the bot.
-     *
-     * This method performs a bank-centered equipment reset:
-     * - Travels to a bank and deposits carried items.
-     * - Checks inventory capacity, then unequips each item using a fast memory transfer.
-     * - Stops if any item cannot be moved, leaving it equipped.
-     * - Deposits the unequipped items.
-     * - Withdraws each selected gear item from the bank.
-     * - Equips all selected items.
-     *
-     * Stackable selected items are withdrawn with a default amount of `500`; non-stackable selected items are withdrawn
-     * with an amount of `1`.
-     *
-     * @return `true` if the bot successfully withdrew and equipped the selected gear, otherwise `false`.
+     * Applies the layout while its owning activity still permits native equipment actions.
      */
-    suspend fun locateAndEquip(): Boolean {
-        val banking = bot.actionHandler.banking
+    suspend fun locateAndEquip(allowed: () -> Boolean): Boolean {
+        fun permitted() = allowed() && bot.state == EntityState.ACTIVE &&
+            !bot.client.isPendingLogout && ActionSafety.NON_COMBAT.allows(bot)
+        if (!permitted()) return false
+        if (equipment.all { it == null } && purposes.isEmpty() && !clearUnselected) return true
+        return withTimeoutOrNull(120.seconds) {
+            val banking = bot.actionHandler.banking
+            if (!banking.travelToBankOpen() || !permitted() || !bot.bank.isOpen) return@withTimeoutOrNull false
+            val requested = equipment.withIndex().filter { it.value != null }
+            val ids = requested.mapNotNull { it.value }.toSet()
+            banking.depositInventory(ids)
+            if (!permitted() || !bot.bank.isOpen) return@withTimeoutOrNull false
 
-        bot.log("Starting equipment selection locator.")
-        if (!banking.travelToBankDepositAll()) {
-            return false
-        }
-
-        // Fast memory based unequip to speed things up here.
-        bot.log("Fast transfer: equipment -> inventory.")
-        if (!bot.inventory.hasSpaceForAll(bot.equipment)) {
-            // TODO Make bot try and deposit all again?
-            bot.log("Not enough inventory space to unequip selected gear.")
-            return false
-        }
-
-        for ((index, item) in bot.equipment.withIndex()) {
-            if (item == null) {
-                continue
+            val weapon = equipment.getOrNull(WEAPON)
+            val conflicting = weapon?.let { EquipmentDefinition.ALL.get(it).orElse(null)?.isTwoHanded } == true &&
+                equipment.getOrNull(SHIELD) != null
+            var success = !conflicting
+            val ready = linkedMapOf<Int, Int>()
+            for ((slot, selected) in requested) {
+                val id = selected!!
+                if (!permitted() || !bot.bank.isOpen) return@withTimeoutOrNull false
+                val definition = EquipmentDefinition.ALL.get(id).orElse(null)
+                if (definition == null || definition.index != slot || !definition.meetsAllRequirements(bot) ||
+                    itemDef(id).isNoted || conflicting && slot in setOf(WEAPON, SHIELD)) {
+                    success = false
+                    continue
+                }
+                val worn = bot.equipment[slot]?.takeIf { it.id == id }
+                val stackable = itemDef(id).isStackable
+                if (worn != null && (!stackable || worn.amount >= 500)) {
+                    ready[slot] = id
+                    continue
+                }
+                val quantity = if (stackable)
+                    (500L - (worn?.amount ?: 0) - bot.inventory.computeAmountForId(id)).coerceAtLeast(0L).toInt()
+                    else if (bot.inventory.contains(id)) 0 else 1
+                if (quantity > 0) {
+                    banking.withdrawUnnoted(Item(id, quantity), ::permitted)
+                }
+                if (!permitted()) return@withTimeoutOrNull false
+                if (worn != null || bot.inventory.contains(id)) ready[slot] = id else success = false
             }
-            if (!bot.equipment.unequip(index)) {
-                bot.log("Could not unequip $item.")
-                return false
+
+            if (!permitted()) return@withTimeoutOrNull false
+            bot.overlays.closeWindows()
+            for ((slot, id) in ready) {
+                if (!permitted()) return@withTimeoutOrNull false
+                if (bot.equipment[slot]?.id == id &&
+                    (!itemDef(id).isStackable || !bot.inventory.contains(id))) continue
+                val definition = EquipmentDefinition.ALL.get(id).orElse(null)
+                if (definition == null || !definition.meetsAllRequirements(bot) || !bot.inventory.contains(id)) {
+                    success = false
+                    continue
+                }
+                if (slot == SHIELD && bot.equipment[WEAPON]?.equipDef?.isTwoHanded == true) {
+                    success = false
+                    continue
+                }
+                if (!bot.actionHandler.equipment.equip(id) || bot.equipment[slot]?.id != id) success = false
             }
-        }
-        bot.naturalDelay()
 
-        if (!banking.travelToBankDepositAll()) {
-            return false
-        }
-
-        bot.naturalMicroDelay()
-        bot.log("Withdrawing all selected gear from bank.")
-
-        val selectedItems = ArrayList<Item>()
-        for (id in equipment) {
-            if (id != null) {
-                selectedItems += Item(id, if (itemDef(id).isStackable) 500 else 1)
+            if (success && (clearUnselected || purposes.isNotEmpty())) {
+                for ((slot, item) in bot.equipment.withIndex()) {
+                    if (item == null || equipment.getOrNull(slot) != null) continue
+                    val gear = BotGearSelector.ALL_GEAR_IDS.value[item.id]
+                    if (!clearUnselected && gear != null && BotEquipmentPreferences.supports(gear, purposes)) continue
+                    if (!permitted()) return@withTimeoutOrNull false
+                    if (!bot.actionHandler.equipment.unequip(slot)) success = false
+                }
             }
-        }
-
-        if (!banking.withdrawAll(selectedItems)) {
-            return false
-        }
-
-        bot.naturalMicroDelay()
-        bot.log("Equipping all selected gear.")
-
-        return bot.actionHandler.equipment.equipAll(selectedItems.map { it.id })
+            success && permitted() && requested.all { (slot, id) -> bot.equipment[slot]?.id == id }
+        } == true
     }
 }

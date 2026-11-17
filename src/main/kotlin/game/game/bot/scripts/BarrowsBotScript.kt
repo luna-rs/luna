@@ -295,7 +295,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
             } != true) return false
         val planned = plan(bot) ?: return false
         val success = withTimeoutOrNull(180_000) {
-            if (!BotGearLocator(bot, planned.base).locateAndEquip() || !handler.banking.travelToBankDepositAll())
+            if (!BotGearLocator(bot, planned.base, clearUnselected = true).locateAndEquip() || !handler.banking.travelToBankDepositAll())
                 return@withTimeoutOrNull false
             val missing = planned.requirements.mapNotNull { (id, amount) ->
                 (amount - CombatLoadout.carried(bot, id)).takeIf { it > 0 }?.let { Item(id, it) }

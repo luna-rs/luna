@@ -4,6 +4,7 @@ import api.bot.SuspendableCondition
 import api.bot.Suspendable.delay
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
+import api.bot.action.trading.BotGearDemand
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotUtilityPurchases
 import api.bot.zone.SubZone
@@ -91,6 +92,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     private fun buyExact(shop: Shop, id: Int, amount: Int, maxTotalCost: Int,
                          expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null): Boolean {
+        if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, id) && BotGearDemand.forItem(bot, id) != null &&
+            (!BotGearDemand.usableNow(bot, id) || BotGearDemand.hasUsableOwned(bot, id))) return false
         if (amount !in 1..100 || maxTotalCost < 1 || !ActionSafety.NON_COMBAT.allows(bot) ||
             bot.isConnectedPlayer && !bot.isAutomationActive ||
             !shop.botAccess.apply(bot) ||
@@ -250,6 +253,40 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         require(amount > 0)
         BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
         return id in obtainWantedItems(mapOf(id to amount))
+    }
+
+    /**
+     * Obtains one usable tool from real finite sources without recording every failed tier as an exact supply.
+     * The caller's saved absolute deadline also bounds child trading; each shop action retains native price,
+     * access, capacity and payment guards. A funded generated bid can remain while ordinary work resumes.
+     */
+    suspend fun obtainGeneratedTool(ordered: List<Int>, deadlineMillis: Long): Int? {
+        if (ordered.isEmpty() || deadlineMillis <= System.currentTimeMillis()) return null
+        val key = BotGearDemand.toolKey(ordered)
+        val need = BotGearDemand.record(bot, key, ordered.first(), ordered) ?: return null
+        val coins = minOf(need.maximumCoins, BotGearDemand.allowance(bot))
+        if (coins < 1) return null
+        for (id in ordered) {
+            if (deadlineMillis <= System.currentTimeMillis()) return null
+            if (!BotGearDemand.usableNow(bot, id)) continue
+            if (BotGearDemand.deficit(bot, id) < 1 && bot.totalItemAmount(id) < 1) return null
+            val shop = BotSupplySources.quote(bot, id, 1)?.takeIf { it.totalCoins in 1..coins.toLong() }
+            if (shop == null && bot.totalItemAmount(id) < 1) continue
+            val remaining = deadlineMillis - System.currentTimeMillis()
+            if (remaining <= 0L) return null
+            val acquired = withTimeoutOrNull(remaining) {
+                obtainWantedItems(mapOf(id to 1), coins, mapOf(id to (shop?.maximumUnitPrice ?: coins.toLong())))
+            }.orEmpty()
+            if (id in acquired) return id
+            if (bot.scriptStack.current()?.isPaused() == true) return null
+        }
+        if (need.selected >= 0 && BotGearDemand.deficit(bot, need.selected) > 0 &&
+            deadlineMillis > System.currentTimeMillis()) {
+            TradeBotScript.buySpecific(bot, need.selected, 1, deadlineMillis)?.let {
+                bot.scriptStack.pushHead(it)
+            }
+        }
+        return null
     }
 
     /**

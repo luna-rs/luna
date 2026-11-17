@@ -19,6 +19,7 @@ import game.player.item.consume.potion.Potion
 import io.luna.game.model.Entity
 import io.luna.game.model.EntityState
 import io.luna.game.model.def.EquipmentDefinition
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.item.Item
@@ -264,8 +265,13 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @param item The item and amount to withdraw.
      * @return `true` if the withdrawal succeeds.
      */
-    suspend fun withdraw(item: Item): Boolean {
-        if (!ActionSafety.NON_COMBAT.await(bot)) return false
+    suspend fun withdraw(item: Item): Boolean = withdraw(item) { true }
+
+    /**
+     * Rechecks the owning activity before native withdrawal inputs, including after an amount dialogue opens.
+     */
+    suspend fun withdraw(item: Item, allowed: () -> Boolean): Boolean {
+        if (!allowed() || !ActionSafety.NON_COMBAT.await(bot) || !allowed()) return false
         bot.log("Withdrawing ${name(item)}.")
 
         if (!bot.bank.isOpen) {
@@ -304,26 +310,48 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (clickWidget != 5) {
             // Withdraw 1, 5, 10, or all.
             bot.log("Clicking withdraw option $clickWidget.")
+            if (!allowed() || !bot.bank.isOpen || !ActionSafety.NON_COMBAT.allows(bot)) return false
             bot.output.sendItemWidgetClick(clickWidget, bankIndex, 5382, withdrawItem.id)
-            return withdrawCond.submit().await()
+            return withdrawCond.submit().await() && allowed()
         }
 
         val amountCond = SuspendableCondition {
             NumberInput::class in bot.overlays
         }
 
+        if (!allowed() || !bot.bank.isOpen || !ActionSafety.NON_COMBAT.allows(bot)) return false
         bot.output.sendItemWidgetClick(5, bankIndex, 5382, withdrawItem.id)
 
         // Wait until amount input interface is open.
         if (amountCond.submit().await()) {
-            if (!ActionSafety.NON_COMBAT.await(bot) || !bot.bank.isOpen || NumberInput::class !in bot.overlays) return false
+            if (!allowed() || !ActionSafety.NON_COMBAT.await(bot) || !allowed() ||
+                !bot.bank.isOpen || NumberInput::class !in bot.overlays) return false
             bot.log("Entering amount (${withdrawItem.amount}).")
             bot.output.enterAmount(withdrawItem.amount)
-            return withdrawCond.submit().await()
+            return withdrawCond.submit().await() && allowed()
         }
 
         bot.log("Could not open enter amount interface.")
         return false
+    }
+
+    /**
+     * Withdraws real unnoted stock and verifies the exact received quantity within one short operation.
+     * Ordinary trading withdrawals retain their chosen note mode through the existing overload.
+     */
+    suspend fun withdrawUnnoted(item: Item, allowed: () -> Boolean = { true }): Boolean {
+        fun permitted() = allowed() && bot.state == EntityState.ACTIVE &&
+            !bot.client.isPendingLogout && ActionSafety.NON_COMBAT.allows(bot)
+        if (!ItemDefinition.isIdValid(item.id) || item.itemDef.isNoted || item.amount < 1 ||
+            !permitted() || !bot.bank.isOpen) return false
+        val quantity = minOf(item.amount, bot.bank.computeAmountForId(item.id))
+        if (quantity < 1) return false
+        val before = bot.inventory.computeAmountForId(item.id).toLong()
+        return withTimeoutOrNull(5.seconds) {
+            clickBankingMode(false)
+            withdraw(Item(item.id, quantity), ::permitted) && permitted() &&
+                bot.inventory.computeAmountForId(item.id).toLong() - before == quantity.toLong()
+        } == true
     }
 
     /**

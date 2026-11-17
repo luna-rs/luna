@@ -72,6 +72,7 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
             gameService.sync {
                 checkIndoorsSpawns(tokenObjects)
                 tokenObjects.forEach { world.npcs.add(it) }
+                engine.bot.coordinator.EquipmentDropSources.installSpawns(tokenObjects)
             }
             logger.debug("Loaded ${tokenObjects.size} global NPC spawns!")
         }

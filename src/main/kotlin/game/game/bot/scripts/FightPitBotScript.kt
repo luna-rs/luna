@@ -190,7 +190,7 @@ class FightPitBotScript(bot: Bot, private var entered: Boolean = false, private 
             ?: return false
         discipline = purpose
         val selected = DuelBotPolicy.loadout(bot, purpose) ?: return false
-        if (!BotGearLocator(bot, selected.gear).locateAndEquip()) return false
+        if (!BotGearLocator(bot, selected.gear, clearUnselected = true).locateAndEquip()) return false
         val supplies = selected.runes.map { (id, amount) -> Item(id, amount * 50) }.toMutableList()
         val food = Food.ID_TO_FOOD.entries.filter { bot.bank.computeAmountForId(it.key) > 0 && it.value.heal > 0 }
             .maxByOrNull { it.value.heal }?.key

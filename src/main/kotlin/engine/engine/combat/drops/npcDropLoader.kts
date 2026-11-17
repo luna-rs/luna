@@ -29,6 +29,7 @@ fun load(loadedDrops: Array<StaticNpcDropTable>) {
         loadTable(table, subTables)
     }
     logger.debug("Loaded {} NPC drop tables!", loadedDrops.size)
+    engine.bot.coordinator.EquipmentDropSources.installTables(loadedDrops)
 }
 
 /**

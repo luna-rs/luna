@@ -3,8 +3,8 @@ package api.bot.skill
 
 import api.attr.Attr
 import api.bot.action.BotPotionMaintenance
-import game.player.item.consume.potion.Potion
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotGearDemand
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.script.TargetingZonedBotScript
@@ -12,7 +12,9 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.skill.mining.Pickaxe
 import game.skill.woodcutting.cutTree.Axe
+import game.player.item.consume.potion.Potion
 import io.luna.game.model.Entity
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Skill
@@ -70,7 +72,7 @@ abstract class SkillingBotScript<E : Entity>(
         /**
          * Failed acquisition delays are shared across sessions of each skill without delaying an owned replacement.
          */
-        private val toolRetryAfter = Attr.map<Int, Long>()
+
 
         private val axeQuality = Axe.entries.associate { axe ->
             axe.id to axe.chances.values.sumOf { (minimum, maximum) -> minimum + maximum }
@@ -163,7 +165,10 @@ abstract class SkillingBotScript<E : Entity>(
         val toolId = selected?.id
         if (toolId != null && !hasCarriedItem(toolId)) {
             val withdrawalId = toolIds(toolId).firstOrNull { it in bot.bank } ?: toolId
-            if (!handler.banking.withdraw(Item(withdrawalId)) || !hasCarriedItem(toolId) ||
+            if (!handler.banking.withdrawUnnoted(Item(withdrawalId)) {
+                    !isPaused() && !isTerminated() && skill.level >= levelRequired() &&
+                        skill.level >= selected.skillLevel
+                } || !hasCarriedItem(toolId) ||
                 skill.level < levelRequired() || skill.level < selected.skillLevel) {
                 bot.log("I couldn't collect a usable ${itemName(toolId)}.")
                 stop()
@@ -223,7 +228,7 @@ abstract class SkillingBotScript<E : Entity>(
     }
 
     /**
-     * Allows a skill to recover its real detached tool before replacement selection or shopping.
+     * Allows a skill to recover its real detached tool before replacement selection, shopping or emergency fallback.
      */
     protected open suspend fun recoverMissingTool() {}
 
@@ -307,24 +312,20 @@ abstract class SkillingBotScript<E : Entity>(
         val quality = toolQuality()
         val ordered = if (bot.personality.isDumb) candidates.shuffled() else if (quality.isEmpty()) candidates.toList()
             else candidates.sortedWith(compareByDescending<SkillingTool> { quality[it.id] ?: it.skillLevel }.thenBy { it.id })
-        ordered.firstOrNull { skill.level >= it.skillLevel && ownsTool(it.id) }?.let { return it }
-        val retryAfter = bot.attributes()[toolRetryAfter.attr]
-        if ((retryAfter[skill.id] ?: 0L) > System.currentTimeMillis()) return null
-        val acquired = withTimeoutOrNull(120.seconds) {
-            for (candidate in ordered) {
-                if (isPaused() || isTerminated()) return@withTimeoutOrNull null
-                if (skill.level < candidate.skillLevel) continue
-                if (!ownsTool(candidate.id)) handler.shop.obtainWantedItem(candidate.id)
-                if (isPaused() || isTerminated()) return@withTimeoutOrNull null
-                if (skill.level >= candidate.skillLevel && ownsTool(candidate.id)) {
-                    bot.log("Resolved skilling tool: ${itemName(candidate.id)}.")
-                    return@withTimeoutOrNull candidate
-                }
-            }
-            null
+        ordered.firstOrNull { skill.level >= it.skillLevel && ownsTool(it.id) }?.let {
+            BotGearDemand.acquisitionFinished(bot, skill.id, true)
+            return it
         }
-        if (acquired != null) retryAfter.remove(skill.id)
-        else if (!isPaused() && !isTerminated()) retryAfter[skill.id] = System.currentTimeMillis() + 60_000L
+        val deadline = BotGearDemand.acquisitionDeadline(bot, skill.id) ?: return null
+        val remaining = deadline - System.currentTimeMillis()
+        val acquired = if (remaining <= 0L) null else withTimeoutOrNull(remaining) {
+            if (isPaused() || isTerminated()) return@withTimeoutOrNull null
+            handler.shop.obtainGeneratedTool(ordered.map { it.id }, deadline)
+            if (isPaused() || isTerminated()) return@withTimeoutOrNull null
+            ordered.firstOrNull { skill.level >= it.skillLevel && ownsTool(it.id) }
+        }
+        if (!isPaused() && !isTerminated())
+            BotGearDemand.acquisitionFinished(bot, skill.id, acquired != null)
         return acquired
     }
 
@@ -349,10 +350,7 @@ abstract class SkillingBotScript<E : Entity>(
             .sortedWith(compareByDescending<SkillingTool> { quality.getValue(it.id) }.thenBy { it.id })
         fun bestOwned() = candidates().firstOrNull { ownsTool(it.id) }
         val owned = bestOwned()
-        if (owned == null) {
-            BotTradeIntentions.recordToolUpgrade(bot, quality.keys, null)
-            return
-        }
+        if (owned == null) return
         if (!bot.personality.isDumb) tool = owned
         val activeFor = duration.inWholeMilliseconds.coerceIn(0L, 8 * 60 * 60_000L) + 2 * 60 * 60_000L
         fun record(id: Int) {
@@ -380,7 +378,11 @@ abstract class SkillingBotScript<E : Entity>(
     /**
      * Checks live carried and banked forms, including a fishing vessel temporarily loaded with bait.
      */
-    private fun ownsTool(id: Int): Boolean = hasCarriedItem(id) || toolIds(id).any { it in bot.bank }
+    private fun ownsTool(id: Int): Boolean = hasCarriedItem(id) || toolIds(id).any { candidate ->
+        candidate in bot.bank || ItemDefinition.ALL.get(candidate).map { definition ->
+            definition.notedId.orElse(-1).let { it >= 0 && it in bot.inventory }
+        }.orElse(false)
+    }
 
     /**
      * Checks whether the bot currently carries the specified item.

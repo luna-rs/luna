@@ -237,7 +237,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             bot.log("Initial setup complete. Equipping required gear. candidateZones=${zones.size}")
             val equipmentLocator = equipment()
             if (!awaitActionSafety()) return true
-            if (equipmentLocator != null && !equipmentLocator.locateAndEquip()) {
+            if (equipmentLocator != null && !equipmentLocator.locateAndEquip { !isPaused() && !isTerminated() }) {
                 if (!awaitActionSafety()) return true
                 bot.log("Gear required for this script could not be equipped.")
                 onEquipmentFailed(equipmentLocator)

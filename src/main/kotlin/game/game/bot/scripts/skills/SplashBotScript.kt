@@ -115,13 +115,13 @@ class SplashBotScript(bot: Bot, duration: Duration,
         spell = ownedSpell(false) ?: CombatSpell.WIND_STRIKE.def
         if (!prepareRunes()) return false
         if (resumed) {
-            if (!validEquipment() && !BotGearLocator(bot, equipment.copyOf()).locateAndEquip()) return false
+            if (!validEquipment() && !BotGearLocator(bot, equipment.copyOf(), clearUnselected = true).locateAndEquip()) return false
             forceBanking = true
         }
         return true
     }
 
-    override suspend fun equipment(): BotGearLocator? = splashEquipment?.let { BotGearLocator(bot, it.copyOf()) }
+    override suspend fun equipment(): BotGearLocator? = splashEquipment?.let { BotGearLocator(bot, it.copyOf(), clearUnselected = true) }
     override suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) { stop() }
 
     override suspend fun onBankOpen(initial: Boolean) {

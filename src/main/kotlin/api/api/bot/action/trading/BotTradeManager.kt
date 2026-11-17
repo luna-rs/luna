@@ -319,7 +319,7 @@ object BotTradeManager {
      * Reviewed utilities also require a concrete deficit and respect currently usable shop alternatives.
      */
     internal fun capProductionPurchase(quote: BotTradeItem): BotTradeItem? {
-        val current = BotUtilityPurchases.constrain(quote)?.let(BotPotionDemand::constrain) ?: return null
+        val current = BotUtilityPurchases.constrain(quote)?.let(BotPotionDemand::constrain)?.let(BotGearDemand::constrain) ?: return null
         val limit = BotTradeIntentions.productionLimit(current.bot, current.item.id) ?: return current
         if (limit.maximumUnitPrice < 1L || limit.maximumCoins < 1L) return null
         val price = minOf(current.price.coerceAtLeast(1L), limit.maximumUnitPrice)

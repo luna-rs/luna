@@ -150,7 +150,7 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
         val outfit = loadout(bot) ?: return true
         val ammo = outfit.gear[Equipment.AMMUNITION]!!
         val prepared = withTimeoutOrNull(240_000) {
-            if (!BotGearLocator(bot, outfit.gear).locateAndEquip() || !handler.banking.travelToBankDepositAll())
+            if (!BotGearLocator(bot, outfit.gear, clearUnselected = true).locateAndEquip() || !handler.banking.travelToBankDepositAll())
                 return@withTimeoutOrNull false
             val extraAmmo = AMMO_COUNT - bot.equipment.computeAmountForId(ammo)
             val supplies = listOf(Item(FOOD, FOOD_COUNT), Item(PRAYER, POTION_COUNT), Item(995, 3000)) +

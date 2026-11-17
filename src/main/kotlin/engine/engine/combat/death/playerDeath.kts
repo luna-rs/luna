@@ -32,6 +32,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
         victim.playJingle(Jingles.DEATH_2)
         BotReactions.reactToOtherDied(source, victim)
         if (victim.isRealBot()) {
+            (victim as? Bot)?.let { engine.bot.coordinator.EquipmentDropJobs.death(it) }
             // The damage stack only counts players, so an NPC killer is the attacker of the last hit.
             val killer = source ?: victim.combat.lastDamageReceived?.attacker?.takeIf { it != victim }
             victim.lastKiller = killer

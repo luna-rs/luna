@@ -126,13 +126,28 @@ open class NpcCombatScript(bot: Bot,
                            private var spell: CombatSpell? = null,
                            private val slayerTask: SlayerTaskType? = null,
                            private val slayerMaster: SlayerMaster? = null,
-                           override val magicOnly: Boolean = false) :
+                           override val magicOnly: Boolean = false,
+                           val monsterRequirement: SlayerTaskType? = null) :
     TargetingZonedBotScript<Npc>(bot, duration,
         zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE }.toMutableList()), SocialBotScript, MagicOnlyCombat {
 
     override val actionSafety = ActionSafety.COMBAT
 
     override val allowsCombatResponse: Boolean get() = !magicOnly
+
+    /**
+     * Finite owned-supply outings cannot request shopping, optional cannon stock or unrelated potion refills.
+     */
+    protected open val ownedCombatSuppliesOnly: Boolean = false
+
+    /**
+     * An activity may withdraw its exact finite owned food basket instead of ordinary replenishment.
+     */
+    protected open suspend fun withdrawBoundedFood(): Boolean = false
+
+    protected open fun combatActivityAllowed(): Boolean = true
+
+    private val encounterTask: SlayerTaskType? get() = monsterRequirement ?: slayerTask
 
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
     companion object {
@@ -272,11 +287,11 @@ open class NpcCombatScript(bot: Bot,
          * this check never grants items, cancels assignments or replaces a selected weapon to make a shield fit.
          */
         internal fun acceptsSlayerLoadout(bot: Bot, purpose: BotGearPurpose, task: SlayerTaskType?,
-                                         loadout: CombatLoadout): Boolean {
+                                         loadout: CombatLoadout, nativeRules: Boolean = false): Boolean {
             if (task == SlayerTaskType.ZYGOMITE && !ownsFungicide(bot)) return false
-            if (requiredSlayerEquipment(task).any { (slot, id) -> loadout.gear[slot] != id ||
+            if (monsterEquipment(task, nativeRules).any { (slot, id) -> loadout.gear[slot] != id ||
                     !bot.itemTracker.contains(id) || !equipDef(id).meetsAllRequirements(bot) }) return false
-            if (requiredSlayerInventory(task).any { (id, amount) -> bot.itemTracker.count(id) < amount }) return false
+            if (monsterInventory(task, nativeRules).any { (id, amount) -> bot.itemTracker.count(id) < amount }) return false
             if (task in POISONOUS_TASKS && !bot.status.isAntiPoison() &&
                 SLAYER_ANTIPOISONS.none { bot.itemTracker.contains(it) }) return false
             if (task in setOf(SlayerTaskType.CAVE_BUG, SlayerTaskType.CAVE_SLIME, SlayerTaskType.WALL_BEAST) &&
@@ -307,9 +322,10 @@ open class NpcCombatScript(bot: Bot,
                     else -> return false
                 }
             }
-            if (Equipment.SHIELD in requiredSlayerEquipment(task) &&
+            if (Equipment.SHIELD in monsterEquipment(task, nativeRules) &&
                 (weapon == null || equipDef(weapon).isTwoHanded)) return false
-            if (task !in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK)) return true
+            if (task !in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK) ||
+                nativeRules && !io.luna.Luna.settings().skills().slayerEquipmentNeeded()) return true
             return when (purpose) {
                 BotGearPurpose.MELEE -> weapon == 4158
                 BotGearPurpose.RANGED -> weapon != null && loadout.gear[Equipment.AMMUNITION] == 4160 &&
@@ -327,8 +343,10 @@ open class NpcCombatScript(bot: Bot,
          * Magic Dart staff and rune requirements. Salt demand is a standing stock target, independent of trip size.
          */
         internal fun slayerLoadout(bot: Bot, purpose: BotGearPurpose, task: SlayerTaskType?,
-                                   requested: CombatSpell? = null): CombatLoadout? {
-            requiredSlayerEquipment(task).values.forEach { id ->
+                                   requested: CombatSpell? = null, nativeRules: Boolean = false): CombatLoadout? {
+            if (nativeRules && task != null && bot.slayer.level < task.level) return null
+            monsterEquipment(task, nativeRules).values.forEach { id ->
+                if (nativeRules) return@forEach
                 if (!bot.itemTracker.contains(id)) bot.preferences.addWantedItem(id, 3)
             }
             if (task == SlayerTaskType.ZYGOMITE) {
@@ -336,21 +354,35 @@ open class NpcCombatScript(bot: Bot,
                 if (bot.itemTracker.count(Zygomites.FUNGICIDE) < 10)
                     bot.preferences.addWantedItem(Zygomites.FUNGICIDE, 100)
             }
-            requiredSlayerInventory(task).forEach { (id, _) ->
+            monsterInventory(task, nativeRules).forEach { (id, _) ->
+                if (nativeRules) return@forEach
                 if (bot.itemTracker.count(id) < 50) bot.preferences.addWantedItem(id,
                     if (id in setOf(4161, 6696, Mogres.EXPLOSIVE)) 500 else 3)
             }
-            val restricted = task in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK)
+            val restricted = task in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK) &&
+                (!nativeRules || io.luna.Luna.settings().skills().slayerEquipmentNeeded())
             val dart = restricted && purpose == BotGearPurpose.MAGIC
             if (dart && requested != null && requested != CombatSpell.MAGIC_DART) return null
-            val equipment = requiredSlayerEquipment(task) + if (dart) mapOf(Equipment.WEAPON to 4170) else emptyMap()
+            val equipment = monsterEquipment(task, nativeRules) + if (dart) mapOf(Equipment.WEAPON to 4170) else emptyMap()
             val loadout = CombatLoadout.find(bot, purpose, if (dart) CombatSpell.MAGIC_DART else requested,
                 requiredEquipment = equipment,
                 requiredAmmo = 4160.takeIf { restricted && purpose == BotGearPurpose.RANGED },
                 allowedWeapons = if (restricted && purpose == BotGearPurpose.MELEE) setOf(4158) else emptySet())
                 ?: return null
-            return loadout.takeIf { acceptsSlayerLoadout(bot, purpose, task, it) }
+            return loadout.takeIf { acceptsSlayerLoadout(bot, purpose, task, it, nativeRules) }
         }
+
+        /**
+         * Native off-task encounters retain unconditional Wyvern protection and obey configured Slayer-item rules.
+         * Assignment preparation keeps its existing conservative kit policy.
+         */
+        internal fun monsterEquipment(task: SlayerTaskType?, nativeRules: Boolean = true): Map<Int, Int> =
+            if (nativeRules && task != SlayerTaskType.SKELETAL_WYVERN &&
+                !io.luna.Luna.settings().skills().slayerEquipmentNeeded()) emptyMap() else requiredSlayerEquipment(task)
+
+        internal fun monsterInventory(task: SlayerTaskType?, nativeRules: Boolean = true): Map<Int, Int> =
+            if (nativeRules && !io.luna.Luna.settings().skills().slayerEquipmentNeeded()) emptyMap()
+            else requiredSlayerInventory(task)
 
         /**
          * A charged spray, or an empty spray and refill, must exist in accessible owned stock.
@@ -402,10 +434,16 @@ open class NpcCombatScript(bot: Bot,
              */
             var slayerMaster: SlayerMaster? = null
 
+            /**
+             * Independent native monster capability never creates or binds a Slayer assignment.
+             */
+            var monsterRequirement: SlayerTaskType? = null
+
             override fun load(data: JsonObject) {
                 super.load(data)
                 slayerTask = data.get("slayerTask")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerTaskType::valueOf)
                 slayerMaster = data.get("slayerMaster")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerMaster::valueOf)
+                monsterRequirement = data.get("monsterRequirement")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerTaskType::valueOf)
                 purpose = data.get("purpose")?.asString?.let(BotGearPurpose::valueOf) ?: BotGearPurpose.MELEE
                 spell = data.get("spell")?.takeUnless { it.isJsonNull }?.asString?.let(CombatSpell::valueOf)
                 magicOnly = data.get("magicOnly")?.asBoolean ?: false
@@ -422,6 +460,7 @@ open class NpcCombatScript(bot: Bot,
                 super.save(data)
                 slayerTask?.let { data.addProperty("slayerTask", it.name) }
                 slayerMaster?.let { data.addProperty("slayerMaster", it.name) }
+                monsterRequirement?.let { data.addProperty("monsterRequirement", it.name) }
                 data.addProperty("purpose", purpose.name)
                 spell?.let { data.addProperty("spell", it.name) }
                 if (magicOnly) data.addProperty("magicOnly", true)
@@ -461,7 +500,8 @@ open class NpcCombatScript(bot: Bot,
                                                            (data as? NpcCombatData)?.spell,
                                                            (data as? NpcCombatData)?.slayerTask,
                                                            (data as? NpcCombatData)?.slayerMaster,
-                                                           (data as? NpcCombatData)?.magicOnly ?: false)
+                                                           (data as? NpcCombatData)?.magicOnly ?: false,
+                                                           (data as? NpcCombatData)?.monsterRequirement)
 
     /**
      * Runtime identity rejects a replaced task even when its type and master happen to match.
@@ -480,7 +520,9 @@ open class NpcCombatScript(bot: Bot,
      * Keeps task NPC IDs authoritative even when several monsters share a camp or display name.
      */
     internal fun acceptsAssignment(npc: Npc): Boolean = assignmentActive() &&
-        (slayerTask == null || assignmentNpcId(npc) in slayerTask.npcs)
+        (slayerTask == null || assignmentNpcId(npc) in slayerTask.npcs) &&
+        (monsterRequirement == null || bot.slayer.level >= monsterRequirement.level &&
+            assignmentNpcId(npc) in monsterRequirement.npcs)
 
     /**
      * Maps only native dormant forms to the task's actual kill identity.
@@ -514,12 +556,12 @@ open class NpcCombatScript(bot: Bot,
     /**
      * Saved assignment metadata selects the same protection after restoration; equipped items are checked live.
      */
-    private val requiredSlayerGear = requiredSlayerEquipment(slayerTask)
+    private val requiredSlayerGear get() = monsterEquipment(encounterTask, monsterRequirement != null)
 
     /**
      * Native finishing tools must remain carried, including after inventory deposits or saved-session restoration.
      */
-    private val requiredSlayerItems = requiredSlayerInventory(slayerTask)
+    private val requiredSlayerItems get() = monsterInventory(encounterTask, monsterRequirement != null)
 
     /**
      * Access equipment is retained through initial gearing, bank deposits and saved-session restoration.
@@ -598,6 +640,7 @@ open class NpcCombatScript(bot: Bot,
                 !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
         }
         if (!assignmentActive()) return false
+        if (monsterRequirement != null && bot.slayer.level < monsterRequirement.level) return false
         if (!cannonPrepared && !CannonBotSupport.recover(bot)) return false
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
@@ -612,7 +655,7 @@ open class NpcCombatScript(bot: Bot,
             if (!handler.combat.switchSpellbook(spellbook)) return false
             if (slayerTask == null && !prepareMagicSupplies()) return false
         }
-        loadout = slayerLoadout(bot, purpose, slayerTask, spell) ?: return false
+        loadout = slayerLoadout(bot, purpose, encounterTask, spell, monsterRequirement != null) ?: return false
         if (originalZones.any { !campSuppliesOwned(bot, it) }) return false
         requiredCampGear.forEach { (slot, id) -> loadout!!.gear[slot] = id }
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
@@ -735,11 +778,11 @@ open class NpcCombatScript(bot: Bot,
         }
         BotTradeIntentions.recordSupplies(bot,
             selected.runes.map { (id, amount) -> Item(id, amount * 28) }, stockTarget = 1_000)
-        BotTradeIntentions.requestCombatPotions(bot, purpose,
+        if (!ownedCombatSuppliesOnly) BotTradeIntentions.requestCombatPotions(bot, purpose,
             poison = slayerTask in POISONOUS_TASKS, dragons = dragonTrip,
             dangerous = queenTrip || chaosTrip || moleTrip || originalZones.any { it in STRONG_FOOD_ZONES },
             prayer = bot.prayer.staticLevel >= 30)
-        if (!api.bot.action.BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
+        if (!ownedCombatSuppliesOnly && !api.bot.action.BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
                 !isPaused() && !isTerminated()
             }) { stop(); return }
         if (slayerTask == SlayerTaskType.ZYGOMITE && !collectFungicide()) {
@@ -834,6 +877,8 @@ open class NpcCombatScript(bot: Bot,
                     return
                 }
             }
+        } else if (ownedCombatSuppliesOnly) {
+            if (!withdrawBoundedFood()) { stop(); return }
         } else {
             val strongFood = SubZone.KBD_LAIR in originalZones || moleTrip || chaosTrip ||
                 originalZones.any { it in STRONG_FOOD_ZONES }
@@ -1217,6 +1262,7 @@ open class NpcCombatScript(bot: Bot,
         data.magicOnly = magicOnly
         data.slayerTask = slayerTask
         data.slayerMaster = slayerMaster
+        data.monsterRequirement = monsterRequirement
         return data
     }
 
@@ -1264,7 +1310,7 @@ open class NpcCombatScript(bot: Bot,
      * Collects eligible drops in shared recovery, wanted-item and guide-value order, checking actual capacity per drop.
      * Supply checks still run between attempts; an item that will not fit cannot hide a later compatible stack.
      */
-    private suspend fun lootItems() {
+    protected suspend fun lootItems() {
         safespotCombat.release()
         attend()
         if (queenTrip && forceBanking) return
@@ -1277,8 +1323,9 @@ open class NpcCombatScript(bot: Bot,
         val groundItems = world.locator.findViewableItems(bot) { isLoot(it) && it.isVisibleTo(bot) }
         for (item in handler.loot.ordered(groundItems)) {
             if (!isActionSafe() || forceBanking || !assignmentActive()) return
+            if (!isLoot(item)) continue
             if (!handler.loot.canPickup(item)) continue
-            handler.loot.pickup(item) { isActionSafe() && !forceBanking && assignmentActive() }
+            handler.loot.pickup(item) { isActionSafe() && !forceBanking && assignmentActive() && isLoot(item) }
             attend()
             if (queenTrip && forceBanking) return
             bot.naturalDelay()
@@ -1308,7 +1355,7 @@ open class NpcCombatScript(bot: Bot,
         if (!tactics.check()) {
             forceBanking = true
         }
-        handler.potions.drink(fighting = bot.combat.inCombat(), dragons = activeZone in DRAGON_ZONES ||
+        if (!ownedCombatSuppliesOnly) handler.potions.drink(fighting = bot.combat.inCombat(), dragons = activeZone in DRAGON_ZONES ||
             BotPotionActionHandler.breathesFire(bot.combat.lastCombatWith))
     }
 
@@ -1390,6 +1437,18 @@ open class NpcCombatScript(bot: Bot,
      * Validates actual equipment, dragon protection and one attack's supplies before permitting attack clicks.
      */
     internal fun prepareCombat(): Boolean {
+        if (!combatActivityAllowed()) {
+            bot.combat.target = null
+            stop()
+            return false
+        }
+        if (monsterRequirement != null && (bot.slayer.level < monsterRequirement.level || loadout?.let {
+                !acceptsSlayerLoadout(bot, purpose, monsterRequirement, it, nativeRules = true)
+            } == true)) {
+            bot.combat.target = null
+            stop()
+            return false
+        }
         if (!trainingPurposeNeeded()) {
             bot.combat.target = null
             clearMagic()

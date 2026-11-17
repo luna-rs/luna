@@ -13,6 +13,7 @@ import game.player.item.consume.potion.Potion
 import game.player.item.consume.potion.PotionFamily
 import com.google.common.collect.ImmutableSet
 import engine.bot.gear.BotEquipmentPreferences
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotGearPurpose
 import io.luna.game.model.def.AmmoDefinition
@@ -142,9 +143,18 @@ object BotTradeIntentions {
                                    now: Long = System.currentTimeMillis()) {
         val current = bot.attributes()[toolUpgrades.attr]
         current.keys.removeAll(family)
+        val key = BotGearDemand.toolKey(family)
+        BotGearDemand.clear(bot, key)
         if (id != null && id in family && ItemDefinition.ALL.get(id).map { it.isTradeable }.orElse(false)) {
-            current[id] = ToolUpgradePlan(now + activeForMillis.coerceIn(1L, 10 * 60 * 60_000L),
-                (satisfying.filter { it in family } + id).distinct(), retained?.takeIf { it in family })
+            val expires = now + activeForMillis.coerceIn(1L, 10 * 60 * 60_000L)
+            val ordered = BotGearDemand.toolOrder(family).filter { bot.canUseWantedItem(it) }
+            val useful = if (retained == null) ordered else ordered.takeWhile { it != retained }
+            val need = if (id != retained) BotGearDemand.record(bot, key, id,
+                useful.ifEmpty { listOf(id) }, retained, expires) else null
+            val selected = need?.selected ?: id
+            if (selected < 0) return
+            val accepted = ordered.takeWhile { it != selected } + selected
+            current[selected] = ToolUpgradePlan(expires, accepted, retained?.takeIf { it in family })
         }
     }
 
@@ -243,6 +253,34 @@ object BotTradeIntentions {
     fun hasExactSupplyDemand(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Boolean =
         supplyPlans(bot, now)[id]?.target?.let { it > 0 } == true
 
+    /**
+     * Identifies independently literal activity inputs, manual targets and finite production materials.
+     * Generated equipment requests may change concrete tier without changing these exact requirements.
+     */
+    fun hasLiteralSupplyDemand(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Boolean =
+        livePlans(bot, now)[id]?.target?.let { it > 0 } == true || explicitSupplyPlan(bot, id) != null ||
+            activeProductionPlan(bot, now)?.target(id)?.let { it > 0 } == true
+
+    /**
+     * Personal exact requirements exclude the current manufacturing plan's own inputs and future proceeds.
+     */
+    fun hasUnmetPersonalSupplyDemand(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Boolean =
+        maxOf(livePlans(bot, now)[id]?.target ?: 0, explicitSupplyPlan(bot, id)?.target ?: 0) > bot.totalItemAmount(id)
+
+    /**
+     * Personal native acquisition can pursue an unmet aspiration without implying a funded resale buyer.
+     */
+    fun generatedEquipmentAspirations(bot: Bot): Set<Int> {
+        BotEquipmentPreferences.progressionCandidates(bot)
+        return BotGearDemand.current(bot).asSequence().map { it.aspiration }
+            .filter { BotGearDemand.usableNow(bot, it) && bot.totalItemAmount(it) < 1 }.toSet()
+    }
+
+    fun generatedEquipmentTargets(bot: Bot): Set<Int> {
+        BotEquipmentPreferences.progressionCandidates(bot)
+        return BotGearDemand.targets(bot)
+    }
+
     private fun <T> weightedChoice(options: List<Pair<T, Int>>, seed: Int): T {
         var roll = Math.floorMod(mix(seed), options.sumOf { it.second })
         for ((value, weight) in options) {
@@ -282,12 +320,9 @@ object BotTradeIntentions {
                 bot.totalItemAmount(id) + quote.item.amount, wanted.priority)
         }
         val completion = BotEquipmentPreferences.completionCandidates(bot)
-        val completionSlots = completion.associateBy { equipDef(it).index }
-        val progression = BotEquipmentPreferences.progressionCandidates(bot).filter { id ->
-            val fallback = completionSlots[equipDef(id).index]
-            fallback == null || fallback == id
-        }
-        val gear = progression + completion + if (discretionaryShopper(bot.username.orEmpty()) || bot.preferences.isMerchant)
+        val progression = BotEquipmentPreferences.progressionCandidates(bot)
+        val progressionSlots = progression.mapTo(hashSetOf()) { equipDef(it).index }
+        val gear = progression + completion.filter { equipDef(it).index !in progressionSlots } + if (discretionaryShopper(bot.username.orEmpty()) || bot.preferences.isMerchant)
             BotEquipmentPreferences.fashionCandidates(bot) else emptyList()
         for (id in gear) {
             if (bot.totalItemAmount(id) > 0 || !bot.canUseWantedItem(id)) continue
@@ -301,6 +336,11 @@ object BotTradeIntentions {
                 else if (id !in progression && cosmetic) WantedItemPriority.LOW else WantedItemPriority.HIGH))
         }
         addCombatSupplies(bot, progression, result)
+        result.entries.removeIf { (id, _) ->
+            val need = BotGearDemand.forItem(bot, id)
+            need != null && !hasLiteralSupplyDemand(bot, id, now) &&
+                (need.selected != id || BotGearDemand.deficit(bot, id, false) < 1)
+        }
         return result.values.sortedByDescending { it.priority().level }
     }
 
@@ -364,11 +404,30 @@ object BotTradeIntentions {
     }
 
     /**
+     * Predicts the existing one-copy equipment reserve before a genuine new output or drop becomes owned.
+     * This is an ownership projection, not resale cash or a reason to invent a personal purchase target.
+     */
+    fun wouldRetainFirstEquipment(bot: Bot, id: Int): Boolean {
+        if (bot.totalItemAmount(id) > 0 || !bot.canUseWantedItem(id)) return false
+        val candidate = BotGearSelector.ALL_GEAR_IDS.value[id] ?: return false
+        if (BotEquipmentPreferences.prefers(bot, id)) return true
+        return listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC).any { purpose ->
+            if (!BotEquipmentPreferences.supports(candidate, setOf(purpose))) return@any false
+            val best = BotGearSelector.ALL_GEAR.value[candidate.index].asSequence().filter {
+                ItemDefinition.ALL.get(it.id).isPresent && bot.totalItemAmount(it.id) > 0 &&
+                    bot.canUseWantedItem(it.id) && BotEquipmentPreferences.supports(it, setOf(purpose))
+            }.maxOfOrNull { it.calculateScore() }
+            best == null || candidate.calculateScore() >= best
+        }
+    }
+
+    /**
      * Protects concrete supplies, personal fashion copies and the strongest owned usable item in each slot.
      * Merchant resale can sell other acquired stock even when a broad default wanted entry exists.
      */
     fun retainedStock(bot: Bot): Map<Int, Int> {
         val retained = supplyPlans(bot, System.currentTimeMillis()).mapValuesTo(HashMap()) { it.value.target }
+        for ((id, amount) in BotGearDemand.retained(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotPotionDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for (id in BotReusableItems.itemIds()) retained[id] = maxOf(retained[id] ?: 0, reusableReserve(bot, id))
         val combatSupplies = HashMap<Int, WantedItemDefinition>()
@@ -438,7 +497,7 @@ object BotTradeIntentions {
     internal fun saleSupplyTarget(bot: Bot, id: Int, now: Long = System.currentTimeMillis()): Int {
         val attributes = bot.attributes()
         val plan = attributes[plans.attr][id]
-        var target = maxOf(reusableReserve(bot, id), if (plan != null && plan.expires > now) plan.target else 0,
+        var target = maxOf(BotGearDemand.retained(bot)[id] ?: 0, reusableReserve(bot, id), if (plan != null && plan.expires > now) plan.target else 0,
             BotPotionDemand.retainedStock(bot)[id] ?: 0,
             activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
             explicitSupplyPlan(bot, id)?.target ?: 0)
@@ -447,7 +506,7 @@ object BotTradeIntentions {
         for ((requested, upgrade) in upgrades) {
             if (upgrade.expires <= now ||
                 id != requested && id !in upgrade.satisfying && id != upgrade.fallback) continue
-            val owned = upgrade.satisfying.firstOrNull { bot.totalItemAmount(it) > 0 }
+            val owned = upgrade.satisfying.firstOrNull { BotGearDemand.usableNow(bot, it) && bot.itemTracker.count(it) > 0 }
             if (id == (owned ?: requested) ||
                 owned == null && id == upgrade.fallback && bot.totalItemAmount(id) > 0) target = maxOf(target, 1)
         }
@@ -516,7 +575,7 @@ object BotTradeIntentions {
                 maxOf(existing.expires, upgrade.expires))
         }
         for ((id, upgrade) in upgrades.toMap()) {
-            val owned = upgrade.satisfying.firstOrNull { bot.totalItemAmount(it) > 0 }
+            val owned = upgrade.satisfying.firstOrNull { BotGearDemand.usableNow(bot, it) && bot.itemTracker.count(it) > 0 }
             val desired = owned ?: id
             if (desired != id) {
                 upgrades.remove(id)

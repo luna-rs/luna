@@ -190,7 +190,7 @@ class TreasureTrailBotScript(bot: Bot, private val data: TrailData = TrailData()
         if (combat) {
             if (current.guardian && bot.combatLevel < 70) return@withTimeoutOrNull false
             val loadout = CombatLoadout.find(bot, BotGearPurpose.MELEE) ?: return@withTimeoutOrNull false
-            if (!BotGearLocator(bot, loadout.gear).locateAndEquip()) return@withTimeoutOrNull false
+            if (!BotGearLocator(bot, loadout.gear, clearUnselected = true).locateAndEquip()) return@withTimeoutOrNull false
             bot.combat.magic.selectedSpell = CombatSpellDefinition.NONE
             bot.combat.magic.autocastSpell = CombatSpellDefinition.NONE
             bot.combat.magic.isAutocasting = false

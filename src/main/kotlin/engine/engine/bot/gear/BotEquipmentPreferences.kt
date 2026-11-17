@@ -1,6 +1,7 @@
 package engine.bot.gear
 
 import api.predef.*
+import api.bot.action.trading.BotGearDemand
 import com.google.common.cache.CacheBuilder
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.AmmoDefinition
@@ -211,20 +212,33 @@ object BotEquipmentPreferences {
     fun progressionCandidates(bot: Bot): List<Int> {
         if (bot.preferences.isSkiller) return emptyList()
         val style = planningPurpose(bot)
-        return progressionOutfit(bot).filter { candidate ->
-            if (owns(bot, candidate.id)) return@filter false
-            val owned = bot.itemTracker.elementSet().mapNotNull { BotGearSelector.ALL_GEAR_IDS.value[it] }
-                .filter { it.index == candidate.index && supports(it, setOf(style)) &&
+        return progressionOutfit(bot).mapNotNull { candidate ->
+            val key = "gear:${style.name}:${candidate.index}"
+            val owned = bot.itemTracker.elementSet().mapNotNull { BotGearSelector.ALL_GEAR_IDS.value[unnoted(it)] }
+                .distinctBy { it.id }.filter { it.index == candidate.index && supports(it, setOf(style)) &&
                     it.def.value.meetsAllRequirements(bot) }
             val existing = select(bot, owned, setOf(style))
             val tasteCanMatter = prefers(bot, candidate.id) &&
                 favouriteLevelGap(bot.personality.intelligence, bot.personality.social) > 0
-            // Equal ordinary variants are interchangeable stock, rather than another reason to visit the market.
-            if (existing != null && !tasteCanMatter && candidate.calculateScore() <= existing.calculateScore()) {
-                return@filter false
+            if (owns(bot, candidate.id) || existing != null && !tasteCanMatter &&
+                candidate.calculateScore() <= existing.calculateScore()) {
+                BotGearDemand.clear(bot, key)
+                return@mapNotNull null
             }
-            select(bot, owned + candidate, setOf(style))?.id == candidate.id
-        }.map { it.id }
+            if (select(bot, owned + candidate, setOf(style))?.id != candidate.id) {
+                BotGearDemand.clear(bot, key)
+                return@mapNotNull null
+            }
+            val choices = if (isCosmetic(candidate.id)) listOf(candidate) else
+                (ordinaryItems + completionItems + candidate.id).mapNotNull { BotGearSelector.ALL_GEAR_IDS.value[it] }
+                    .filter { it.index == candidate.index && supports(it, setOf(style)) &&
+                        it.def.value.meetsAllRequirements(bot) &&
+                        it.calculateScore() <= candidate.calculateScore() &&
+                        (existing == null || it.calculateScore() > existing.calculateScore()) }
+                    .sortedWith(compareByDescending<BotGearItem> { it.calculateScore() }.thenBy { it.id })
+            BotGearDemand.record(bot, key, candidate.id, choices.map { it.id }, existing?.id)?.selected
+                ?.takeIf { it >= 0 }
+        }
     }
 
     /**

@@ -230,7 +230,7 @@ class DuelArenaBotScript(bot: Bot, private var attempted: Boolean = false,
             val chance = 0.1 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.4
             stakeBudget = if (rand(chance)) DuelBotPolicy.stakeLimit(bot) else 0
         }
-        if (!BotGearLocator(bot, selected.gear).locateAndEquip()) return false
+        if (!BotGearLocator(bot, selected.gear, clearUnselected = true).locateAndEquip()) return false
         val runeStock = selected.runes.mapValues { (_, amount) -> amount * 50 }.toMutableMap()
         if (purpose == BotGearPurpose.MAGIC) {
             for ((id, amount) in BotCombatMagic.optionalRuneStock(bot, selected.gear[Equipment.WEAPON], selected.gear)) {

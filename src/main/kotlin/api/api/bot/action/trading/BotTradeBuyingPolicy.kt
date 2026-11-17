@@ -69,6 +69,15 @@ object BotTradeBuyingPolicy {
         val base = definition.unnotedId.orElse(id)
         if (base == 995 || !definition.isTradeable) return null
         val active = BotTradeIntentions.supplyDemand(bot, base)
+        if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base))
+            return active?.takeIf { bot.totalItemAmount(base) < it.target }
+        val generated = BotGearDemand.forItem(bot, base)
+        if (generated != null) {
+            if (!BotGearDemand.usableNow(bot, base) || BotGearDemand.deficit(bot, base) < 1) return null
+            val tags = bot.preferences.getWantedItem(base)?.tags ?: com.google.common.collect.ImmutableSet.of()
+            return WantedItemDefinition(base, 1, 1, -1, -1,
+                io.luna.game.model.def.WantedItemDefinition.WantedItemPriority.HIGH, tags)
+        }
         val potion = PotionFamily.forId(base)
         if (potion != null && BotTradeIntentions.hasExactSupplyDemand(bot, base))
             return active?.takeIf { bot.totalItemAmount(base) < it.target }
@@ -101,6 +110,11 @@ object BotTradeBuyingPolicy {
      */
     fun alternatives(bot: Bot, id: Int): Set<Int> {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) return emptySet()
+        if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) BotGearDemand.forItem(bot, base)?.let { need ->
+            return need.alternatives.filterTo(linkedSetOf()) { BotGearDemand.usableNow(bot, it) &&
+                BotGearDemand.deficit(bot, it) > 0 }
+        }
         if (!groupedEquipment(bot, base)) return emptySet()
         val goal = goals(bot).firstOrNull { base in it.alternatives } ?: return emptySet()
         return goal.alternatives.filterTo(linkedSetOf()) { alternative ->
@@ -116,6 +130,7 @@ object BotTradeBuyingPolicy {
      */
     fun buyingAdvertisement(bot: Bot, id: Int): String? {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) return null
         if (!groupedEquipment(bot, base)) return null
         val goal = goals(bot).firstOrNull { base in it.alternatives } ?: return null
         val family = goal.family ?: return null
@@ -129,6 +144,10 @@ object BotTradeBuyingPolicy {
      */
     fun groupKey(bot: Bot, id: Int): Int? {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) return null
+        if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) BotGearDemand.forItem(bot, base)?.let {
+            return it.key.hashCode()
+        }
         val potion = PotionFamily.forId(base)
         if (potion != null && BotPotionDemand.reserveDoses(bot, potion) > 0 &&
             !BotTradeIntentions.hasExactSupplyDemand(bot, base)) return -potion.fourDose - 1
@@ -142,6 +161,7 @@ object BotTradeBuyingPolicy {
      */
     fun satisfiedEquipment(bot: Bot, id: Int): Boolean {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base)) return false
         val candidate = BotGearSelector.ALL_GEAR_IDS.value[base] ?: return false
         if (candidate.index == Equipment.AMMUNITION || family(base) == null ||
             BotEquipmentPreferences.isCosmetic(base) || !candidate.def.value.meetsAllRequirements(bot)) return false
@@ -183,7 +203,7 @@ object BotTradeBuyingPolicy {
             if (gear.index == Equipment.AMMUNITION || !gear.def.value.meetsAllRequirements(bot)) return@mapNotNull null
             val cosmetic = BotEquipmentPreferences.isCosmetic(gear.id)
             val family = if (cosmetic) null else family(gear.id)
-            val choices = if (family == null) setOf(gear.id) else
+            val choices = if (family == null || BotTradeIntentions.hasLiteralSupplyDemand(bot, gear.id)) setOf(gear.id) else
                 familyMembers[gear.index to family].orEmpty().filterTo(linkedSetOf()) { alternative ->
                     val candidate = BotGearSelector.ALL_GEAR_IDS.value[alternative] ?: return@filterTo false
                     candidate.def.value.highestRequirement == gear.def.value.highestRequirement &&

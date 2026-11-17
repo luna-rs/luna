@@ -107,7 +107,7 @@ class DagannothKingsBotScript(bot: Bot, private var attempted: Boolean = false,
         if (DagannothKingsTrip.preparationSlots(selected) > 28) return true
         plan = selected
         val prepared = withTimeoutOrNull(180_000) {
-            if (!BotGearLocator(bot, selected.baseGear).locateAndEquip()) return@withTimeoutOrNull false
+            if (!BotGearLocator(bot, selected.baseGear, clearUnselected = true).locateAndEquip()) return@withTimeoutOrNull false
             val requested = selected.carriedRequirements()
             if (!handler.banking.withdrawAll(requested.map { (id, amount) -> Item(id, amount) }) ||
                 !handler.widgets.clickCloseInterface()) return@withTimeoutOrNull false
