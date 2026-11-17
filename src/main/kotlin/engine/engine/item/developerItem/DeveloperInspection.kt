@@ -1,6 +1,8 @@
 package engine.item.developerItem
 
 import api.predef.ext.removeObject
+import api.bot.script.BotScript
+import api.bot.script.InventoryBotScript
 import engine.bot.economy.BotProductionMetrics
 import game.skill.magic.lowHighAlch.AlchemyType
 import io.luna.game.model.EntityState
@@ -8,6 +10,7 @@ import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.movement.wandering.WanderingAction
 import io.luna.game.model.`object`.GameObject
@@ -18,6 +21,29 @@ import io.luna.game.model.`object`.GameObject
  * @author lare96
  */
 internal object DeveloperInspection {
+    /**
+     * Adds a few read-only production lines to the existing selected bot's script report.
+     * Inspection reads only that queue and existing scalar state, without pricing or serializing its scripts.
+     */
+    internal fun productionLines(target: Bot, scripts: List<BotScript>): List<String> = buildList {
+        val now = System.currentTimeMillis()
+        BotProductionMetrics.latestDecision(target)?.let { decision ->
+            val age = (now - decision.observedAt).coerceAtLeast(0L) / 1_000
+            val count = BotProductionMetrics.decisionCount(decision.source, decision.reason)
+            add("Production: ${decision.source} / ${decision.reason}; ${age}s ago; observed this boot: $count")
+            decision.recipeKey?.let { add("Last recipe: ${it.take(80)}; skill ${decision.skill}; input ${decision.itemId}") }
+            if (decision.stages > 0) add("Last progress: ${decision.completedOperations} completed, ${decision.remainingOperations} remaining; " +
+                "stage ${decision.stage}/${decision.stages}; direct spent ${decision.spentCoins}/${decision.maximumCoins} GP")
+        }
+        val plan = scripts.asSequence().filterIsInstance<InventoryBotScript>()
+            .firstOrNull { !it.isTerminated() && !it.isFinished() && it.productionPlan != null }?.productionPlan
+            ?: return@buildList
+        add("Current recipe: ${plan.recipe.key.take(80)}")
+        add("Progress: ${plan.completedOperations}/${plan.operations}; stage ${plan.currentStageIndex + 1}/${plan.recipes.size}")
+        add("Direct spending: ${plan.spentCoins}/${plan.maximumCoins} GP; work deadline: ${(plan.deadline - now).coerceAtLeast(0L) / 1_000}s")
+        if (plan.supplyDeadline > 0L) add("Supply deadline: ${(plan.supplyDeadline - now).coerceAtLeast(0L) / 1_000}s; shop tried: ${plan.shopAttempted}")
+    }
+
     fun containers(actor: Player, target: Player) {
         if (!DeveloperItemHandler.available(actor, target)) return
         DeveloperItemHandler.menu(actor, listOf("Inventory", "Equipment", "Bank").map { name ->

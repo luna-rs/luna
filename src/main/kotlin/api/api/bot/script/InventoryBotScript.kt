@@ -17,6 +17,8 @@ import com.google.gson.JsonArray
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.coordinator.skill.BotProductionPlanner
 import engine.bot.economy.BotProductionMetrics
+import engine.bot.economy.BotProductionMetrics.Reason
+import engine.bot.economy.BotProductionMetrics.Source
 import game.bot.scripts.trading.TradeBotScript
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import io.luna.game.action.ActionType
@@ -83,6 +85,7 @@ abstract class InventoryBotScript(
      */
     private fun trainingAllowed(): Boolean {
         if (trainingSkill?.let { BotCombatActionHandler.mayGainExperience(bot, it) } != false) return true
+        recordProductionOutcome(Reason.ACCOUNT_RESTRICTION)
         stop()
         return false
     }
@@ -159,6 +162,29 @@ abstract class InventoryBotScript(
         private set
     private var plannedBatch: Map<Int, Int> = emptyMap()
     private var productionHandedOff = false
+    private var productionOutcomeRecorded = false
+
+    /**
+     * Records one terminal boundary for this finite owner, without retaining a history or querying market state.
+     */
+    private fun recordProductionOutcome(reason: Reason) {
+        val plan = productionPlan ?: return
+        if (productionOutcomeRecorded) return
+        productionOutcomeRecorded = true
+        BotProductionMetrics.recordDecision(bot, Source.PRODUCTION, reason, plan = plan)
+    }
+
+    private fun exhaustedProductionReason(): Reason =
+        if (bankFailures >= maxFailures) Reason.BANK_EXHAUSTED else Reason.ACTION_EXHAUSTED
+
+    private fun plannedEndReason(plan: ProductionPlan): Reason = when {
+        plan.remainingOperations == 0 -> Reason.COMPLETED
+        plan.deadline <= System.currentTimeMillis() -> Reason.EXPIRED
+        bot.skill(plan.recipe.skill).level < plan.recipe.level -> Reason.LEVEL
+        !BotCombatActionHandler.mayGainExperience(bot, plan.recipe.skill) -> Reason.ACCOUNT_RESTRICTION
+        plan.training && !BotCombatActionHandler.wantsToTrain(bot, plan.recipe.skill) -> Reason.NO_EXPERIENCE
+        else -> Reason.CANCELLED
+    }
 
     override fun allowsLoot(item: GroundItem): Boolean = productionPlan == null && super.allowsLoot(item)
 
@@ -241,6 +267,8 @@ abstract class InventoryBotScript(
         requestMissing: Boolean = true, prepareMissing: () -> Boolean = { false }
     ): List<Item> {
         if (productionRetriesExhausted() || !isActionSafe() || !levelEligible) {
+            recordProductionOutcome(if (productionRetriesExhausted()) exhaustedProductionReason()
+                else if (!levelEligible) Reason.LEVEL else Reason.CANCELLED)
             stop()
             return emptyList()
         }
@@ -249,7 +277,7 @@ abstract class InventoryBotScript(
         if (!ownedSuppliesOnly && productionPlan == null)
             BotTradeIntentions.recordSupplies(bot, materials, tools, stockTarget = 1_000)
         if (!bot.ownsProductionSupplies(materials, tools)) {
-            if (!requestMissing) { stop(); return emptyList() }
+            if (!requestMissing) { recordProductionOutcome(Reason.MATERIALS_UNAVAILABLE); stop(); return emptyList() }
             if (!ownedSuppliesOnly && productionPlan == null) items.filter { bot.bank.computeAmountForId(it.id).toLong() +
                     bot.inventory.computeAmountForId(it.id) < it.amount }.forEach {
                 val target = if (it.id in tools) {
@@ -346,7 +374,7 @@ abstract class InventoryBotScript(
      */
     protected fun requestProductionBank(canContinue: Boolean): Boolean {
         if (!isActionSafe() || (!forceBanking && canContinue)) return false
-        if (bankFailures >= maxFailures) { stop(); return false }
+        if (bankFailures >= maxFailures) { recordProductionOutcome(Reason.BANK_EXHAUSTED); stop(); return false }
         bankFailures++
         return true
     }
@@ -357,7 +385,7 @@ abstract class InventoryBotScript(
      */
     protected fun productionReady(canContinue: Boolean, levelEligible: Boolean = true): Boolean {
         if (!isActionSafe()) return false
-        if (!levelEligible) { stop(); return false }
+        if (!levelEligible) { recordProductionOutcome(Reason.LEVEL); stop(); return false }
         if (!canContinue) { forceBanking = true; return false }
         return true
     }
@@ -394,7 +422,10 @@ abstract class InventoryBotScript(
         }
         if (progressed) failures = 0 else if (!neutral && isActionSafe() && ++failures >= maxFailures) {
             val zone = attemptedZone
-            if (zones.size <= 1 || zone == null) stop() else {
+            if (zones.size <= 1 || zone == null) {
+                recordProductionOutcome(Reason.ACTION_EXHAUSTED)
+                stop()
+            } else {
                 failedProductionZone = zone
                 failedProductionZones.add(zone)
             }
@@ -428,8 +459,13 @@ abstract class InventoryBotScript(
         // A paused attempt belongs to its recorded site, not whichever candidate is selected on resume.
         zones.removeAll(failedProductionZones)
         if (failedProductionZone != null) resetProductionFailures()
-        if (zones.isEmpty()) { stop(); return false }
-        if (!trainingAllowed() || productionRetriesExhausted()) { stop(); return false }
+        if (zones.isEmpty()) { recordProductionOutcome(Reason.NO_SOURCE); stop(); return false }
+        if (!trainingAllowed()) return false
+        if (productionRetriesExhausted()) {
+            recordProductionOutcome(exhaustedProductionReason())
+            stop()
+            return false
+        }
         val planned = productionPlan
         if (planned != null && !preparePlannedSupplies(planned)) return false
         if (!beforeInventoryInit()) return false
@@ -452,6 +488,7 @@ abstract class InventoryBotScript(
         if (!supplied) {
             bot.log("Could not obtain the minimum production supplies.")
             if (startup != null && isActionSafe() && startup.prepareMissing()) return false
+            recordProductionOutcome(Reason.MATERIALS_UNAVAILABLE)
             stop()
             return false
         }
@@ -461,6 +498,7 @@ abstract class InventoryBotScript(
         if (isTerminated() || isPaused()) return false
         if (!withdraw.all { bot.itemTracker.count(it.id) >= it.amount }) {
             bot.log("Bot does not have required withdraw items. Ending script.")
+            recordProductionOutcome(Reason.WITHDRAWAL_FAILED)
             return false
         }
         return true
@@ -499,6 +537,7 @@ abstract class InventoryBotScript(
             resetProductionFailures()
         }
         if (productionRetriesExhausted()) {
+            recordProductionOutcome(exhaustedProductionReason())
             stop()
             return false
         }
@@ -537,6 +576,7 @@ abstract class InventoryBotScript(
         }
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("We no longer have the required withdraw items. Stopping script.")
+            recordProductionOutcome(Reason.MATERIALS_UNAVAILABLE)
             stop()
             return
         }
@@ -545,6 +585,7 @@ abstract class InventoryBotScript(
         if (!awaitActionSafety(ActionSafety.NON_COMBAT)) return
         if (!withdrawn) {
             bot.log("Could not withdraw required inventory items. Stopping script.")
+            recordProductionOutcome(Reason.WITHDRAWAL_FAILED)
             stop()
         } else {
             bankFailures = 0
@@ -607,12 +648,15 @@ abstract class InventoryBotScript(
     internal fun finishPlannedProduction() {
         settlePlannedProduction()
         productionPlan?.let {
-            if (!isPaused() && !productionHandedOff) BotTradeIntentions.clearProductionPlan(bot, it, this)
+            if (!isPaused() && !productionHandedOff) {
+                recordProductionOutcome(plannedEndReason(it))
+                BotTradeIntentions.clearProductionPlan(bot, it, this)
+            }
         }
     }
 
-    private fun stopPlannedProduction() {
-        productionPlan?.let { BotTradeIntentions.clearProductionPlan(bot, it, this) }
+    private fun stopPlannedProduction(reason: Reason = Reason.NO_LONGER_USEFUL) {
+        productionPlan?.let { recordProductionOutcome(reason); BotTradeIntentions.clearProductionPlan(bot, it, this) }
         stop()
     }
 
@@ -624,14 +668,14 @@ abstract class InventoryBotScript(
                 productionHandedOff = true
                 bot.scriptStack.softPushHead(next)
                 stop()
-            } else stopPlannedProduction()
+            } else stopPlannedProduction(Reason.CONTINUATION_UNAVAILABLE)
             return false
         }
         if (plan.remainingOperations > 0 && plan.deadline > System.currentTimeMillis() &&
             bot.skill(plan.recipe.skill).level >= plan.recipe.level &&
             BotCombatActionHandler.mayGainExperience(bot, plan.recipe.skill) &&
             (!plan.training || BotCombatActionHandler.wantsToTrain(bot, plan.recipe.skill))) return true
-        stopPlannedProduction()
+        stopPlannedProduction(plannedEndReason(plan))
         return false
     }
 
@@ -661,7 +705,8 @@ abstract class InventoryBotScript(
             if (queueMissingPlannedPreparation(plan)) return false
             if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
                 BotProductionPlanner.unavailable(bot, plan)
-            stopPlannedProduction()
+            stopPlannedProduction(if (System.currentTimeMillis() >= plan.supplyDeadline)
+                Reason.ACQUISITION_EXHAUSTED else Reason.CANCELLED)
             return false
         }
         if (plan.recipe.skill == SKILL_COOKING && !plan.shopAttempted && plan.remainingCoins > 0L &&
@@ -700,7 +745,8 @@ abstract class InventoryBotScript(
         if (queueMissingPlannedPreparation(plan)) return false
         if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
             BotProductionPlanner.unavailable(bot, plan)
-        stopPlannedProduction()
+        stopPlannedProduction(if (System.currentTimeMillis() >= plan.supplyDeadline)
+            Reason.ACQUISITION_EXHAUSTED else Reason.MATERIALS_UNAVAILABLE)
         return false
     }
 

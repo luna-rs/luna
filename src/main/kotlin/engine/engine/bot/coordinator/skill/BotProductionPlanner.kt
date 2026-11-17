@@ -5,13 +5,20 @@ import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotSupplySources
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotFoodDemand
+import api.bot.action.trading.BotGearDemand
 import api.bot.action.trading.BotTradePurpose
 import api.bot.script.*
 import api.predef.*
+import api.predef.ext.totalItemAmount
 import engine.bot.economy.BotProductionUses
+import engine.bot.economy.BotProductionMetrics
+import engine.bot.economy.BotProductionMetrics.Reason
+import engine.bot.economy.BotProductionMetrics.Source
 import engine.bot.gear.BotItemTracker.Companion.itemOwnershipRevision
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.ItemDefinition
+import io.luna.game.model.def.EquipmentDefinition
+import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.bot.Bot
 import java.util.IdentityHashMap
@@ -83,20 +90,30 @@ object BotProductionPlanner {
 
     /**
      * Chooses a bounded, affordable native batch or a fully funded short native production chain.
-     * Zero-XP preparation may use a later same-skill recipe's real XP only when the complete chain's
-     * external materials and tools fit its shared budget. It never awards that future experience itself.
+     * Native preparation may use a later same-skill recipe's real XP only when the complete chain's
+     * external materials and tools fit its shared budget. Experience remains with each native action.
      */
     fun select(bot: Bot, skill: Int, level: Int, training: Boolean, duration: Duration,
                keyPrefix: String? = null, finalFood: Int? = null): InventoryBotScript? {
-        if (finalFood != null && (skill != SKILL_COOKING || !CookingProductionPaths.isFood(finalFood))) return null
+        fun rejected(reason: Reason): InventoryBotScript? {
+            val previous = BotProductionMetrics.latestDecision(bot)
+            if (reason == Reason.COOLDOWN && previous?.source == Source.PLANNER &&
+                previous.reason == reason && previous.skill == skill && previous.recipeKey == keyPrefix) return null
+            BotProductionMetrics.recordDecision(bot, Source.PLANNER, reason, keyPrefix, skill)
+            return null
+        }
+        var lastRejection = Reason.NO_ELIGIBLE_RECIPE
+        if (finalFood != null && (skill != SKILL_COOKING || !CookingProductionPaths.isFood(finalFood)))
+            return rejected(Reason.INVALID_REQUEST)
         val now = System.currentTimeMillis()
         val key = "$skill:${keyPrefix.orEmpty()}:$training:${finalFood ?: -1}"
         val history = bot.attributes()[retries.attr]
         val retry = history[key]
         if (retry != null && retry.revision == bot.itemOwnershipRevision && retry.level == level && retry.after > now)
-            return null
-        if (duration <= Duration.ZERO || !BotCombatActionHandler.mayGainExperience(bot, skill) ||
-            training && !BotCombatActionHandler.wantsToTrain(bot, skill)) return null
+            return rejected(Reason.COOLDOWN)
+        if (duration <= Duration.ZERO) return rejected(Reason.INVALID_REQUEST)
+        if (!BotCombatActionHandler.mayGainExperience(bot, skill) ||
+            training && !BotCombatActionHandler.wantsToTrain(bot, skill)) return rejected(Reason.ACCOUNT_RESTRICTION)
         history[key] = Retry(bot.itemOwnershipRevision, level, now + 30_000L)
         if (history.size > 24) history.remove(history.minBy { it.value.after }.key)
 
@@ -107,8 +124,13 @@ object BotProductionPlanner {
             if (described.containsKey(entry)) return described[entry]
             val native = entry.describe(bot)
             val recipe = native?.takeIf { bot.skill(it.skill).staticLevel >= it.level &&
-                (it.skill != SKILL_COOKING || bot.skill(it.skill).level >= it.level) &&
-                BotCombatActionHandler.mayGainExperience(bot, it.skill) }
+                bot.skill(it.skill).level >= it.level && (it.skill != skill || it.level <= level) &&
+                BotCombatActionHandler.mayGainExperience(bot, it.skill) &&
+                (!training || it.experience == 0.0 || BotCombatActionHandler.wantsToTrain(bot, it.skill)) }
+            if (native != null && recipe == null && (keyPrefix == null || native.key.startsWith(keyPrefix)))
+                lastRejection = if (bot.skill(native.skill).staticLevel < native.level ||
+                    bot.skill(native.skill).level < native.level || native.skill == skill && native.level > level)
+                    Reason.LEVEL else Reason.ACCOUNT_RESTRICTION
             described[entry] = recipe
             return recipe
         }
@@ -122,7 +144,7 @@ object BotProductionPlanner {
             else if (deferred && !ready) null
             else entry to native
         }
-        if (candidates.isEmpty()) return null
+        if (candidates.isEmpty()) return rejected(lastRejection)
         val goals = usefulGoals(bot, ::count, ::describe)
 
         /**
@@ -134,10 +156,20 @@ object BotProductionPlanner {
                             val economy: ProductionRecipe)
         val pipelines = buildList {
             if (finalFood == null) for ((entry, recipe) in candidates) {
-                add(Pipeline(entry, listOf(recipe), recipe))
-                if (recipe.experience == 0.0) for (chain in downstream(recipe, ::describe)) {
-                    val aggregate = ProductionChainEconomics.aggregate(chain.map { ProductionStage(it, 1) }) ?: continue
-                    add(Pipeline(entry, chain, aggregate))
+                val paths = ProductionRecipePaths.forRecipe(recipe, ::describe) {
+                    skill != SKILL_COOKING || it.experience == 0.0
+                }
+                for (path in paths) {
+                    if (path.any { stage ->
+                        failedRecipes[stage.key]?.let { failure ->
+                            failure.after > now && failure.requirements.any { (id, amount) -> count(id) < amount }
+                        } == true
+                    }) continue
+                    val first = path.first()
+                    val firstEntry = if (first.key == recipe.key) entry else nativeEntry(bot, first) ?: continue
+                    val aggregate = if (path.size == 1) recipe else
+                        ProductionChainEconomics.aggregate(path.map { ProductionStage(it, 1) }) ?: continue
+                    add(Pipeline(firstEntry, path, aggregate))
                 }
             }
             val foods = if (finalFood != null) listOf(finalFood) else if (skill == SKILL_COOKING)
@@ -189,7 +221,7 @@ object BotProductionPlanner {
                     count(id) >= amount.toLong() * 56 }) return@mapNotNull null
             val ids = path.stages.flatMapTo(hashSetOf()) { it.materials.keys + it.tools }
             val inputPrices = ids.associateWith(::ceiling).toMutableMap()
-            if (skill == SKILL_COOKING) CookingProductionPaths.pricePreparations(path.stages, inputPrices)
+            ProductionRecipePaths.pricePreparations(path.stages, inputPrices)
             val loose = recipe.materials.filterKeys { !itemDef(it).isStackable }.values.sumOf { it.toLong() }
             val stackSlots = recipe.materials.keys.count { itemDef(it).isStackable }
             val capacity = if (loose == 0L) ProductionEconomics.MAX_OPERATIONS else
@@ -201,15 +233,27 @@ object BotProductionPlanner {
                 goals.quantities.getValue(id) / recipe.products.getValue(id)
             } ?: ProductionEconomics.MAX_OPERATIONS
             var requested = minOf(capacity, stockLimit ?: ProductionEconomics.MAX_OPERATIONS, useLimit)
+            if (training && requested > 0) {
+                requested = ProductionRecipePaths.trainingOperationLimit(path.stages, requested,
+                    trainingExperienceRemaining(bot, skill))
+                if (requested == 0) {
+                    lastRejection = Reason.NO_EXPERIENCE
+                    return@mapNotNull null
+                }
+            }
             val stock = ids.associateWith(::count)
             if (skill == SKILL_COOKING) {
                 for ((id, amount) in recipe.materials) requested = minOf(requested,
                     ((stock[id] ?: 0L) + (source(id)?.quantity ?: 0)).div(amount).coerceAtMost(100L).toInt())
                 if (recipe.tools.any { (stock[it] ?: 0L) == 0L && source(it) == null }) return@mapNotNull null
             }
+            if (requested < 1) {
+                lastRejection = if (capacity < 1) Reason.NO_SPACE else Reason.MATERIALS_UNAVAILABLE
+                return@mapNotNull null
+            }
             val quote = ProductionEconomics.quote(recipe, training, requested, remainingXp,
-                stock, budget, inputPrices, recoverable.filterKeys { !personalFoodOutput(bot, it) },
-                usePrices) ?: return@mapNotNull null
+                stock, budget, inputPrices, recoverable.filterKeys { !personalOutput(bot, it) },
+                usePrices, rejected = { lastRejection = it }) ?: return@mapNotNull null
             val ticks = path.stages.sumOf { processingTicks(it) }
             val netCost = (quote.inputValue - quote.outputValue).coerceAtLeast(0L).toDouble()
             val score = if (training) recipe.experience / ticks /
@@ -219,16 +263,14 @@ object BotProductionPlanner {
                 recipe.tools.all { (stock[it] ?: 0L) > 0L }
             Candidate(path, quote, inputPrices, usePrices, stockLimit != null, stocked, score)
         }
-        val ownedFoodSuffixes = scored.filter { it.stocked && it.path.economy.products.keys.any(CookingProductionPaths::isFood) }
-            .flatMap { candidate -> candidate.path.economy.products.keys.filter(CookingProductionPaths::isFood)
-                .map { it to candidate.path.stages.size } }.groupBy({ it.first }, { it.second })
-            .mapValues { (_, sizes) -> sizes.min() }
-        val preferred = scored.filter { candidate -> candidate.path.economy.products.keys.none { id ->
-            ownedFoodSuffixes[id]?.let { candidate.path.stages.size > it } == true
-        } }.sortedWith(compareByDescending<Candidate> { it.useful }.thenByDescending { it.stocked }.thenByDescending { it.score }
+        val suppliedPaths = scored.filter { it.stocked }.groupBy { it.path.stages.last().key }
+        val preferred = scored.filterNot { candidate ->
+            ProductionRecipePaths.hasSuppliedSuffix(candidate.path.stages,
+                suppliedPaths[candidate.path.stages.last().key].orEmpty().map { it.path.stages })
+        }.sortedWith(compareByDescending<Candidate> { it.useful }.thenByDescending { it.stocked }.thenByDescending { it.score }
             .thenByDescending { it.path.stages.first().level })
         val chosen = when {
-            preferred.isEmpty() -> return null
+            preferred.isEmpty() -> return rejected(lastRejection)
             bot.personality.isIntelligent || bot.personality.isDextrous -> preferred.first()
             bot.personality.isDumb && randBoolean() -> preferred.last()
             else -> preferred.take(8).random()
@@ -237,6 +279,7 @@ object BotProductionPlanner {
         val plan = ProductionPlan(chosen.path.stages.first(), training, chosen.quote.operations,
             chosen.quote.maximumCoins, chosen.caps, deadline,
             continuationRecipes = chosen.path.stages.drop(1), personalUsePrices = chosen.usePrices)
+        BotProductionMetrics.recordDecision(bot, Source.PLANNER, Reason.SELECTED, plan.recipe.key, skill, plan = plan)
         return chosen.path.entry.create(bot, duration).planProduction(plan)
     }
 
@@ -267,11 +310,28 @@ object BotProductionPlanner {
                     !BotCombatActionHandler.wantsToTrain(bot, remaining.skill) ||
                 nativeEntry(bot, remaining) == null) return false
         }
+        if (plan.training) {
+            val remaining = plan.recipes.drop(plan.currentStageIndex).mapIndexed { index, recipe ->
+                ProductionStage(recipe, if (index == 0) plan.remainingOperations else plan.operations)
+            }
+            if (!ProductionRecipePaths.trainingReachable(remaining,
+                    trainingExperienceRemaining(bot, native.skill))) return false
+        }
         val recipe = plan.economicRecipe() ?: return false
+        val carried = ProductionRecipePaths.carriedInputPrices(plan.recipes,
+            plan.currentStageIndex, plan.maximumUnitPrices)
+        val prepared = carried.keys.filter { id ->
+            val required = recipe.materials[id] ?: 0
+            required > 0 && owned(bot, id) >= required
+        }.associateWith { recipe.materials.getValue(it) }
+        val disposal = BotProductionUses.recoverableValues(bot, prepared, operations = 1)
         val inputPrices = plan.maximumUnitPrices.mapValues { (id, ceiling) ->
-            val replacement = if (native.skill == SKILL_COOKING) BotSupplySources.quote(bot, id, 100)?.maximumUnitPrice
-                ?: ceiling.takeIf { owned(bot, id) >= (recipe.materials[id] ?: 1) } else null
-            maxOf(ceiling, replacement ?: bot.world.economy.getPrice(id).coerceAtLeast(1L))
+            val basis = carried[id]?.takeIf { id in prepared }
+            if (basis != null) maxOf(basis, disposal[id] ?: 0L) else {
+                val replacement = if (native.skill == SKILL_COOKING) BotSupplySources.quote(bot, id, 100)?.maximumUnitPrice
+                    ?: ceiling.takeIf { owned(bot, id) >= (recipe.materials[id] ?: 1) } else null
+                maxOf(ceiling, replacement ?: bot.world.economy.getPrice(id).coerceAtLeast(1L))
+            }
         }
         val goals = if (plan.personalUsePrices.isEmpty()) null else usefulGoals(bot) { entry ->
             entry.describe(bot)?.takeIf { bot.skill(it.skill).staticLevel >= it.level &&
@@ -284,11 +344,17 @@ object BotProductionPlanner {
         return ProductionEconomics.quote(recipe, plan.training, 1, Double.MAX_VALUE,
             inputPrices.keys.associateWith { owned(bot, it) }, minOf(plan.remainingCoins, owned(bot, 995)),
             inputPrices, BotProductionUses.recoverableValues(bot, recipe.products, operations = 1)
-                .filterKeys { !personalFoodOutput(bot, it) }, usePrices) != null
+                .filterKeys { !personalOutput(bot, it) }, usePrices) != null
     }
 
     private fun personalFoodOutput(bot: Bot, id: Int): Boolean = CookingProductionPaths.isFood(id) &&
         (BotFoodDemand.wouldRetain(bot, id) || BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, id))
+
+    private fun personalOutput(bot: Bot, id: Int): Boolean = personalFoodOutput(bot, id) ||
+        EquipmentDefinition.ALL.get(id).isPresent &&
+            (BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, id) ||
+                BotTradeIntentions.wouldRetainFirstEquipment(bot, id) ||
+                BotGearDemand.forItem(bot, id)?.alternatives?.none { bot.totalItemAmount(it) > 0 } == true)
 
     /**
      * Resolves at most one output's native candidates, rejecting stale gameplay inputs and optimistic old yields.
@@ -375,30 +441,15 @@ object BotProductionPlanner {
     }
 
     /**
-     * Preparation chains support exact one-to-one native links. Uncertain yields, cycles and unknown ratios
-     * stay outside speculative chaining; their ordinary single-stage recipes remain available.
+     * Uses the actual training termination policy rather than promising experience after its native stop.
      */
-    private fun downstream(first: ProductionRecipe,
-                           describe: (ProductionCatalogue.Entry) -> ProductionRecipe?): List<List<ProductionRecipe>> {
-        val result = ArrayList<List<ProductionRecipe>>()
-        val queue = ArrayDeque<List<ProductionRecipe>>()
-        queue.add(listOf(first))
-        var visited = 0
-        while (queue.isNotEmpty() && result.size < 8 && visited++ < 32) {
-            val path = queue.removeFirst()
-            val last = path.last()
-            if (path.size >= ProductionChainEconomics.MAX_STAGES || last.productProbability != 1.0) continue
-            val output = last.products.entries.singleOrNull()?.takeIf { it.value == 1 }?.key ?: continue
-            for (entry in ProductionCatalogue.byInput[output].orEmpty().take(16)) {
-                if (entry.skill != first.skill) continue
-                val next = describe(entry) ?: continue
-                if (next.key in path.map { it.key } || next.materials[output] != 1) continue
-                val extended = path + next
-                if (next.experience > 0.0) result += extended else queue.add(extended)
-                if (result.size >= 8) break
-            }
+    private fun trainingExperienceRemaining(bot: Bot, skill: Int): Double {
+        val combat = Skill.isCombatSkill(skill)
+        val target = if (!combat && bot.preferences.isSkiller) SkillSet.MAXIMUM_EXPERIENCE.toDouble() else {
+            val level = if (combat) bot.preferences.pk?.build()?.targetLevel(skill) ?: 99 else 99
+            SkillSet.experienceForLevel(level).toDouble()
         }
-        return result
+        return (target - bot.skill(skill).experience).coerceAtLeast(0.0)
     }
 
     /**

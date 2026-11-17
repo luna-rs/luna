@@ -1,5 +1,6 @@
 package api.bot.script
 
+import engine.bot.economy.BotProductionMetrics.Reason
 import kotlin.math.ceil
 
 /**
@@ -66,6 +67,7 @@ object ProductionEconomics {
      * Input ceilings include the caller's complete opportunity-cost estimate even for already owned inputs.
      * Training can pay for native XP within the existing alchemy allowance; profit requires a positive margin.
      * Zero-XP preparation therefore needs a profitable exit or a separately validated downstream recipe.
+     * An optional rejection callback receives the existing failed branch once without repeating the quotation.
      */
     fun quote(
         recipe: ProductionRecipe,
@@ -76,25 +78,33 @@ object ProductionEconomics {
         maximumCoins: Long,
         inputUnitPrices: Map<Int, Long>,
         recoverableOutputPrices: Map<Int, Long>,
-        personalUsePrices: Map<Int, Long> = emptyMap()
+        personalUsePrices: Map<Int, Long> = emptyMap(),
+        rejected: ((Reason) -> Unit)? = null
     ): Quote? {
-        if (requestedOperations < 1 || maximumCoins < 0L || !remainingExperience.isFinite()) return null
-        if (training && (recipe.experience <= 0.0 || remainingExperience <= 0.0)) return null
+        fun reject(reason: Reason): Quote? {
+            rejected?.invoke(reason)
+            return null
+        }
+        if (requestedOperations < 1 || maximumCoins < 0L || !remainingExperience.isFinite())
+            return reject(Reason.INVALID_REQUEST)
+        if (training && (recipe.experience <= 0.0 || remainingExperience <= 0.0))
+            return reject(Reason.NO_EXPERIENCE)
         val ids = recipe.materials.keys + recipe.tools
-        if (ids.any { inputUnitPrices[it] == null || inputUnitPrices.getValue(it) < 1L }) return null
-        val materialValue = value(recipe.materials, inputUnitPrices) ?: return null
+        if (ids.any { inputUnitPrices[it] == null || inputUnitPrices.getValue(it) < 1L })
+            return reject(Reason.NO_INPUT_PRICE)
+        val materialValue = value(recipe.materials, inputUnitPrices) ?: return reject(Reason.INVALID_REQUEST)
         val input = saturatingAdd(materialValue, recipe.coinCost)
-        if (input == Long.MAX_VALUE) return null
+        if (input == Long.MAX_VALUE) return reject(Reason.INVALID_REQUEST)
         val usefulOutput = recipe.products.keys.associateWith { id ->
             maxOf(recoverableOutputPrices[id] ?: 0L, personalUsePrices[id] ?: 0L)
         }
         val output = ((value(recipe.products, usefulOutput, allowMissing = true)
-            ?: return null) * recipe.productProbability).toLong().coerceAtLeast(0L)
+            ?: return reject(Reason.INVALID_REQUEST)) * recipe.productProbability).toLong().coerceAtLeast(0L)
         val permittedLoss = if (training)
             (recipe.experience * AlchemyPolicy.MAX_TRAINING_GP_PER_XP).toLong().coerceAtLeast(0L) else 0L
         if (training) {
-            if (input > saturatingAdd(output, permittedLoss)) return null
-        } else if (output <= input) return null
+            if (input > saturatingAdd(output, permittedLoss)) return reject(Reason.UNECONOMIC)
+        } else if (output <= input) return reject(Reason.UNECONOMIC)
 
         var limit = requestedOperations.coerceAtMost(MAX_OPERATIONS)
         if (training) limit = minOf(limit,
@@ -123,7 +133,8 @@ object ProductionEconomics {
             val cost = purchaseCost(candidate)
             if (cost < Long.MAX_VALUE && cost <= maximumCoins) operations = candidate else upper = candidate - 1
         }
-        if (operations < 1 || !economicallyUseful(operations)) return null
+        if (operations < 1) return reject(Reason.INSUFFICIENT_COINS)
+        if (!economicallyUseful(operations)) return reject(Reason.UNECONOMIC)
         return Quote(operations, purchaseCost(operations), ids.associateWith { inputUnitPrices.getValue(it) },
             input, output, permittedLoss)
     }
