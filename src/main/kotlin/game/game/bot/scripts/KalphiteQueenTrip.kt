@@ -1,6 +1,8 @@
 package game.bot.scripts
 
 import api.bot.action.CombatLoadout
+import api.bot.boss.BossFood
+import api.bot.boss.BossTarget
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.npc.spawn.shantayPass.ShantayPass
@@ -14,18 +16,17 @@ import io.luna.game.model.mob.bot.Bot
  * @author lare96
  */
 internal object KalphiteQueenTrip {
-    const val FOOD = 385
     const val POTION = 2434
     const val ROPE = 954
     val prayerPotions = setOf(2434, 139, 141, 143)
-    val supplies = mapOf(FOOD to 20, POTION to 4, ROPE to 2, ShantayPass.PASS to 1)
+    val supplies = mapOf(POTION to 4, ROPE to 2, ShantayPass.PASS to 1)
 
     /**
      * Uses unboosted levels so a temporary potion cannot qualify an underlevelled bot.
      */
-    fun levelsReady(bot: Bot): Boolean = bot.combatLevel >= 110 &&
+    fun levelsReady(bot: Bot, group: Boolean = false): Boolean = bot.combatLevel >= (if (group) 90 else 110) &&
         minOf(bot.attack.staticLevel, bot.strength.staticLevel, bot.defence.staticLevel,
-            bot.hitpoints.staticLevel) >= 85 && bot.prayer.staticLevel >= 70
+            bot.hitpoints.staticLevel) >= (if (group) 70 else 85) && bot.prayer.staticLevel >= (if (group) 60 else 70)
 
     /**
      * Requires a strong melee weapon and substantial physical armour, independently of combat level.
@@ -40,9 +41,10 @@ internal object KalphiteQueenTrip {
     /**
      * Full stock is needed for selection and fresh trips, including ropes even when another player tied them.
      */
-    fun ready(bot: Bot, loadout: CombatLoadout): Boolean = levelsReady(bot) && gearReady(loadout.gear) &&
+    fun ready(bot: Bot, loadout: CombatLoadout, group: Boolean = false): Boolean = levelsReady(bot, group) && gearReady(loadout.gear) &&
         loadout.gear.filterNotNull().all { bot.itemTracker.contains(it) } &&
-        supplies.all { (id, amount) -> bot.itemTracker.count(id) >= amount }
+        supplies.all { (id, amount) -> bot.itemTracker.count(id) >= amount } &&
+        BossFood.ownedReady(bot, BossTarget.KALPHITE_QUEEN, group)
 
     /**
      * Rechecks physical equipment after a pause, degradation or other script changes.
@@ -52,7 +54,8 @@ internal object KalphiteQueenTrip {
     /**
      * Keeps a food reserve for getting out; the last potion dose may be consumed during a kill.
      */
-    fun canContinue(bot: Bot): Boolean = levelsReady(bot) && equipped(bot) &&
-        bot.inventory.computeAmountForId(FOOD) > 2 &&
+    fun canContinue(bot: Bot, group: Boolean = false): Boolean = levelsReady(bot, group) && equipped(bot) &&
+        BossFood.carriedHealing(bot, BossTarget.KALPHITE_QUEEN, group) >
+            BossFood.reserveHealing(BossTarget.KALPHITE_QUEEN, group) &&
         (bot.prayer.level > 10 || prayerPotions.any { bot.inventory.contains(it) })
 }

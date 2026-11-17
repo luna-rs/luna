@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.combat.state;
 
+import api.bot.boss.BossOutingDefence;
 import api.bot.action.BotCombatActionHandler;
 import engine.combat.status.StatusEffectType;
 import engine.controllers.MultiCombatAreaListener;
@@ -395,6 +396,7 @@ public abstract class CombatContext<T extends Mob> {
     public final void markAttackedBy(Mob attacker) {
         if (attacker instanceof Player player && mob instanceof Player victim && player != victim) {
             player.getControllers().getPrimary().pvpAttackCommitted(victim);
+            BossOutingDefence.observeAttack(player, victim);
         }
         if (mob instanceof Npc npc && attacker instanceof Player player) {
             npc.getCombat().setLastAttackingPlayer(player);

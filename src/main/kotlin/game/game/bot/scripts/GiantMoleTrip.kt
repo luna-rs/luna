@@ -1,8 +1,10 @@
 package game.bot.scripts
 
 import api.bot.action.BotLightSources
+import api.bot.boss.BossFood
+import api.bot.boss.BossTarget
+import api.predef.hitpoints
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import game.player.item.consume.food.Food
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 
@@ -16,11 +18,9 @@ import io.luna.game.model.mob.bot.Bot
 internal object GiantMoleTrip {
 
     /**
-     * Native digging tool and the stronger food stock carried on one boss trip.
+     * Native digging tool carried alongside the shared trip's healing provisions.
      */
     const val SPADE = 952
-    const val FOOD_COUNT = 20
-    const val MINIMUM_HEAL = 16
 
     /**
      * Tools and a real lit source are required independently of food remaining after an interrupted fight.
@@ -38,11 +38,10 @@ internal object GiantMoleTrip {
     fun lightCarried(bot: Bot): Boolean = BotLightSources.carried(bot, sealed = true)
 
     /**
-     * Admission requires enough owned food of a usable healing strength for the shared boss banking policy.
+     * Admission requires enough real remaining healing for this solo or grouped outing.
      */
-    fun ready(bot: Bot): Boolean = suppliesOwned(bot) && Food.ID_TO_FOOD.filterValues {
-        it.heal >= MINIMUM_HEAL
-    }.keys.sumOf { bot.itemTracker.count(it).toLong() } >= FOOD_COUNT
+    fun ready(bot: Bot, group: Boolean = false): Boolean = bot.hitpoints.staticLevel >= (if (group) 45 else 60) &&
+        suppliesOwned(bot) && BossFood.ownedReady(bot, BossTarget.MOLE, group)
 
     /**
      * Rechecks physical supplies before attacks and after saved-session restoration or item loss.

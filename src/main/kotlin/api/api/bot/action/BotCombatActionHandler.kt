@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.isRealBot
+import api.bot.boss.BossOutings
 
 import engine.bot.gear.BotGearPurpose
 import io.luna.game.model.item.Equipment.EquipmentBonus
@@ -301,7 +302,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * This checks legality only; the PK purpose and personality decide whether to initiate.
      */
     fun canAttackPlayer(target: Player): Boolean {
-        if (target === bot || bot.preferences.isSkiller || !bot.isAlive || !target.isAlive ||
+        if (target === bot || BossOutings.allies(bot, target) || bot.preferences.isSkiller || !bot.isAlive || !target.isAlive ||
             bot.state != EntityState.ACTIVE || target.state != EntityState.ACTIVE ||
             bot.position.z != target.position.z || !target.isViewableFrom(bot) ||
             bot.combat.isDisabled || !bot.combat.isAttackable || !target.combat.isAttackable) return false

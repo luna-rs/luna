@@ -1,5 +1,6 @@
 package api.bot.webwalk.plan
 
+import api.bot.boss.BossOutings
 import api.bot.webwalk.model.TeleportDefinition
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.obj.webs.Web
@@ -51,7 +52,8 @@ object BotCapabilities {
         count(bot.inventory, items)
         count(bot.equipment, items)
         val fromBank = if (bank == BankAccess.ALL) banked else null
-        val usable = TeleportAvailability.usable(bot, teleports, fromBank)
+        val usable = if (BossOutings.member(bot)?.phase == BossOutings.Phase.TRAVELLING) emptySet()
+            else TeleportAvailability.usable(bot, teleports, fromBank)
         val spends = teleports.filter { it.id in usable }.associate { it.id to TeleportAvailability.spend(bot, it, fromBank) }
             .filterValues { !it.isEmpty }
         if (bank != BankAccess.NONE) {

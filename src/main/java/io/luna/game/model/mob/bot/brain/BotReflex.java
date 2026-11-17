@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.ReflexBotScript;
 import api.bot.action.BotCombatActionHandler;
+import api.bot.boss.BossOutingDefence;
 import engine.bot.speech.BotReactions;
 import game.bot.scripts.LogoutBotScript;
 import game.bot.scripts.WildernessScavengeBotScript;
@@ -119,6 +120,10 @@ public final class BotReflex {
                 bot.getOverlays().has(PlayerDialogue.class) || bot.getOverlays().has(TextDialogue.class))) {
             bot.getOutput().sendContinueDialogue();
             bot.log("Reflex [continue dialogue] triggered.");
+            return false;
+        }
+
+        if (BossOutingDefence.respond(bot)) {
             return false;
         }
 

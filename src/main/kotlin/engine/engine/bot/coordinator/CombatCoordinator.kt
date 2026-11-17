@@ -1,5 +1,9 @@
 package engine.bot.coordinator
 
+import api.bot.boss.BossRecruitment
+import api.bot.boss.BossTarget
+import api.bot.boss.BossReadiness
+
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.totalItemAmount
@@ -112,9 +116,9 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.IORWERTH_CAMP, 75, setOf("Elf warrior"), true),
             Camp(SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS, 75, setOf("Blue dragon"), true),
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
-            Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true),
-            Camp(SubZone.GIANT_MOLE_LAIR, 110, setOf("Giant Mole"), true),
-            Camp(SubZone.CHAOS_ELEMENTAL_WILDERNESS, 110, setOf("Chaos Elemental"), true),
+            Camp(SubZone.KBD_LAIR, 85, setOf("King black dragon"), true),
+            Camp(SubZone.GIANT_MOLE_LAIR, 75, setOf("Giant Mole"), true),
+            Camp(SubZone.CHAOS_ELEMENTAL_WILDERNESS, 95, setOf("Chaos Elemental"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
         )
 
@@ -280,13 +284,18 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                     loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
                 queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout),
                 moleReady = GiantMoleTrip.ready(bot))
-                .filter { it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }.shuffled()
+                .filter { camp ->
+                    val boss = BossTarget.entries.firstOrNull { it.zone == camp.zone }
+                    camp.zone.entryBlocker(bot) == null &&
+                        (if (boss != null) BossReadiness.ready(bot, boss, false, purpose)
+                        else NpcCombatScript.campSuppliesOwned(bot, camp.zone))
+                }.shuffled()
             if (candidates.firstOrNull()?.zone in RockCrabBotScript.CAMPS) {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
                     zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList(),
                     magicOnly = magicOnly).also { if (training) it.trainingGoal = if (magicOnly) SKILL_MAGIC else -1 }
             }
-            val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
+            val dedicated = setOf(SubZone.KBD_LAIR, SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
             val selected = if (candidates.firstOrNull()?.zone in dedicated) candidates.take(1)
                 else candidates.filter { it.zone !in dedicated && it.zone !in RockCrabBotScript.CAMPS }.take(4)
@@ -315,6 +324,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         }
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
             bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
+        if (!training && rand(0.25)) {
+            BossRecruitment.candidate(bot, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
+        }
         if (training && rand(0.25)) {
             magicTrainingScript(bot, true, duration)?.let {
                 bot.scriptStack.push(it)

@@ -1,6 +1,13 @@
 package game.bot.scripts
 
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.boss.BossTarget
+import api.bot.boss.BossReadiness
+import api.bot.boss.BossFood
+import api.bot.boss.BossAttendance
+import api.bot.boss.BossEncounterLearning
+import api.bot.boss.BossOutings
+import api.bot.boss.BossOutingTravel
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotCombatMagic
@@ -90,8 +97,8 @@ import kotlin.time.Duration.Companion.minutes
  * Varrock's sealed monk cage is excluded from fresh and restored sessions because its drops cannot be reached on foot.
  *
  * Dragon sessions require a one-handed melee loadout and an owned anti-dragon shield, equipped before travel.
- * Losing that protection blocks further attack clicks and requests banking. KBD additionally requires combat
- * level 100 and up to twenty food items healing at least sixteen Hitpoints. Bones collected in the lair
+ * Losing that protection blocks further attack clicks and requests banking. Boss visits enforce separate solo
+ * and group readiness and a boss-specific budget of physically owned healing food. Bones collected in the lair
  * are retained for profit instead of buried.
  * Specialist assignments replace ordinary outfit slots with mandatory owned protection: earmuffs for banshees
  * and a nose peg for aberrant spectres. Protection is equipped before travel and rechecked before every attack,
@@ -103,7 +110,7 @@ import kotlin.time.Duration.Companion.minutes
  * Fremennik assignments retain owned mirror shields, salt and antipoison as needed. Turoth and kurask trips select
  * their native spear, broad-arrow or Magic Dart loadout before equipment is chosen, with no ordinary-ammo fallback.
  * Giant Mole sessions retain a spade and a sealed lit light, wait through the native burrow and reacquire its live
- * position across the full lair. Their banking uses the stronger food policy shared with other boss trips.
+ * position across the full lair. Their banking accepts group food through the shared boss-specific healing policy.
  * Remaining assignments share the same lifecycle: enclosed cave lights, worn specialist protection, cooler and
  * explosive stocks, source-native dormant-form attacks, exact wall-beast front tiles and owned Mogre throws.
  * Waterfall trips keep Glarial's amulet equipped; metal dragons retain owned antifire and stronger food.
@@ -127,11 +134,82 @@ open class NpcCombatScript(bot: Bot,
                            private val slayerTask: SlayerTaskType? = null,
                            private val slayerMaster: SlayerMaster? = null,
                            override val magicOnly: Boolean = false,
-                           val monsterRequirement: SlayerTaskType? = null) :
+                           val monsterRequirement: SlayerTaskType? = null,
+                           val groupBoss: Boolean = false) :
     TargetingZonedBotScript<Npc>(bot, duration,
         zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE }.toMutableList()), SocialBotScript, MagicOnlyCombat {
 
     override val actionSafety = ActionSafety.COMBAT
+
+    internal val bossTarget: BossTarget? get() = BossTarget.entries.singleOrNull {
+        originalZones.size == 1 && originalZones[0] == it.zone
+    }
+
+    internal var outingMembership: BossOutings.Member? = null
+    private var bossArrivalUntil = 0L
+    private var bossCompanyEstablished = false
+    private var leavingUnsupportedBoss = false
+    private var companyObservedTick = Long.MIN_VALUE
+    private var companyAvailable = false
+    private var unsupportedFocus: Npc? = null
+    private var unsupportedSpawn = -1
+
+    /**
+     * Counts only an active, equipped and supplied encounter participant, excluding banking and defensive children.
+     */
+    internal fun countsForBossCompany(): Boolean {
+        val boss = bossTarget ?: return false
+        if (forceBanking || leavingUnsupportedBoss || isFinished() || isTerminated() || isPaused() || !isRunning() ||
+            !BossReadiness.levelsReady(bot, boss, true, purpose) || bot.equipment.weapon == null ||
+            BossFood.carriedHealing(bot, boss, groupBoss) <= 0) return false
+        val selected = loadout ?: return false
+        if (bot.combat.target is io.luna.game.model.mob.Player ||
+            selected.gear.withIndex().any { (slot, id) ->
+                id != null && slot != Equipment.AMMUNITION && bot.equipment[slot]?.id != id
+            } || purpose == BotGearPurpose.MAGIC && selected.runes.any { (id, count) ->
+                bot.inventory.computeAmountForId(id) < count
+            }) return false
+        if (purpose == BotGearPurpose.RANGED) {
+            val ammunition = selected.gear[Equipment.AMMUNITION] ?: selected.gear[Equipment.WEAPON] ?: return false
+            if (bot.equipment.computeAmountForId(ammunition) == 0) return false
+        }
+        return when (boss) {
+            BossTarget.KBD -> bot.equipment.shield?.id == 1540
+            BossTarget.MOLE -> GiantMoleTrip.carried(bot)
+            BossTarget.KALPHITE_QUEEN -> KalphiteQueenTrip.canContinue(bot, true)
+            BossTarget.CHAOS_ELEMENTAL -> loadout?.gear?.withIndex()?.all { (slot, id) ->
+                id == null || bot.equipment[slot]?.id == id
+            } == true
+        }
+    }
+
+    /**
+     * Keeps only an already engaged target when personal experience and carried healing support its remaining fight.
+     */
+    private fun supportedBossFight(boss: BossTarget): Boolean {
+        if (!groupBoss || BossReadiness.levelsReady(bot, boss, false, purpose)) return true
+        if (companyObservedTick != bot.world.currentTick) {
+            companyObservedTick = bot.world.currentTick
+            companyAvailable = BossAttendance.enough(bot, boss)
+        }
+        if (companyAvailable) {
+            bossCompanyEstablished = true
+            unsupportedFocus = null
+            unsupportedSpawn = -1
+            return true
+        }
+        val current = focus ?: bot.combat.target as? Npc ?: return false
+        if (!current.isAlive || !boss.zone.area.contains(bot.position) ||
+            current.def().name !in boss.bossNpcNames ||
+            !bot.combat.inCombat() ||
+            bot.combat.target !== current && bot.combat.lastCombatWith !== current) return false
+        if (unsupportedFocus == null) {
+            unsupportedFocus = current
+            unsupportedSpawn = current.spawnCount
+        }
+        if (unsupportedFocus !== current || unsupportedSpawn != current.spawnCount) return false
+        return BossEncounterLearning.canFinish(bot, boss, current)
+    }
 
     override val allowsCombatResponse: Boolean get() = !magicOnly
 
@@ -433,6 +511,7 @@ open class NpcCombatScript(bot: Bot,
              * Master that assigned the saved task, used to reject a changed assignment on restoration.
              */
             var slayerMaster: SlayerMaster? = null
+            var groupBoss = false
 
             /**
              * Independent native monster capability never creates or binds a Slayer assignment.
@@ -447,6 +526,7 @@ open class NpcCombatScript(bot: Bot,
                 purpose = data.get("purpose")?.asString?.let(BotGearPurpose::valueOf) ?: BotGearPurpose.MELEE
                 spell = data.get("spell")?.takeUnless { it.isJsonNull }?.asString?.let(CombatSpell::valueOf)
                 magicOnly = data.get("magicOnly")?.asBoolean ?: false
+                groupBoss = data.get("groupBoss")?.asBoolean ?: false
                 val builder = ImmutableSetMultimap.builder<SubZone, String>()
                 val savedNames = data.get("names")?.takeUnless { it.isJsonNull }?.asJsonObject
                 savedNames?.entrySet()?.forEach { (zoneName, npcs) ->
@@ -464,6 +544,7 @@ open class NpcCombatScript(bot: Bot,
                 data.addProperty("purpose", purpose.name)
                 spell?.let { data.addProperty("spell", it.name) }
                 if (magicOnly) data.addProperty("magicOnly", true)
+                if (groupBoss) data.addProperty("groupBoss", true)
                 val savedNames = JsonObject()
                 names.asMap().forEach { (zone, npcs) ->
                     savedNames.add(zone.name, GsonUtils.toJsonTree(npcs))
@@ -501,7 +582,8 @@ open class NpcCombatScript(bot: Bot,
                                                            (data as? NpcCombatData)?.slayerTask,
                                                            (data as? NpcCombatData)?.slayerMaster,
                                                            (data as? NpcCombatData)?.magicOnly ?: false,
-                                                           (data as? NpcCombatData)?.monsterRequirement)
+                                                           (data as? NpcCombatData)?.monsterRequirement,
+                                                           (data as? NpcCombatData)?.groupBoss ?: false)
 
     /**
      * Runtime identity rejects a replaced task even when its type and master happen to match.
@@ -655,17 +737,21 @@ open class NpcCombatScript(bot: Bot,
             if (!handler.combat.switchSpellbook(spellbook)) return false
             if (slayerTask == null && !prepareMagicSupplies()) return false
         }
-        loadout = slayerLoadout(bot, purpose, encounterTask, spell, monsterRequirement != null) ?: return false
-        if (originalZones.any { !campSuppliesOwned(bot, it) }) return false
+        loadout = (bossTarget?.let { BossReadiness.loadout(bot, it, groupBoss, purpose) }
+            ?: if (bossTarget == null) slayerLoadout(bot, purpose, encounterTask, spell,
+                monsterRequirement != null) else null) ?: return false
+        val boss = bossTarget
+        if (boss != null && !BossReadiness.levelsReady(bot, boss, groupBoss, purpose)) return false
+        if (!resumed && boss != null && !BossReadiness.ready(bot, boss, groupBoss, purpose)) return false
+        if (originalZones.any { zone -> boss?.zone != zone && !campSuppliesOwned(bot, zone) }) return false
         requiredCampGear.forEach { (slot, id) -> loadout!!.gear[slot] = id }
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
-                !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
-                (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
+                !KalphiteQueenTrip.levelsReady(bot, groupBoss) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
+                (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!, groupBoss)))) return false
         if (moleTrip && (originalZones.size != 1 || !GiantMoleTrip.suppliesOwned(bot) ||
-                (!resumed && !GiantMoleTrip.ready(bot)))) return false
+                (!resumed && !GiantMoleTrip.ready(bot, groupBoss)))) return false
         if (darkCaveTrip && !GiantMoleTrip.lightOwned(bot)) return false
-        if (chaosTrip && (originalZones.size != 1 || !resumed && !ChaosElementalTrip.ready(bot))) return false
-        if (SubZone.KBD_LAIR in originalZones && bot.combatLevel < 100) return false
+        if (chaosTrip && (originalZones.size != 1 || !resumed && !ChaosElementalTrip.ready(bot, groupBoss))) return false
         if (dragonTrip) {
             val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
             if (purpose != BotGearPurpose.MELEE ||
@@ -679,6 +765,7 @@ open class NpcCombatScript(bot: Bot,
 
 
     override suspend fun finish() {
+        if (!isPaused()) outingMembership?.let { BossOutings.cancel(it) }
         safespotCombat.release()
         campBehavior.close()
         bot.reflex.isDisableCombatReflex = false
@@ -779,7 +866,7 @@ open class NpcCombatScript(bot: Bot,
         BotTradeIntentions.recordSupplies(bot,
             selected.runes.map { (id, amount) -> Item(id, amount * 28) }, stockTarget = 1_000)
         if (!ownedCombatSuppliesOnly) BotTradeIntentions.requestCombatPotions(bot, purpose,
-            poison = slayerTask in POISONOUS_TASKS, dragons = dragonTrip,
+            poison = slayerTask in POISONOUS_TASKS || bossTarget == BossTarget.KBD, dragons = dragonTrip,
             dangerous = queenTrip || chaosTrip || moleTrip || originalZones.any { it in STRONG_FOOD_ZONES },
             prayer = bot.prayer.staticLevel >= 30)
         if (!ownedCombatSuppliesOnly && !api.bot.action.BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
@@ -868,6 +955,14 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
+        if (bossTarget == BossTarget.KBD && !bot.status.isAntiPoison() &&
+            BossReadiness.poisonCures.none { bot.inventory.contains(it) }) {
+            val cure = BossReadiness.poisonCures.firstOrNull { bot.bank.contains(it) }
+            if (cure == null || !handler.banking.withdraw(Item(cure)) || !bot.inventory.contains(cure)) {
+                stop()
+                return
+            }
+        }
         if (queenTrip) {
             for ((id, amount) in KalphiteQueenTrip.supplies) {
                 val missing = (amount - bot.inventory.computeAmountForId(id)).coerceAtLeast(0)
@@ -877,11 +972,18 @@ open class NpcCombatScript(bot: Bot,
                     return
                 }
             }
-        } else if (ownedCombatSuppliesOnly) {
+        }
+        val foodTarget = bossTarget
+        if (ownedCombatSuppliesOnly) {
             if (!withdrawBoundedFood()) { stop(); return }
+        } else if (foodTarget != null) {
+            if (!BossFood.withdraw(bot, foodTarget, groupBoss)) {
+                bot.log("Owned boss food could not meet this trip's healing budget.")
+                stop()
+                return
+            }
         } else {
-            val strongFood = SubZone.KBD_LAIR in originalZones || moleTrip || chaosTrip ||
-                originalZones.any { it in STRONG_FOOD_ZONES }
+            val strongFood = originalZones.any { it in STRONG_FOOD_ZONES }
             if (strongFood) {
                 val carried = strongFoodCount()
                 if (carried < 20 && (!handler.banking.withdrawAnyFood(amount = 20 - carried,
@@ -898,8 +1000,9 @@ open class NpcCombatScript(bot: Bot,
                 stop()
                 return
             }
-            cannonPrepared = !magicOnly && slayerTask == null && CannonBotSupport.prepare(bot, originalZones, purpose)
         }
+        if (!queenTrip) cannonPrepared = !ownedCombatSuppliesOnly && !magicOnly && slayerTask == null &&
+            CannonBotSupport.prepare(bot, originalZones, purpose)
         if (!wieldAtBank(weapon, ammo, thrown) ||
             (slayerTask == SlayerTaskType.ZYGOMITE && !refillFungicide()) || !configureCombat()) {
             stop()
@@ -982,6 +1085,20 @@ open class NpcCombatScript(bot: Bot,
             return false
         }
         if (missing.isNotEmpty() && !handler.retrieveAll(missing)) return false
+        val boss = bossTarget
+        if (boss != null) {
+            val token = outingMembership
+            if (token != null && BossOutings.member(bot) === token) {
+                val arrived = BossOutingTravel.travel(bot, token, { !isTerminated() && !leavingUnsupportedBoss }) {
+                    handler.webWalkTo(zone, radius = 0, bank = BankAccess.NONE, fallback = false)
+                }
+                if (arrived) bossArrivalUntil = System.currentTimeMillis() + 60_000
+                return arrived
+            }
+            if (token != null && !bossCompanyEstablished && bossArrivalUntil == 0L) return false
+            if (groupBoss && !BossReadiness.levelsReady(bot, boss, false, purpose) &&
+                !BossAttendance.enough(bot, boss)) return false
+        }
         return super.travelToWorkZone(zone, bank)
     }
     // todo auto bury bones after each kill
@@ -1260,6 +1377,7 @@ open class NpcCombatScript(bot: Bot,
         data.purpose = purpose
         data.spell = spell
         data.magicOnly = magicOnly
+        data.groupBoss = groupBoss
         data.slayerTask = slayerTask
         data.slayerMaster = slayerMaster
         data.monsterRequirement = monsterRequirement
@@ -1268,15 +1386,19 @@ open class NpcCombatScript(bot: Bot,
 
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
+        if (unsupportedFocus != null && !companyAvailable &&
+            (npc !== unsupportedFocus || npc.spawnCount != unsupportedSpawn)) return false
         if (!acceptsAssignment(npc)) return false
         if (chaosTrip) return npc.id == ChaosElementalAttack.CHAOS_ELEMENTAL
         if (slayerTask == SlayerTaskType.MOGRE && Mogres.liveMogre(bot) !== npc) return false
         if (npc.id in Zygomites.FORMS) return slayerTask == SlayerTaskType.ZYGOMITE
-        if (queenTrip) return npc.id in setOf(1158, 1160) && KalphiteQueenTrip.canContinue(bot)
+        if (queenTrip) return npc.id in setOf(1158, 1160) && KalphiteQueenTrip.canContinue(bot, groupBoss)
         if (moleTrip) return npc.id == GiantMole.ID && !npc.burrowing
         if (npc.id == 50) {
-            return activeZone == SubZone.KBD_LAIR && bot.combatLevel >= 100 &&
-                bot.equipment.shield?.id == 1540 && bot.equipment.weapon != null && handler.inventory.hasAnyFood()
+            return activeZone == SubZone.KBD_LAIR &&
+                BossReadiness.levelsReady(bot, BossTarget.KBD, groupBoss, purpose) &&
+                bot.equipment.shield?.id == 1540 && bot.equipment.weapon != null &&
+                BossFood.carriedHealing(bot, BossTarget.KBD, groupBoss) > 0
         }
         if (npc.combat.target == bot) {
             return true
@@ -1344,12 +1466,13 @@ open class NpcCombatScript(bot: Bot,
      */
     private suspend fun attend() {
         if (queenTrip) {
-            if (bot.health <= 65) handler.inventory.eatAnyFood(minimumHeal = 20)
-            if (!KalphiteQueenTrip.canContinue(bot)) forceBanking = true
+            if (bot.health <= 65) BossFood.eat(bot, BossTarget.KALPHITE_QUEEN, groupBoss)
+            if (!KalphiteQueenTrip.canContinue(bot, groupBoss)) forceBanking = true
             return
         }
         if (activeZone == SubZone.KBD_LAIR &&
-            (bot.equipment.shield?.id != 1540 || !handler.inventory.hasAnyFood())) {
+            (bot.equipment.shield?.id != 1540 ||
+                BossFood.carriedHealing(bot, BossTarget.KBD, groupBoss) <= 0)) {
             forceBanking = true
         }
         if (!tactics.check()) {
@@ -1360,6 +1483,29 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun beforeZoneWork(): Boolean {
+        val boss = bossTarget
+        if (boss != null && groupBoss && !BossReadiness.levelsReady(bot, boss, false, purpose) &&
+            outingMembership?.let { BossOutings.member(bot) === it } != true) {
+            if (!supportedBossFight(boss)) {
+                val waiting = !leavingUnsupportedBoss && !bossCompanyEstablished &&
+                    System.currentTimeMillis() < bossArrivalUntil && !bot.combat.inCombat()
+                if (waiting) {
+                    bot.combat.target = null
+                    return true
+                }
+                leavingUnsupportedBoss = true
+            }
+            if (leavingUnsupportedBoss) {
+                bot.combat.target = null
+                bot.combat.autoRetaliateTarget = null
+                bot.reflex.isDisableCombatReflex = true
+                handler.combat.fleeCombat()
+                handler.webWalkTo(api.bot.boss.BossRecruitment.meetingBank(bot, boss),
+                    bank = BankAccess.NONE, fallback = false)
+                stop()
+                return true
+            }
+        }
         if (forceBanking || !bot.isAlive || !isRunning()) safespotCombat.release()
         if (!assignmentActive()) {
             bot.combat.target = null
@@ -1374,9 +1520,9 @@ open class NpcCombatScript(bot: Bot,
         }
         val inChamber = bot.position.z == 0 && SubZone.KALPHITE_QUEEN.area.contains(bot)
         bot.reflex.isDisableCombatReflex = inChamber
-        if (bot.health <= 65) handler.inventory.eatAnyFood(minimumHeal = 20)
+        if (bot.health <= 65) BossFood.eat(bot, BossTarget.KALPHITE_QUEEN, groupBoss)
         handler.potions.drink(fighting = bot.combat.inCombat(), dragons = false, prayerBelow = 31)
-        if (!KalphiteQueenTrip.canContinue(bot) || bot.inventory.isFull) forceBanking = true
+        if (!KalphiteQueenTrip.canContinue(bot, groupBoss) || bot.inventory.isFull) forceBanking = true
         if (forceBanking) {
             bot.combat.target = null
             if (inChamber) {
@@ -1449,6 +1595,13 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return false
         }
+        val boss = bossTarget
+        if (leavingUnsupportedBoss || boss != null && groupBoss &&
+            !BossReadiness.levelsReady(bot, boss, false, purpose) && !supportedBossFight(boss)) {
+            bot.combat.target = null
+            bot.combat.autoRetaliateTarget = null
+            return false
+        }
         if (!trainingPurposeNeeded()) {
             bot.combat.target = null
             clearMagic()
@@ -1501,7 +1654,7 @@ open class NpcCombatScript(bot: Bot,
             bot.reflex.isDisableCombatReflex = false
             return false
         }
-        if (queenTrip && (forceBanking || !KalphiteQueenTrip.canContinue(bot))) {
+        if (queenTrip && (forceBanking || !KalphiteQueenTrip.canContinue(bot, groupBoss))) {
             bot.combat.target = null
             forceBanking = true
             bot.reflex.isDisableCombatReflex = true

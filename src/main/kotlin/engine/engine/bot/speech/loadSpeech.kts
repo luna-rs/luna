@@ -3,6 +3,8 @@ package engine.bot.speech;
 import api.predef.*
 import api.predef.ext.*
 import api.bot.social.CombatCampBehavior
+import api.bot.boss.BossRecruitment
+import api.bot.boss.BossOutingSpeechPool
 import api.bot.action.trading.PlayerTradeAdvertisementMarket
 import io.luna.game.event.impl.ChatEvent
 import io.luna.game.event.impl.CombatDamageReceivedEvent
@@ -20,6 +22,7 @@ on(ServerLaunchEvent::class) {
         BotMiningSpeechPool.load()
         BotMiningArgumentPool.load()
         BotRuneRunningSpeechPool.load()
+        BossOutingSpeechPool.load()
     }
 }
 
@@ -30,6 +33,7 @@ BotReactions.reactToOtherLevelUp()
 BotChatRouter.add(PlayerTradeAdvertisementMarket.live)
 BotChatRouter.add(BotPriceChecks)
 BotChatRouter.add(CombatCampBehavior)
+BotChatRouter.add(BossRecruitment)
 on(ChatEvent::class) { BotChatRouter.route(this) }
 on(CombatDamageReceivedEvent::class) {
     CombatCampBehavior.nearDeath(plr, damage.rawAmount)

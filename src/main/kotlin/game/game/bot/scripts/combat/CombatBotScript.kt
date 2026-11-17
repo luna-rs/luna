@@ -62,12 +62,13 @@ import kotlin.time.Duration.Companion.seconds
  * @param targetAllowed Optional encounter guard, rechecked before attacks and suspendable equipment switches.
  * @param onCombatFinished Cleanup after final completion or termination; a combat pause retains encounter ownership.
  * @param lootOnVictory Whether to wait briefly for native death processing and attempt visible ground loot on victory.
+ * @param allowPlayerRetargeting Whether a player fight may switch away from its original encounter target.
  * @author lare96
  */
 class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob,
     private val initialState: InitialState = InitialState.ATTACK, private val pkSession: PkBotScript? = null,
     private val targetAllowed: () -> Boolean = { true }, private val onCombatFinished: () -> Unit = {},
-    private val lootOnVictory: Boolean = false) :
+    private val lootOnVictory: Boolean = false, private val allowPlayerRetargeting: Boolean = true) :
     DynamicBotScript(bot) {
 
     override val actionSafety = ActionSafety.COMBAT
@@ -89,7 +90,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * Keeps waiting during reaction windows, and abandons fights with no usable permitted discipline.
      */
     private suspend fun prepareAttack(): Boolean {
-        if (!targetAllowed()) {
+        if (!targetAllowed() || (!allowPlayerRetargeting && focus is Player &&
+                !combatPolicy.canAttackPlayer(focus as Player))) {
             bot.combat.target = null
             stop()
             return false
@@ -349,7 +351,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         when (initialState) {
             InitialState.ATTACK -> {
                 // A resumed script may find its focus dead, or an NPC on its next life: nothing to attack then.
-                if (focusAlive()) {
+                if (focusAlive() && targetAllowed() && (allowPlayerRetargeting || focus !is Player ||
+                        combatPolicy.canAttackPlayer(focus as Player))) {
                     bot.combat.attack(focus)
                 }
                 bot.speechStack.setDisableGeneral(true)
@@ -462,7 +465,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * unreachable, out of view, or no longer valid for multi-combat, the bot looks for nearby loot instead.
      */
     private suspend fun targetEnemy() {
-        val opponent = if (pkSession == null) combatPolicy.opponent() else null
+        val opponent = if (pkSession == null && allowPlayerRetargeting) combatPolicy.opponent() else null
         if (opponent != null && (opponent != focus || !focusAlive()) && opponent.isViewableFrom(bot) &&
             (!focusAlive() || !focus.isViewableFrom(bot) || !bot.combat.checkMultiCombat(focus))) {
             bot.log("Switching focus from $focus to $opponent.")
@@ -470,7 +473,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             focusSpawn = (opponent as? Npc)?.spawnCount
         }
         if (focusAlive() && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
-            if (focus is Player && !usesPkSwitching && rand(1 of 5)) {
+            if (focus is Player && allowPlayerRetargeting && !usesPkSwitching && rand(1 of 5)) {
                 val local = world.locator.findViewablePlayers(bot) {
                     bot.combat.checkMultiCombat(it) &&
                             it.healthPercent < 25 &&

@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.damage;
 
 import io.luna.game.event.impl.CombatDamageReceivedEvent;
+import api.bot.boss.BossEncounterLearning;
 import engine.combat.prayer.CombatPrayerEffects;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -124,6 +125,7 @@ public final class CombatDamage {
         attacker.getCombat().setLastAttackSent(source);
         victim.getCombat().setLastAttackReceived(source);
         victim.getCombat().setLastDamageReceived(applied);
+        BossEncounterLearning.record(applied, source.getDelay());
         source.applyNpcPoison(applied);
         if (victim instanceof Npc npc) {
             npc.onDamageApplied(applied);
