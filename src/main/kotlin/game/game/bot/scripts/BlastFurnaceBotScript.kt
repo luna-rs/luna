@@ -5,6 +5,8 @@ import api.bot.Suspendable.waitFor
 import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.script.ProductionPlan
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.webwalk.plan.BankAccess
 import api.attr.Attr
 import api.attr.getValue
@@ -17,6 +19,7 @@ import game.content.blastFurnace.BlastFurnaceInterface
 import game.content.blastFurnace.BlastFurnaceWorkAction
 import game.skill.smithing.BarType
 import game.bot.scripts.BlastFurnaceCrew.Role
+import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.GroundItem
@@ -26,6 +29,7 @@ import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Repeats manual furnace batches using owned ore, coal, tools and fees through normal player interactions.
@@ -42,14 +46,18 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
                             private var prepared: Boolean = false,
                             private val deadline: Long = System.currentTimeMillis() + 1_200_000,
                             private var failures: Int = 0,
-                            val role: Role = Role.SMELTER) : BotScript(bot) {
+                            val role: Role = Role.SMELTER,
+                            private var supplyPlan: ProductionPlan? = null) : BotScript(bot) {
     companion object {
         private var Bot.nextAttempt by Attr.long()
 
         private fun defer(bot: Bot) { bot.nextAttempt = System.currentTimeMillis() + 15 * 60_000L }
 
-        private fun owned(bot: Bot, id: Int): Long = bot.inventory.computeAmountForId(id).toLong() +
-            bot.bank.computeAmountForId(id)
+        private fun owned(bot: Bot, id: Int): Long {
+            val note = itemDef(id).notedId.orElse(-1)
+            return bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id) +
+                if (note >= 0) bot.inventory.computeAmountForId(note).toLong() else 0L
+        }
 
         private fun canWork(bot: Bot, role: Role): Boolean =
             BotCombatActionHandler.mayGainExperience(bot, role.skillId) &&
@@ -77,8 +85,12 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             for (role in roles) {
                 if (!canWork(bot, role) || role != Role.SMELTER && BlastFurnaceCrew.occupied(bot, role)) continue
                 if (!BlastFurnace.hasAccess(bot) && owned(bot, 995) < BlastFurnace.FEE) continue
-                val bar = if (role == Role.SMELTER) BarType.entries.sortedByDescending { it.level }
-                    .firstOrNull { eligible(bot, it) } ?: continue else BarType.STEEL
+                val bar = if (role == Role.SMELTER) {
+                    val choices = BarType.entries.filter { it.level <= bot.smithing.staticLevel && it.level <= bot.smithing.level }
+                        .sortedByDescending { it.level }
+                    choices.firstOrNull { supplies(bot, it, !pendingWork(bot), requireTools = false) != null }
+                        ?: choices.firstOrNull { eligible(bot, it) } ?: continue
+                } else BarType.STEEL
                 if (tools(bot, role).any { owned(bot, it.id) == 0L } &&
                     owned(bot, 995) <= if (BlastFurnace.hasAccess(bot)) 0 else BlastFurnace.FEE) continue
                 val script = BlastFurnaceBotScript(bot, bar,
@@ -127,7 +139,10 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
 
         fun eligible(bot: Bot): Boolean = eligible(bot, BarType.STEEL)
         fun eligible(bot: Bot, bar: BarType): Boolean = available(bot) && canWork(bot, Role.SMELTER) &&
-            supplies(bot, bar, !pendingWork(bot), requireTools = false) != null
+            bar.level <= bot.smithing.level && bar.level <= bot.smithing.staticLevel &&
+            (supplies(bot, bar, !pendingWork(bot), requireTools = false) != null ||
+                BlastFurnaceSupplies.create(bot, bar, tools(bot, Role.SMELTER),
+                    System.currentTimeMillis() + 120_000L) != null)
     }
 
     /**
@@ -141,12 +156,14 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         var deadline = 0L
         var failures = 0
         var role = Role.SMELTER
+        var supplyPlan: ProductionPlan? = null
         override fun load(data: JsonObject) {
             bar = BarType.valueOf(data.get("bar").asString)
             prepared = data.get("prepared").asBoolean
             deadline = data.get("deadline").asLong
             failures = data.get("failures")?.asInt ?: 0
             role = data.get("role")?.asString?.let { runCatching { Role.valueOf(it) }.getOrNull() } ?: Role.SMELTER
+            supplyPlan = data.getAsJsonObject("supplies")?.let(ProductionPlan::load)
         }
         override fun save(data: JsonObject) {
             data.addProperty("bar", bar.name)
@@ -154,10 +171,11 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             data.addProperty("deadline", deadline)
             data.addProperty("failures", failures)
             data.addProperty("role", role.name)
+            supplyPlan?.let { data.add("supplies", it.save()) }
         }
     }
 
-    constructor(bot: Bot, data: FurnaceData) : this(bot, data.bar, data.prepared, data.deadline, data.failures, data.role)
+    constructor(bot: Bot, data: FurnaceData) : this(bot, data.bar, data.prepared, data.deadline, data.failures, data.role, data.supplyPlan)
     private var lastProgress = System.currentTimeMillis()
     private var previous: List<Any?>? = null
     override val allowsCombatResponse = false
@@ -180,6 +198,54 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         return tools(bot, role).all { owned(bot, it.id) > 0L }
     }
 
+    /**
+     * Purchases one finite ore basket through normal trades and stocked shops before committing to travel.
+     * The same saved target, actual-spend allowance and absolute deadline survive child trades and restarts.
+     */
+    private suspend fun prepareSupplies(): Boolean {
+        val ids = tools(bot, role).map { it.id } +
+            if (role == Role.SMELTER) BlastFurnace.ingredients(selectedBar).map { it.id } else emptyList()
+        if (ids.any { id -> itemDef(id).notedId.orElse(-1).let { it >= 0 && bot.inventory.contains(it) } }) {
+            if (!bank(emptyList())) return false
+            prepared = false
+        }
+        if (!prepareTools()) return false
+        if (role != Role.SMELTER || pendingWork()) return retireSupplies()
+        val purchase = supplyPlan
+        if (purchase == null && plan() != null) return true
+        val acquisition = purchase ?: BlastFurnaceSupplies.create(bot, selectedBar, tools(bot, role),
+            minOf(deadline, System.currentTimeMillis() + 120_000L))?.also { supplyPlan = it } ?: return false
+        BotTradeIntentions.recordProductionPlan(bot, acquisition, this)
+        fun supplied() = plan() != null
+        if (!supplied() && System.currentTimeMillis() < acquisition.deadline) {
+            for ((id, target) in acquisition.targets()) {
+                if (owned(bot, id) >= target || !acquisition.attemptedMarketItems.add(id)) continue
+                val remaining = acquisition.deadline - System.currentTimeMillis()
+                if (remaining <= 0L) break
+                val trade = TradeBotScript.buySpecific(bot, id, target, acquisition.deadline) ?: continue
+                trade.duration = minOf(30_000L, remaining).milliseconds
+                prepared = false
+                bot.scriptStack.pushHead(trade)
+                return false
+            }
+            if (!acquisition.shopAttempted && !supplied() && System.currentTimeMillis() < acquisition.deadline) {
+                acquisition.shopAttempted = true
+                withTimeoutOrNull((acquisition.deadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
+                    handler.shop.obtainWantedItems(acquisition.targets(), acquisition.remainingCoins
+                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), acquisition.maximumUnitPrices)
+                }
+            }
+        }
+        return retireSupplies() && supplied()
+    }
+
+    private suspend fun retireSupplies(): Boolean {
+        val acquisition = supplyPlan ?: return true
+        BotTradeIntentions.clearProductionPlan(bot, acquisition, this)
+        supplyPlan = null
+        return true
+    }
+
     private fun pendingWork(): Boolean = pendingWork(bot)
 
     private fun carriedOre(): Boolean = BlastFurnace.ingredients(selectedBar).any { bot.inventory.contains(it.id) }
@@ -189,7 +255,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             !BlastFurnaceCrew.claim(bot, this, role, deadline)) return true
         BlastFurnaceCrew.refresh(bot, this)
         val finished = withTimeoutOrNull(600_000) {
-            if (!prepareTools()) return@withTimeoutOrNull true
+            if (!prepareSupplies()) return@withTimeoutOrNull true
             if (!prepared || tools(bot, role).any { !bot.inventory.contains(it.id) }) {
                 val plan = plan(!pendingWork()) ?: return@withTimeoutOrNull true
                 if (!bank(plan)) return@withTimeoutOrNull true
@@ -197,7 +263,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             }
             !returnToFurnace()
         } ?: true
-        if (finished) defer(bot)
+        if (finished) { if (!isPaused()) defer(bot) }
         else { resetProgress(); bot.log("Blast Furnace: arrived as $role.") }
         return finished
     }
@@ -267,6 +333,12 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     }
 
     private suspend fun restock(): Boolean {
+        prepared = false
+        if (!trainingComplete() && !prepareSupplies()) {
+            if (isPaused() || bot.scriptStack.current() !== this) return false
+            defer(bot)
+            return finishBanking()
+        }
         val plan = if (trainingComplete()) null else plan()
         if (plan == null) return finishBanking()
         val ready = withTimeoutOrNull(120_000) { bank(plan) && returnToFurnace() } == true
@@ -278,6 +350,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
 
     private suspend fun finishBanking(): Boolean {
         BlastFurnaceCrew.release(bot, this)
+        retireSupplies()
         if (bot.state == EntityState.ACTIVE && isActionSafe() && !bot.inWilderness()) {
             withTimeoutOrNull(120_000) { bank(emptyList(), ending = true) }
         }
@@ -389,11 +462,12 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         if ((!ending && System.currentTimeMillis() >= deadline) || bot.inWilderness() || !isActionSafe()) return false
         if (!handler.interactions.interact(2, bank) || !waitFor(5.seconds) { bot.bank.isOpen } ||
             !handler.banking.depositInventory()) return false
-        for (item in plan) if (!handler.banking.withdraw(item)) return false
-        return handler.widgets.clickCloseInterface()
+        for (item in plan) if (!handler.banking.withdrawUnnoted(item)) return false
+        return handler.widgets.clickCloseInterface() && bot.inventory.containsAll(plan)
     }
 
     override suspend fun finish() {
+        if (!isPaused()) supplyPlan?.let { BotTradeIntentions.clearProductionPlan(bot, it, this) }
         BlastFurnaceCrew.release(bot, this)
         output.sendCloseInterface()
         bot.actions.interruptWeak()
@@ -402,5 +476,6 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     }
     override fun snapshot() = FurnaceData().also {
         it.bar = selectedBar; it.prepared = prepared; it.deadline = deadline; it.failures = failures; it.role = role
+        it.supplyPlan = supplyPlan
     }
 }
