@@ -24,6 +24,7 @@ object1(9089) {
     }
 }
 object1(9143) { BlastFurnace.fillBucket(plr) }
+object1(BlastFurnaceAnvilGate.CLOSED) { BlastFurnaceAnvilGate.open(plr, gameObject) }
 for (id in listOf(9092, 9093, 9095, 9096)) object1(id) { BlastFurnace.openStock(plr) }
 for (damage in BlastFurnace.Damage.entries) object1(damage.broken) { BlastFurnace.repair(plr, damage) }
 useItem(1929).onObject(9092) { BlastFurnace.cool(plr) }
