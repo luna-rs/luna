@@ -831,6 +831,16 @@ enum class SubZone(
         parent = { RELLEKKA }),
 
     /**
+     * The open mine east of Rellekka.
+     * - 9 iron rocks
+     * - 2 mithril rocks
+     */
+    RELLEKKA_EAST_MINE(
+        inside = Position(2725, 3692),
+        area = SimpleBoxArea.of(2720, 3685, 2730, 3698),
+        parent = { RELLEKKA }),
+
+    /**
      * The chaos druid tower dungeon.
      * - Ogres
      * - Blood rune thieving chest
