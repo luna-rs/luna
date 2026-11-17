@@ -87,7 +87,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
             ?: error("No woodcutting activity is available at level $level.")
         zones.clear()
         zones.addAll(activity.zones)
-        return CutTreeBotScript(bot, activity.tokens, getDuration(bot), zones)
+        return CutTreeBotScript(bot, activity.tokens, getDuration(bot, skillId), zones)
     }
 
     /**

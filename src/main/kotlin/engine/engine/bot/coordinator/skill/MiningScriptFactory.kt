@@ -94,7 +94,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         zones.addAll(if (bot.personality.isDextrous)
             alternatives.sortedBy { bot.position.computeLongestDistance(it.inside) }
         else alternatives.shuffled())
-        return MineBotScript(bot, activity.tokens, getDuration(bot), zones, preferred, powerMining,
+        return MineBotScript(bot, activity.tokens, getDuration(bot, skillId), zones, preferred, powerMining,
             profitMining = !training)
     }
 

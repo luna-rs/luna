@@ -36,7 +36,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         }
         zones.clear()
         zones += SubZone.ARDOUGNE_SQUARE_THIEVING
-        return StealBotScript(bot, setOf(ThievingStallType.GEM), getDuration(bot), zones,
+        return StealBotScript(bot, setOf(ThievingStallType.GEM), getDuration(bot, skillId), zones,
             sellOnCompletion = true)
     }
 
@@ -47,7 +47,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         if (RoguesDenBotScript.eligible(bot) && rand(0.15)) {
             zones.clear()
             zones += SubZone.ROGUES_DEN_MAZE
-            return RoguesDenBotScript(bot, getDuration(bot).coerceAtLeast(20.minutes))
+            return RoguesDenBotScript(bot, getDuration(bot, skillId).coerceAtLeast(20.minutes))
         }
         val shouldPickpocket = bot.personality.isDextrous || rand(bot.personality.dexterity) ||
             rand(bot.personality.intelligence) || level < ThievingStallType.VEGETABLE.level
@@ -79,7 +79,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         zones.addAll((activity.zones + stalls.filter { option ->
             option.tokens.any { it in activity.tokens }
         }.flatMap { it.zones }).distinct())
-        return StealBotScript(bot, activity.tokens, getDuration(bot), zones)
+        return StealBotScript(bot, activity.tokens, getDuration(bot, skillId), zones)
     }
 
     /**
@@ -112,7 +112,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         val expanded = zones.distinct()
         zones.clear()
         zones.addAll(expanded)
-        return PickpocketBotScript(bot, activity.tokens, getDuration(bot), zones,
+        return PickpocketBotScript(bot, activity.tokens, getDuration(bot, skillId), zones,
             sellOnCompletion = !training)
     }
 

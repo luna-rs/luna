@@ -234,13 +234,13 @@ class HarvestBotScript(
         // Chance to queue a flax spinning script, unless this bot spins its own flax.
         if (harvestable == Harvestable.FLAX && !spinFlax &&
             (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
-            val script = SpinTextileBotScript(bot, SkillingScriptFactory.getDuration(bot))
+            val script = SpinTextileBotScript(bot, SkillingScriptFactory.getDuration(bot, SKILL_CRAFTING))
             bot.scriptStack.pushTail(script, 2)
         }
         // Chance to queue milling the wheat into flour.
         if (harvestable == Harvestable.WHEAT && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             val mill = MillFlourBotScript.pickMill(bot)
-            bot.scriptStack.pushTail(MillFlourBotScript(bot, mill, SkillingScriptFactory.getDuration(bot)), 2)
+            bot.scriptStack.pushTail(MillFlourBotScript(bot, mill, SkillingScriptFactory.getDuration(bot, SKILL_COOKING)), 2)
         }
     }
 }

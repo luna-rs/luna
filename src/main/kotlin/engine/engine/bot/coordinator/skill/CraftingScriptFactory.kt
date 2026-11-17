@@ -97,9 +97,9 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         // Use ready leather before spending more coins on unfinished hides.
         val craftArmor = getBestActivity(bot, level, { it.level }, craftable)
         if (craftArmor != null) {
-            return CraftArmorBotScript(bot, craftArmor, getDuration(bot))
+            return CraftArmorBotScript(bot, craftArmor, getDuration(bot, skillId))
         }
-        return TanHideBotScript(bot, getDuration(bot))
+        return TanHideBotScript(bot, getDuration(bot, skillId))
     }
 
     override fun getProfitScript(
@@ -112,13 +112,13 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         }
         if (randBoolean() && level >= Textile.BOWSTRING.level) {
             zones += SubZone.FLAX_SPINNING_MAIN
-            return SpinTextileBotScript(bot, getDuration(bot))
+            return SpinTextileBotScript(bot, getDuration(bot, skillId))
         }
         if (getUntannedHides(bot) > 0 || randBoolean()) {
-            return TanHideBotScript(bot, getDuration(bot))
+            return TanHideBotScript(bot, getDuration(bot, skillId))
         }
         zones += ProductionZones.FLAX
-        return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot), zones)
+        return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot, skillId), zones)
     }
 
     /**
@@ -150,10 +150,10 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         if (listOf(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE, Skill.RANGED, Skill.MAGIC)
                 .none { BotCombatActionHandler.mayGainExperience(bot, it) }) {
             return CollectGroundItemBotScript(bot, CollectHidesBotScript.COWHIDE,
-                CollectHidesBotScript.hideTarget(bot), getDuration(bot), zones)
+                CollectHidesBotScript.hideTarget(bot), getDuration(bot, skillId), zones)
         }
         val collect = pickUpHides ?: (!bot.personality.isDumb || !roll(1 of 3))
-        return CollectHidesBotScript(bot, getDuration(bot), zones, collect)
+        return CollectHidesBotScript(bot, getDuration(bot, skillId), zones, collect)
     }
 
     /**
@@ -168,7 +168,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * Trains only through the existing glove recipe until the pending activity's real level gate is reached.
      */
     fun getBasicScript(bot: Bot, targetLevel: Int): CraftArmorBotScript =
-        CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot), targetLevel = targetLevel)
+        CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot, skillId), targetLevel = targetLevel)
 
     /**
      * Selects an owned Crafting production recipe or non-training soft-clay preparation activity.
@@ -184,7 +184,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * @return An eligible production script, or null so the caller can select its existing fallback.
      */
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val candidates = buildList<Pair<Int, InventoryBotScript>> {
             addAll(Gem.entries.map { CutGemBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })

@@ -70,7 +70,7 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
      */
     private fun select(bot: Bot, level: Int, profit: Boolean, returning: Boolean = false): BotScript? {
         Farming.update(bot)
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val training = if (!profit && !returning) TrainingBudget(bot) else null
         val saplings = TreeSeedling.entries.mapTo(HashSet()) { it.sapling }
         val candidates = FarmingBotScript.SITES.keys.mapNotNull { location ->

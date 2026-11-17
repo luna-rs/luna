@@ -53,7 +53,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
      * the inherited personality selector; current-level and safety checks occur again during execution.
      */
     internal fun getOwnedBowScript(bot: Bot, level: Int): StringBowBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val candidates = Bow.entries.filter { it != ARROW_SHAFT }
             .map { StringBowBotScript(bot, it, duration) }.filter { it.isEligible() }
         return getBestActivity(bot, level, { it.requiredLevel }, candidates)
@@ -63,7 +63,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
      * Retains arrow-only selection for callers that specifically need shaft preparation or finished arrows.
      */
     internal fun getOwnedArrowScript(bot: Bot, level: Int): MakeArrowBotScript? {
-        val candidates = ownedArrowScripts(bot, getDuration(bot)).filter { it.requiredLevel <= level }
+        val candidates = ownedArrowScripts(bot, getDuration(bot, skillId)).filter { it.requiredLevel <= level }
         return getBestActivity(bot, level, { it.requiredLevel },
             candidates.filter { it.hasCompleteSupplies() }.ifEmpty { candidates })
     }
@@ -90,7 +90,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
      * Their scripts retain their native interaction flow while reusing the same inventory production lifecycle.
      */
     internal fun getOwnedAmmunitionScript(bot: Bot, level: Int): BotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val arrows = ownedArrowScripts(bot, duration).map { it.requiredLevel to it }
         val ammunition = FletchAmmunitionBotScript.RECIPES.values.map { FletchAmmunitionBotScript(bot, it, duration) }
             .filter { it.isEligible() }.map { it.requiredLevel to it }
@@ -109,7 +109,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
 
     /** Selects a valid cutting recipe from an owned log tier and knife before using acquisition fallback. */
     internal fun getOwnedLogScript(bot: Bot, level: Int): CutLogBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val candidates = Log.entries.flatMap { log ->
             log.bows.indices.map { CutLogBotScript(bot, log, it, duration) }
         }.filter { it.isEligible() }
@@ -131,7 +131,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
                 index = 0
             }
 
-            return CutLogBotScript(bot, log, index, getDuration(bot))
+            return CutLogBotScript(bot, log, index, getDuration(bot, skillId))
         }
 
         /*
@@ -157,12 +157,12 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
             return getScriptForLog(Log.OAK)
         } else if (level >= SHORTBOW.level && (!randomized || rand(64) == 0)) {
             return if (level >= LONGBOW.level && (!randomized || randBoolean())) {
-                CutLogBotScript(bot, Log.NORMAL, 2, getDuration(bot))
+                CutLogBotScript(bot, Log.NORMAL, 2, getDuration(bot, skillId))
             } else {
-                CutLogBotScript(bot, Log.NORMAL, 1, getDuration(bot))
+                CutLogBotScript(bot, Log.NORMAL, 1, getDuration(bot, skillId))
             }
         } else {
-            return CutLogBotScript(bot, Log.NORMAL, 0, getDuration(bot))
+            return CutLogBotScript(bot, Log.NORMAL, 0, getDuration(bot, skillId))
         }
     }
 }

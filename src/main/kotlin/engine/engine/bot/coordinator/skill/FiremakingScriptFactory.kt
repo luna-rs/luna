@@ -37,7 +37,7 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
     const val GATHER_TARGET = FiremakingBotScript.LOGS_PER_TRIP * 4
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        return getTrainingScript(bot, level, zones, getDuration(bot))
+        return getTrainingScript(bot, level, zones, getDuration(bot, skillId))
     }
 
     /**
@@ -65,7 +65,7 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
     fun getBurnScript(bot: Bot,
                       level: Int = bot.firemaking.staticLevel,
                       zones: MutableList<SubZone> = ArrayList(),
-                      duration: Duration = getDuration(bot)): FiremakingBotScript? {
+                      duration: Duration = getDuration(bot, skillId)): FiremakingBotScript? {
         if (duration <= Duration.ZERO || !BotCombatActionHandler.wantsToTrain(bot, skillId)) return null
         val owned = Log.entries.filter { bot.itemTracker.count(it.id) > 0 }
         val log = getBestActivity(bot, level, { it.level }, owned) ?: return null

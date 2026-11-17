@@ -32,7 +32,7 @@ object PrayerScriptFactory : SkillingScriptFactory(SKILL_PRAYER) {
      * Selects one owned production activity without creating materials or awarding experience.
      */
     internal fun getProductionScript(bot: Bot): BotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         EctofuntusBotScript.select(bot, duration)?.let { return it }
         return BotProductionPlanner.select(bot, skillId, bot.prayer.staticLevel, true, duration)
     }

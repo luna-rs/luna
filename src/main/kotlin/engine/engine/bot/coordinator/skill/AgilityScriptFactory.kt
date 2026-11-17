@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.minutes
  */
 object AgilityScriptFactory : SkillingScriptFactory(SKILL_AGILITY) {
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val options = ArrayList<BotSkillingActivity<Pair<Int, BotScript>>>()
         AgilityBotCourse.entries.filter { AgilityBotScript.canTrain(bot, it) }.forEach {
             options += BotSkillingActivity(setOf(it.minimumLevel to AgilityBotScript(bot, it, duration)), setOf(it.zone))
@@ -43,12 +43,12 @@ object AgilityScriptFactory : SkillingScriptFactory(SKILL_AGILITY) {
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         if (RoguesDenBotScript.eligible(bot) && rand(0.25)) {
             zones += SubZone.ROGUES_DEN_MAZE
-            return RoguesDenBotScript(bot, getDuration(bot).coerceAtLeast(20.minutes))
+            return RoguesDenBotScript(bot, getDuration(bot, skillId).coerceAtLeast(20.minutes))
         }
         val pyramid = AgilityBotCourse.AGILITY_PYRAMID
         if (level >= pyramid.course.level && AgilityBotScript.canTrain(bot, pyramid)) {
             zones += pyramid.zone
-            return AgilityBotScript(bot, pyramid, getDuration(bot))
+            return AgilityBotScript(bot, pyramid, getDuration(bot, skillId))
         }
         return object : DynamicBotScript(bot) {
             override suspend fun run() = true

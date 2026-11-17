@@ -61,7 +61,7 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
      * Retains the mill's existing non-training role using one captured batch of real grain and pots only.
      */
     internal fun getOwnedMillingScript(bot: Bot): MillFlourBotScript? =
-        MillFlourBotScript.ownedSession(bot, getDuration(bot))
+        MillFlourBotScript.ownedSession(bot, getDuration(bot, skillId))
 
     override fun getTrainingScript(
         bot: Bot,
@@ -91,7 +91,7 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         }
         zones += ProductionZones.RANGES
 
-        return CookFoodBotScript(bot, food, getDuration(bot), zones)
+        return CookFoodBotScript(bot, food, getDuration(bot, skillId), zones)
     }
 
     override fun getProfitScript(
@@ -122,13 +122,13 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         val stage = stages.firstOrNull { (recipe, remaining) ->
             bot.ownsProductionSupplies((listOf(recipe.baseIngredient) + remaining).map { Item(it) })
         }?.first ?: return null
-        return AssembleFoodBotScript(bot, stage, getDuration(bot))
+        return AssembleFoodBotScript(bot, stage, getDuration(bot, skillId))
     }
 
     /** Selects a level-appropriate owned dough recipe using the existing personality rules. */
     internal fun getPreparationScript(bot: Bot, level: Int): MakeDoughBotScript? {
         val options = IncompleteFood.DOUGH.values.flatMap { food ->
-            WaterResource.FILLED_IDS.map { MakeDoughBotScript(bot, food, it, getDuration(bot)) }
+            WaterResource.FILLED_IDS.map { MakeDoughBotScript(bot, food, it, getDuration(bot, skillId)) }
         }.filter { it.isEligible() || it.canPrepareWater() }
         return getBestActivity(bot, level, { it.requiredLevel }, options)
     }
@@ -136,9 +136,9 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
     /** Chooses eligible owned dough preparation, food cutting, or food assembly for non-training Cooking. */
     internal fun getNonTrainingPreparation(bot: Bot, level: Int): BotScript? {
         val cutting = getBestActivity(bot, level, { it.requiredLevel },
-            CutFoodBotScript.RECIPES.keys.map { CutFoodBotScript(bot, it, getDuration(bot)) }
+            CutFoodBotScript.RECIPES.keys.map { CutFoodBotScript(bot, it, getDuration(bot, skillId)) }
                 .filter { it.isEligible() })
-        val milling = MillFlourBotScript(bot, MillFlourBotScript.pickMill(bot), getDuration(bot))
+        val milling = MillFlourBotScript(bot, MillFlourBotScript.pickMill(bot), getDuration(bot, skillId))
         return listOfNotNull(getPreparationScript(bot, level), cutting, getAssemblyScript(bot, level), milling).randomOrNull()
     }
 
@@ -154,6 +154,6 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
                 } else {
                     food.otherIngredients
                 }
-                alternatives.map { AssembleFoodBotScript(bot, food, getDuration(bot), secondary = it) }
+                alternatives.map { AssembleFoodBotScript(bot, food, getDuration(bot, skillId), secondary = it) }
             }.filter { it.isEligible() || (!training && it.canPrepareWater()) })
 }

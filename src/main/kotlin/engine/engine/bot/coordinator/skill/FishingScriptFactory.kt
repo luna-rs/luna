@@ -201,7 +201,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         return FishBotScript(
             bot,
             activity.tokens.single(),
-            getDuration(bot),
+            getDuration(bot, skillId),
             activity.zones.toMutableList()
         )
     }

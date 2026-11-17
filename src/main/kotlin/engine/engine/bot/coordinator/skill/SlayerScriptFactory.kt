@@ -163,10 +163,10 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
     }
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        SlayerBotScript(bot, getDuration(bot))
+        SlayerBotScript(bot, getDuration(bot, skillId))
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        SlayerBotScript(bot, getDuration(bot))
+        SlayerBotScript(bot, getDuration(bot, skillId))
 
     /**
      * Excludes level-three skillers and skiller templates before any travel or task request.

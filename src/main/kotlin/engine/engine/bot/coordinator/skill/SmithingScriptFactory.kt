@@ -33,7 +33,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
      */
     fun getBlastFurnaceScript(bot: Bot, level: Int): BlastFurnaceBotScript? =
         if (level < BarType.BRONZE.level) null
-        else BlastFurnaceBotScript.select(bot, SKILL_SMITHING, getDuration(bot).inWholeMilliseconds)
+        else BlastFurnaceBotScript.select(bot, SKILL_SMITHING, getDuration(bot, skillId).inWholeMilliseconds)
 
     /**
      * Smithable item types prioritized for profit-oriented smithing.
@@ -101,7 +101,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
             bot.itemTracker.count(it.barType.id) >= SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
         })
         if (smithingItem != null) {
-            return SmithBarBotScript(bot, mutableListOf(smithingItem), getDuration(bot))
+            return SmithBarBotScript(bot, mutableListOf(smithingItem), getDuration(bot, skillId))
         }
 
         // Prefer owned ore combinations; the script gathers supplies when none are available.
@@ -111,7 +111,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
 
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
         zones += ProductionZones.FURNACES
-        return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
+        return SmeltOreBotScript(bot, smeltBar, getDuration(bot, skillId), zones)
     }
 
     override fun getProfitScript(
@@ -128,13 +128,13 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
 
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
         zones += ProductionZones.FURNACES
-        return SmeltOreBotScript(bot, null, getDuration(bot), zones)
+        return SmeltOreBotScript(bot, null, getDuration(bot, skillId), zones)
     }
 
     /** Selects cannonball production only when the supplied level, permanent level, and owned supplies qualify. */
     internal fun getCannonballScript(bot: Bot, level: Int): MakeCannonballBotScript? {
         if (level < game.skill.smithing.makeCannonball.MakeCannonballAction.LEVEL) return null
-        return MakeCannonballBotScript(bot, getDuration(bot)).takeIf { it.isEligible() }
+        return MakeCannonballBotScript(bot, getDuration(bot, skillId)).takeIf { it.isEligible() }
     }
 
     /**
@@ -152,7 +152,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
             bot.itemTracker.count(it.barType.id) >= SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
         }
         if (smithingItems.isNotEmpty()) {
-            return SmithBarBotScript(bot, smithingItems.toMutableList(), getDuration(bot))
+            return SmithBarBotScript(bot, smithingItems.toMutableList(), getDuration(bot, skillId))
         }
         return null
     }
@@ -166,6 +166,6 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
    // todo boilerplate
         zones += ProductionZones.FURNACES
-        return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
+        return SmeltOreBotScript(bot, smeltBar, getDuration(bot, skillId), zones)
     }
 }

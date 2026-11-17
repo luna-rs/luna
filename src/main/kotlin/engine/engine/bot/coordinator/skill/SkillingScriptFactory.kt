@@ -7,9 +7,9 @@ import api.bot.script.VoidBotScript
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
-import engine.bot.coordinator.skill.SkillingCoordinator.Companion.BASE_SKILLING_DURATION_MINUTES
+
 import game.bot.scripts.BlastFurnaceBotScript
-import kotlin.math.floor
+
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -30,21 +30,13 @@ abstract class SkillingScriptFactory(val skillId: Int) {
         /**
          * Selects the duration of a skilling session for [bot].
          *
-         * The base duration is randomly chosen from [BASE_SKILLING_DURATION_MINUTES]. Dextrous bots may receive a longer
-         * session duration, reflecting a stronger tendency to stay focused on skilling before switching activities.
+         * Most sessions last twenty to forty-five minutes. Personality and the selected skill affinity influence
+         * the chance of a shorter visit or a longer session. Only favorite skills can reach two hours.
          *
          * @param bot The bot whose personality affects the duration.
          * @return The selected skilling session duration.
          */
-        fun getDuration(bot: Bot): Duration {
-            var baseDuration = rand(BASE_SKILLING_DURATION_MINUTES)
-
-            if (bot.personality.isDextrous) {
-                baseDuration = floor(baseDuration * rand(1.25, 1.75)).toInt()
-            }
-
-            return baseDuration.minutes
-        }
+        fun getDuration(bot: Bot, skill: Int? = null): Duration = SkillingSessionDuration.sample(bot, skill)
     }
 
     // TODO Profit function to determine which element is the most profitable to harvest/process right now.
@@ -99,14 +91,14 @@ abstract class SkillingScriptFactory(val skillId: Int) {
     private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
         if (training && !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
         if (skillId in setOf(SKILL_SMITHING, SKILL_AGILITY, SKILL_FIREMAKING, SKILL_CRAFTING)) {
-            BlastFurnaceBotScript.select(bot, skillId, getDuration(bot).inWholeMilliseconds)?.let { return it }
+            BlastFurnaceBotScript.select(bot, skillId, getDuration(bot, skillId).inWholeMilliseconds)?.let { return it }
         }
         if (skillId in setOf(SKILL_CRAFTING, SKILL_FLETCHING, SKILL_HERBLORE, SKILL_SMITHING, SKILL_COOKING)) {
             if (skillId == SKILL_HERBLORE)
                 HerbloreScriptFactory.getOwnedGatheringScript(bot, training)?.let { return it }
             if (skillId == SKILL_COOKING && !training)
                 CookingScriptFactory.getOwnedMillingScript(bot)?.let { return it }
-            val planned = BotProductionPlanner.select(bot, skillId, level, training, getDuration(bot))
+            val planned = BotProductionPlanner.select(bot, skillId, level, training, getDuration(bot, skillId))
             if (planned != null) return planned
             return when (skillId) {
                 SKILL_CRAFTING -> CraftingScriptFactory.getCollectHidesScript(bot, zones)
@@ -114,7 +106,7 @@ abstract class SkillingScriptFactory(val skillId: Int) {
                     else CraftingScriptFactory.getProfitScript(bot, level, zones)
                 SKILL_FLETCHING -> WoodcuttingScriptFactory.getScript(bot, bot.woodcutting.staticLevel, zones, false)
                 SKILL_HERBLORE -> game.bot.scripts.skills.HerbGatheringScript(bot,
-                    game.skill.herblore.identifyHerb.Herb.GUAM_LEAF, getDuration(bot))
+                    game.skill.herblore.identifyHerb.Herb.GUAM_LEAF, getDuration(bot, skillId))
                 SKILL_SMITHING -> MiningScriptFactory.getScript(bot, bot.mining.staticLevel, zones, false)
                 SKILL_COOKING -> FishingScriptFactory.getScript(bot, bot.fishing.staticLevel, zones, false)
                 else -> VoidBotScript(bot)

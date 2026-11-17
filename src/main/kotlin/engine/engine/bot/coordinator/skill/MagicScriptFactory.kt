@@ -56,7 +56,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * The inherited policy preserves casual variety and prefers higher-level available spells for efficient bots.
      */
     internal fun getTeleportScript(bot: Bot, level: Int): TeleportTrainingBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val options = TeleportTrainingBotScript.SITES.keys.map { TeleportTrainingBotScript(bot, it, duration) }
             .filter { it.isEligible() }
         return getBestActivity(bot, level, { it.spell.level }, options)
@@ -69,7 +69,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * Runes are acquired by the inventory lifecycle after selection; profit alone requires a positive guide margin.
      */
     internal fun getTelegrabScript(bot: Bot, profit: Boolean): TelegrabBotScript? =
-        TelegrabBotScript(bot, TelegrabBotScript.WINE, profit, getDuration(bot), TelegrabBotScript.wineZones(bot, profit))
+        TelegrabBotScript(bot, TelegrabBotScript.WINE, profit, getDuration(bot, skillId), TelegrabBotScript.wineZones(bot, profit))
             .takeIf { it.isEligible() }
 
     /**
@@ -102,41 +102,41 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             val method = RandomUtils.weightedRoll(remaining) ?: break
             remaining.remove(method)
             val script = when (method) {
-                Method.COMBAT -> CombatCoordinator.magicTrainingScript(bot, !profit, getDuration(bot))
-                Method.SPLASH -> SplashBotScript(bot, getDuration(bot))
+                Method.COMBAT -> CombatCoordinator.magicTrainingScript(bot, !profit, getDuration(bot, skillId))
+                Method.SPLASH -> SplashBotScript(bot, getDuration(bot, skillId))
                 Method.ALCHEMY -> getAlchemyScript(bot, level, profit)
                 Method.WINE -> getTelegrabScript(bot, profit)
                 Method.ORBS -> BotProductionPlanner.select(bot, SKILL_MAGIC, level, !profit,
-                    getDuration(bot), "charge-orb:")
+                    getDuration(bot, skillId), "charge-orb:")
                 Method.ENCHANTING -> BotProductionPlanner.select(bot, SKILL_MAGIC, level, !profit,
-                    getDuration(bot), "enchant:")
+                    getDuration(bot, skillId), "enchant:")
                 Method.SUPERHEAT -> BotProductionPlanner.select(bot, SKILL_MAGIC, level, !profit,
-                    getDuration(bot), "superheat:")
+                    getDuration(bot, skillId), "superheat:")
                 Method.BONES -> getBonesToFoodScript(bot, level)
                 Method.TELEPORT -> getTeleportScript(bot, level)
                 Method.TELEOTHER -> {
-                    val choices = TeleOtherType.entries.map { TeleOtherBotScript(bot, it, getDuration(bot)) }
+                    val choices = TeleOtherType.entries.map { TeleOtherBotScript(bot, it, getDuration(bot, skillId)) }
                         .filter { it.isEligible() }
                     getBestActivity(bot, level, { it.type.level }, choices)
                 }
             }
             if (script != null) return script
         }
-        return if (profit) VoidBotScript(bot) else SplashBotScript(bot, getDuration(bot))
+        return if (profit) VoidBotScript(bot) else SplashBotScript(bot, getDuration(bot, skillId))
     }
 
     /**
      * Restocks a nearly exhausted owned staff through the native well, without starting or completing a quest.
      */
     private fun getIbanRechargeScript(bot: Bot): RechargeIbanBotScript? =
-        RechargeIbanBotScript(bot, getDuration(bot)).takeIf { IbanStaff.remaining(bot) < 20 && it.isEligible() }
+        RechargeIbanBotScript(bot, getDuration(bot, skillId)).takeIf { IbanStaff.remaining(bot) < 20 && it.isEligible() }
 
     /**
      * Selects an eligible native food-conversion spell with the normal level/personality policy. Existing stock
      * limits preparation sessions; missing inputs leave other Magic activities available.
      */
     internal fun getBonesToFoodScript(bot: Bot, level: Int): BonesToFoodBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val options = BonesToItemsType.entries.map { BonesToFoodBotScript(bot, it, duration) }
             .filter { it.isEligible() }
         return getBestActivity(bot, level, { it.type.level }, options)
@@ -151,7 +151,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * @return An eligible charging script, or `null` so alchemy and splashing can be considered.
      */
     internal fun getOrbScript(bot: Bot, level: Int): ChargeOrbBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val options = mapOf(
             ChargeOrbType.WATER to SubZone.WATER_OBELISK,
             ChargeOrbType.EARTH to SubZone.EARTH_OBELISK,
@@ -171,7 +171,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * @return An eligible enchantment, or `null` to continue to alchemy/splashing.
      */
     internal fun getEnchantScript(bot: Bot, level: Int): EnchantJewelleryBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val options = EnchantJewelleryBotScript.RECIPES.map { (type, inputId) ->
             EnchantJewelleryBotScript(bot, type, inputId, duration)
         }.filter { it.isEligible() }
@@ -188,7 +188,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      */
     internal fun getSuperheatScript(bot: Bot, level: Int): SuperheatItemBotScript? {
         if (level < SuperheatItemAction.LEVEL) return null
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val options = BarType.entries.map { SuperheatItemBotScript(bot, it, duration) }
             .filter { it.isEligible() }
         return getBestActivity(bot, bot.smithing.level, { it.barType.level }, options)
@@ -211,6 +211,6 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             else -> return null
         }
 
-        return AlchemyBotScript(bot, type, getDuration(bot), profit = profit).takeIf { it.isEligible() }
+        return AlchemyBotScript(bot, type, getDuration(bot, skillId), profit = profit).takeIf { it.isEligible() }
     }
 }

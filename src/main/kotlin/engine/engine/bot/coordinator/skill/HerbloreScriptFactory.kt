@@ -39,20 +39,20 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
      * collection spends only already-owned runes; subsequent mixing receives a new finite economic quote.
      */
     internal fun getOwnedGatheringScript(bot: Bot, training: Boolean): BotScript? {
-        if (!training && SinisterChestBotScript.ready(bot)) return SinisterChestBotScript(bot, getDuration(bot))
+        if (!training && SinisterChestBotScript.ready(bot)) return SinisterChestBotScript(bot, getDuration(bot, skillId))
         return getIngredientGatheringScript(bot, ownedRunesOnly = true)
     }
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         getProductionScript(bot, level, true)?.let { return it }
         getIngredientGatheringScript(bot)?.let { return it }
-        return IdentifyHerbBotScript(bot, Herb.GUAM_LEAF, getDuration(bot))
+        return IdentifyHerbBotScript(bot, Herb.GUAM_LEAF, getDuration(bot, skillId))
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         if (SinisterChestBotScript.ready(bot)) {
             zones += SubZone.YANILLE_DUNGEON_SINISTER_CHEST
-            return SinisterChestBotScript(bot, getDuration(bot))
+            return SinisterChestBotScript(bot, getDuration(bot, skillId))
         }
         return getProductionScript(bot, level, false) ?: getIngredientGatheringScript(bot) ?:
             getTrainingScript(bot, level, zones)
@@ -66,7 +66,7 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
         val potion = FinishedPotion.RANGING_POTION
         if (bot.herblore.staticLevel < potion.level || bot.itemTracker.count(potion.unf) < 1 ||
             bot.itemTracker.count(potion.secondary) > 0) return null
-        return TelegrabBotScript(bot, TelegrabBotScript.WINE, false, getDuration(bot), TelegrabBotScript.wineZones(bot),
+        return TelegrabBotScript(bot, TelegrabBotScript.WINE, false, getDuration(bot, skillId), TelegrabBotScript.wineZones(bot),
             herbloreContinuation = true, ownedRunesOnly = ownedRunesOnly)
             .takeIf { it.isEligible() }
     }
@@ -82,7 +82,7 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
      * @return An eligible script, or null when no usable owned recipe is available in the requested mode.
      */
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
-        val duration = getDuration(bot)
+        val duration = getDuration(bot, skillId)
         val finished = FinishedPotion.entries.map { MakePotionBotScript(bot, it, duration) }
             .filter { it.isEligible() }
         val ready = finished.filter { bot.itemTracker.count(it.potion.secondary) > 0 }
