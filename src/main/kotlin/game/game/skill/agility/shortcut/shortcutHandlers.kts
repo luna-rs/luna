@@ -3,7 +3,7 @@ package game.skill.agility.shortcut
 import api.predef.*
 
 for (id in AgilityShortcut.IDS) {
-    object1(id, { _, target -> AgilityShortcut.reach(target) }) { AgilityShortcut.use(plr, gameObject) }
+    object1(id, { player, target -> AgilityShortcut.reach(target, player.position) }) { AgilityShortcut.use(plr, gameObject) }
 }
 
 for (id in AgilityShortcut.ROPE_IDS) {

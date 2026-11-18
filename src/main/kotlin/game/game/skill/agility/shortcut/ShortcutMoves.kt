@@ -212,12 +212,21 @@ internal object ShortcutMoves {
                       endMessage = "...You make it safely to the other side.", valid = { active(plr) })
 
     /**
+     * Matches the tiles between the two banks and the tile used for a fall.
+     */
+    internal fun onLogOrInWater(position: Position, from: Position, to: Position, water: Position): Boolean =
+        position == water || (position.z == from.z && position != from && position != to &&
+            position.x in minOf(from.x, to.x)..maxOf(from.x, to.x) &&
+            position.y in minOf(from.y, to.y)..maxOf(from.y, to.y))
+
+    /**
      * Walks to the middle of a log, stumbles and falls into the river at [water] beside it, swims and is washed up on
      * the far bank, [to], 10 ticks after the fall, with 2 to 6 damage and [xp].
      */
     fun fallOffLog(plr: Player, from: Position, to: Position, water: Position, xp: Double): AgilityAction {
         val middle = Position((from.x + to.x) / 2, (from.y + to.y) / 2)
         val swim = AgilityWalk.SWIM.walk
+        val controller = plr.controllers.primary
         return object : AgilityAction(plr, listOf(
             AgilityStep(middle, from.computeLongestDistance(middle), walkingAnimation = AgilityWalk.BALANCE.walk),
             AgilityStep(middle, 2, walkingAnimation = AgilityWalk.BALANCE.walk, animation = STUMBLE, jump = true),
@@ -226,6 +235,12 @@ internal object ShortcutMoves {
             AgilityStep(to, 9, walkingAnimation = swim, jump = true)),
             "You walk carefully across the slippery log...", valid = { active(plr) }), DeathInterruptible, ShortcutFall {
             init {
+                onCancel = {
+                    if (active(plr) && plr.controllers.primary === controller &&
+                        onLogOrInWater(plr.position, from, to, water)) {
+                        plr.move(from)
+                    }
+                }
                 onSuccess = {
                     WASHED_UP.forEach { plr.sendMessage(it) }
                     plr.damage(rand(2, 6))

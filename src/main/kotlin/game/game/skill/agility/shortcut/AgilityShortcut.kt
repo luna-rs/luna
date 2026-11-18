@@ -11,8 +11,12 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 import io.luna.game.model.`object`.GameObject
 import kotlin.math.abs
+
+private val ARDOUGNE_LOG_WATER = Position(2600, 3335)
+private val FREMENNIK_LOG_WATER = Position(2723, 3594)
 
 /**
  * The open-world Agility shortcuts that cross from one end to the other: walls, tunnels, fences, railings, logs,
@@ -36,6 +40,7 @@ enum class AgilityShortcut(val level: Int,
                            private val freeFrom: Set<Position> = emptySet(),
                            val rope: Boolean = false,
                            private val reach: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
+                           private val logWater: Position? = null,
                            private val crossing: (Player, Position, Position, GameObject) -> AgilityAction) {
 
     FALADOR_WALL(5, 0.5, listOf(11844 to Position(2935, 3355)),
@@ -65,16 +70,18 @@ enum class AgilityShortcut(val level: Int,
     // Only a crowdsourced chart gives this log's fail rate.
     ARDOUGNE_LOG(33, 4.0, listOf(9328 to Position(2599, 3336, 1), 9329 to Position(2600, 3336, 1),
                                  9330 to Position(2601, 3336, 1)),
-                 listOf(Position(2598, 3336), Position(2602, 3336)), crossing = { plr, from, to, _ ->
+                 listOf(Position(2598, 3336), Position(2602, 3336)), logWater = ARDOUGNE_LOG_WATER,
+                 crossing = { plr, from, to, _ ->
         if (ShortcutMoves.keepsFooting(plr.agility.level, 90, 250)) ShortcutMoves.walkLog(plr, to)
-        else ShortcutMoves.fallOffLog(plr, from, to, Position(2600, 3335), 2.0)
+        else ShortcutMoves.fallOffLog(plr, from, to, ARDOUGNE_LOG_WATER, 2.0)
     }),
 
     FREMENNIK_LOG(48, 4.0, listOf(9322 to Position(2722, 3595, 1), 9323 to Position(2722, 3594, 1),
                                   9324 to Position(2722, 3593, 1)),
-                  listOf(Position(2722, 3596), Position(2722, 3592)), crossing = { plr, from, to, _ ->
+                  listOf(Position(2722, 3596), Position(2722, 3592)), logWater = FREMENNIK_LOG_WATER,
+                  crossing = { plr, from, to, _ ->
         if (ShortcutMoves.keepsFooting(plr.agility.level, 140, 255)) ShortcutMoves.walkLog(plr, to)
-        else ShortcutMoves.fallOffLog(plr, from, to, Position(2723, 3594), 2.0)
+        else ShortcutMoves.fallOffLog(plr, from, to, FREMENNIK_LOG_WATER, 2.0)
     }),
 
     AL_KHARID_ROCKS(38, 0.0, listOf(9331 to Position(3305, 3315), 9332 to Position(3303, 3315)),
@@ -261,6 +268,8 @@ enum class AgilityShortcut(val level: Int,
 
     companion object {
 
+        private val LOG_RECOVERY_REACH = InteractionPolicy(InteractionType.DISTANCE, AgilityApproach.RADIUS)
+
         /**
          * The shortcuts by the id and tile of each object they are clicked on.
          */
@@ -284,18 +293,27 @@ enum class AgilityShortcut(val level: Int,
         /**
          * How near the object [target] a player must come before a click on it starts its shortcut.
          */
-        fun reach(target: Entity): InteractionPolicy =
-            (target as? GameObject)?.let { byObject[it.id to it.position]?.reach } ?: InteractionPolicy.STANDARD_SIZE
+        fun reach(target: Entity, from: Position? = null): InteractionPolicy {
+            val shortcut = (target as? GameObject)?.let { byObject[it.id to it.position] }
+                ?: return InteractionPolicy.STANDARD_SIZE
+            if (from != null && shortcut.isStrandedOnLog(from)) return LOG_RECOVERY_REACH
+            return shortcut.reach
+        }
 
         /**
          * Starts the shortcut [obj] belongs to, from the end [plr] stands nearer, after walking them onto it.
          */
         fun use(plr: Player, obj: GameObject) {
             val shortcut = byObject[obj.id to obj.position] ?: return
-            if (!ready(plr)) return
+            if (!ready(plr) || obj.state != EntityState.ACTIVE) return
             val first = shortcut.startEnd(plr.position) ?: return
             val start = shortcut.inColumn(plr.position, shortcut.ends[first])
             val end = shortcut.inColumn(plr.position, shortcut.ends[1 - first])
+            if (shortcut.isStrandedOnLog(plr.position)) {
+                plr.move(start)
+                plr.sendMessage("You scramble back onto the riverbank.")
+                return
+            }
             val begin = begin@ {
                 if (!ready(plr) || plr.position != start || obj.state != EntityState.ACTIVE) return@begin
                 if (shortcut.rope && !plr.inventory.contains(ROPE)) return@begin
@@ -316,6 +334,14 @@ enum class AgilityShortcut(val level: Int,
             }
             if (plr.position == start) begin() else plr.submitAction(AgilityApproach(plr, start) { begin() })
         }
+    }
+
+    /**
+     * Whether [position] is on the log or in its river tile, where ordinary walking cannot be used to approach it.
+     */
+    private fun isStrandedOnLog(position: Position): Boolean {
+        val water = logWater ?: return false
+        return ShortcutMoves.onLogOrInWater(position, ends[0], ends[1], water)
     }
 
     /**
