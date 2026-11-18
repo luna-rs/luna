@@ -8,6 +8,7 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
+import io.luna.game.model.mob.interact.InteractionPolicy
 
 /** The Fight Cave's monsters, the ones a Yt-MejKot may heal. */
 val CAVE_MONSTERS = 2734..2746
@@ -18,7 +19,8 @@ val MAX_HEAL = 10
 /** Itself and the cave monsters beside it that are under half health. */
 fun patients(mejKot: Npc): List<Npc> {
     val nearby = mejKot.world.locator.findViewableNpcs(mejKot) {
-        it !== mejKot && it.id in CAVE_MONSTERS && JadAttack.besideEdge(mejKot, it)
+        it !== mejKot && it.id in CAVE_MONSTERS &&
+            mejKot.world.collisionManager.reached(mejKot, it, InteractionPolicy.STANDARD_SIZE)
     }
     return (nearby + mejKot).filter { it.isAlive && it.health * 2 < it.totalHealth }
 }
@@ -47,6 +49,6 @@ class Heal(mejKot: Npc, other: Mob) : MeleeCombatAttack<Npc>(mejKot, other, JadH
  */
 combat(2741, 2742) {
     attack {
-        if (JadAttack.besideEdge(npc, other) && patients(npc).isNotEmpty()) Heal(npc, other) else melee()
+        if (canReachMelee() && patients(npc).isNotEmpty()) Heal(npc, other) else melee()
     }
 }

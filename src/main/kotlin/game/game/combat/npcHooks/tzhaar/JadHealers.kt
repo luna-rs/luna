@@ -188,11 +188,7 @@ object JadHealers {
     /**
      * The number of tiles between two mobs' bodies along the larger axis: 0 when they overlap, 1 when they touch.
      */
-    fun gap(a: Mob, b: Mob): Int {
-        val dx = maxOf(0, b.position.x - (a.position.x + a.size() - 1), a.position.x - (b.position.x + b.size() - 1))
-        val dy = maxOf(0, b.position.y - (a.position.y + a.size() - 1), a.position.y - (b.position.y + b.size() - 1))
-        return maxOf(dx, dy)
-    }
+    fun gap(a: Mob, b: Mob): Int = a.position.computeFootprintDistance(b.position, a.size(), b.size())
 
     private fun tilesAroundJad(jad: Npc, count: Int): List<Position> {
         val world = jad.world

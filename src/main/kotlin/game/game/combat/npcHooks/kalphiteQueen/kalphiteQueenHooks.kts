@@ -13,7 +13,7 @@ import io.luna.game.model.mob.block.Animation.AnimationPriority
 for (id in listOf(1158, 1160)) {
     combat(id) {
         attack {
-            when (rand().nextInt(if (npc.isWithinDistance(other, 1)) 3 else 2)) {
+            when (rand().nextInt(if (canReachMelee()) 3 else 2)) {
                 0 -> KalphiteQueenAttack(npc, other, true)
                 1 -> KalphiteQueenAttack(npc, other, false)
                 else -> melee(animationId = (if (npc.id == 1158) 1184 else 1177) + rand().nextInt(2))

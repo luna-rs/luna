@@ -15,6 +15,7 @@ import io.luna.game.model.mob.combat.attack.RangedCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import io.luna.game.model.mob.interact.InteractionPolicy
 
 /**
  * DSL receiver used to build combat attacks for an NPC combat hook.
@@ -27,6 +28,12 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * @author lare96
  */
 class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(npc, other) {
+
+    /**
+     * Checks whether the current target is reachable by an adjacent melee attack.
+     */
+    fun canReachMelee(): Boolean =
+        npc.world.collisionManager.reached(npc, other, InteractionPolicy.STANDARD_SIZE)
 
     /**
      * Creates a magic combat attack using the specified spell.

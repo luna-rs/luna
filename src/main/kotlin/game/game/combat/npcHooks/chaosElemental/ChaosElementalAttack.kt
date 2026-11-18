@@ -112,14 +112,11 @@ class ChaosElementalAttack(npc: Npc, other: Mob, val kind: Kind, val style: Comb
             repeat(TELEPORT_TRIES) {
                 val tile = centre.translate(random.nextInt(TELEPORT_RADIUS * 2 + 1) - TELEPORT_RADIUS,
                     random.nextInt(TELEPORT_RADIUS * 2 + 1) - TELEPORT_RADIUS)
-                if (!under(npc, tile) && tile != player.position && canLand(tile)) return tile
+                if (npc.position.computeFootprintDistance(tile, npc.size(), 1) > 0 &&
+                    tile != player.position && canLand(tile)) return tile
             }
             return null
         }
-
-        private fun under(npc: Npc, tile: Position): Boolean =
-            tile.x >= npc.position.x && tile.x < npc.position.x + npc.size() &&
-                tile.y >= npc.position.y && tile.y < npc.position.y + npc.size()
 
         /** The worn slots Madness empties, in order: the weapon first, then the rest at random. */
         fun unequipOrder(player: Player, random: Random): List<Int> {

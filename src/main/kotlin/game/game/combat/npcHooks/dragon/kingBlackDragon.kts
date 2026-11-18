@@ -8,7 +8,7 @@ import game.combat.npcHooks.dragon.KingBlackDragonBreath.Kind
 // breath is equally likely; outside melee reach KBD uses only the ordinary fire projectile.
 combat(50) {
     attack {
-        if (!npc.isWithinDistance(other, 1)) {
+        if (!canReachMelee()) {
             KingBlackDragonBreath(npc, other, Kind.FIRE, distant = true)
         } else when (rand().nextInt(3)) {
             0 -> KingBlackDragonBreath(npc, other, Kind.FIRE)

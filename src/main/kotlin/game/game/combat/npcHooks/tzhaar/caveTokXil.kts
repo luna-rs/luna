@@ -12,7 +12,7 @@ import io.luna.game.model.LocalProjectile
  */
 combat(2739, 2740) {
     attack {
-        if (JadAttack.besideEdge(npc, other)) {
+        if (canReachMelee()) {
             melee(animationId = 2628)
         } else {
             ranged(null, { npc, other ->

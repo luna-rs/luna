@@ -188,6 +188,20 @@ public final class Position implements Locatable {
     }
 
     /**
+     * Computes the longest axis distance between the nearest tiles of two square footprints.
+     *
+     * @param other The south-west tile of the other footprint.
+     * @param size The side length of this footprint.
+     * @param otherSize The side length of the other footprint.
+     * @return The horizontal tile distance, or zero for overlapping footprints.
+     */
+    public int computeFootprintDistance(Position other, int size, int otherSize) {
+        int deltaX = Math.max(other.x - (x + size - 1), x - (other.x + otherSize - 1));
+        int deltaY = Math.max(other.y - (y + size - 1), y - (other.y + otherSize - 1));
+        return Math.max(0, Math.max(deltaX, deltaY));
+    }
+
+    /**
      * Returns a new position translated by the specified amounts.
      * <p>
      * If no translation is applied, this instance is returned.

@@ -66,19 +66,6 @@ class JadAttack(jad: Npc, other: Mob, private val magic: Boolean) :
         const val ROCKS_DELAY = 74
 
         /**
-         * True if [target] stands right beside one of Jad's edges, the only place he can melee from. A tile that
-         * only touches one of his corners diagonally doesn't count.
-         */
-        fun besideEdge(jad: Npc, target: Mob): Boolean {
-            val gapX = edgeGap(jad.position.x, jad.size(), target.position.x, target.size())
-            val gapY = edgeGap(jad.position.y, jad.size(), target.position.y, target.size())
-            return (gapX == 1 && gapY == 0) || (gapX == 0 && gapY == 1)
-        }
-
-        private fun edgeGap(start: Int, size: Int, otherStart: Int, otherSize: Int): Int =
-            maxOf(0, otherStart - (start + size - 1), start - (otherStart + otherSize - 1))
-
-        /**
          * The tile the fireball leaves from: the middle of Jad's body, moved one tile towards [target] so it comes
          * out of the mouth rather than his south-west corner.
          */

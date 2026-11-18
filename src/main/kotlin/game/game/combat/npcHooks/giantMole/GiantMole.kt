@@ -248,11 +248,9 @@ object GiantMole {
     /**
      * Whether [player] stands within melee distance of [mole]'s body.
      */
-    fun isBeside(mole: Mob, player: Player): Boolean {
-        val dx = maxOf(mole.position.x - player.position.x, player.position.x - (mole.position.x + mole.size() - 1), 0)
-        val dy = maxOf(mole.position.y - player.position.y, player.position.y - (mole.position.y + mole.size() - 1), 0)
-        return mole.position.z == player.position.z && maxOf(dx, dy) <= 1
-    }
+    fun isBeside(mole: Mob, player: Player): Boolean =
+        mole.position.z == player.position.z &&
+            mole.position.computeFootprintDistance(player.position, mole.size(), 1) <= 1
 
     /**
      * The middle tile of a mole whose south-west tile is [position].

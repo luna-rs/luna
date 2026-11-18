@@ -65,7 +65,7 @@ class KetZekMagic(attacker: Npc, victim: Mob) : MagicCombatAttack<Npc>(
  */
 combat(2743, 2744) {
     attack {
-        if (JadAttack.besideEdge(npc, other) && randBoolean()) {
+        if (canReachMelee() && randBoolean()) {
             melee(animationId = KET_ZEK_MELEE_ANIMATION, maxHit = KET_ZEK_MELEE_MAX_HIT)
         } else {
             KetZekMagic(npc, other)

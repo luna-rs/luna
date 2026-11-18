@@ -14,7 +14,7 @@ val MELEE_SPEED = 4
 combat(JAD) {
     attack {
         // Next to him he picks any of the three styles; further away only magic or ranged.
-        when (rand().nextInt(if (JadAttack.besideEdge(npc, other)) 3 else 2)) {
+        when (rand().nextInt(if (canReachMelee()) 3 else 2)) {
             0 -> JadAttack(npc, other, true)
             1 -> JadAttack(npc, other, false)
             else -> melee(animationId = MELEE_ANIMATION, maxHit = MELEE_MAX_HIT, speed = MELEE_SPEED)

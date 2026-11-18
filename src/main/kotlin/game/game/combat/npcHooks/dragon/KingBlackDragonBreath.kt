@@ -18,6 +18,7 @@ import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import io.luna.game.model.mob.interact.InteractionPolicy
 
 /**
  * King Black Dragon breath mechanics from Lost City's area_wilderness/king_black_dragon.rs2.
@@ -47,6 +48,9 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, privat
         if (distant) PROJECTILE else null,
         if (distant) Graphic(131, 124, 0) else null,
         null, null, 5, if (distant) 10 else 1) {
+
+    override fun getInteractionPolicy(): InteractionPolicy =
+        if (distant) super.getInteractionPolicy() else InteractionPolicy.STANDARD_SIZE
 
     /**
      * Breath visuals and sounds in the revision 377 pack.

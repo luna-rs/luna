@@ -24,7 +24,7 @@ val SPINES: (Mob, Mob) -> LocalProjectile = { npc, other ->
 // Fight Pit Tok-Xil. The Fight Cave's have their own hook, and Jad is deliberately excluded.
 combat(2631, 2632) {
     attack {
-        if (npc.isWithinDistance(other, 1) && randBoolean()) {
+        if (canReachMelee() && randBoolean()) {
             melee(animationId = 2628)
         } else {
             ranged(null, SPINES, animationId = 2633, range = 6)

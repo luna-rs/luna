@@ -588,8 +588,8 @@ public final class CollisionManager {
      *     <li>A distance of {@code 0} requires the source and target to occupy the exact same tile.</li>
      *     <li>Targets outside {@link Position#VIEWING_DISTANCE} are rejected before type-specific checks run.</li>
      *     <li>{@link InteractionType#DISTANCE} requires only the same plane and the configured distance.</li>
-     *     <li>{@link InteractionType#LINE_OF_SIGHT} requires the target to be within policy distance and visible
-     *     through a successful {@link #raycast(Position, Position)}.</li>
+     *     <li>{@link InteractionType#LINE_OF_SIGHT} tests range and a clear ray between the nearest occupied tiles
+     *     of mobs. Other interactables use their anchor tiles.</li>
      *     <li>{@link InteractionType#SIZE} uses collision-aware reach checks for adjacent ground items, mobs and objects,
      *     object box-distance checks for larger distances, and falls back to line-of-sight for other targets.</li>
      * </ul>
@@ -613,9 +613,11 @@ public final class CollisionManager {
         if (policy.getType() == InteractionType.UNSPECIFIED) {
             // No checks.
             return true;
-        } else if (start.getZ() != end.getZ()) {
-            return false;
-        } else if (!start.isWithinDistance(end, Position.VIEWING_DISTANCE)) {
+        } else if (policy.getType() == InteractionType.LINE_OF_SIGHT) {
+            int sourceSize = source instanceof Mob mob ? Math.max(1, mob.size()) : 1;
+            int targetSize = target instanceof Mob mob ? Math.max(1, mob.size()) : 1;
+            return reachedLineOfSight(start, end, sourceSize, targetSize, distance);
+        } else if (!start.isViewable(end)) {
             // Can't interact if the entity isn't visible.
             return false;
         } else if (distance == 0) {
@@ -628,9 +630,6 @@ public final class CollisionManager {
         // The reach checks read the flags of the start tile, so they need the matrix of the chunk the start is in.
         CollisionMatrix matrices = world.getChunks().load(start.getChunk()).getMatrices()[start.getZ()];
         switch (policy.getType()) {
-            case LINE_OF_SIGHT:
-                // Line of sight requires raycast and being within the distance.
-                return start.isWithinDistance(end, distance) && raycast(start, end);
             case SIZE:
                 if (distance == 1) {
                     if (target instanceof GroundItem) {
@@ -653,6 +652,23 @@ public final class CollisionManager {
         logger.warn("This section should not be reached! Invalid config [{}, {}, {}].", policy.getType(),
                 box(policy.getDistance()), target);
         return start.isWithinDistance(target, distance);
+    }
+
+    /**
+     * Tests the range and line of sight between two square footprints. Visibility still uses the anchors.
+     * Reads live collision data on the game thread.
+     *
+     * @param start The south-west tile of the source.
+     * @param end The south-west tile of the target.
+     * @param sourceSize The side length of the source footprint.
+     * @param targetSize The side length of the target footprint.
+     * @param distance The maximum range between the nearest occupied tiles.
+     * @return Whether the target is visible and in range.
+     */
+    public boolean reachedLineOfSight(Position start, Position end, int sourceSize, int targetSize, int distance) {
+        return start.isViewable(end) && start.computeFootprintDistance(end, sourceSize, targetSize) <= distance &&
+                LineOfSight.hasLineOfSight(view(false), start.getZ(), start.getX(), start.getY(), end.getX(), end.getY(),
+                        sourceSize, sourceSize, targetSize, targetSize, 0);
     }
 
     /**

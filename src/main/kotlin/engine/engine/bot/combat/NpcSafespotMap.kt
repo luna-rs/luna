@@ -170,23 +170,24 @@ object NpcSafespotMap {
             return null
         }
         val collision = bot.world.collisionManager
+        val npcSize = npc.size()
         if (collision.view(false).get(stand.x, stand.y, stand.z) and TILE_BLOCKERS != 0 ||
-            !collision.reached(stand, npc.position, policy)) {
+            !collision.reachedLineOfSight(stand, npc.position, 1, npcSize, policy.distance)) {
             return null
         }
         var position = npc.position
         repeat(MAX_CHASE_STEPS) {
-            // Current combat's melee checks are anchored to one tile. Reject all adjacency conservatively, including
-            // wall/diagonal cases, rather than claiming a spot safe through a different hypothetical-target check.
-            if (position.isWithinDistance(stand, 1) || !position.isWithinDistance(stand, Position.VIEWING_DISTANCE)) {
+            // Conservatively reject hypothetical edge, corner and overlapping contact.
+            if (position.computeFootprintDistance(stand, npcSize, 1) <= 1 || !position.isViewable(stand)) {
                 return null
             }
             val from = position
             val step = PursuitAction.nextStep(from, stand, 1, false) { direction ->
-                collision.traversable(from, EntityType.PLAYER, direction, npc.size(), npc.routeStrategy)
+                collision.traversable(from, EntityType.PLAYER, direction, npcSize, npc.routeStrategy)
             }
             if (step == Direction.NONE) {
-                return if (zone.area.contains(position) && collision.reached(stand, position, policy)) position else null
+                return if (zone.area.contains(position) &&
+                    collision.reachedLineOfSight(stand, position, 1, npcSize, policy.distance)) position else null
             }
             position = from.translate(1, step)
         }
