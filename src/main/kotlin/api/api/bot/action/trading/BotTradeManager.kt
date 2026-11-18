@@ -38,6 +38,8 @@ object BotTradeManager {
 
     /** The configured minimum trade-offer value, in coins. */
     internal const val MINIMUM_OFFER_VALUE = 10L
+    private const val NATIVE_SALE_MINIMUM_VALUE = 1_000.0
+    private const val NATIVE_SALE_MINIMUM_QUANTITY = 100
 
     /** The configured wait duration for trade requests, in seconds. */
     internal const val REQUEST_WAIT_SECONDS = 30
@@ -161,9 +163,11 @@ object BotTradeManager {
      * @param bot The bot preparing the offer.
      * @param priceStrategy The pricing strategy used for non-coin items.
      * @param purpose The buying or selling purpose of the trade.
+     * @param nativeTrade Whether direct sellers need a qualifying stack of each bulk commodity.
      * @return Candidate items for the bot's side of the trade.
      */
-    fun computeOfferItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
+    fun computeOfferItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose,
+                          nativeTrade: Boolean = false): List<BotTradeItem> {
         return when (purpose) {
             BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> {
                 // Buyers may pay with coins and eligible surplus stock, never retained equipment or supplies.
@@ -183,14 +187,32 @@ object BotTradeManager {
                 val candidates = computeSellItems(bot, priceStrategy, purpose)
                 if (purpose == BotTradePurpose.MERCHANT_SELL || bot.preferences.isMerchant) {
                     BotTradeSelection.merchantSales(candidates.map { quote ->
-                        val definition = itemDef(quote.item.id)
-                        if (definition.isStackable || definition.notedId.isPresent) quote
+                        if (canSellAsStack(quote.item.itemDef)) quote
                         else BotTradeItem(Item(quote.item.id, 1), quote.price, quote.purpose, bot)
-                    })
-                } else candidates
+                    }, nativeTrade = nativeTrade)
+                } else if (nativeTrade) candidates.filter { hasNativeSaleStock(bot, it.item.id, it.item.amount) }
+                else candidates
             }
         }
     }
+
+    /**
+     * Checks a direct sale's available quantity at the economy guide price for the base item.
+     * Notable stock can be withdrawn as notes, and individual unnoteable items keep their existing sale rules.
+     */
+    internal fun hasNativeSaleStock(bot: Bot, id: Int, amount: Int): Boolean {
+        if (amount <= 0) return false
+        val definition = itemDef(id)
+        val base = definition.unnotedId.orElse(id)
+        return !canSellAsStack(definition) || amount >= NATIVE_SALE_MINIMUM_QUANTITY ||
+            bot.world.economy.getRealPrice(base) * amount >= NATIVE_SALE_MINIMUM_VALUE
+    }
+
+    /**
+     * Recognizes both naturally stackable items and either form of a bank note.
+     */
+    internal fun canSellAsStack(definition: ItemDefinition): Boolean =
+        definition.isStackable || definition.notedId.isPresent || definition.unnotedId.isPresent
 
     /**
      * Quotes one explicitly requested ordinary sale using the same transferable-stock and reserve rules as a

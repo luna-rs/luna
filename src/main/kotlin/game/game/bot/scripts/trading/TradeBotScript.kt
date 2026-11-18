@@ -667,7 +667,9 @@ class TradeBotScript(bot: Bot,
         val stock = linkedMapOf<Int, Int>()
         for (offer in offers.distinctBy { it.itemIds }) {
             val id = offer.itemIds.singleOrNull() ?: continue
-            val amount = minOf(PlayerTradeSaleStock.available(bot, id), offer.quantity ?: Int.MAX_VALUE)
+            val available = PlayerTradeSaleStock.available(bot, id)
+            if (!BotTradeManager.hasNativeSaleStock(bot, id, available)) continue
+            val amount = minOf(available, offer.quantity ?: Int.MAX_VALUE)
             if (amount <= 0) continue
             var reserve = PlayerTradeSaleStock.carriedReserve(bot, id)
             reactiveCarriedReserves[id] = PlayerTradeSaleStock.physical(bot, id).mapNotNull { (physicalId, held) ->
@@ -719,7 +721,9 @@ class TradeBotScript(bot: Bot,
         fun current(): Boolean = playerPurchaseCurrent(context)
         if (!current()) return null
         PlayerTradeSaleStock.refresh(bot)
-        val desired = minOf(PlayerTradeSaleStock.available(bot, id), context.plan?.quantity ?: 0,
+        val available = PlayerTradeSaleStock.available(bot, id)
+        if (!BotTradeManager.hasNativeSaleStock(bot, id, available)) return null
+        val desired = minOf(available, context.plan?.quantity ?: 0,
             context.entry.remainingQuantity(context.offer) ?: Int.MAX_VALUE)
         if (desired <= 0) return null
         var carried = reactiveSaleStock(id).values.sumOf { it.toLong() }
@@ -752,8 +756,9 @@ class TradeBotScript(bot: Bot,
             if (!current() || !handler.webWalkTo(buyer.position, radius = 1) || !current()) return null
         }
         PlayerTradeSaleStock.refresh(bot)
-        val amount = minOf(desired, PlayerTradeSaleStock.available(bot, id))
-        if (amount <= 0) return null
+        val remainingStock = PlayerTradeSaleStock.available(bot, id)
+        if (!BotTradeManager.hasNativeSaleStock(bot, id, remainingStock)) return null
+        val amount = minOf(desired, remainingStock)
         val quote = context.pricing ?: return null
         offering = listOf(BotTradeItem(Item(id, amount), quote.maximumUnitPrice, purpose, bot))
         var remaining = amount
@@ -890,7 +895,7 @@ class TradeBotScript(bot: Bot,
                 limits[id] = limits.getValue(id) - amount
             }
         }
-        carriedOffer = stock
+        carriedOffer = if (buying) stock else nativeSaleStock(stock)
         advertisementFunding = null
         advertisementGuides.clear()
         if (bot.isRealBot()) preparedAdvertisementFunding()
@@ -904,10 +909,7 @@ class TradeBotScript(bot: Bot,
                 return false
             }
         }
-        if (stock.isEmpty()) {
-            return false
-        }
-        return true
+        return carriedOffer.isNotEmpty()
     }
 
     override suspend fun finish() {
@@ -1285,10 +1287,13 @@ class TradeBotScript(bot: Bot,
         actionableWants = BotTradeIntentions.purchases(bot).associateBy { it.id }
         val strategy = resolveTradePrice()
         tradePrice = strategy
-        val offers = if (saleTarget != null)
-            listOfNotNull(BotTradeManager.computeTargetedSaleItem(bot, strategy, saleTarget))
-        else BotTradeManager.computeBudgetedOfferItems(bot, strategy, purpose)
-            .filter { purchaseTarget == null || it.item.id == COINS }
+        val offers = when {
+            saleTarget != null -> listOfNotNull(BotTradeManager.computeTargetedSaleItem(bot, strategy, saleTarget)
+                ?.takeIf { BotTradeManager.hasNativeSaleStock(bot, saleTarget, it.item.amount) })
+            !buying -> BotTradeManager.computeOfferItems(bot, strategy, purpose, nativeTrade = true)
+            else -> BotTradeManager.computeBudgetedOfferItems(bot, strategy, purpose)
+                .filter { purchaseTarget == null || it.item.id == COINS }
+        }
         val wants = if (purchaseTarget == null) BotTradeManager.computeExpected(bot, strategy, purpose, offers)
         else BotTradeManager.affordablePurchases(specificDemand(), offers)
         val traders = (if (browsing) BotMarketplace.entries else listOf(marketplace))
@@ -1585,8 +1590,9 @@ class TradeBotScript(bot: Bot,
         val id = advertised.itemIds.singleOrNull() ?: return null
         if (id == COINS || !itemDef(id).isTradeable) return null
         val allowance = carriedOffer.filterKeys { unnotedId(it) == id }
-        if (!(reactiveBuyer != null && reactiveSalePreparing) &&
-            currentAdvertisementFunding(allowance, offered).isEmpty()) return null
+        if (!(reactiveBuyer != null && reactiveSalePreparing) && humanSaleStock(offered).keys.none {
+                unnotedId(it) == id
+            }) return null
         val ask = offering.firstOrNull { unnotedId(it.item.id) == id }?.price ?: return null
         val pricing = remembered?.pricing ?: market.pricing(entry, bot, advertised, id) {
             PlayerTradeAdvertisementPolicy.saleQuote(advertised, ask)?.let {
@@ -2430,6 +2436,8 @@ class TradeBotScript(bot: Bot,
         val saleStock = if (seller === this) ownStock else otherStock
         val payingStock = if (buyer === this) ownStock else otherStock
         val stock = seller.quantities(saleStock.toItems(), true)
+            .filter { (id, amount) -> BotTradeManager.hasNativeSaleStock(seller.bot, id, amount) }
+        if (stock.isEmpty()) return null
         val payment = buyer.quantities(payingStock.toItems(), true).toMutableMap()
         val paymentPrices = buyer.prices(buyer.offering).toMutableMap()
         if (seller.merchantSelling) {
@@ -2685,8 +2693,21 @@ class TradeBotScript(bot: Bot,
     /**
      * Bounds ordinary direct sales to this trip's tradeable stock, including items already on the offer screen.
      */
-    private fun humanSaleStock(): Map<Int, Int> = currentAdvertisementFunding(carriedOffer,
-        bot.overlays[OfferTradeInterface::class]?.items?.filterNotNull().orEmpty())
+    private fun humanSaleStock(offered: Collection<Item> =
+        bot.overlays[OfferTradeInterface::class]?.items?.filterNotNull().orEmpty()): Map<Int, Int> {
+        val stock = currentAdvertisementFunding(carriedOffer, offered)
+        return if (reactiveBuyer == null) nativeSaleStock(stock) else stock
+    }
+
+    /**
+     * Tests each commodity once while preserving the physical ids used to place trade offers.
+     */
+    private fun nativeSaleStock(stock: Map<Int, Int>): Map<Int, Int> {
+        val eligible = quantities(stock.toItems(), true).filter { (id, amount) ->
+            BotTradeManager.hasNativeSaleStock(bot, id, amount)
+        }
+        return stock.filterKeys { unnotedId(it) in eligible }
+    }
 
     /**
      * Allows a direct human request only when the prepared bot can offer real payment or sale stock.

@@ -61,7 +61,8 @@ object MerchantingCoordinator : BotCoordinator {
         val purposes = if (bot.preferences.isMerchant) listOf(BotTradePurpose.MERCHANT_SELL)
             else listOf(BotTradePurpose.SELL)
         return purposes.firstOrNull { purpose ->
-            BotTradeManager.computeOfferItems(bot, strategy, purpose).sumOf { it.totalPrice().toLong() } >=
+            BotTradeManager.computeOfferItems(bot, strategy, purpose, nativeTrade = true)
+                .sumOf { it.totalPrice().toLong() } >=
                 BotTradeManager.MINIMUM_OFFER_VALUE
         }
     }
@@ -111,16 +112,18 @@ object MerchantingCoordinator : BotCoordinator {
             }
         }
         val needsItems = canMarketBuy || canShopBuy
-        if (chooseSelling(selling != null, needsItems)) {
-            // Start trading script, or sell items to store.
-            val purpose = BotTradePurpose.SELL
-            val store = if (bot.personality.isDumb) SellToStoreBotScript(bot) else null
+        val store = if (canMarketSell && bot.personality.isDumb) SellToStoreBotScript(bot) else null
+        val storeOnly = store?.takeIf { selling == null && it.saleCandidates().isNotEmpty() }
+        if (chooseSelling(selling != null || storeOnly != null, needsItems)) {
             val desperate = bot.totalItemAmount(995) < 1_000
-            if (store != null && (desperate || randBoolean()) && store.saleCandidates().isNotEmpty()) {
-                bot.scriptStack.push(store)
-            } else {
+            val shopSale = storeOnly ?: store?.takeIf {
+                (desperate || randBoolean()) && it.saleCandidates().isNotEmpty()
+            }
+            if (shopSale != null) {
+                bot.scriptStack.push(shopSale)
+            } else if (selling != null) {
                 val market = BotMarketplace.select(bot)
-                bot.scriptStack.push(TradeBotScript(bot, purpose, market))
+                bot.scriptStack.push(TradeBotScript(bot, BotTradePurpose.SELL, market))
             }
         } else if (needsItems) {
             // Visit the market before using a shop for wanted items.

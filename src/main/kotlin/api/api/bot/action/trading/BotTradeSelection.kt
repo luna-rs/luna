@@ -24,11 +24,16 @@ object BotTradeSelection {
      */
     internal fun merchantSales(items: List<BotTradeItem>,
                                random: Random = Random.Default,
+                               nativeTrade: Boolean = false,
                                samples: (Int) -> Long = { world.economy.prices[it]?.samples ?: 0L }): List<BotTradeItem> {
         val settings = Luna.settings().bots()
         val eligible = items.filter { it.price > 0 && it.item.amount > 0 }.associateWith {
             LongMath.saturatedMultiply(it.item.amount.toLong(), it.price)
-        }.filterValues { it > settings.merchantSaleMinimumStackValue() }
+        }.filter { (item, value) ->
+            if (nativeTrade && BotTradeManager.canSellAsStack(item.item.itemDef)) {
+                BotTradeManager.hasNativeSaleStock(item.bot, item.item.id, item.item.amount)
+            } else value > settings.merchantSaleMinimumStackValue()
+        }
         val history = eligible.keys.associateWith { samples(it.item.id).coerceAtLeast(0L) }
         val byValue = compareByDescending<BotTradeItem> { eligible.getValue(it) }
             .thenByDescending { history.getValue(it) }.thenBy { it.item.id }
