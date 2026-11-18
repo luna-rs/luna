@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `main` (
   `username` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `bot` bit(1) NOT NULL,
   `rights` varchar(50) NOT NULL,
-  `json_data` text NOT NULL,
+  `json_data` mediumtext NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `bot` (`bot`)
