@@ -1,6 +1,7 @@
 package api.combat.death
 
 import api.bot.isRealBot
+import api.predef.world
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -18,6 +19,11 @@ import io.luna.game.model.mob.bot.brain.BotPkPreference
  * @author lare96
  */
 object PlayerDeathItems {
+
+    /**
+     * A [Comparator] that sorts items by economy value.
+     */
+    val ECONOMY_VALUE_COMPARATOR = Comparator.comparingLong<Item> { world.economy.getPrice(it.id) }.reversed()
 
     /**
      * Identifies an autonomous bot's carried team cape, including bank notes of a native team cape.
@@ -76,7 +82,7 @@ object PlayerDeathItems {
      */
     fun select(items: Iterable<Item>, keepCount: Int): Selection {
         require(keepCount >= 0)
-        val sorted = items.filter { it.amount > 0 && it.itemDef.isTradeable }.sortedWith(Item.VALUE_COMPARATOR)
+        val sorted = items.filter { it.amount > 0 && it.itemDef.isTradeable }.sortedWith(ECONOMY_VALUE_COMPARATOR)
         val kept = ArrayList<Item>()
         val lost = ArrayList<Item>()
         var remaining = keepCount

@@ -53,7 +53,9 @@ public final class ItemPriceData {
      */
     public static int computeInitialPrice(int id) {
         ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        def = ItemDefinition.ALL.retrieve(def.getUnnotedId().orElse(id));
+        if (def.getUnnotedId().isPresent()) {
+            def = ItemDefinition.ALL.retrieve(def.getUnnotedId().getAsInt());
+        }
         var economy = ItemEconomyDefinition.ALL.get(def.id()).orElse(null);
         Integer override = EconomySeedOverrides.get(def.id());
         int initialPrice = override != null ? override :

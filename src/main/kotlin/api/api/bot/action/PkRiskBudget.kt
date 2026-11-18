@@ -106,7 +106,7 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
                     val carried = (inventory.filter { it.id !in EssencePouch.ID_TO_POUCH } + equipment)
                         .filterNot { PlayerDeathItems.isProtectedBotTeamCape(bot, it) }
                     val tradeable = if (conservativeTies) carried.sortedWith(
-                        Item.VALUE_COMPARATOR.thenBy { value(listOf(it.withAmount(1))) }) else carried
+                        PlayerDeathItems.ECONOMY_VALUE_COMPARATOR.thenBy { value(listOf(it.withAmount(1))) }) else carried
                     value(PlayerDeathItems.select(tradeable, keepCount).lost) +
                         value(inventory.filter { it.id in EssencePouch.ID_TO_POUCH }) + value(pouchContents(carriedPouches))
                 } else BigInteger.ZERO

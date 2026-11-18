@@ -64,7 +64,7 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
         removeItems(receiver.victim.equipment, removed)
 
         if (sort) {
-            removed.sortWith(Item.VALUE_COMPARATOR)
+            removed.sortWith(PlayerDeathItems.ECONOMY_VALUE_COMPARATOR)
         }
         return removed
     }

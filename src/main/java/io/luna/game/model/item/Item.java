@@ -38,15 +38,6 @@ public class Item {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The comparator used to sort items by their in-game base value (descending).
-     * <p>
-     * The value is taken from the <b>unnoted</b> item definition's {@link ItemDefinition#getValue()}. This prevents
-     * noted variants from appearing to have different values purely due to being noted.
-     */
-    public static final Comparator<Item> VALUE_COMPARATOR = Comparator.<Item>comparingInt(it ->
-            it.getUnnotedItemDef().getValue()).reversed();
-
-    /**
      * The item ids that should not appear in name-based lookup results.
      * <p>
      * This is primarily intended to hide internal/test/unwanted entries from UI search or chat commands.
