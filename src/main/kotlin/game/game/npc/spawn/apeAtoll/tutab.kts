@@ -12,7 +12,6 @@ ShopHandler.create("Tutab's Magical Market") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Fire rune" x 10_000

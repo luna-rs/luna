@@ -15,7 +15,6 @@ ShopHandler.create("Lletya General Store") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 3 every 100

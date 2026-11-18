@@ -19,7 +19,6 @@ ShopHandler.create("Oziach's Armour") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.4, 0.03, 1.3)
-    botAccess = { true }
 
     sell {
         1127 x 2 every 500 // Rune platebody

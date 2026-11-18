@@ -15,7 +15,6 @@ ShopHandler.create("General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Needle" x 2 every 100
@@ -28,6 +27,7 @@ ShopHandler.create("General Store") {
         "Hammer" x 2 every 100
         "Sample bottle" x 100
         "Knife" x 100
+        "Anti-dragon shield" x 10
     }
 
     open {

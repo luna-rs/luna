@@ -119,7 +119,7 @@ object MerchantStoreBargains {
             slotsUsed++
             val item = shop.items[slot] ?: continue
             if (shop.isOriginallyStocked(slot) || item.amount < 1 || item.isDynamic ||
-                !eligibleItem(item.id) || !shop.botAccess.apply(bot)) continue
+                !eligibleItem(item.id)) continue
             valued++
             quotesUsed++
             val candidate = quote(bot, shop, item.id, Int.MAX_VALUE, budget, Long.MAX_VALUE,
@@ -181,7 +181,7 @@ object MerchantStoreBargains {
     }
 
     private fun eligibleShop(shop: Shop): Boolean = shop.currency == Currency.COINS &&
-        shop.buyPolicy == BuyPolicy.ALL && !shop.name.equals("Bot General Store", ignoreCase = true)
+        shop.buyPolicy == BuyPolicy.ALL && shop.npcSellers.isNotEmpty()
 
     private fun eligibleItem(id: Int): Boolean {
         val definition = ItemDefinition.ALL.get(id).orElse(null) ?: return false
@@ -193,7 +193,7 @@ object MerchantStoreBargains {
 
     private fun quote(bot: Bot, shop: Shop, id: Int, requested: Int, budget: Int, resaleCeiling: Long,
                       expiresAt: Long, reserves: () -> Map<Int, Int>): Deal? {
-        if (budget < 1 || !eligibleShop(shop) || !shop.botAccess.apply(bot) || !eligibleItem(id)) return null
+        if (budget < 1 || !eligibleShop(shop) || !eligibleItem(id)) return null
         val slot = shop.items.computeIndexForId(id)
         if (slot < 0 || shop.isOriginallyStocked(slot)) return null
         val stock = shop.items[slot] ?: return null

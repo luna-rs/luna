@@ -19,7 +19,6 @@ ShopHandler.create("Zenesha's Plate Mail Body Shop.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.6, 0.02, 1.0)
-    botAccess = { true }
 
     sell {
         1117 x 3 every 100 // Bronze platebody

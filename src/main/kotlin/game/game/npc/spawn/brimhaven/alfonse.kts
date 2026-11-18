@@ -19,7 +19,6 @@ ShopHandler.create("The Shrimp and Parrot") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.75, 0.03, 1.3)
-    botAccess = { true }
 
     sell {
         347 x 5 every 900 // Herring

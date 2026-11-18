@@ -5,7 +5,6 @@
  */
 package game.npc.spawn.apeAtoll
 
-import api.bot.zone.Zone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
@@ -18,7 +17,6 @@ ShopHandler.create("Hamab's Crafting Emporium") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { this in Zone.APE_ATOLL }
 
     sell {
         1755 x 2 every 100 // Chisel

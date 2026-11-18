@@ -3,6 +3,7 @@ package game.npc.spawn.portPhasmatys
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
@@ -13,10 +14,12 @@ import io.luna.game.model.mob.Player
  * The Port Phasmatys General Store, run by a ghost.
  */
 ShopHandler.create("Port Phasmatys General Store") {
+    botAccess {
+        npcSeller(2, 1699, area = SimpleBoxArea.of(3653, 3472, 3663, 3482))
+    }
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 100 every 15
@@ -26,6 +29,7 @@ ShopHandler.create("Port Phasmatys General Store") {
         "Tinderbox" x 2 every 100
         "Chisel" x 2 every 100
         "Hammer" x 5 every 100
+        "Anti-dragon shield" x 10
     }
 }
 

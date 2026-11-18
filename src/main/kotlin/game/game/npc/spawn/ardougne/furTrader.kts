@@ -5,6 +5,7 @@
  */
 package game.npc.spawn.ardougne
 
+import api.bot.zone.SubZone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.StallMerchant
@@ -16,11 +17,13 @@ import io.luna.game.model.item.shop.Shop
 
 // Lost City inventory: furshop.
 ShopHandler.create("Ardougne Fur Stall.") {
+    botAccess {
+        npcSeller(2, 573, subZone = SubZone.ARDOUGNE_SQUARE_THIEVING)
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.95, 0.02, 1.2)
-    botAccess = { !StallMerchant.recentTheft(this, ThievingStallType.FUR, 1000) }
 
     sell {
         948 x 3 every 100 // Bear fur

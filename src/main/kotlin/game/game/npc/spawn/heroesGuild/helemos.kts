@@ -12,7 +12,6 @@ ShopHandler.create("Happy Heroes' H'emporium.") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly { combatLevel > 65 }
 
     sell {
         "Dragon battleaxe" x 10

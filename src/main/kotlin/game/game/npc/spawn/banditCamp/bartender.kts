@@ -17,7 +17,6 @@ ShopHandler.create("The Big Heist Lodge") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         4627 x 10 every 100 // Bandit's brew

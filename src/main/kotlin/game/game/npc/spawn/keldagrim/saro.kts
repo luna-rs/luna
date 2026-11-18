@@ -17,7 +17,6 @@ ShopHandler.create("Quality Armour Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1105 x 3 every 400 // Steel chainbody

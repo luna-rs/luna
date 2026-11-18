@@ -70,7 +70,7 @@ object BotProductionUses {
 
         // Merchant scripts do not execute ordinary shop liquidation; do not invent that exit for them.
         if (!bot.preferences.isMerchant) for (shop in bot.world.shops.values()) {
-            if (shop.currency != Currency.COINS || !shop.botAccess.apply(bot)) continue
+            if (shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) continue
             for ((id, definition) in definitions) {
                 val noted = definition.notedId.orElse(id)
                 val saleId = if (noted != id && shop.computeCanSell(noted)) noted else id

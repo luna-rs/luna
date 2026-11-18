@@ -25,6 +25,7 @@ ShopHandler.create("Karamja General Store") {
         "Tinderbox" x 2 every 100
         "Chisel" x 2 every 100
         "Hammer" x 5 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

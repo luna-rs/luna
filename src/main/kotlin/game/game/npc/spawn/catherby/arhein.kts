@@ -39,6 +39,7 @@ ShopHandler.create(SHOP_NAME) {
         "Rope" x 10
         "Pot" x 30
         "Knife" x 10
+        "Anti-dragon shield" x 10
     }
 
     open {

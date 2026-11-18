@@ -17,7 +17,6 @@ ShopHandler.create("Void Knight Magic Store") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         554 x 5000 every 10 // Fire rune

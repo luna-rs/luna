@@ -38,7 +38,6 @@ merchants.forEachIndexed { index, name ->
         currency = Currency.COINS
         restock = RestockPolicy.BALANCED
         stockPricing = Shop.StockPricing(0.60, 0.01)
-        botAccess = { false }
 
         sell {
             for (number in index + 1..50 step 10) {

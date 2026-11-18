@@ -4,7 +4,6 @@ import api.shop.dsl.ShopHandler
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
-import io.luna.game.model.mob.bot.brain.BotActivity
 
 /**
  * Barkers' Haberdashery in Canifis.
@@ -13,7 +12,6 @@ ShopHandler.create("Barkers' Haberdashery") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    botAccess = { preferences.likesActivity(BotActivity.MERCHANTING) || personality.isSocial }
 
     sell {
         2900 x 50 // Grey hat

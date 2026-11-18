@@ -19,7 +19,6 @@ ShopHandler.create("Drogo's Mining Emporium.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.7, 0.02, 1.0)
-    botAccess = { true }
 
     sell {
         2347 x 4 every 100 // Hammer

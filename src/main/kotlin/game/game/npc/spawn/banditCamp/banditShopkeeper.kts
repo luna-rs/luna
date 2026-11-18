@@ -14,7 +14,6 @@ ShopHandler.create("Bandit Bargains") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Waterskin(4)" x 5 every 100
@@ -29,6 +28,7 @@ ShopHandler.create("Bandit Bargains") {
         "Desert shirt" x 5 every 500
         "Desert robe" x 5 every 500
         "Knife" x 5 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

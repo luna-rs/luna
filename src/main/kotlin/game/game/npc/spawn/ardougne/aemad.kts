@@ -38,6 +38,7 @@ ShopHandler.create(SHOP_NAME) {
         "Papyrus" x 10
         "Knife" x 10
         "Jug" x 10
+        "Anti-dragon shield" x 10
     }
 
     open {

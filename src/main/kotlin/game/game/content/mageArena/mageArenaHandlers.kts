@@ -5,6 +5,7 @@ import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import io.luna.game.event.impl.LogoutEvent
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
@@ -36,15 +37,19 @@ object1(2880) {
 
 // Titles and pricing are from 377 NPC params. Counts are a Luna stock policy: the pinned source has no 377 inv list.
 ShopHandler.create("Lundail's Arena-side Rune Shop.") {
+    botAccess {
+        npcSeller(4, 903, area = SimpleBoxArea.of(2529, 4704, 2547, 4727))
+    }
     stockPricing = Shop.StockPricing(0.6, 0.03)
     sell { 556 x 1000; 555 x 1000; 557 x 1000; 554 x 1000; 558 x 1000; 559 x 1000; 562 x 100; 561 x 100; 560 x 100; 563 x 100; 565 x 100 }
-    botAccess = { MageArena.cave(position) }
 }
 ShopHandler.create("Mage Arena Staffs.") {
+    botAccess {
+        npcSeller(4, 904, area = SimpleBoxArea.of(2496, 4678, 2522, 4727))
+    }
     buy = BuyPolicy.NONE
     stockPricing = Shop.StockPricing(0.0, 0.02)
     sell { 2415 x 5; 2416 x 5; 2417 x 5 }
-    botAccess = { MageArena.stage(this) >= MageArena.STAFF_GIVEN && MageArena.chamber(position) }
 }
 
 for (id in 907..914) combat(id) {

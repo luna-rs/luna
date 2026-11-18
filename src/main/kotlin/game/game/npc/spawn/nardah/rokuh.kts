@@ -17,7 +17,6 @@ ShopHandler.create("Rokuh's Choc Ice Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         6794 x 30 every 50 // Choc-ice

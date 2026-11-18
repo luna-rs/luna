@@ -12,7 +12,6 @@ ShopHandler.create("Grand Tree Groceries") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Gianne dough" x 50

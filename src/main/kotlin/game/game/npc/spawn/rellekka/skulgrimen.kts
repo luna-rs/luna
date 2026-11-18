@@ -2,6 +2,7 @@ package game.npc.spawn.rellekka
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -23,6 +24,9 @@ val SHOP_NAME = "Skulgrimen's Battle Gear"
  * turned away.
  */
 ShopHandler.create(SHOP_NAME) {
+    botAccess {
+        npcSeller(2, SKULGRIMEN_ID, area = SimpleBoxArea.of(2658, 3689, 2668, 3699))
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS

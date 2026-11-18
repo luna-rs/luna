@@ -103,7 +103,7 @@ object MerchantingCoordinator : BotCoordinator {
         val shopBudget = (bot.totalItemAmount(995).toDouble() *
             BotTradeIntentions.budgetFraction(bot, BotTradePurpose.BUY)).toInt()
         val shops = if (shopBudget <= 0 || needs.isEmpty()) emptyList() else world.shops.values()
-            .filter { it.currency == Currency.COINS && it.botAccess.apply(bot) }
+            .filter { it.currency == Currency.COINS && it.npcSellers.isNotEmpty() }
         val canShopBuy = needs.any { wanted ->
             shops.any { shop ->
                 val price = shop.computeBuyValue(wanted.id, 1)

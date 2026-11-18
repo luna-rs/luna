@@ -17,7 +17,6 @@ ShopHandler.create("Pelter's Veg Stall") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.55, 0.001, 1.0)
-    botAccess = { false } // A punishment-event supply, rather than an ordinary bot shopping destination.
 
     sell {
         2518 x 100 every 100 // Rotten tomato; no item-specific restock interval is recorded.

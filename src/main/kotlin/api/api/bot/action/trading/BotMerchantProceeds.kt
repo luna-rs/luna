@@ -80,7 +80,7 @@ object BotMerchantProceeds {
      */
     fun shopPurchase(bot: Bot, shop: Shop, id: Int, maximum: Int, budget: Int,
                      resaleUnit: Long? = null, capital: BotMerchantCapital.Balance = BotMerchantCapital.snapshot(bot)): Purchase? {
-        if (!BotMerchantCapital.active(bot) || shop.currency != Currency.COINS || !shop.botAccess.apply(bot)) return null
+        if (!BotMerchantCapital.active(bot) || shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) return null
         val slot = shop.items.computeIndexForId(id)
         if (slot < 0 || shop.items[slot]?.isDynamic != false || maximum < 1 || budget < 1) return null
         var low = 1

@@ -1,12 +1,12 @@
 package api.shop.dsl
 
+import api.bot.zone.SubZone
 import api.predef.*
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.Shop
-import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.brain.BotActivity
 
 /**
  * The receiver for the [shop] closure that encapsulates shop creation.
@@ -36,21 +36,33 @@ class ShopReceiver(val name: String) {
     var stockPricing: Shop.StockPricing? = null
 
     /**
-     * If a bot can access this shop.
+     * Declares where bots can find a shopkeeper with a custom click or dialogue handler.
+     *
+     * @author lare96
      */
-    var botAccess: Bot.() -> Boolean = { true }
+    class BotAccessReceiver internal constructor() {
+        internal val sellers = mutableListOf<Shop.NpcSeller>()
+
+        /**
+         * Discovers the existing click handler for an NPC whose spawn is inside a bot subzone.
+         */
+        fun npcSeller(option: Int, id: Int, subZone: SubZone, dialogueOption: String? = null) {
+            npcSeller(option, id, subZone.area, dialogueOption)
+        }
+
+        /**
+         * Supplies the NPC's local spawn area when no bot subzone covers the shop.
+         */
+        fun npcSeller(option: Int, id: Int, area: SimpleBoxArea, dialogueOption: String? = null) {
+            require(option in setOf(1, 2, 4, 5))
+            sellers += Shop.NpcSeller(id, option, dialogueOption, area)
+        }
+    }
 
     /**
      * The next index to add an item to.
      */
     private var index = 0
-
-    /**
-     * Whether this shop should be considered a merchant-only shop by bot shopping systems.
-     *
-     * This does not grant access by itself. [botAccess] still decides whether an individual bot may open the shop.
-     */
-    private var merchantOnly = false
 
     /**
      * The added items.
@@ -66,6 +78,16 @@ class ShopReceiver(val name: String) {
      * The [OpenReceiver] instance.
      */
     private val openReceiver = OpenReceiver()
+
+    private val npcSellers = mutableListOf<Shop.NpcSeller>()
+
+    /**
+     * Adds locations for shopkeepers with custom click or dialogue handlers.
+     * NPCs declared in [open] are discovered automatically.
+     */
+    fun botAccess(init: BotAccessReceiver.() -> Unit) {
+        npcSellers += BotAccessReceiver().apply(init).sellers
+    }
 
     /**
      * Initializes a new [SellReceiver]. Allows for adding the initial items to the shop.
@@ -86,11 +108,12 @@ class ShopReceiver(val name: String) {
      */
     fun register() {
         // The shop registry remains the single source of truth. Bot shopping discovers shops from ShopManager later.
-        val shop = Shop(world, name, restock, buy, currency, botAccess, merchantOnly, stockPricing)
+        val shop = Shop(world, name, restock, buy, currency, stockPricing)
         shop.init(items)
 
         // Normal players can still discover this shop through its configured NPC, object, or button listeners.
         openReceiver.addListeners(shop)
+        npcSellers.forEach(shop::registerNpcSeller)
 
         world.shops.register(shop)
     }
@@ -102,33 +125,5 @@ class ShopReceiver(val name: String) {
         val item = ShopHandler.PendingShopItem(index++, id, amount, maxAmount)
         items += item
         return item
-    }
-
-    /**
-     * Restricts this shop to bots interested in merchanting.
-     *
-     * Non-strict shops require the bot to like merchanting. Strict shops require the bot to love merchanting.
-     * [additionalFilter] may impose extra requirements such as combat level.
-     *
-     * The merchant-only flag is only used to categorize this shop during speculative bot shopping. [botAccess] remains
-     * authoritative, meaning a bot still has to satisfy every condition configured here before opening the shop.
-     */
-    fun merchantsAccessOnly(
-        strict: Boolean = false,
-        additionalFilter: Bot.() -> Boolean = { true }
-    ) {
-        // Mark this shop as part of the merchant shopping pool.
-        merchantOnly = true
-
-        // Access itself is always decided by the predicate, including strictness and any extra caller-supplied checks.
-        botAccess = {
-            val merchantAccess = if (strict) {
-                preferences.lovesActivity(BotActivity.MERCHANTING)
-            } else {
-                preferences.likesActivity(BotActivity.MERCHANTING)
-            }
-
-            merchantAccess && additionalFilter(this)
-        }
     }
 }

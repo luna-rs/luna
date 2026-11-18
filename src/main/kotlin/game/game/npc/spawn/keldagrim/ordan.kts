@@ -17,7 +17,6 @@ ShopHandler.create("Ore Seller") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         436 x 100 every 200 // Copper ore

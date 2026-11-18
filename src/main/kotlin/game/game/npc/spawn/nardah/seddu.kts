@@ -17,7 +17,6 @@ ShopHandler.create("Seddu's Adventurer's Store") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1093 x 1 every 12000 // Rune plateskirt

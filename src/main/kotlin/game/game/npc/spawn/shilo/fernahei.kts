@@ -13,7 +13,6 @@ ShopHandler.create("Fishing shop") {
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
     // TODO Once Shilo Village is added, let in bots that have finished the quest.
-    botAccess = { false }
 
     sell {
         "Feather" x 10_000

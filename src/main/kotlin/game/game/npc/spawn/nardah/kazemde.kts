@@ -14,7 +14,6 @@ ShopHandler.create("Nardah General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 5 every 10
@@ -27,6 +26,7 @@ ShopHandler.create("Nardah General Store") {
         "Chisel" x 2 every 100
         "Hammer" x 5 every 100
         "Cooked meat" x 4 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

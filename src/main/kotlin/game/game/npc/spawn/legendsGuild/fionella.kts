@@ -14,13 +14,13 @@ ShopHandler.create("Legends Guild General Store.") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { combatLevel > 30 }
 
     sell {
         "Swordfish" x 20 every 200
         "Apple pie" x 5 every 200
         "Attack potion(3)" x 3 every 100
         "Steel arrow" x 500 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

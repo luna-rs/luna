@@ -19,7 +19,6 @@ ShopHandler.create("Gaius' Two Handed Shop.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.6, 0.02, 1.0)
-    botAccess = { true }
 
     sell {
         1307 x 4 every 200 // Bronze 2h sword

@@ -12,7 +12,6 @@ ShopHandler.create("Funch's Fine Groceries") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Brandy" x 10

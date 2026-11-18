@@ -15,7 +15,6 @@ ShopHandler.create("Bandit Duty Free") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 5 every 50
@@ -25,6 +24,7 @@ ShopHandler.create("Bandit Duty Free") {
         "Hammer" x 5 every 100
         "Bronze pickaxe" x 5 every 100
         "Bronze axe" x 10 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

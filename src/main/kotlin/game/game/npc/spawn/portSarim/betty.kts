@@ -25,7 +25,6 @@ ShopHandler.create(SHOP_NAME) {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Fire rune" x 5000

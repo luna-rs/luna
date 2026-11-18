@@ -15,7 +15,6 @@ ShopHandler.create("Gunslik's Assorted Items") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Jug" x 2 every 100
@@ -30,6 +29,7 @@ ShopHandler.create("Gunslik's Assorted Items") {
         "Vial" x 10 every 500
         "Pestle and mortar" x 3 every 500
         "Rope" x 10 every 200
+        "Anti-dragon shield" x 10
     }
 
     open {

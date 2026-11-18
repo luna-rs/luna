@@ -14,7 +14,6 @@ ShopHandler.create("Pollnivneach General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 3 every 100
@@ -32,6 +31,7 @@ ShopHandler.create("Pollnivneach General Store") {
         "Jug of water" x 5 every 10
         "Bowl of water" x 7 every 10
         "Bucket of water" x 8 every 10
+        "Anti-dragon shield" x 10
     }
 
     open {

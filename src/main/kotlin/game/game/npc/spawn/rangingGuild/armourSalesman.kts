@@ -19,7 +19,6 @@ ShopHandler.create("Aaron's Archery Appendages.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.5, 0.01, 1.0)
-    botAccess = { ranged.level >= 40 }
 
     sell {
         1129 x 10 every 50 // Leather body

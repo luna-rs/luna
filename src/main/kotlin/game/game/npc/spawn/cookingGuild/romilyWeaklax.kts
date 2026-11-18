@@ -7,7 +7,6 @@ package game.npc.spawn.cookingGuild
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
-import game.content.cookingGuild.CookingGuild
 import game.npc.spawn.GeneralStore
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
@@ -18,7 +17,6 @@ ShopHandler.create("Pie Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { CookingGuild.canEnter(this) }
 
     sell {
         7162 x 50 every 50 // Pie recipe book

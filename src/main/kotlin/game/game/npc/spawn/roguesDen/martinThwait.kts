@@ -1,5 +1,6 @@
 package game.npc.spawn.roguesDen
 
+import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import api.shop.dsl.ShopHandler
@@ -13,10 +14,12 @@ import io.luna.game.model.mob.Player
  * Martin Thwait's Lost and Found in the Rogues' Den.
  */
 ShopHandler.create("Martin Thwait's Lost and Found.") {
+    botAccess {
+        npcSeller(2, 2270, subZone = SubZone.ROGUES_DEN)
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { thieving.level >= 50 && agility.level >= 50 }
 
     sell {
         "Rope" x 50 every 100

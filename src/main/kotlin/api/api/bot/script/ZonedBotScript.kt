@@ -445,7 +445,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         handler.webWalkTo(zone = zone, bank = bank)
 
     /**
-     * Gets the item that a zone's entrance needs, from the bank or a shop, then travels there.
+     * Obtains the entry item through the ordinary supply flow before travelling to the zone.
      */
     private suspend fun travelToZone(zone: SubZone, bank: BankAccess = BankAccess.ALL): Boolean {
         val item = zone.entryItem

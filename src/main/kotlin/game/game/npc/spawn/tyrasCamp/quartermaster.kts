@@ -3,6 +3,7 @@ package game.npc.spawn.tyrasCamp
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -13,10 +14,13 @@ import io.luna.game.model.mob.dialogue.Expression
  * The Quartermaster's Stores in Tyras Camp.
  */
 ShopHandler.create("Quartermaster's Stores") {
+    botAccess {
+        npcSeller(1, 1208, area = SimpleBoxArea.of(2189, 3135, 2199, 3145),
+                  dialogueOption = "Yes please. What are you selling?")
+    }
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly { combatLevel > 65 }
 
     sell {
         "Pot" x 5 every 100
@@ -32,6 +36,7 @@ ShopHandler.create("Quartermaster's Stores") {
         "Adamant halberd" x 7 every 100
         "Rune halberd" x 7 every 100
         "Dragon halberd" x 5 every 500
+        "Anti-dragon shield" x 10
     }
 }
 

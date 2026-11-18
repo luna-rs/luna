@@ -15,7 +15,6 @@ ShopHandler.create("Ali's Discount Wares") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1931 x 3 every 100 // Pot
@@ -31,6 +30,7 @@ ShopHandler.create("Ali's Discount Wares") {
         590 x 11 every 100 // Tinderbox
         1265 x 23 every 100 // Bronze pickaxe
         2138 x 15 every 100 // Raw chicken
+        1540 x 10 // Anti-dragon shield
     }
 
     open {

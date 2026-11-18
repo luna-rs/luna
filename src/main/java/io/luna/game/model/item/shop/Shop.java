@@ -2,14 +2,15 @@ package io.luna.game.model.item.shop;
 
 import api.shop.dsl.ShopHandler.PendingShopItem;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import io.luna.game.model.World;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.Inventory;
+import io.luna.game.model.area.SimpleBoxArea;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.item.ItemContainer.StackPolicy;
 import io.luna.game.model.item.ItemTracker;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 
@@ -46,6 +47,41 @@ import java.util.Set;
  * @author natis1
  */
 public final class Shop {
+
+    /**
+     * Identifies a native NPC interaction that can open this shop.
+     *
+     * @author lare96
+     */
+    public record NpcSeller(int id, int option, String dialogueOption, SimpleBoxArea area) {
+
+        /**
+         * Checks the current NPC type and its spawn location, allowing the seller to wander.
+         */
+        public boolean matches(Npc npc) {
+            return npc.getId() == id && (area == null || area.contains(npc.getBasePosition()));
+        }
+    }
+
+    /**
+     * The shop's registered NPC entry points.
+     */
+    private final List<NpcSeller> npcSellers = new ArrayList<>();
+    private final List<NpcSeller> npcSellersView = Collections.unmodifiableList(npcSellers);
+
+    /**
+     * Registers a native opener for bot discovery without changing the player's click handler.
+     */
+    public void registerNpcSeller(NpcSeller seller) {
+        npcSellers.add(seller);
+    }
+
+    /**
+     * Returns the currently registered native NPC entry points.
+     */
+    public List<NpcSeller> getNpcSellers() {
+        return npcSellersView;
+    }
 
     /**
      * Optional pricing for a shop's original stock. Buy prices start at {@code buyMultiplier} of the cache value;
@@ -164,14 +200,6 @@ public final class Shop {
     private final Set<Integer> itemIds = new HashSet<>();
 
     /**
-     * Whether this shop is intended specifically for merchanting bots.
-     * <p>
-     * This is classification metadata only. {@link #botAccess} remains the authoritative check for whether a particular
-     * bot may actually access the shop.
-     */
-    private final boolean merchantOnly;
-
-    /**
      * Snapshot of original stock amounts for each shop slot.
      * <p>
      * A present value indicates the item is naturally stocked by this shop and may be restocked according to policy.
@@ -196,11 +224,6 @@ public final class Shop {
     private final Set<Integer> restockItems = new HashSet<>();
 
     /**
-     * The predicate that determines whether an individual bot may access this shop.
-     */
-    private final Predicate<Bot> botAccess;
-
-    /**
      * Shop-specific pricing for original stock, or {@code null} for the existing specialty-shop defaults.
      */
     private final StockPricing stockPricing;
@@ -213,26 +236,22 @@ public final class Shop {
      * @param restockPolicy The restock policy.
      * @param buyPolicy The policy controlling what items may be sold to this shop.
      * @param currency The currency item used for transactions.
-     * @param botAccess Determines whether a particular bot may access this shop.
-     * @param merchantOnly Whether this shop belongs to the merchant-only shop pool.
      */
     public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy,
-                Currency currency, Predicate<Bot> botAccess, boolean merchantOnly) {
-        this(world, name, restockPolicy, buyPolicy, currency, botAccess, merchantOnly, null);
+                Currency currency) {
+        this(world, name, restockPolicy, buyPolicy, currency, null);
     }
 
     /**
      * Creates a shop with optional pricing for its original stock. Other items retain general-store pricing.
      */
     public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy,
-                Currency currency, Predicate<Bot> botAccess, boolean merchantOnly, StockPricing stockPricing) {
+                Currency currency, StockPricing stockPricing) {
         this.world = world;
         this.name = name;
         this.restockPolicy = restockPolicy;
         this.buyPolicy = buyPolicy;
         this.currency = currency;
-        this.botAccess = botAccess;
-        this.merchantOnly = merchantOnly;
         this.stockPricing = stockPricing;
 
         amountMap = new OptionalInt[40];
@@ -299,6 +318,9 @@ public final class Shop {
      * @return {@code true} if at least one item was purchased, otherwise {@code false}.
      */
     public boolean buy(Player player, int index, int buyAmount) {
+        if (!canTradeWith(player)) {
+            return false;
+        }
         Inventory inventory = player.getInventory();
         Item shopItem = items.get(index);
 
@@ -382,6 +404,9 @@ public final class Shop {
      * @return {@code true} if the sale completed, otherwise {@code false}.
      */
     public boolean sell(Player player, int index, int sellAmount) {
+        if (!canTradeWith(player)) {
+            return false;
+        }
         Inventory inventory = player.getInventory();
         Item inventoryItem = inventory.get(index);
 
@@ -412,6 +437,10 @@ public final class Shop {
             return items.add(sellItem);
         }
         return false;
+    }
+
+    private boolean canTradeWith(Player player) {
+        return !(player instanceof Bot bot) || !bot.isBot() || bot.getActionHandler().getShop().canTradeWith(this);
     }
 
     /**
@@ -807,20 +836,6 @@ public final class Shop {
      */
     public Set<Integer> getRestockItems() {
         return restockItems;
-    }
-
-    /**
-     * @return {@code true} if this shop belongs to the merchant-only shopping pool.
-     */
-    public boolean isMerchantOnly() {
-        return merchantOnly;
-    }
-
-    /**
-     * @return The predicate that determines whether an individual bot may access this shop.
-     */
-    public Predicate<Bot> getBotAccess() {
-        return botAccess;
     }
 
     /**

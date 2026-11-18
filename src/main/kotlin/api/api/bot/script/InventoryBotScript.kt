@@ -313,7 +313,8 @@ abstract class InventoryBotScript(
                 var missing = (item.amount.toLong() * operations - owned(item.id)).coerceAtLeast(0)
                 if (missing == 0L) continue
                 val shops = bot.world.shops.values().filter {
-                    item.id in it.itemIds && it.botAccess.apply(bot) && it.items.computeAmountForId(item.id) > 0
+                    it.npcSellers.isNotEmpty() && item.id in it.itemIds &&
+                        it.items.computeAmountForId(item.id) > 0
                 }.sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
                     .thenBy { it.computeBuyValue(item.id, 1).orElse(Int.MAX_VALUE) })
                 for (shop in shops) {

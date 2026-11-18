@@ -3,7 +3,6 @@ package api.bot.action
 import api.bot.script.BotScript.ActionSafety
 import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotTradeIntentions
-import api.bot.zone.SubZone
 import api.predef.ext.get
 import engine.controllers.Controllers.inWilderness
 import game.item.degradable.jewellery.TeleportJewellery
@@ -103,7 +102,7 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
         for ((id, amount) in required) {
             var missing = (amount - selection.owned(id)).coerceAtLeast(0)
             val shops = bot.world.shops.values().filter {
-                it.currency == Currency.COINS && id in it.itemIds && it.botAccess.apply(bot) &&
+                it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds &&
                     it.items.computeAmountForId(id) > 0
             }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
             for (shop in shops) {
@@ -146,13 +145,13 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
                 val capacity = if (Item(saleId).itemDef.isStackable) needed else 27
                 val amount = minOf(needed, capacity, bot.bank.computeAmountForId(id))
                 if (amount < 1 || !handler.banking.withdraw(Item(id, amount)) || !safe()) break
-                if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
-                if (!safe() || !shop.botAccess.apply(bot)) return false
-                bot.overlays.closeWindows()
-                bot.overlays.open(ShopInterface(shop))
+                if (handler.shop.travelToShop(shop, ::safe) == null) {
+                    failed += shop
+                    continue
+                }
                 var progressed = false
                 while (safe() && coins() < target && actions < 120 &&
-                    bot.overlays[ShopInterface::class]?.shop === shop && shop.botAccess.apply(bot) && shop.computeCanSell(saleId)) {
+                    bot.overlays[ShopInterface::class]?.shop === shop && shop.computeCanSell(saleId)) {
                     val held = bot.inventory.computeAmountForId(saleId)
                     if (held < 1 || protectedItem(Item(id), reserved)) break
                     val unit = shop.computeSellValue(saleId, 1)
@@ -185,7 +184,7 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
     }
 
     private fun shopsForSale(id: Int): List<Shop> = bot.world.shops.values().filter {
-        it.currency == Currency.COINS && it.botAccess.apply(bot) && it.computeCanSell(saleId(it, id)) &&
+        it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && it.computeCanSell(saleId(it, id)) &&
             it.items.hasSpaceFor(Item(saleId(it, id))) && it.computeSellValue(saleId(it, id), 1) > 0
     }
 

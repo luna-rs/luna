@@ -19,7 +19,6 @@ ShopHandler.create("Candle Shop") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.4, 0.03, 1.3)
-    botAccess = { true }
 
     sell {
         36 x 10 every 100 // Candle

@@ -14,7 +14,6 @@ import game.skill.agility.yanille.YanilleDungeon
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
-import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -3246,13 +3245,6 @@ enum class SubZone(
             if (this !in bot.subZones && !canEnterTaverleyWest(bot))
                 "the western section of Taverley Dungeon needs a dusty key" else null
 
-        EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS, EDGEVILLE_DUNGEON_HOBGOBLINS ->
-            // A bot without a key buys one for a coin.
-            if (this !in bot.subZones && !bot.itemTracker.contains(BrassKeyDoor.KEY) &&
-                !bot.inventory.contains(Currency.COINS.id) && !bot.bank.contains(Currency.COINS.id)
-            )
-                "the house door needs a brass key" else null
-
         WATERFALL_FIRE_GIANTS_WEST, WATERFALL_FIRE_GIANTS_EAST ->
             if (!bot.itemTracker.contains(295)) "the Waterfall entrance needs Glarial's amulet" else null
 
@@ -3273,11 +3265,8 @@ enum class SubZone(
         }
 
     /**
-     * Determines if a bot can get into the western section of Taverley Dungeon. Every bot carries the dusty key there,
-     * and one without a key can obtain it from Velrak or buy it for a coin. The web walker still takes the pipe or strange floor for a bot with
-     * the Agility for them, when that is shorter.
+     * Checks for an owned dusty key or a bot that can obtain one from Velrak.
      */
     private fun canEnterTaverleyWest(bot: Bot): Boolean =
-        bot.itemTracker.contains(TaverleyJailDoor.DUSTY_KEY_GATE.key) ||
-                bot.inventory.contains(Currency.COINS.id) || bot.bank.contains(Currency.COINS.id) || BotTaverleyKeys.canAttempt(bot)
+        bot.itemTracker.contains(TaverleyJailDoor.DUSTY_KEY_GATE.key) || BotTaverleyKeys.canAttempt(bot)
 }

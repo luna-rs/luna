@@ -12,7 +12,6 @@ ShopHandler.create("Legends Guild Shop of Useful Items.") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly { combatLevel > 65 }
 
     sell {
         "Mithril seeds" x 60

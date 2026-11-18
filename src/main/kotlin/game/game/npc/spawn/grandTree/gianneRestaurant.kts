@@ -19,7 +19,6 @@ ShopHandler.create("Gianne's Restaurant") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.25, 0.01, 1.0)
-    botAccess = { true }
 
     sell {
         2227 x 3 every 100 // Vegetable batta

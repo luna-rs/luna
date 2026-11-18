@@ -19,7 +19,6 @@ ShopHandler.create("Bedabin Village Bartering") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.8, 0.03, 1.2)
-    botAccess = { true }
 
     sell {
         1823 x 5 every 100 // Waterskin(4)

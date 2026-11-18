@@ -2,6 +2,7 @@ package game.npc.spawn.rellekka
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -22,6 +23,9 @@ val SHOP_NAME = "Yrsa's Accoutrements"
  * away.
  */
 ShopHandler.create(SHOP_NAME) {
+    botAccess {
+        npcSeller(2, YRSA_ID, area = SimpleBoxArea.of(2620, 3670, 2630, 3680))
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS

@@ -17,7 +17,6 @@ ShopHandler.create("Jorzik's Armour Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1147 x 0 every 500 // Rune med helm

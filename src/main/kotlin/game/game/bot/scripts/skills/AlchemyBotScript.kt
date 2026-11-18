@@ -846,7 +846,7 @@ class AlchemyBotScript(
             var missing = (amount - owned(id)).coerceAtLeast(0)
             if (missing == 0L) continue
             val shops = world.shops.values().filter {
-                it.currency.id == 995 && id in it.itemIds && it.botAccess.apply(bot) &&
+                it.currency.id == 995 && it.npcSellers.isNotEmpty() && id in it.itemIds &&
                     it.items.computeAmountForId(id) > 0
             }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
             for (shop in shops) {

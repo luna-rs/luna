@@ -19,7 +19,6 @@ ShopHandler.create("Burthorpe Supplies") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.4, 0.03, 1.3)
-    botAccess = { true }
 
     sell {
         1931 x 3 every 100 // Pot
@@ -31,6 +30,7 @@ ShopHandler.create("Burthorpe Supplies") {
         2347 x 5 every 100 // Hammer
         946 x 2 every 100 // Knife
         1980 x 20 every 50 // Empty cup
+        1540 x 10 // Anti-dragon shield
     }
 
     open {

@@ -19,7 +19,6 @@ ShopHandler.create("Food Store") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.7, 0.01, 1.0)
-    botAccess = { true }
 
     sell {
         1933 x 3 every 100 // Pot of flour

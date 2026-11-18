@@ -8,7 +8,6 @@ package game.npc.spawn.mosLeHarmless
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
-import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -18,7 +17,6 @@ ShopHandler.create("Smithing Smith's Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { position.isWithinDistance(Position(3689, 2954, 0), 64) }
 
     sell {
         1321 x 5 every 100 // Bronze scimitar

@@ -17,7 +17,6 @@ ShopHandler.create("Vigr's Warhammers") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1337 x 5 every 100 // Bronze warhammer

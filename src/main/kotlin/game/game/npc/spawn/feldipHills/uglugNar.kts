@@ -8,7 +8,6 @@ package game.npc.spawn.feldipHills
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
-import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -18,7 +17,6 @@ ShopHandler.create("Uglug's Stuffsies") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { position.isWithinDistance(Position(2442, 3049, 0), 64) }
 
     sell {
         4844 x 100 every 10 // Relicym's balm(3)

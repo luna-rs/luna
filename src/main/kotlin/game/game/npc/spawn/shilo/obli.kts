@@ -15,7 +15,6 @@ ShopHandler.create("Obli's General Store.") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Tinderbox" x 2 every 500
@@ -41,6 +40,7 @@ ShopHandler.create("Obli's General Store.") {
         "Vial of water" x 50 every 200
         "Machete" x 50 every 200
         "Rope" x 10 every 200
+        "Anti-dragon shield" x 10
     }
 
     open {

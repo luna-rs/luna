@@ -15,7 +15,6 @@ ShopHandler.create("Khazard General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Bronze pickaxe" x 5 every 100
@@ -31,6 +30,7 @@ ShopHandler.create("Khazard General Store") {
         "Bailing bucket" x 30 every 100
         "Swamp paste" x 500 every 20
         "Knife" x 2 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

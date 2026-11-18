@@ -15,7 +15,6 @@ ShopHandler.create("Jiminua's Jungle Store.") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Tinderbox" x 2 every 500
@@ -43,6 +42,7 @@ ShopHandler.create("Jiminua's Jungle Store.") {
         "Bronze pickaxe" x 2 every 500
         "Iron axe" x 5 every 700
         "Bronze bar" x 10 every 500
+        "Anti-dragon shield" x 10
     }
 
     open {

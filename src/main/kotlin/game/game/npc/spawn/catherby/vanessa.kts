@@ -19,7 +19,6 @@ ShopHandler.create("Vanessa's Farming shop.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.7, 0.001, 1.0)
-    botAccess = { true }
 
     sell {
         5341 x 500 every 10 // Rake

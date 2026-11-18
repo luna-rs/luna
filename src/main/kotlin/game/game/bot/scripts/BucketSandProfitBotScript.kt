@@ -9,7 +9,6 @@ import api.bot.action.trading.BotTradePrice
 import api.bot.action.trading.BotTradePurpose
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
-import api.bot.zone.SubZone
 import api.predef.ext.get
 import api.predef.ext.totalItemAmount
 import api.predef.world
@@ -138,7 +137,8 @@ class BucketSandProfitBotScript private constructor(
             if (wallet < 1) return null
             val shops = if (only == null) world.shops.values() else listOf(only)
             return shops.asSequence().filter { shop ->
-                shop.currency == Currency.COINS && EMPTY_BUCKET in shop.itemIds && shop.botAccess.apply(bot)
+                shop.currency == Currency.COINS && shop.npcSellers.isNotEmpty() &&
+                    EMPTY_BUCKET in shop.itemIds
             }.mapNotNull { shop ->
                 val stock = shop.items.computeAmountForId(EMPTY_BUCKET).coerceAtMost(MAX_BATCH)
                 (stock downTo minimum).firstNotNullOfOrNull { amount ->
@@ -206,16 +206,11 @@ class BucketSandProfitBotScript private constructor(
             guide * MAX_BATCH - 1L, Int.MAX_VALUE.toLong()).coerceAtLeast(0L).toInt()
         val missing = (budget - bot.inventory.computeAmountForId(Currency.COINS.id)).coerceAtLeast(0)
         if (missing > 0 && !handler.banking.withdraw(Item(Currency.COINS.id, missing))) return false
-        bot.overlays.closeWindows()
-        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
+        ownOverlay = handler.shop.travelToShop(initial.shop, ::active) ?: return false
         if (!active() || bot.inventory.computeAmountForId(Currency.COINS.id) < 1) return false
         val current = findPurchase(bot, world.economy.getPrice(SAND_BUCKET), minimum,
             bot.inventory.computeAmountForId(Currency.COINS.id), initial.shop) ?: return false
         if (!bot.inventory.hasSpaceFor(Item(EMPTY_BUCKET, current.amount))) return false
-        val overlay = ShopInterface(current.shop)
-        bot.overlays.open(overlay)
-        ownOverlay = overlay
-        if (bot.overlays[ShopInterface::class] !== overlay || !active()) return false
         val quote = current.shop.computeBuyValue(EMPTY_BUCKET, current.amount).orElse(-1)
         val saleGuide = world.economy.getPrice(SAND_BUCKET)
         if (saleGuide <= 0 || saleUnit(bot, saleGuide) <= world.economy.getPrice(EMPTY_BUCKET) ||

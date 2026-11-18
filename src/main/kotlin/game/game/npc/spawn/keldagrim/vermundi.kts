@@ -17,7 +17,6 @@ ShopHandler.create("Vermundi's Clothes Stall") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         5048 x 3 every 40 // Skirt

@@ -17,7 +17,6 @@ ShopHandler.create("Pickaxe-Is-Mine") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1265 x 6 every 50 // Bronze pickaxe

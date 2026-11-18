@@ -84,7 +84,7 @@ internal object PkRuneRestocking {
         for ((id, amount) in missing) {
             var remaining = amount
             val shops = bot.world.shops.values().filter {
-                it.currency == Currency.COINS && id in it.itemIds && it.botAccess.apply(bot)
+                it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds
             }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
             for (shop in shops) {
                 val quantity = minOf(remaining, shop.items.computeAmountForId(id))

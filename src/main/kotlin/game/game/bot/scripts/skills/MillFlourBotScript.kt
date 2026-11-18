@@ -27,7 +27,6 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
-import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.withTimeoutOrNull
@@ -340,11 +339,9 @@ class MillFlourBotScript(
     }
 
     /**
-     * Buys empty pots at home from the general stores that stock them, fullest first, as bots shop elsewhere, and
-     * banks them.
+     * Visits stores that stock empty pots, fullest first, and banks any purchases.
      */
     private suspend fun buyPots(): Boolean {
-        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
         val banking = bot.actionHandler.banking
         if (!banking.travelToBankOpen() || !banking.depositInventory() || !isActionSafe()) return false
         banking.clickBankingMode(false)
@@ -352,12 +349,13 @@ class MillFlourBotScript(
         if (!bot.actionHandler.widgets.clickCloseInterface()) return false
         val wanted = minOf(owned(FlourMill.GRAIN) + bot.flourInBin, POT_PURCHASE.toLong(),
             bot.inventory.computeRemainingSize().toLong()).toInt()
-        val shops = world.shops.values().filter { it.currency == Currency.COINS && it.botAccess.apply(bot) && potStock(it) > 0 }
+        val shops = world.shops.values().filter {
+            it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && potStock(it) > 0
+        }
             .sortedByDescending { potStock(it) }
         for (shop in shops) {
             if (bot.inventory.computeAmountForId(FlourMill.POT) >= wanted) break
-            bot.overlays.open(ShopInterface(shop))
-            if (bot.overlays[ShopInterface::class]?.shop !== shop) continue
+            if (handler.shop.travelToShop(shop) { isActionSafe() } == null) continue
             while (bot.inventory.computeAmountForId(FlourMill.POT) < wanted) {
                 val before = bot.inventory.computeAmountForId(FlourMill.POT)
                 val left = wanted - before

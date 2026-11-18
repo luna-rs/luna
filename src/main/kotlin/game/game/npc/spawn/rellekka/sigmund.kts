@@ -20,7 +20,6 @@ ShopHandler.create("Sigmund The Merchant") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Tinderbox" x 2 every 500
@@ -40,6 +39,7 @@ ShopHandler.create("Sigmund The Merchant") {
         "Egg" x 10 every 200
         "Potato" x 10 every 200
         "Cabbage" x 10 every 200
+        "Anti-dragon shield" x 10
     }
 
     open {

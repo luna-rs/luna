@@ -19,7 +19,6 @@ ShopHandler.create("Davon's Amulet Store") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.9, 0.02, 1.2)
-    botAccess = { true }
 
     sell {
         1718 x 0 every 200 // Holy symbol

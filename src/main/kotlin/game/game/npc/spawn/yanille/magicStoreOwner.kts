@@ -16,7 +16,6 @@ ShopHandler.create("Magic Guild Store (Runes and Staves)") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    botAccess = { magic.level >= 66 }
 
     sell {
         "Air rune" x 5000

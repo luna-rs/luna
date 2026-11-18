@@ -26,7 +26,6 @@ ShopHandler.create(SHOP_NAME) {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly(true) { personality.isIntelligent }
 
     sell {
         "Gold ring" x 0

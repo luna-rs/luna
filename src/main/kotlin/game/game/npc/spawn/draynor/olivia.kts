@@ -19,7 +19,6 @@ ShopHandler.create("Draynor Seed Market.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.6, 0.03, 1.2)
-    botAccess = { true }
 
     sell {
         5318 x 20 every 100 // Potato seed

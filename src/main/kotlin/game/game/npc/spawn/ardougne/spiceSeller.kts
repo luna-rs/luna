@@ -5,6 +5,7 @@
  */
 package game.npc.spawn.ardougne
 
+import api.bot.zone.SubZone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.StallMerchant
@@ -16,11 +17,13 @@ import io.luna.game.model.item.shop.Shop
 
 // Lost City inventory: spicestall.
 ShopHandler.create("Ardougne Spice Stall.") {
+    botAccess {
+        npcSeller(2, 572, subZone = SubZone.ARDOUGNE_MARKETPLACE)
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.6, 0.02, 1.0)
-    botAccess = { !StallMerchant.recentTheft(this, ThievingStallType.SPICE, 600) }
 
     sell {
         2007 x 1 every 100 // Spice

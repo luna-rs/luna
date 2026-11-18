@@ -19,7 +19,6 @@ ShopHandler.create("Karamja Wines, Spirits, and Beers.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.7, 0.02, 1.0)
-    botAccess = { true }
 
     sell {
         1917 x 3 every 100 // Beer

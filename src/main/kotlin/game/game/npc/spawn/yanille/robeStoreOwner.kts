@@ -13,7 +13,6 @@ ShopHandler.create("Magic Guild Store (Mystic Robes)") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    botAccess = { magic.level >= 66 }
 
     sell {
         "Mystic hat" x 1000

@@ -17,7 +17,6 @@ ShopHandler.create("Quality Weapons Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1365 x 2 every 200 // Steel battleaxe

@@ -17,7 +17,6 @@ ShopHandler.create("Agmundi's Quality Clothes") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         5050 x 3 every 50 // Skirt

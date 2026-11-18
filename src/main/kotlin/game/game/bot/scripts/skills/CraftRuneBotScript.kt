@@ -98,7 +98,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
          * Checks native shop visibility and stock without reserving it or creating essence.
          */
         internal fun canPurchaseEssence(bot: Bot, id: Int): Boolean = bot.world.shops.values().any {
-            id in it.itemIds && it.botAccess.apply(bot) && it.items.computeAmountForId(id) > 0
+            it.npcSellers.isNotEmpty() && id in it.itemIds && it.items.computeAmountForId(id) > 0
         }
 
         /**

@@ -8,7 +8,6 @@ package game.npc.spawn.mosLeHarmless
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
-import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -18,7 +17,6 @@ ShopHandler.create("Dodgy Mike's Clothing") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { position.isWithinDistance(Position(3695, 2978, 0), 64) }
 
     sell {
         7114 x 15 every 100 // Pirate boots

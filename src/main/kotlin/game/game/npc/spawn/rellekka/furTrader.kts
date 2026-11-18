@@ -1,5 +1,6 @@
 package game.npc.spawn.rellekka
 
+import api.bot.zone.SubZone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.skill.thieving.stealFromStall.StealFromAction
@@ -35,6 +36,9 @@ val SHOP_NAME = "Fremennik Fur Trader"
  * away.
  */
 ShopHandler.create(SHOP_NAME) {
+    botAccess {
+        npcSeller(2, FUR_TRADER_ID, subZone = SubZone.RELLEKKA_MARKET_STALLS)
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS

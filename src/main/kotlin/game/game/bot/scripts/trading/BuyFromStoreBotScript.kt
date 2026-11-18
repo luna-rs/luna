@@ -7,7 +7,6 @@ import api.bot.action.trading.BotMerchantCapital
 import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotTradeSelection
 import api.bot.script.DynamicBotScript
-import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import api.predef.ext.get
@@ -16,7 +15,6 @@ import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
-import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import kotlin.math.ln
@@ -25,13 +23,7 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Purchases wanted items and optional speculative stock from registered shops while the bot is at home.
- *
- * Shops are discovered directly from the global shop registry. This script deliberately contains no hardcoded list
- * of shops, NPCs, or physical shop locations.
- *
- * Every shop's bot-access predicate remains authoritative. Being at home only allows the bot to remotely open an
- * otherwise-accessible shop; it does not bypass merchant requirements or custom shop restrictions.
+ * Purchases wanted items and optional speculative stock by visiting the shops' native NPCs.
  *
  * This is a dynamic script because a shopping trip has no state that needs to survive logout or server restart.
  *
@@ -111,11 +103,6 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 } }
             }) return true
 
-        // Remote shop access is a home-only convenience. Never open a registered shop from somewhere else.
-        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) {
-            bot.log("Could not travel home to shop.")
-            return true
-        }
         if (!prepareInventory(budget)) {
             bot.log("Could not prepare inventory for shopping.")
             return true
@@ -292,7 +279,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 .filterNot { it in failedShops }
                 .randomOrNull() ?: break
 
-            if (!openShop(shop)) {
+            if (handler.shop.travelToShop(shop) { isActionSafe() } == null) {
                 failedShops += shop
                 continue
             }
@@ -322,8 +309,6 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
     /**
      * Spends leftover money after wanted items have been handled.
      *
-     * Merchanting bots select merchant-only shops. Other bots select ordinary shops.
-     *
      * Intelligence affects diversification:
      * - Dumb bots normally commit to one item.
      * - Average bots may buy one or several items.
@@ -333,10 +318,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         if (!BotMerchantCapital.active(bot)) return 0
         val capital = BotMerchantCapital.snapshot(bot)
         if (capital.cashRecovery || capital.electiveCoins < 1L) return 0
-        val merchant = bot.preferences.likesActivity(BotActivity.MERCHANTING)
 
         val candidates = shops
-            .filter { it.isMerchantOnly == merchant }
             .associateWith { candidate ->
                 candidate.items.filterNotNull()
                     .filter { it.amount > 0 && it.id != COINS_ID && canBuyOne(candidate, it.id, budget) }
@@ -351,7 +334,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         }.firstOrNull() ?: return 0
         val shop = opening.first
 
-        if (!openShop(shop)) {
+        if (handler.shop.travelToShop(shop) { isActionSafe() } == null) {
             return 0
         }
 
@@ -500,8 +483,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      */
     private fun accessibleShops(): List<Shop> {
         return world.shops.values()
-            .filter { it.currency == Currency.COINS }
-            .filter { it.botAccess.apply(bot) }
+            .filter { it.currency == Currency.COINS && it.npcSellers.isNotEmpty() }
     }
 
     /**
@@ -509,27 +491,6 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      */
     private fun shopsFor(shops: List<Shop>, id: Int): List<Shop> {
         return shops.filter { it.stockAmount(id) > 0 }
-    }
-
-    /**
-     * Opens [shop] remotely while at home.
-     *
-     * Access is checked again immediately before opening so candidate selection can never accidentally bypass a
-     * merchant requirement or other custom bot-access predicate.
-     */
-    private fun openShop(shop: Shop): Boolean {
-        if (SubZone.HOME !in bot.subZones) {
-            return false
-        }
-
-        if (!shop.botAccess.apply(bot)) {
-            return false
-        }
-
-        bot.overlays.open(ShopInterface(shop))
-
-        // Verify the expected interface actually became the active shop overlay before sending shop clicks.
-        return bot.overlays[ShopInterface::class]?.shop === shop
     }
 
     /**

@@ -17,7 +17,6 @@ ShopHandler.create("Wine Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1993 x 5 every 1500 // Jug of wine

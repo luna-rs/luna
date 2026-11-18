@@ -9,16 +9,19 @@ import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.StallMerchant
 import game.skill.thieving.stealFromStall.ThievingStallType
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 
 // Lost City inventory: keldagrim_silver_stall.
 ShopHandler.create("Silver Cog Silver Stall") {
+    botAccess {
+        npcSeller(2, 2159, area = SimpleBoxArea.of(2880, 10192, 2890, 10202))
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { !StallMerchant.recentTheft(this, ThievingStallType.SILVER, 1000) }
 
     sell {
         1714 x 2 every 100 // Unstrung symbol

@@ -19,7 +19,6 @@ ShopHandler.create("Blurberry Bar") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.25, 0.01, 1.0)
-    botAccess = { true }
 
     sell {
         2028 x 10 every 100 // Blurberry special

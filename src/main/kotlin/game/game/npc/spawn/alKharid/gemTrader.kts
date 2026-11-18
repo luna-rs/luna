@@ -24,7 +24,6 @@ ShopHandler.create(SHOP_NAME) {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly(true)
 
     sell {
         "Uncut sapphire" x 0

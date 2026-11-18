@@ -5,7 +5,6 @@
  */
 package game.npc.spawn.wilderness
 
-import api.bot.zone.Zone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
@@ -20,7 +19,6 @@ ShopHandler.create("Tony's Pizza Bases") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.6, 0.03, 1.0)
-    botAccess = { this in Zone.WILDERNESS }
 
     sell {
         2283 x 30 every 100 // Pizza base

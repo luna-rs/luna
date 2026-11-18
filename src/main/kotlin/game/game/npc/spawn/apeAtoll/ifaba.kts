@@ -16,11 +16,11 @@ ShopHandler.create("Ifaba's General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 3 every 100
         "Jug" x 2 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

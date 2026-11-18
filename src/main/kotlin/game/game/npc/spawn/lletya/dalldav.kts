@@ -17,7 +17,6 @@ ShopHandler.create("Lletya Archery Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         884 x 2000 every 20 // Iron arrow

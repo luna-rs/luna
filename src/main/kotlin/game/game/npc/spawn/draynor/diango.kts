@@ -19,7 +19,6 @@ ShopHandler.create("Diango's Toy Store") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.5, 0.02, 1.5)
-    botAccess = { true }
 
     sell {
         2520 x 5 every 20 // Toy horsey

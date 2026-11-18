@@ -13,7 +13,6 @@ ShopHandler.create("Fine Fashions") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly { personality.isSocial }
 
     sell {
         656 x 5 // Pink hat

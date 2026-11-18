@@ -19,7 +19,6 @@ ShopHandler.create("Gulluck and Sons") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.25, 0.01, 1.0)
-    botAccess = { true }
 
     sell {
         882 x 200 every 10 // Bronze arrow

@@ -12,7 +12,6 @@ ShopHandler.create("Archery store") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Bronze arrowtips" x 100

@@ -19,7 +19,6 @@ ShopHandler.create("Rasolo the Wandering Merchant.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.05, 0.02, 2.0)
-    botAccess = { true }
 
     sell {
         1969 x 5 every 20 // Spinach roll
@@ -47,6 +46,7 @@ ShopHandler.create("Rasolo the Wandering Merchant.") {
         3424 x 2 every 500 // Olive oil(3)
         3420 x 2 every 500 // Limestone brick
         5 x 1 every 500 // Instruction manual
+        1540 x 10 // Anti-dragon shield
     }
 
     open {

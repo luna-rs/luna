@@ -5,7 +5,6 @@
  */
 package game.npc.spawn.miscellania
 
-import api.bot.zone.Zone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
@@ -18,7 +17,6 @@ ShopHandler.create("Island Greengrocer") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { this in Zone.MISCELLANIA_AND_ETCETERIA }
 
     sell {
         1965 x 10 every 100 // Cabbage

@@ -4,6 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import api.shop.dsl.ShopHandler
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -20,8 +21,13 @@ for (id in 2519..2521) {
     npc4(id) { HardwoodGrove.openShop(plr, targetNpc, HardwoodGrove.DRINKS) }
 }
 
+val gabootyShopArea = SimpleBoxArea.of(HardwoodGrove.GABOOTY, 5)
+
 // The 377 cache supplies the item values. Stock counts and restocking use Luna's local shop policy.
 ShopHandler.create(HardwoodGrove.COOPERATIVE) {
+    botAccess {
+        (2519..2521).forEach { npcSeller(4, it, area = gabootyShopArea) }
+    }
     currency = Currency.TRADING_STICKS
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
@@ -41,6 +47,9 @@ ShopHandler.create(HardwoodGrove.COOPERATIVE) {
     }
 }
 ShopHandler.create(HardwoodGrove.DRINKS) {
+    botAccess {
+        (2519..2521).forEach { npcSeller(5, it, area = gabootyShopArea) }
+    }
     currency = Currency.TRADING_STICKS
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW

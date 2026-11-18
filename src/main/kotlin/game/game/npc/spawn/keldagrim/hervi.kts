@@ -9,16 +9,19 @@ import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.StallMerchant
 import game.skill.thieving.stealFromStall.ThievingStallType
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 
 // Lost City inventory: keldagrim_gem_stall.
 ShopHandler.create("Green Gemstone Gems") {
+    botAccess {
+        npcSeller(2, 2157, area = SimpleBoxArea.of(2883, 10207, 2893, 10217))
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly(strict = true) { !StallMerchant.recentTheft(this, ThievingStallType.GEM, 1000) }
 
     sell {
         1607 x 3 every 15000 // Sapphire

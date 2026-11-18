@@ -8,7 +8,6 @@ package game.npc.spawn.lighthouse
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
-import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -18,7 +17,6 @@ ShopHandler.create("Lighthouse Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { position.isWithinDistance(Position(2509, 3639, 1), 64) }
 
     sell {
         954 x 10 every 200 // Rope
@@ -45,6 +43,7 @@ ShopHandler.create("Lighthouse Store") {
         1909 x 5 every 500 // Greenman's ale
         1913 x 5 every 500 // Dwarven stout
         1907 x 5 every 500 // Wizard's mind bomb
+        1540 x 10 // Anti-dragon shield
     }
 
     open {

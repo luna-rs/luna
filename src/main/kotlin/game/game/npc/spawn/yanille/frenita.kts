@@ -19,7 +19,6 @@ ShopHandler.create("Frenita's Cookery Shop.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.55, 0.01, 1.0)
-    botAccess = { true }
 
     sell {
         2313 x 5 every 200 // Pie dish

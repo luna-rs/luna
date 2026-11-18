@@ -19,7 +19,6 @@ ShopHandler.create("Rommiks Crafty Supplies.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.65, 0.02, 1.0)
-    botAccess = { true }
 
     sell {
         1755 x 2 every 100 // Chisel

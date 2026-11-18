@@ -17,7 +17,6 @@ ShopHandler.create("Shop of Distaste") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.55, 0.01, 1.0)
-    botAccess = { true }
 
     sell {
         2518 x 2000 every 10 // Rotten tomato

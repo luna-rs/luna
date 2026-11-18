@@ -17,7 +17,6 @@ ShopHandler.create("Thora's Bar") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { Fremennik.isFremennik(this) }
 
     sell {
         1917 x 50 every 10 // Beer

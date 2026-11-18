@@ -278,14 +278,14 @@ object BotBankSpace {
                     break
                 }
             }
-            if (withdrawn.isEmpty() || !sales.travelHome()) return false
+            if (withdrawn.isEmpty()) return false
             for ((candidate, saleId) in withdrawn) {
                 val id = candidate.item.id
                 val rejected = failedShops.getOrPut(id) { HashSet() }
                 val ownedBefore = bot.inventory.computeAmountForId(saleId)
                 for (shop in sales.shopsFor(saleId).filterNot { it in rejected }) {
                     if (!safe(bot) || saleActions >= MAX_SALE_ACTIONS) break
-                    if (!sales.openShop(shop)) { rejected += shop; continue }
+                    if (!sales.openShop(shop) { safe(bot) }) { rejected += shop; continue }
                     val quote = authorizedPrice.getValue(id)
                     if (valueUsed + quote * bot.inventory.computeAmountForId(saleId) > MAX_SESSION_VALUE) break
                     val sold = sales.sellItem(shop, saleId, candidate.item.amount, MAX_SALE_ACTIONS - saleActions,

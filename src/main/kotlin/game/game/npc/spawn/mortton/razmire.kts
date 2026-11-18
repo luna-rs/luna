@@ -15,7 +15,6 @@ ShopHandler.create("Razmire General Store.") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 3 every 100
@@ -29,6 +28,7 @@ ShopHandler.create("Razmire General Store.") {
         "Vial of water" x 100 every 100
         "Pot of flour" x 100 every 10
         "Flamtaer hammer" x 3 every 10
+        "Anti-dragon shield" x 10
     }
 
     open {
@@ -43,7 +43,6 @@ ShopHandler.create("Razmire Builders Merchants.") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Plank" x 1000 every 10

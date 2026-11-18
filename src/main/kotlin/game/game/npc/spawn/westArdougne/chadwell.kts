@@ -15,7 +15,6 @@ ShopHandler.create("West Ardougne General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 3 every 100
@@ -31,6 +30,7 @@ ShopHandler.create("West Ardougne General Store") {
         "Meat pie" x 10 every 100
         "Bread" x 5 every 100
         "Cooked meat" x 10 every 100
+        "Anti-dragon shield" x 10
     }
 
     open {

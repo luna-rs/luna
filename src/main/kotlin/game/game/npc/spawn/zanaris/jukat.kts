@@ -12,7 +12,6 @@ ShopHandler.create("Jukat") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly { combatLevel > 65 }
 
     sell {
         "Dragon longsword" x 10

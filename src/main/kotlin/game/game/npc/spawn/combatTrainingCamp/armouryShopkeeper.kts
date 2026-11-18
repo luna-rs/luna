@@ -8,7 +8,6 @@ package game.npc.spawn.combatTrainingCamp
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
-import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -20,7 +19,6 @@ ShopHandler.create("Armoury") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.5, 0.01, 1.5)
-    botAccess = { position.isWithinDistance(Position(2514, 3385, 0), 64) }
 
     sell {
         882 x 200 every 10 // Bronze arrow

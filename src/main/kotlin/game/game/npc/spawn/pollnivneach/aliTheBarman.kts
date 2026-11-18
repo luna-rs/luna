@@ -15,7 +15,6 @@ ShopHandler.create("Ali the Barman's Bar") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1917 x 83 every 10 // Beer

@@ -4,14 +4,16 @@ import api.bot.SuspendableCondition
 import api.bot.Suspendable.delay
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
+import api.bot.zone.SubZone
 import api.bot.action.trading.BotGearDemand
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotUtilityPurchases
-import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
+import game.bot.scripts.ObtainDustyKeyBotScript
 import game.bot.scripts.trading.TradeBotScript
+import game.obj.doors.BrassKeyDoor
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
@@ -35,8 +37,23 @@ import java.util.WeakHashMap
  */
 class BotShopActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
-    /** One market preview per missing item before the owning script falls back to a shop. */
-    private val marketAttempts = WeakHashMap<BotScript, MutableSet<Int>>()
+    private val visits = BotShopVisits(bot, handler)
+
+    /**
+     * Opens the expected shop by travelling to and interacting with one of its NPCs.
+     */
+    suspend fun travelToShop(shop: Shop, canContinue: () -> Boolean = { true }): ShopInterface? =
+        visits.open(shop, canContinue)
+
+    /**
+     * Verifies that the bot is still visiting this shopkeeper.
+     */
+    fun canTradeWith(shop: Shop): Boolean = visits.canTradeWith(shop)
+
+    /**
+     * Tracks supply scripts already queued for this activity across its pauses.
+     */
+    private val supplyAttempts = WeakHashMap<BotScript, MutableSet<Int>>()
 
     /**
      * One finite GP budget shared by every item in a guarded acquisition basket.
@@ -106,7 +123,6 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             (!BotGearDemand.usableNow(bot, id) || BotGearDemand.hasUsableOwned(bot, id))) return false
         if (amount !in 1..100 || maxTotalCost < 1 || !ActionSafety.NON_COMBAT.allows(bot) ||
             bot.isConnectedPlayer && !bot.isAutomationActive ||
-            !shop.botAccess.apply(bot) ||
             bot.overlays[ShopInterface::class]?.shop !== shop) return false
         val index = shop.items.computeIndexForId(id)
         if (index < 0) return false
@@ -265,7 +281,9 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     suspend fun obtainWantedItem(id: Int, amount: Int): Boolean {
         require(amount > 0)
-        BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
+        if (id != BotTaverleyKeys.DUSTY_KEY) {
+            BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
+        }
         return id in obtainWantedItems(mapOf(id to amount))
     }
 
@@ -313,8 +331,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Attempts the requested minimum carried quantities through owned bank stock and normal shop purchases.
      * Each purchase rechecks access, stock, price, funds, capacity and actual inventory progress.
      * Basket items remain carried when depositing other inventory. Partial purchases remain owned on failure;
-     * the returned ids meet their targets when the attempt ends. The whole basket shares one two-minute
-     * deadline, including banking, travel and every purchase.
+     * the returned ids meet their targets when the attempt ends. Banking, travel and purchases share a
+     * two-minute deadline, with a third minute available when a brass key still needs to be obtained.
      */
     suspend fun obtainWantedItems(amounts: Map<Int, Int>): Set<Int> = obtainWantedItems(amounts, null)
 
@@ -345,12 +363,14 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount
         }.keys
         val owner = if (budget == null) bot.scriptStack.current()?.takeUnless { it is TradeBotScript } else null
-        val attempted = owner?.let { marketAttempts.getOrPut(it) { hashSetOf() } }
+        val attempted = owner?.let { supplyAttempts.getOrPut(it) { hashSetOf() } }
         if (acquired().size == targets.size) {
             attempted?.removeAll(targets.keys)
             return targets.keys
         }
-        withTimeoutOrNull(120.seconds) {
+        val needsBrassKey = budget == null && targets[BrassKeyDoor.KEY] == 1 && BrassKeyDoor.KEY !in acquired()
+        val timeout = if (needsBrassKey) 180.seconds else 120.seconds
+        withTimeoutOrNull(timeout) {
             try {
                 for ((id, amount) in targets) {
                     if (!ActionSafety.NON_COMBAT.await(bot)) break
@@ -359,6 +379,17 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         continue
                     }
                     val banked = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+                    if (id == BotTaverleyKeys.DUSTY_KEY) {
+                        if (amount == 1 && banked == 0L && attempted != null &&
+                            id !in attempted && BotTaverleyKeys.canAttempt(bot)) {
+                            attempted += id
+                            bot.scriptStack.pushHead(ObtainDustyKeyBotScript(bot, targets.keys))
+                            return@withTimeoutOrNull
+                        }
+                        acquireWantedItem(id, amount, targets.keys, budget)
+                        if (id in acquired()) attempted?.remove(id)
+                        continue
+                    }
                     val utilitySource = BotUtilityPurchases.shopCeiling(bot, id)
                     if (attempted != null && id !in attempted && banked < amount && utilitySource == null) {
                         val deadline = System.currentTimeMillis() + 45_000L
@@ -403,10 +434,11 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             }
         }
         if (carried() >= amount) return true
+        if (id == BotTaverleyKeys.DUSTY_KEY) return false
         if (budget != null) return acquireQuotedItem(id, amount, basket, budget)
-        if (id == BotTaverleyKeys.DUSTY_KEY && amount == 1 && BotTaverleyKeys.obtain(bot, basket)) return true
+        if (id == BrassKeyDoor.KEY && amount == 1 && BotBrassKeys.obtain(bot, basket)) return true
         if (!ActionSafety.NON_COMBAT.allows(bot)) return false
-        val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
+        val shops = world.shops.values().filter { it.npcSellers.isNotEmpty() && id in it.itemIds }
             .sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
                 .thenBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) })
         if (shops.isEmpty()) return id == 1793 && acquireWoadLeaves(amount, basket)
@@ -415,7 +447,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         for (shop in shops) {
             while (carried() < amount) {
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
-                if (!shop.botAccess.apply(bot) || shop.items.computeAmountForId(id) < 1) break
+                if (shop.items.computeAmountForId(id) < 1) break
                 val price = shop.computeBuyValue(id, 1).orElse(-1)
                 if (price < 0) break
                 val currency = shop.currency.id
@@ -439,10 +471,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                     if (missing > 0 && !handler.banking.withdraw(Item(currency, missing))) break
                 }
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
-                bot.overlays.closeWindows()
-                if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) break
-                if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
-                bot.overlays.open(ShopInterface(shop))
+                if (travelToShop(shop) == null) break
                 val before = carried()
                 val remaining = amount - before
                 if (remaining <= 0) return true
@@ -466,14 +495,14 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         if (id == coins || budget.remainingCoins < 1) return false
         fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
         val shops = world.shops.values().filter {
-            it.currency == Currency.COINS && id in it.itemIds && it.botAccess.apply(bot)
+            it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds
         }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
         bot.actions.interruptWeak()
         bot.overlays.closeWindows()
         for (shop in shops) {
             while (carried() < amount && budget.remainingCoins > 0) {
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
-                if (!shop.botAccess.apply(bot) || shop.items.computeAmountForId(id) < 1) break
+                if (shop.items.computeAmountForId(id) < 1) break
                 val price = shop.computeBuyValue(id, 1).orElse(-1)
                 if (price < 1 || price.toLong() > ceiling || price > budget.remainingCoins) break
                 val held = bot.inventory.computeAmountForId(coins)
@@ -491,10 +520,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                     if (missing > 0 && !handler.banking.withdraw(Item(coins, missing))) break
                 }
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
-                bot.overlays.closeWindows()
-                if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) break
-                if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
-                bot.overlays.open(ShopInterface(shop))
+                if (travelToShop(shop) == null) break
                 val before = carried()
                 val production = BotTradeIntentions.productionLimit(bot, id)
                 val captured = budget.productionLimits[id]

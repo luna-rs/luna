@@ -14,7 +14,7 @@ import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Sells actual surplus to registered GP shops while the bot is at home.
+ * Sells actual surplus by visiting registered GP shops.
  *
  * Active supplies, personal cosmetic copies and useful equipment share marketplace retention rules. Broad default
  * wanted targets do not prevent gathered loot from being sold. Merchants never use this script. A trip starts only
@@ -24,7 +24,7 @@ import io.luna.game.model.mob.bot.Bot
  * Items are banked and withdrawn in batches, leaving room for proceeds. Each batch refreshes equipment retention;
  * each sale checks current ownership and newly recorded supply requirements. Equipped and dynamic items are protected.
  *
- * Shop currency, bot-access restrictions, and selling policies remain authoritative. Shops that
+ * Shop currency and selling policies remain authoritative. Shops that
  * cannot be opened or stop accepting an item are skipped for the remainder of that item's sale.
  *
  * This is a dynamic script because the shopping trip has no state that must survive logout or restart.
@@ -42,12 +42,6 @@ class SellToStoreBotScript(bot: Bot, private val targetId: Int? = null) : Dynami
         val surplus = saleCandidates()
         if (surplus.isEmpty()) return true
         startedTrip = true
-        if (!travelHome()) {
-            bot.log("Could not travel home to sell items.")
-            return true
-        }
-        if (!canUseStore()) return true
-
         sales.refreshRetention()
         for (item in surplus) {
             val id = item.id
@@ -79,14 +73,11 @@ class SellToStoreBotScript(bot: Bot, private val targetId: Int? = null) : Dynami
                 if (amount < 1 || !handler.banking.withdraw(Item(id, amount))) {
                     break
                 }
-                if (!travelHome()) {
-                    return true
-                }
                 if (!canUseStore()) return true
 
                 val before = bot.inventory.computeAmountForId(saleId)
                 for (shop in shopsFor(saleId).filterNot { it in failedShops }.shuffled()) {
-                    if (!openShop(shop)) {
+                    if (!sales.openShop(shop, ::canUseStore)) {
                         failedShops += shop
                         continue
                     }
@@ -138,8 +129,8 @@ class SellToStoreBotScript(bot: Bot, private val targetId: Int? = null) : Dynami
     /**
      * Sells an item to the specified shop without exceeding the permitted sale quantity.
      *
-     * Continues while the correct shop is open, the bot remains at home, and the shop still
-     * authorizes the bot and accepts the item. Each transaction rechecks the current inventory
+     * Continues while the bot is still at the open shop and the shop accepts the item.
+     * Each transaction rechecks the current inventory
      * quantity and retained stock before choosing a Sell-100 action or a smaller action for restricted quantities.
      *
      * Successful sales are counted using the actual inventory decrease. Processing stops when
@@ -157,38 +148,13 @@ class SellToStoreBotScript(bot: Bot, private val targetId: Int? = null) : Dynami
     /**
      * Finds registered shops that currently accept an item from this bot.
      *
-     * Only GP shops are considered. Each candidate must authorize the bot through its access
-     * predicate and permit the item through its selling policy.
+     * Only GP shops with an NPC seller and an applicable selling policy are considered.
      *
      * @param id The item id the bot wants to sell.
      * @return The currently eligible shops, or an empty list if none are available.
      */
     private fun shopsFor(id: Int): List<Shop> {
         return sales.shopsFor(id)
-    }
-
-    /**
-     * Ensures the bot is within the home subzone before accessing shops remotely.
-     *
-     * Does not initiate travel when the bot is already at home.
-     *
-     * @return `true` if the bot is already at home or the travel action succeeds.
-     */
-    private suspend fun travelHome(): Boolean {
-        return sales.travelHome()
-    }
-
-    /**
-     * Opens a shop interface when the bot is at home and authorized to access the shop.
-     *
-     * Closes existing overlays before opening the requested shop. Successful opening is verified
-     * by checking that the active shop interface references the requested shop instance.
-     *
-     * @param shop The shop to open.
-     * @return `true` if the requested shop interface becomes active.
-     */
-    private fun openShop(shop: Shop): Boolean {
-        return sales.openShop(shop)
     }
 
     override suspend fun finish() {

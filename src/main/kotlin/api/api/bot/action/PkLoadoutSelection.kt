@@ -52,7 +52,7 @@ internal class PkLoadoutSelection(private val bot: Bot) {
      * A desired item can already be owned or currently stocked by an accessible GP shop.
      */
     fun available(id: Int): Boolean = owned(id) > 0 || bot.world.shops.values().any {
-        it.currency == Currency.COINS && id in it.itemIds && it.botAccess.apply(bot) &&
+        it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds &&
             it.items.computeAmountForId(id) > 0 && it.computeBuyValue(id, 1).isPresent
     }
 
@@ -75,7 +75,7 @@ internal class PkLoadoutSelection(private val bot: Bot) {
             .groupBy { if (carriedOnly) it.id else it.unnotedItemDef.id() }
             .mapValues { (_, items) -> items.sumOf { it.amount.toLong() } }
         val shops = if (desired && !purchasePlanning) bot.world.shops.values().filter {
-            it.currency == Currency.COINS && it.botAccess.apply(bot)
+            it.currency == Currency.COINS && it.npcSellers.isNotEmpty()
         } else emptyList()
         val economy = bot.world.economy
         val prices = HashMap<Int, Long>()

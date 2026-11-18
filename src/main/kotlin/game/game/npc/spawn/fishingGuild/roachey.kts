@@ -13,7 +13,6 @@ ShopHandler.create("Fishing Guild Shop.") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    botAccess = { fishing.level >= 68 }
 
     sell {
         "Small fishing net" x 50

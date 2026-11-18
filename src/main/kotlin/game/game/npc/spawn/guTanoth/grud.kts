@@ -19,7 +19,6 @@ ShopHandler.create("Grud's Herblore Stall.") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.4, 0.03, 1.3)
-    botAccess = { true }
 
     sell {
         229 x 50 every 100 // Vial

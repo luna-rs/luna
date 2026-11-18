@@ -17,7 +17,6 @@ ShopHandler.create("Oronwen's General Store") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1734 x 8 every 100 // Thread
@@ -29,6 +28,7 @@ ShopHandler.create("Oronwen's General Store") {
         1769 x 10 every 100 // Orange dye
         1771 x 10 every 100 // Green dye
         1773 x 10 every 100 // Purple dye
+        1540 x 10 // Anti-dragon shield
     }
 
     open {

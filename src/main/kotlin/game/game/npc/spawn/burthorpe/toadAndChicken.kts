@@ -19,7 +19,6 @@ ShopHandler.create("The Toad and Chicken") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.0, 0.01, 1.0)
-    botAccess = { true }
 
     sell {
         1905 x 12 every 10 // Asgarnian ale

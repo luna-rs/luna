@@ -8,7 +8,6 @@ package game.npc.spawn.mosLeHarmless
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.GeneralStore
-import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -18,7 +17,6 @@ ShopHandler.create("Charley's Fishing Shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { position.isWithinDistance(Position(3673, 2970, 0), 64) }
 
     sell {
         317 x 10 every 300 // Raw shrimps

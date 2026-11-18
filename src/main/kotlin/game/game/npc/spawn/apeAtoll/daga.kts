@@ -12,7 +12,6 @@ ShopHandler.create("Daga's Scimitar Smithy") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly { combatLevel > 65 }
 
     sell {
         "Bronze scimitar" x 100

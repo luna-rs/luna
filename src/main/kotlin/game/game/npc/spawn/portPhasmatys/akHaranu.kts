@@ -12,7 +12,6 @@ ShopHandler.create("Ak-Haranu's Exotic Shop.") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly(true) { combatLevel > 75 }
 
     sell {
         "Bolt rack" x 5000

@@ -2,7 +2,6 @@ package api.bot.action.trading
 
 import api.bot.action.BotActionHandler
 import api.bot.script.BotScript.ActionSafety
-import api.bot.zone.SubZone
 import api.predef.ext.get
 import api.predef.ext.totalItemAmount
 import api.predef.world
@@ -17,7 +16,7 @@ import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Shares shop-sale retention, access checks and verified transactions between ordinary sales and bank maintenance.
+ * Shares shop-sale retention, NPC visits and verified transactions between ordinary sales and bank maintenance.
  * Equipment and supply retention is refreshed per batch; new supply and explicit wanted targets are rechecked per click.
  *
  * @author lare96
@@ -56,7 +55,7 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
     }
 
     /**
-     * Prefers bank notes when an accessible shop accepts them, otherwise keeps the ordinary item form.
+     * Prefers bank notes when a shop accepts them, otherwise keeps the ordinary item form.
      */
     fun saleId(id: Int): Int {
         val definition = ItemDefinition.ALL.retrieve(id)
@@ -90,27 +89,17 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
      * Native selling remains authoritative after suspension.
      */
     fun shopsFor(id: Int): List<Shop> = world.shops.values().filter {
-        it.currency == Currency.COINS && it.botAccess.apply(bot) && it.computeCanSell(id) &&
+        it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && it.computeCanSell(id) &&
             (it.buyPolicy != BuyPolicy.ALL || ItemDefinition.ALL.retrieve(id).isStackable ||
                 ItemDefinition.ALL.retrieve(id).notedId.isEmpty) &&
             it.items.hasSpaceFor(Item(id))
     }
 
     /**
-     * Travels to the same home shop-access area used by ordinary bot sales.
+     * Travels to a shopkeeper and opens the shop through its native interaction.
      */
-    suspend fun travelHome(): Boolean = safe() &&
-        (SubZone.HOME in bot.subZones || handler.webWalkTo(SubZone.HOME)) && safe()
-
-    /**
-     * Opens an authorized shop only from the home shop-access area.
-     */
-    fun openShop(shop: Shop): Boolean {
-        if (!safe() || SubZone.HOME !in bot.subZones || !shop.botAccess.apply(bot)) return false
-        bot.overlays.closeWindows()
-        bot.overlays.open(ShopInterface(shop))
-        return bot.overlays[ShopInterface::class]?.shop === shop
-    }
+    suspend fun openShop(shop: Shop, canContinue: () -> Boolean): Boolean =
+        handler.shop.travelToShop(shop) { safe() && canContinue() } != null
 
     /**
      * Sells a bounded carried quantity through native widget actions, verifying each decrease and currency capacity.
@@ -121,8 +110,8 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
         var sold = 0
         var actions = 0
         while (safe() && canContinue() && actions < maximumActions &&
-            bot.overlays[ShopInterface::class]?.shop === shop && SubZone.HOME in bot.subZones &&
-            shop.botAccess.apply(bot) && shop.computeCanSell(id) && shop.items.hasSpaceFor(Item(id))) {
+            bot.overlays[ShopInterface::class]?.shop === shop &&
+            shop.computeCanSell(id) && shop.items.hasSpaceFor(Item(id))) {
             if (bot.inventory.any { it != null && it.id == id && it.isDynamic }) break
             val baseId = ItemDefinition.ALL.retrieve(id).unnotedId.orElse(id)
             val held = bot.inventory.computeAmountForId(id)

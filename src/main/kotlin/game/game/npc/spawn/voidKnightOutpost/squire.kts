@@ -14,7 +14,6 @@ ShopHandler.create("Void Knight General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    merchantsAccessOnly()
 
     sell {
         "Pot" x 5 every 10
@@ -28,6 +27,7 @@ ShopHandler.create("Void Knight General Store") {
         "Hammer" x 5 every 100
         "Bronze axe" x 10 every 100
         "Field ration" x 25 every 10
+        "Anti-dragon shield" x 10
     }
 
     open {

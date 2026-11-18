@@ -12,7 +12,6 @@ ShopHandler.create("Scavvo's Rune Store.") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    merchantsAccessOnly { combatLevel > 45 }
 
     sell {
         "Rune plateskirt" x 10

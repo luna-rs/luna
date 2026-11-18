@@ -17,7 +17,6 @@ ShopHandler.create("Carefree Crafting Stall") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         1755 x 2 every 100 // Chisel

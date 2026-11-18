@@ -3,7 +3,6 @@ package game.bot.scripts.trading
 import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
-import api.bot.zone.SubZone
 import api.predef.ext.get
 import api.predef.world
 import com.google.gson.JsonObject
@@ -120,17 +119,12 @@ class BuyStoreBargainBotScript private constructor(
                 if (!prepareInventory(initial) || !usable()) return@withTimeoutOrNull
                 prepared = true
             }
-            if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return@withTimeoutOrNull
+            ownOverlay = handler.shop.travelToShop(shop, ::usable) ?: return@withTimeoutOrNull
             if (!usable()) return@withTimeoutOrNull
             val wallet = minOf(remainingBudget, bot.inventory.computeAmountForId(Currency.COINS.id))
             val deal = currentDeal(shop, wallet) ?: return@withTimeoutOrNull
             val amount = deal.quantity
             if (!bot.inventory.hasSpaceFor(Item(itemId, amount))) return@withTimeoutOrNull
-            val overlay = ShopInterface(shop)
-            bot.overlays.open(overlay)
-            ownOverlay = overlay
-            if (bot.overlays[ShopInterface::class] !== overlay) return@withTimeoutOrNull
-
             val cost = shop.computeBuyValue(itemId, amount).orElse(-1)
             if (cost !in 1..wallet) return@withTimeoutOrNull
             val beforeItems = bot.inventory.computeAmountForId(itemId)

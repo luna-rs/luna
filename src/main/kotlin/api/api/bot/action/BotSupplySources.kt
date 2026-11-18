@@ -9,7 +9,7 @@ import java.util.WeakHashMap
 
 /**
  * Quotes finite native shop supplies without buying, reserving stock or assuming future restocks.
- * Callers run on the game thread and revalidate access, stock and prices through ordinary acquisition.
+ * Callers run on the game thread and revalidate travel, stock and prices through ordinary acquisition.
  * The shared item index is refreshed once per world tick so sold-in general-store goods can be discovered.
  *
  * @author lare96
@@ -27,7 +27,7 @@ object BotSupplySources {
     data class Quote(val quantity: Int, val maximumUnitPrice: Long, val totalCoins: Long)
 
     /**
-     * One world's item-to-shop index. Quantities, access and prices are deliberately read from live shops.
+     * One world's item-to-shop index. Quantities and prices are deliberately read from live shops.
      *
      * @author lare96
      */
@@ -43,26 +43,25 @@ object BotSupplySources {
     private val indexes = WeakHashMap<World, Index>()
 
     /**
-     * Quotes only GP shops this account can actually access. Admission decisions must use this overload.
+     * Quotes currently stocked GP supplies in the bot's world.
      */
     fun quote(bot: Bot, id: Int, maxQuantity: Int = MAX_QUANTITY): Quote? =
-        quote(bot.world, bot, id, maxQuantity)
+        quote(bot.world, id, maxQuantity)
 
     /**
-     * Advertises currently stocked potential supplies independently of an account's access restrictions.
-     * This overload does not establish whether an individual bot can purchase the advertised goods.
+     * Quotes currently stocked GP supplies. The purchase still requires a visit to a reachable seller.
      */
     fun quote(world: World, id: Int, maxQuantity: Int = MAX_QUANTITY): Quote? =
-        quote(world, null, id, maxQuantity)
+        quoteStock(world, id, maxQuantity)
 
     /**
-     * Quotes a bounded basket with each account's real shop-access predicates.
+     * Quotes a bounded basket in the bot's world.
      */
     fun quotes(bot: Bot, ids: Collection<Int>, maxQuantity: Int = MAX_QUANTITY): Map<Int, Quote> =
-        ids.take(MAX_ITEM_TYPES).distinct().mapNotNull { id -> quote(bot, id, maxQuantity)?.let { id to it } }.toMap()
+        quotes(bot.world, ids, maxQuantity)
 
     /**
-     * Advertises a bounded basket of potential supplies; account admission must recheck access separately.
+     * Quotes a bounded basket of currently stocked GP supplies.
      */
     fun quotes(world: World, ids: Collection<Int>, maxQuantity: Int = MAX_QUANTITY): Map<Int, Quote> =
         ids.take(MAX_ITEM_TYPES).distinct().mapNotNull { id -> quote(world, id, maxQuantity)?.let { id to it } }.toMap()
@@ -74,20 +73,19 @@ object BotSupplySources {
         if (previous != null && previous.tick == tick && previous.shopCount == shops.size) return previous
         val byId = HashMap<Int, MutableList<WeakReference<Shop>>>()
         for (shop in shops) {
-            if (shop.currency != Currency.COINS) continue
+            if (shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) continue
             val reference = WeakReference(shop)
             for (id in shop.itemIds) byId.getOrPut(id) { ArrayList() }.add(reference)
         }
         return Index(tick, shops.size, byId).also { indexes[world] = it }
     }
 
-    private fun quote(world: World, bot: Bot?, id: Int, maxQuantity: Int): Quote? {
+    private fun quoteStock(world: World, id: Int, maxQuantity: Int): Quote? {
         if (id < 0 || maxQuantity < 1) return null
         val limit = maxQuantity.coerceAtMost(MAX_QUANTITY)
         val sources = index(world).shops[id].orEmpty().mapNotNull { reference ->
             val shop = reference.get() ?: return@mapNotNull null
-            if (bot != null && !shop.botAccess.apply(bot)) null
-            else nativeQuote(shop, id, limit)?.let { Source(shop, it) }
+            nativeQuote(shop, id, limit)?.let { Source(shop, it) }
         }.sortedWith(compareBy<Source> { it.quote.maximumUnitPrice }.thenBy { it.shop.name })
         var quantity = 0
         var totalCoins = 0L

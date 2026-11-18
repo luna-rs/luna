@@ -17,7 +17,6 @@ ShopHandler.create("Lletya Food Store") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { true }
 
     sell {
         2309 x 10 every 200 // Bread

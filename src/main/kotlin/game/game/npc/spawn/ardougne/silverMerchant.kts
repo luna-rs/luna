@@ -5,6 +5,7 @@
  */
 package game.npc.spawn.ardougne
 
+import api.bot.zone.SubZone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.StallMerchant
@@ -16,11 +17,13 @@ import io.luna.game.model.item.shop.Shop
 
 // Lost City inventory: silverstall.
 ShopHandler.create("Ardougne Silver Stall.") {
+    botAccess {
+        npcSeller(2, 569, subZone = SubZone.ARDOUGNE_SQUARE_THIEVING)
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.7, 0.02, 1.0)
-    botAccess = { !StallMerchant.recentTheft(this, ThievingStallType.SILVER, 1000) }
 
     sell {
         1714 x 2 every 100 // Unstrung symbol

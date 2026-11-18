@@ -19,7 +19,6 @@ ShopHandler.create("Irksol's Ruby Rings") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.3, 0.01, 0.5)
-    merchantsAccessOnly(strict = true) { x in 2465..2505 && y in 4435..4478 && z == 0 }
 
     sell {
         1641 x 5 every 500 // Ruby ring

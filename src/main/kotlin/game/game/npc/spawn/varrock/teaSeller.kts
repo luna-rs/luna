@@ -5,6 +5,7 @@
  */
 package game.npc.spawn.varrock
 
+import api.bot.zone.SubZone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.StallMerchant
@@ -16,11 +17,13 @@ import io.luna.game.model.item.shop.Shop
 
 // Lost City inventory: teashop.
 ShopHandler.create("Ye Olde Tea Shoppe") {
+    botAccess {
+        npcSeller(2, 595, subZone = SubZone.VARROCK_TEA_STALL)
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.6, 0.02, 1.0)
-    botAccess = { !StallMerchant.recentTheft(this, ThievingStallType.TEA, 1000) }
 
     sell {
         1978 x 20 every 50 // Cup of tea

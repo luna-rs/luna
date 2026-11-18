@@ -13,7 +13,6 @@ ShopHandler.create("Archery shop") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
-    botAccess = { ranged.level >= 40 }
 
     sell {
         "Bronze arrowtips" x 100

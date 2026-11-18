@@ -19,7 +19,6 @@ ShopHandler.create("Rufus' Meat Emporium") {
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
     stockPricing = Shop.StockPricing(0.7, 0.03, 1.3)
-    botAccess = { true }
 
     sell {
         2132 x 10 every 100 // Raw beef

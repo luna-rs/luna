@@ -9,16 +9,19 @@ import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.npc.spawn.StallMerchant
 import game.skill.thieving.stealFromStall.ThievingStallType
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 
 // Lost City inventory: keldagrim_bread_stall.
 ShopHandler.create("Randivor's Bakery") {
+    botAccess {
+        npcSeller(2, 2156, area = SimpleBoxArea.of(2887, 10207, 2897, 10217))
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
-    botAccess = { !StallMerchant.recentTheft(this, ThievingStallType.BAKERY, 1500) }
 
     sell {
         2309 x 10 every 100 // Bread

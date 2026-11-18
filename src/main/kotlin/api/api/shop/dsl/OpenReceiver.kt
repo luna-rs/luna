@@ -29,11 +29,22 @@ class OpenReceiver {
     fun addListeners(shop: Shop) {
         val open: PlayerEvent.() -> Unit = { plr.overlays.open(ShopInterface(shop)) }
         button.forEach { button(it, open) }
-        npc1.forEach { npc1(it, open) }
-        npc2.forEach { npc2(it, open) }
-        npc3.forEach { npc3(it, open) }
-        npc4.forEach { npc3(it, open) }
-        npc5.forEach { npc4(it, open) }
+        npc1.forEach {
+            shop.registerNpcSeller(Shop.NpcSeller(it, 1, null, null))
+            npc1(it, open)
+        }
+        npc2.forEach {
+            shop.registerNpcSeller(Shop.NpcSeller(it, 2, null, null))
+            npc2(it, open)
+        }
+        (npc3 + npc4).forEach {
+            shop.registerNpcSeller(Shop.NpcSeller(it, 4, null, null))
+            npc3(it, open)
+        }
+        npc5.forEach {
+            shop.registerNpcSeller(Shop.NpcSeller(it, 5, null, null))
+            npc4(it, open)
+        }
         object1.forEach { object1(it, open) }
         object2.forEach { object2(it, open) }
         object3.forEach { object3(it, open) }

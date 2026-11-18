@@ -173,7 +173,7 @@ object BotEquipmentPreferences {
 
         val shopPrices = hashMapOf<Int, Int>()
         for (shop in world.shops.values()) {
-            if (shop.currency != Currency.COINS || !shop.botAccess.apply(bot)) continue
+            if (shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) continue
             for (stock in shop.items.filterNotNull()) {
                 if (stock.id !in ids || stock.amount < 1) continue
                 val quote = shop.computeBuyValue(stock.id, 1)
