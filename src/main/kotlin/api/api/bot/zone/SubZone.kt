@@ -170,6 +170,13 @@ enum class SubZone(
         area = SimpleBoxArea.of(1732, 5133, 1787, 5244), parent = { FALADOR }),
 
     /**
+     * The Ice Queen's chamber and approach tunnel beneath White Wolf Mountain.
+     */
+    ICE_QUEEN_LAIR(
+        inside = Position(2864, 9952), area = SimpleBoxArea.of(2848, 9928, 2879, 9967),
+        parent = { CATHERBY }),
+
+    /**
      * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.
      */
     YANILLE_HOPS(

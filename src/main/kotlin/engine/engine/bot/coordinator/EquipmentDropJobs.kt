@@ -40,6 +40,7 @@ internal object EquipmentDropJobs {
     private val leases = HashMap<SubZone, Lease>()
     private val active = IdentityHashMap<Bot, NpcDropGatheringScript>()
     private val watchdogs = IdentityHashMap<Bot, Task>()
+    private const val ICE_QUEEN_GUARD = 145
 
     /**
      * Admission checks a small prebuilt source list at an ordinary activity boundary, never scanning player holdings.
@@ -56,17 +57,16 @@ internal object EquipmentDropJobs {
             if (source.zone in leases) continue
             val owned = bot.totalItemAmount(source.itemId)
             if (owned == Int.MAX_VALUE) continue
-            val personal = source.itemId in personalTargets ||
+            val personal = if (source.itemId == EquipmentDropSources.ICE_GLOVES) owned == 0 else
+                source.itemId in personalTargets ||
                 BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, source.itemId)
             if (!personal) continue
             if (loadout(bot, source) == null) continue
             val carriedFood = bot.inventory.filterNotNull().filter { it.id in Food.ID_TO_FOOD }.map { it.id }.distinct()
             if (carriedFood.size > 1) continue
-            val minimumHeal = if (source.zone == SubZone.ASGARNIAN_WYVERNS) 16 else 14
-            val minimumFood = if (source.zone == SubZone.ASGARNIAN_WYVERNS) 20 else 14
             val food = Food.ID_TO_FOOD.values.distinctBy { it.id }.filter {
                 (carriedFood.isEmpty() || it.id == carriedFood.single()) &&
-                it.heal >= minimumHeal && bot.totalItemAmount(it.id) >= minimumFood
+                it.heal >= source.minimumFoodHeal && bot.totalItemAmount(it.id) >= source.minimumFoodCount
             }.minByOrNull { it.heal } ?: continue
             val foodCount = minOf(20, bot.totalItemAmount(food.id))
             // This personal outing uses only its finite physically owned food basket.
@@ -156,14 +156,17 @@ internal object EquipmentDropJobs {
         if (leases[source.zone]?.let { it.owner == bot.username.orEmpty() && it.plan == plan.identity && it.until > now } != true)
             return false
         val opponent = bot.combat.lastCombatWith
+        val defendingAgainstGuard = source.zone == SubZone.ICE_QUEEN_LAIR && opponent is Npc &&
+            opponent.id == ICE_QUEEN_GUARD && opponent.basePosition in source.zone.area
         if (!plan.mayContinue(now) || !bot.isAlive || bot.healthPercent < 35.0 ||
-            bot.combat.inCombat() && (opponent !is Npc || opponent.id !in source.npcIds) ||
+            bot.combat.inCombat() && !defendingAgainstGuard && (opponent !is Npc || opponent.id !in source.npcIds) ||
             source.zone.entryBlocker(bot) != null ||
             CombatCoordinator.combatReadiness(bot, BotGearPurpose.MELEE) < source.minimumReadiness ||
             source.monster?.let { bot.slayer.level < it.level } == true) return false
-        if (plan.personal) return source.itemId in BotTradeIntentions.generatedEquipmentAspirations(bot) ||
+        if (!plan.personal) return false
+        if (source.itemId == EquipmentDropSources.ICE_GLOVES) return plan.startingStock == 0
+        return source.itemId in BotTradeIntentions.generatedEquipmentAspirations(bot) ||
             BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, source.itemId) || bot.totalItemAmount(source.itemId) >= plan.stockTarget
-        return false
     }
 
     fun creditedKill(bot: Bot, npc: Npc) { active[bot]?.creditedEquipmentKill(npc) }

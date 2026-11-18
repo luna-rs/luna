@@ -57,6 +57,8 @@ import game.skill.magic.Magic
 import game.skill.magic.SpellCost
 import game.skill.magic.Staff
 import game.skill.mining.Ore
+import game.skill.mining.Pickaxe
+import game.obj.entrances.IceQueenRockSlide
 import game.skill.prayer.Bone
 import game.skill.smithing.BarType
 import game.skill.smithing.smithBar.SmithingTable
@@ -74,6 +76,7 @@ import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
@@ -225,6 +228,11 @@ open class NpcCombatScript(bot: Bot,
 
     protected open fun combatActivityAllowed(): Boolean = true
 
+    /**
+     * Restricts deliberate attacks in a crowded multicombat encounter to the assigned NPCs.
+     */
+    protected open val exclusiveNpcIds: Set<Int>? get() = null
+
     private val encounterTask: SlayerTaskType? get() = monsterRequirement ?: slayerTask
 
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
@@ -282,6 +290,9 @@ open class NpcCombatScript(bot: Bot,
          */
         internal fun campSuppliesOwned(bot: Bot, zone: SubZone): Boolean {
             if (zone == SubZone.CHAOS_ELEMENTAL_WILDERNESS && !ChaosElementalTrip.ready(bot)) return false
+            if (zone == SubZone.ICE_QUEEN_LAIR && zone !in bot.subZones &&
+                (bot.mining.level < IceQueenRockSlide.LEVEL ||
+                    Pickaxe.entries.none { bot.itemTracker.contains(it.id) })) return false
             if (zone in WATERFALL_ZONES && !bot.itemTracker.contains(295)) return false
             if (zone == SubZone.TROLLHEIM_MOUNTAIN_TROLLS && !bot.itemTracker.contains(3105)) return false
             if (zone == SubZone.BRIMHAVEN_METAL && !bot.status.isAntiFire() &&
@@ -311,6 +322,11 @@ open class NpcCombatScript(bot: Bot,
             val tools = mutableListOf<Item>()
             if (entering.any { it in WATERFALL_ZONES } && bot.subZones.none { it in WATERFALL_ZONES } ||
                 entering.any { it == SubZone.LUMBRIDGE_SWAMP_CAVES } && !bot.swampCavesRoped) tools += Item(954)
+            if (SubZone.ICE_QUEEN_LAIR in entering) {
+                // Carry a pickaxe even if the bot currently wields one. Its combat loadout may replace it.
+                val pickaxe = Pickaxe.entries.lastOrNull { bot.itemTracker.contains(it.id) } ?: Pickaxe.BRONZE
+                tools += Item(pickaxe.id)
+            }
             if (entering.any { it in BRIMHAVEN_ZONES } && Axe.computeAxeType(bot) == null) {
                 val axe = Axe.entries.filter { bot.woodcutting.level >= it.level && bot.itemTracker.contains(it.id) }
                     .maxByOrNull { it.level } ?: Axe.BRONZE
@@ -798,9 +814,9 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
         attend()
         if (!prepareCombat()) return mutableListOf()
-        if (bot.combat.inCombat() && bot.combat.lastCombatWith is Npc &&
-            ((!queenTrip && !moleTrip) || canAttack(bot.combat.lastCombatWith as Npc))) {
-            return (bot.combat.lastCombatWith as Npc).takeIf { acceptsAssignment(it) }
+        val opponent = bot.combat.lastCombatWith
+        if (bot.combat.inCombat() && opponent is Npc && prefersCurrentOpponent(opponent)) {
+            return opponent.takeIf { acceptsAssignment(it) }
                 ?.let { mutableListOf(it) } ?: mutableListOf()
         }
         val options = world.locator.findNpcs(searchBase, searchRadius, true) {
@@ -1111,11 +1127,10 @@ open class NpcCombatScript(bot: Bot,
         if (!prepareCombat()) return
         attend()
         if (forceBanking || (queenTrip && waitingForQueen()) || waitingForMole()) return
-        if (bot.combat.lastCombatWith?.isAlive == true &&
-            ((!queenTrip && !moleTrip) || bot.combat.lastCombatWith?.let { it is Npc && canAttack(it) } == true) && bot.combat.inCombat() &&
+        val opponent = bot.combat.lastCombatWith
+        if (opponent?.isAlive == true && prefersCurrentOpponent(opponent) && bot.combat.inCombat() &&
             !bot.actions.contains(CombatAction::class.java)
         ) {
-            val opponent = bot.combat.lastCombatWith
             if (opponent is Npc && acceptsAssignment(opponent)) {
                 interactWithTarget(3, opponent)
             } else if (slayerTask == null) {
@@ -1130,6 +1145,9 @@ open class NpcCombatScript(bot: Bot,
             lootItems()
         }
     }
+
+    private fun prefersCurrentOpponent(opponent: Mob): Boolean =
+        !queenTrip && !moleTrip && exclusiveNpcIds == null || opponent is Npc && canAttack(opponent)
 
     /**
      * Keeps the known boss focus through its short native underground phase, then follows its updated position.
@@ -1387,6 +1405,7 @@ open class NpcCombatScript(bot: Bot,
 
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
+        if (exclusiveNpcIds?.contains(npc.id) == false) return false
         if (unsupportedFocus != null && !companyAvailable &&
             (npc !== unsupportedFocus || npc.spawnCount != unsupportedSpawn)) return false
         if (!acceptsAssignment(npc)) return false

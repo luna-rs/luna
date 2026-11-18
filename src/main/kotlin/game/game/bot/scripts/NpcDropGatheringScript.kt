@@ -111,6 +111,9 @@ class NpcDropGatheringScript(
 
     override val ownedCombatSuppliesOnly: Boolean get() = equipmentPlan != null
 
+    override val exclusiveNpcIds: Set<Int>? get() = equipmentPlan?.takeIf { itemId == EquipmentDropSources.ICE_GLOVES }
+        ?.let { EquipmentDropSources.find(it.sourceKey)?.npcIds }
+
     override val targetSearchTimeout: Duration get() = if (equipmentPlan != null) 45.seconds else super.targetSearchTimeout
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
@@ -164,7 +167,7 @@ class NpcDropGatheringScript(
         }
         for (id in plan.supplies.keys) {
             val count = minOf(plan.remainingSupply(id), bot.totalItemAmount(id), 20)
-            val minimum = if (source.zone == SubZone.ASGARNIAN_WYVERNS) 20 else minOf(14, count)
+            val minimum = if (source.zone == SubZone.ASGARNIAN_WYVERNS) 20 else minOf(source.minimumFoodCount, count)
             if (count < maxOf(1, minimum)) return false
             val missing = (count - bot.inventory.computeAmountForId(id)).coerceAtLeast(0)
             if (missing > 0 && !handler.banking.withdrawUnnoted(Item(id, missing)) {
@@ -220,8 +223,7 @@ class NpcDropGatheringScript(
             observeEquipmentSupplies()
             if (plan.itemId != itemId || plan.stockTarget != stockTarget || originalZones != listOf(source.zone) ||
                 plan.supplies.size != 1 || plan.supplies.values.any { it !in 1..20 } ||
-                plan.supplies.keys.any { (Food.ID_TO_FOOD[it]?.heal ?: 0) <
-                    if (source.zone == SubZone.ASGARNIAN_WYVERNS) 16 else 14 } ||
+                plan.supplies.keys.any { (Food.ID_TO_FOOD[it]?.heal ?: 0) < source.minimumFoodHeal } ||
                 monsterRequirement != source.monster || slayerTask != null || slayerMaster != null ||
                 targetNames[source.zone].toSet() != source.names ||
                 !EquipmentDropJobs.acquire(bot, plan, source) || !EquipmentDropJobs.valid(bot, plan)) return false

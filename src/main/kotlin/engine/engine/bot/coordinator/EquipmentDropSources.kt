@@ -25,7 +25,19 @@ internal object EquipmentDropSources {
                       val chance: Double, val minimumReadiness: Int, val monster: SlayerTaskType?,
                       val spawnCount: Int, val hitpoints: Int, val maximumHit: Int) {
         val key: String get() = "${zone.name}:$itemId"
+        val minimumFoodHeal: Int get() = when (zone) {
+            SubZone.ASGARNIAN_WYVERNS -> 16
+            SubZone.ICE_QUEEN_LAIR -> 10
+            else -> 14
+        }
+        val minimumFoodCount: Int get() = when (zone) {
+            SubZone.ASGARNIAN_WYVERNS -> 20
+            SubZone.ICE_QUEEN_LAIR -> 10
+            else -> 14
+        }
     }
+
+    const val ICE_GLOVES = 1580
 
     /**
      * The reviewed allowlist supplies access/readiness policy, while native data supplies identity and probability.
@@ -36,6 +48,7 @@ internal object EquipmentDropSources {
                               val monster: SlayerTaskType? = null)
 
     private val reviews by lazy { listOf(
+        Review(ICE_GLOVES, SubZone.ICE_QUEEN_LAIR, setOf(795), 65),
         Review(4129, SubZone.SLAYER_TOWER_SECOND_FLOOR, setOf(1610, 1611), 100, SlayerTaskType.GARGOYLE),
         Review(4131, SubZone.SLAYER_TOWER_SECOND_FLOOR, setOf(1613), 110, SlayerTaskType.NECHRYAEL),
         Review(4127, SubZone.FREMENNIK_SLAYER_DUNGEON, (1637..1642).toSet(), 80, SlayerTaskType.JELLY),

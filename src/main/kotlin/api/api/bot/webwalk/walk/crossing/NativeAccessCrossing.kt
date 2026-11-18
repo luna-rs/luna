@@ -3,6 +3,7 @@ package api.bot.webwalk.walk.crossing
 import api.bot.webwalk.plan.PlanLeg
 import api.bot.webwalk.walk.LegContext
 import game.obj.entrances.MournerBasement
+import game.obj.entrances.IceQueenRockSlide
 import game.obj.entrances.PortPhasmatysBarrier
 import game.obj.doors.MournerHeadquartersDoors
 import game.obj.doors.ArdougneWallDoors
@@ -23,6 +24,7 @@ object NativeAccessCrossing : CrossingHandler {
 
     const val ID = "native_access"
     const val ROCKS_READY = "stronghold_rocks_ready"
+    const val ICE_QUEEN_ROCKSLIDE_READY = "ice_queen_rockslide_ready"
 
     override suspend fun cross(context: LegContext, leg: PlanLeg): String? =
         NativeDialogueControl.own(context.bot) { crossOwned(context, leg) }
@@ -43,17 +45,24 @@ object NativeAccessCrossing : CrossingHandler {
         val rocks = GnomeStrongholdRocks.PASSAGES.firstOrNull {
             it.id == id && it.position == position && it.from == leg.from && it.to == leg.to
         }
+        val rockslide = id == IceQueenRockSlide.ID && position == IceQueenRockSlide.POSITION &&
+            IceQueenRockSlide.LANES.any { (west, east) ->
+                west == leg.from && east == leg.to || east == leg.from && west == leg.to
+            }
         val barrier = PortPhasmatysBarrier.PASSAGES.firstOrNull {
             id == PortPhasmatysBarrier.ID && it.position == position &&
                 (it.outside == leg.from && it.inside == leg.to || it.inside == leg.from && it.outside == leg.to)
         }
-        if (!basement && headquarters == null && cityWall == null && rocks == null && barrier == null) {
+        if (!basement && headquarters == null && cityWall == null && rocks == null && barrier == null && !rockslide) {
             return "unsupported native access passage"
         }
         if (context.arrived(leg, 0)) return null
         context.walk(leg.from, 0)?.let { return it }
         if (rocks != null && !GnomeStrongholdRocks.canTraverse(context.bot)) {
             return "the Stronghold rocks require current Agility ${GnomeStrongholdRocks.LEVEL}"
+        }
+        if (rockslide && !IceQueenRockSlide.canTraverse(context.bot)) {
+            return "the White Wolf Mountain rockslide requires current Mining ${IceQueenRockSlide.LEVEL} and a pickaxe"
         }
         // These native temporary open states have no menu action; wait for the closed clickable object to return.
         val temporaryOpen = when {
@@ -72,7 +81,9 @@ object NativeAccessCrossing : CrossingHandler {
             context.find(position, id)
         } else context.find(position, id)
         if (obj == null) return "native access object $id is missing at $position"
-        if (!context.handler.interactions.interactOnLeg(1, obj)) return "could not use native access object $id"
+        if (!context.handler.interactions.interactOnLeg(if (rockslide) 2 else 1, obj)) {
+            return "could not use native access object $id"
+        }
         if (barrier == null || leg.from == barrier.inside) {
             return if (context.awaitArrival(leg, 0, 8.seconds)) null else "the native passage did not reach ${leg.to}"
         }

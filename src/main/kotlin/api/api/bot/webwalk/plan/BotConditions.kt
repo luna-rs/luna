@@ -32,6 +32,7 @@ import api.bot.webwalk.generate.NativeAgilityShortcutSpec
 import game.item.greegree.Greegree
 import game.skill.agility.GnomeStrongholdRocks
 import game.obj.entrances.BrimhavenDungeonAccess
+import game.obj.entrances.IceQueenRockSlide
 import game.skill.thieving.lockedDoor.ArdougneHouseDoorAction
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
@@ -101,6 +102,7 @@ object BotConditions {
                       TrollClimbingCrossing.BOOTS_WORN to { bot: Bot -> TrollClimbingRocks.hasBoots(bot) },
                       NativeAccessCrossing.ROCKS_READY to { bot: Bot -> GnomeStrongholdRocks.canTraverse(bot) },
                       PyramidRockSlideCrossing.ENTRY_READY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= 30 },
+                      NativeAccessCrossing.ICE_QUEEN_ROCKSLIDE_READY to IceQueenRockSlide::canTraverse,
                       ApeGateCrossing.GREEGREE_READY to { bot: Bot -> Greegree.held(bot) != null ||
                           Greegree.ITEMS.keys.any { bot.inventory.contains(it) } },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null },
