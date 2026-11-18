@@ -93,7 +93,7 @@ internal object BossFood {
     /**
      * Reads physical container quantities without consulting trade wishes, pending orders or hypothetical supplies.
      */
-    private fun stock(vararg containers: ItemContainer): Map<Int, Int> {
+    fun stock(vararg containers: ItemContainer): Map<Int, Int> {
         val result = HashMap<Int, Int>()
         for (container in containers) for (item in container) {
             if (item == null || item.amount <= 0 || portion(item.id) == null) continue
@@ -112,8 +112,9 @@ internal object BossFood {
     /**
      * Sums only usable remaining healing physically carried by this participant.
      */
-    fun carriedHealing(bot: Bot, target: BossTarget, group: Boolean): Int {
-        val policy = policy(target, group)
+    fun carriedHealing(bot: Bot, target: BossTarget, group: Boolean): Int = carriedHealing(bot, policy(target, group))
+
+    fun carriedHealing(bot: Bot, policy: Policy): Int {
         return stock(bot.inventory).entries.sumOf { (id, amount) ->
             val portion = portion(id)!!
             if (portion.biteHealing >= policy.minimumBiteHealing) portion.healing.toLong() * amount else 0L
@@ -129,9 +130,10 @@ internal object BossFood {
      * Withdraws the missing real healing through the native bank handler after tools have occupied their slots.
      * Partial or falsely acknowledged withdrawals fail without discarding or replacing any received items.
      */
-    suspend fun withdraw(bot: Bot, target: BossTarget, group: Boolean): Boolean {
-        val policy = policy(target, group)
-        val carried = carriedHealing(bot, target, group)
+    suspend fun withdraw(bot: Bot, target: BossTarget, group: Boolean): Boolean = withdraw(bot, policy(target, group))
+
+    suspend fun withdraw(bot: Bot, policy: Policy): Boolean {
+        val carried = carriedHealing(bot, policy)
         if (carried >= policy.requiredHealing) return true
         if (!bot.bank.isOpen) return false
         val carriedSlots = stock(bot.inventory).entries.sumOf { (id, amount) ->
@@ -145,14 +147,15 @@ internal object BossFood {
             if (!bot.actionHandler.banking.withdraw(item) ||
                 bot.inventory.computeAmountForId(item.id) - before < item.amount) return false
         }
-        return carriedHealing(bot, target, group) >= policy.requiredHealing
+        return carriedHealing(bot, policy) >= policy.requiredHealing
     }
 
     /**
      * Takes one native bite from a qualifying carried portion, preferring stronger and already-started food.
      */
-    suspend fun eat(bot: Bot, target: BossTarget, group: Boolean): Boolean {
-        val policy = policy(target, group)
+    suspend fun eat(bot: Bot, target: BossTarget, group: Boolean): Boolean = eat(bot, policy(target, group))
+
+    suspend fun eat(bot: Bot, policy: Policy): Boolean {
         val selected = bot.inventory.withIndex().mapNotNull { (slot, item) ->
             if (item == null) null else portion(item.id)?.takeIf { it.biteHealing >= policy.minimumBiteHealing }
                 ?.let { Triple(slot, item.id, it) }
