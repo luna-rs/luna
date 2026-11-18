@@ -69,12 +69,12 @@ class BotMerchantLiquidityTest {
         try {
             assertTrue(BotMerchantValuation.liquidMarket(314))
             assertFalse(BotMerchantValuation.liquidMarket(1123))
-            val quote = BotMerchantValuation.Quotes(bot, 1.0, true, 0, 1, 1, emptyList())
+            val quote = BotMerchantValuation.Quotes(bot, 1.0, true, probeExits = false)
             assertTrue(quote.buy(314, 100) in 75L..90L)
             assertTrue(quote.buy(1123, 10_000) in 7_500L..9_000L)
             prices[1123] = ItemPriceData(1123, 10_000.0, 10_000.0, 1_000, 0)
             assertTrue(BotMerchantValuation.liquidMarket(1123))
-            val established = BotMerchantValuation.Quotes(bot, 1.0, true, 0, 1, 1, emptyList())
+            val established = BotMerchantValuation.Quotes(bot, 1.0, true, probeExits = false)
             assertTrue(established.buy(1123, 10_000) in 7_500L..9_000L)
         } finally {
             `when`(world.economy).thenReturn(originalEconomy)

@@ -20,7 +20,7 @@ class BotMerchantPricingTest {
 
     private val bot = InventoryProductionFixtures.bot()
 
-    private fun snapshot() = BotMerchantValuation.Quotes(bot, 1.0, false, 0, 1, 1, emptyList())
+    private fun snapshot() = BotMerchantValuation.Quotes(bot, 1.0, false, probeExits = false)
 
     private fun affordableCosmetics(budget: Int): List<BotTradeItem> {
         val price = snapshot().buy(1038, 1_000)

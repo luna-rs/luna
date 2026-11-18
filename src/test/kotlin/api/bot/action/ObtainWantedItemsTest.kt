@@ -3,6 +3,9 @@ package api.bot.action
 import api.bot.script.InventoryProductionFixtures
 import api.bot.zone.SubZone
 import api.predef.world
+import io.luna.game.model.EntityState
+import io.luna.game.model.Position
+import io.luna.game.model.World
 import io.luna.game.model.def.WidgetDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.RestockPolicy
@@ -10,7 +13,9 @@ import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.item.shop.BuyPolicy
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.interact.InteractionPolicy
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
@@ -18,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 import java.util.EnumSet
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Exercises bounded basket acquisition with real inventory and bank containers, without a live server.
@@ -50,11 +56,37 @@ class ObtainWantedItemsTest {
         doReturn(EnumSet.of(SubZone.HOME)).`when`(it).subZones
     }
 
-    private fun shop(bot: Bot, vararg ids: Int): Shop =
-        spy(Shop(world, "Basket fixture", RestockPolicy.DEFAULT, BuyPolicy.ALL, Currency.COINS, { true }, false)).also { shop ->
+    private suspend fun shop(bot: Bot, vararg ids: Int): Shop =
+        spy(Shop(world, "Basket fixture", RestockPolicy.DEFAULT, BuyPolicy.ALL, Currency.COINS)).also { shop ->
             ids.forEach { check(shop.items.add(Item(it))) }
+            val position = Position(3222, 3218)
+            val seller = mock(Npc::class.java)
+            `when`(seller.id).thenReturn(522)
+            `when`(seller.position).thenReturn(position)
+            `when`(seller.state).thenReturn(EntityState.ACTIVE)
+            `when`(seller.isAlive).thenReturn(true)
+            shop.registerNpcSeller(Shop.NpcSeller(seller.id, 2, null, null))
+
+            val sellerWorld = mock(World::class.java, RETURNS_DEEP_STUBS)
+            `when`(sellerWorld.npcs.byCurrentNpcIds(setOf(seller.id))).thenReturn(listOf(seller))
+            `when`(bot.world).thenReturn(sellerWorld)
+            `when`(bot.position).thenReturn(position)
+            `when`(bot.walking.isEmpty).thenReturn(true)
             `when`(bot.overlays.player).thenReturn(bot)
-            `when`(bot.overlays.getOverlay(ShopInterface::class.java)).thenReturn(ShopInterface(shop))
+
+            val interactions = bot.actionHandler.interactions
+            `when`(interactions.approach(
+                eq(seller) ?: seller,
+                eq(InteractionPolicy.STANDARD_SIZE) ?: InteractionPolicy.STANDARD_SIZE,
+                anyLong().seconds,
+                eq(true),
+                any<() -> Boolean>() ?: { true }
+            )).thenReturn(true)
+            `when`(interactions.interact(eq(2), eq(seller), any<() -> Boolean>() ?: { true })).thenAnswer {
+                if (!it.getArgument<() -> Boolean>(2)()) return@thenAnswer false
+                `when`(bot.overlays.getOverlay(ShopInterface::class.java)).thenReturn(ShopInterface(shop))
+                true
+            }
         }
 
     private suspend fun withdrawNormally(bot: Bot) {
