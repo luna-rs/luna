@@ -3,12 +3,15 @@ package api.bot.social
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
+import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
+import api.bot.action.trading.BotTradeFeedback
 import api.bot.action.trading.BotTradeRequestStage
 import api.bot.action.trading.PlayerTradeAdvertisementMessages
 import api.bot.isRealBot
 import api.bot.script.BotScript
 import api.predef.ext.*
+import api.predef.numF
 import api.predef.rand
 import engine.trade.ConfirmTradeInterface
 import engine.trade.OfferTradeInterface
@@ -132,9 +135,11 @@ object PlayerTradeScams {
      */
     private class Session(val actor: Bot, val victim: Player, val sale: Offer) : BotSocialInteractions.Session {
         private val script = actor.scriptStack.current()
-        private val deadline = System.currentTimeMillis() + 120_000L
-        private val ownBasket = mapOf(sale.actualId to sale.quantity)
-        private val payment = mapOf(995 to sale.coins)
+        private val requestDeadline = System.currentTimeMillis() + 120_000L
+        private val stock = Item(sale.actualId, sale.quantity)
+        private val coins = Item(995, sale.coins)
+        private val ownBasket = mapOf(stock.id to stock.amount)
+        private val feedback = BotTradeFeedback(actor, victim)
         private var ownScreen: OfferTradeInterface? = null
         private var otherScreen: OfferTradeInterface? = null
         private var started = false
@@ -143,7 +148,8 @@ object PlayerTradeScams {
         private var declined = false
         private var completed = false
 
-        override fun valid(): Boolean = !ended && !declined && System.currentTimeMillis() < deadline &&
+        override fun valid(): Boolean = !ended && !declined &&
+            (ownScreen != null || System.currentTimeMillis() < requestDeadline) &&
             actor.isRealBot() && !victim.isRealBot() && actor.preferences.isScammer &&
             actor.scriptStack.current() === script && script?.isRunning() == true &&
             BotSocialInteractions.owns(actor, this) && ready(actor, victim)
@@ -152,46 +158,102 @@ object PlayerTradeScams {
             if (bot !== actor || started) return
             started = true
             try {
-                withTimeoutOrNull((deadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
-                    val stage = BotTradeRequestStage(actor, victim).sendAndAwait(beforeRequest = {
+                val stage = withTimeoutOrNull((requestDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
+                    BotTradeRequestStage(actor, victim).sendAndAwait(beforeRequest = {
                         valid().also { if (it) requestSubmitted = true }
-                    }, canContinue = { valid() }) ?: return@withTimeoutOrNull
-                    if (!valid()) return@withTimeoutOrNull
-                    val mine = actor.overlays[OfferTradeInterface::class] ?: return@withTimeoutOrNull
-                    val theirs = victim.overlays[OfferTradeInterface::class] ?: return@withTimeoutOrNull
-                    if (mine.other !== victim || theirs.other !== actor) return@withTimeoutOrNull
-                    ownScreen = mine
-                    otherScreen = theirs
-                    mine.samplesMarketPrices = false
-                    mine.onDecline { who ->
-                        if (who === victim && !ended && !completed && !declined && currentPlayers(actor, victim)) {
-                            declined = true
-                            if (hasOfferedItems()) {
-                                PlayerTradeAdvertisementMessages.counteroffer(actor, victim, "Fine, you caught me. Nice spot.")
-                            }
+                    }, canContinue = { valid() })
+                }
+                if (stage == null && !requestSubmitted) return
+                val mine = actor.overlays[OfferTradeInterface::class] ?: return
+                val theirs = victim.overlays[OfferTradeInterface::class] ?: return
+                if (mine.other !== victim || theirs.other !== actor) return
+                ownScreen = mine
+                otherScreen = theirs
+                if (!valid()) return
+                mine.samplesMarketPrices = false
+                mine.onDecline { who ->
+                    if (who === victim && !ended && !completed && !declined && currentPlayers(actor, victim)) {
+                        declined = true
+                        if (hasOfferedItems()) {
+                            PlayerTradeAdvertisementMessages.counteroffer(actor, victim, "Fine, you caught me. Nice spot.")
                         }
                     }
-                    if (!stage.offer(Item(sale.actualId, sale.quantity))) return@withTimeoutOrNull
-                    if (!waitFor(60.seconds) { !valid() || !ownsScreens() || matches() } || !matches())
-                        return@withTimeoutOrNull
-                    val ownRevision = mine.revision
-                    val otherRevision = theirs.revision
-                    fun unchanged() = matches() && mine.revision == ownRevision && theirs.revision == otherRevision &&
-                        actor.inventory.hasSpaceForAll(listOf(Item(995, sale.coins))) &&
-                        victim.inventory.hasSpaceForAll(listOf(Item(sale.actualId, sale.quantity)))
-                    mine.guardNativeTrade(validate = { unchanged() }, settle = {
-                        if (!completed) {
-                            completed = true
-                        }
-                    })
-                    val confirmation = stage.offerAndAwait { unchanged() } ?: return@withTimeoutOrNull
-                    val confirm = actor.overlays[ConfirmTradeInterface::class] ?: return@withTimeoutOrNull
-                    val otherConfirm = victim.overlays[ConfirmTradeInterface::class] ?: return@withTimeoutOrNull
-                    if (confirm.offer !== mine || otherConfirm.offer !== theirs || !unchanged()) return@withTimeoutOrNull
-                    confirmation.confirmAndAwait()
                 }
+                if (stage == null || !stage.offer(stock)) {
+                    feedback.awaitResponse(mine, "I couldn't put my items up for sale. Please reopen the trade.") { !valid() }
+                    return
+                }
+                negotiate(mine, theirs)
             } finally {
                 close()
+            }
+        }
+
+        /**
+         * Holds the same asking terms while the player adjusts payment and rechecks them at native acceptance.
+         */
+        private suspend fun negotiate(mine: OfferTradeInterface, theirs: OfferTradeInterface) {
+            while (valid() && ownsScreens() && actor.overlays[OfferTradeInterface::class] === mine) {
+                if (amounts(mine.items.filterNotNull()) != ownBasket) {
+                    feedback.awaitResponse(mine, "I no longer have the stock for this sale. Please reopen the trade.") { !valid() }
+                    return
+                }
+                val adjustment = paymentAdjustment(theirs) ?: inventoryAdjustment()
+                if (adjustment != null) {
+                    feedback.awaitResponse(mine, adjustment) {
+                        !valid() || (paymentAdjustment(theirs) ?: inventoryAdjustment()) != adjustment
+                    }
+                    continue
+                }
+                val ownRevision = mine.revision
+                val otherRevision = theirs.revision
+                fun unchanged() = valid() && ownsScreens() && mine.revision == ownRevision &&
+                    theirs.revision == otherRevision && inventoryAdjustment() == null
+                mine.guardNativeTrade(validate = ::unchanged, settle = { completed = true }, keepOpenOnRejection = true)
+                actor.naturalMicroDelay()
+                if (!unchanged() || actor.overlays[OfferTradeInterface::class] !== mine) continue
+                mine.accept(actor)
+                if (!waitFor(60.seconds) { actor.overlays[OfferTradeInterface::class] !== mine || !unchanged() }) {
+                    feedback.awaitResponse(mine, "Please press Accept on the offer screen.") { !unchanged() }
+                }
+                val confirmation = actor.overlays[ConfirmTradeInterface::class]
+                if (confirmation?.offer === mine) {
+                    confirm(mine, confirmation, ::unchanged)
+                    return
+                }
+            }
+        }
+
+        private fun paymentAdjustment(theirs: OfferTradeInterface): String? {
+            val offered = amounts(theirs.items.filterNotNull())
+            val difference = sale.coins - (offered[coins.id] ?: 0)
+            return when {
+                offered.keys.any { it != coins.id } -> "I only take coins. Remove the other items and offer ${numF(sale.coins)} gp."
+                offered.isEmpty() -> "Please offer ${numF(sale.coins)} gp."
+                difference > 0 -> "Please add ${numF(difference)} gp to make ${numF(sale.coins)} gp."
+                difference < 0 -> "Please remove ${numF(-difference)} gp. My price is ${numF(sale.coins)} gp."
+                else -> null
+            }
+        }
+
+        private fun inventoryAdjustment(): String? = when {
+            !victim.inventory.hasSpaceFor(stock) -> "Your inventory is too full for my offer. Please make room."
+            !actor.inventory.hasSpaceFor(coins) -> "I don't have room for the coins. Please reopen the trade later."
+            else -> null
+        }
+
+        private suspend fun confirm(mine: OfferTradeInterface, screen: ConfirmTradeInterface, unchanged: () -> Boolean) {
+            fun open() = actor.overlays[ConfirmTradeInterface::class] === screen
+            while (valid() && ownsScreens() && open()) {
+                if (!unchanged()) {
+                    val reason = inventoryAdjustment() ?: "The confirmed offer changed. Please reopen the trade."
+                    feedback.awaitResponse(mine, reason) { !valid() || unchanged() }
+                    continue
+                }
+                screen.accept(actor)
+                if (!waitFor(60.seconds) { !open() || !unchanged() }) {
+                    feedback.awaitResponse(mine, "Please press Accept on the confirmation screen.") { !unchanged() }
+                }
             }
         }
 
@@ -203,10 +265,6 @@ object PlayerTradeScams {
                 (victim.overlays[OfferTradeInterface::class] === theirs ||
                     victim.overlays[ConfirmTradeInterface::class]?.offer === theirs)
         }
-
-        private fun matches(): Boolean = valid() && ownsScreens() &&
-            amounts(ownScreen!!.items.filterNotNull()) == ownBasket &&
-            amounts(otherScreen!!.items.filterNotNull()) == payment
 
         /**
          * Observes native placement before a decline closes the offer, even before the offering coroutine resumes.

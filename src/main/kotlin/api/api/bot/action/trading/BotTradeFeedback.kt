@@ -1,8 +1,15 @@
 package api.bot.action.trading
 
+import api.bot.Suspendable.waitFor
+import api.bot.isRealBot
+import api.predef.ext.*
+import com.google.common.base.Stopwatch
+import engine.trade.ConfirmTradeInterface
+import engine.trade.OfferTradeInterface
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Explains one trade attempt to its human participant without repeating unchanged intentions.
@@ -38,5 +45,28 @@ class BotTradeFeedback(private val bot: Bot, private val other: Player) {
         sent += text
         lastSentAt = now
         return true
+    }
+
+    /**
+     * Gives the player thirty seconds after a specific warning to respond on this exact trade screen.
+     * Uses a server trade-status message if the directed notice could not be delivered.
+     */
+    suspend fun awaitResponse(offer: OfferTradeInterface, text: String, responded: () -> Boolean) {
+        if (other.isRealBot() || offer.other !== other) return
+        val confirmation = bot.overlays[ConfirmTradeInterface::class]?.takeIf { it.offer === offer }
+        fun open(): Boolean = if (confirmation == null) bot.overlays[OfferTradeInterface::class] === offer
+            else bot.overlays[ConfirmTradeInterface::class] === confirmation
+        if (!open() || responded()) return
+
+        val warning = "$text I'll wait 30 seconds."
+        if (!PlayerTradeAdvertisementMessages.notice(bot, other, "@blu@${bot.username}: $warning@bla@")) {
+            other.sendMessage(warning)
+            other.sendText("Trade paused. Check the chatbox.", if (confirmation == null) 3431 else 3535)
+        }
+        val timer = Stopwatch.createStarted()
+        while (open() && !responded() && timer.elapsed().seconds < 30) {
+            waitFor(2.seconds) { !open() || responded() || timer.elapsed().seconds >= 30 }
+        }
+        if (open() && !responded()) bot.overlays.closeWindows()
     }
 }

@@ -122,10 +122,8 @@ object BotTradeManager {
             if (purpose == BotTradePurpose.MERCHANT_BUY) {
                 "Buying anything"
             } else if (purpose == BotTradePurpose.MERCHANT_SELL) {
-                // Sell headers + merchant sell suffix.
-                val header = BotTradeSpeechPool.take(bot, BotTradeSpeech.SELLING)
-                val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.MERCHANT_SELLING)
-                "$header $suffix"
+                val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.MERCHANT_SELLING) ?: "a mix of items"
+                "Selling $suffix"
             } else if (tradeItem != null) {
                 // Buying/selling a single item.
                 val speechContext = when (purpose) {
@@ -274,8 +272,10 @@ object BotTradeManager {
      * rules as negotiation. Unaffordable items are skipped so cheaper needs can still be selected.
      * Merchant quotes are alternatives: each may use the full budget, with the actual offer capped during negotiation.
      * Call again with actual carried stock after banking, since withdrawals can be limited by capacity.
+     * @param offeredCoins Coins already on the current trade screen that still count toward the food allowance.
      */
-    internal fun affordablePurchases(candidates: List<BotTradeItem>, payment: List<BotTradeItem>): List<BotTradeItem> {
+    internal fun affordablePurchases(candidates: List<BotTradeItem>, payment: List<BotTradeItem>,
+                                     offeredCoins: Long = 0L): List<BotTradeItem> {
         val remaining = payment.associate { it.item.id to it.item.amount }.toMutableMap()
         val paymentPrices = payment.associate { it.item.id to it.price }
         val selected = ArrayList<BotTradeItem>()
@@ -283,7 +283,7 @@ object BotTradeManager {
         val potionFamilies = HashSet<Pair<Bot, PotionFamily>>()
         val foodConsumers = HashSet<Bot>()
         for (original in candidates) {
-            val candidate = capProductionPurchase(original) ?: continue
+            val candidate = capProductionPurchase(original, offeredCoins) ?: continue
             val id = candidate.item.id
             val personalFood = BotFoodDemand.handles(candidate.bot, id)
             if (personalFood && candidate.bot in foodConsumers) continue
@@ -322,8 +322,9 @@ object BotTradeManager {
      * Applies a finite production goal's total ownership, unit-price and shared coin limits to a captured bid.
      * Reviewed utilities also require a concrete deficit and respect currently usable shop alternatives.
      */
-    internal fun capProductionPurchase(quote: BotTradeItem): BotTradeItem? {
-        val current = BotUtilityPurchases.constrain(quote)?.let(BotPotionDemand::constrain)?.let(BotGearDemand::constrain)?.let { BotFoodDemand.constrain(it) } ?: return null
+    internal fun capProductionPurchase(quote: BotTradeItem, offeredCoins: Long = 0L): BotTradeItem? {
+        val current = BotUtilityPurchases.constrain(quote)?.let(BotPotionDemand::constrain)?.let(BotGearDemand::constrain)
+            ?.let { BotFoodDemand.constrain(it, offeredCoins) } ?: return null
         val limit = BotTradeIntentions.productionLimit(current.bot, current.item.id) ?: return current
         if (limit.maximumUnitPrice < 1L || limit.maximumCoins < 1L) return null
         val price = minOf(current.price.coerceAtLeast(1L), limit.maximumUnitPrice)

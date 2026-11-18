@@ -78,6 +78,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
 
     private var nativeValidation: (() -> Boolean)? = null
     private var nativeSettlement: (() -> Unit)? = null
+    internal var keepOpenOnRejection = false
+        private set
     private var declineObserver: ((Player) -> Unit)? = null
 
     /**
@@ -108,10 +110,12 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     /**
      * Attaches an optional game-thread guard and settlement for the exact captured trade basket.
      * Native confirmation rechecks both participants before transfer and settles before closing either window.
+     * When [keepOpenOnRejection] is enabled, both screens block acceptance and leave the attempt open for feedback.
      */
-    fun guardNativeTrade(validate: () -> Boolean, settle: () -> Unit) {
+    fun guardNativeTrade(validate: () -> Boolean, settle: () -> Unit, keepOpenOnRejection: Boolean = false) {
         nativeValidation = validate
         nativeSettlement = settle
+        this.keepOpenOnRejection = keepOpenOnRejection
     }
 
     /**
@@ -251,6 +255,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
             plr.sendMessage("${other.username} does not have enough inventory space for your items.")
             return
         }
+        if ((keepOpenOnRejection && !nativeTradeAllowed()) ||
+            (otherOffer.keepOpenOnRejection && !otherOffer.nativeTradeAllowed())) return
 
         if (otherOffer.accepted) {
             completed = true

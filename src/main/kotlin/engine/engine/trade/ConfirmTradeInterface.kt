@@ -45,7 +45,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
     /**
      * If the "Accept" button has been clicked.
      */
-    private var accepted = false
+    internal var accepted = false
+        private set
 
     /**
      * If the trade has been completed.
@@ -95,7 +96,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
             throw error
         }
         if (!allowed) {
-            plr.overlays.closeWindows()
+            if (!offer.keepOpenOnRejection && !confirm.offer.keepOpenOnRejection) plr.overlays.closeWindows()
             return
         }
 
