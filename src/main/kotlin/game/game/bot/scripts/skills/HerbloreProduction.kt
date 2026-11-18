@@ -68,7 +68,7 @@ internal object HerbloreProduction {
         val unfinished = UnfPotion.entries.firstOrNull { it.id == potion.unf } ?: return null
         MakeUnfPotionBotScript(bot, unfinished, duration).takeIf { it.isEligible() }?.let { return it }
         val herb = Herb.entries.firstOrNull { it.identified == unfinished.herb } ?: return null
-        return IdentifyHerbBotScript(bot, herb, duration, allowGathering = false).takeIf { it.isEligible() }
+        return IdentifyHerbBotScript(bot, herb, duration, allowAcquisition = false).takeIf { it.isEligible() }
     }
 
     private fun finished(bot: Bot, duration: Duration, matches: (FinishedPotion) -> Boolean): BotScript? {
@@ -82,10 +82,6 @@ internal object HerbloreProduction {
     fun mixing(bot: Bot, potion: FinishedPotion, duration: Duration): InventoryBotScript? {
         if (duration <= Duration.ZERO || !MakePotionBotScript(bot, potion, duration).isEligible()) return null
         if (owned(bot, potion.secondary) == 0L) {
-            if (potion == FinishedPotion.RANGING_POTION) {
-                return TelegrabBotScript(bot, TelegrabBotScript.WINE, false, duration,
-                    TelegrabBotScript.wineZones(bot), herbloreContinuation = true).takeIf { it.isEligible() }
-            }
             Ingredient.entries.firstOrNull { it.newId == potion.secondary }?.let { ingredient ->
                 GrindIngredientBotScript(bot, ingredient, duration).takeIf { it.isEligible() }?.let { return it }
             }

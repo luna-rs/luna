@@ -24,6 +24,7 @@ import game.skill.magic.superheatItem.SuperheatItemAction
 import game.skill.smithing.BarType
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.RandomUtils
+import kotlin.time.Duration
 
 /**
  * Creates bot scripts used to train Magic.
@@ -74,11 +75,11 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     /**
      * Weights unlocked methods before their input preparation, account and location checks are resolved lazily.
-     * Alchemy and wine are intentional choices; food conversion cannot always displace them.
+     * Alchemy receives the highest weight in both modes once the lowest spell is unlocked.
      */
     internal fun methodWeights(bot: Bot, level: Int, profit: Boolean): Map<Method, Double> = buildMap {
         if (!bot.preferences.isSkiller) put(Method.COMBAT, if (profit) 2.0 else 4.0)
-        if (level >= AlchemyType.LOW.level) put(Method.ALCHEMY, 4.0)
+        if (level >= AlchemyType.LOW.level) put(Method.ALCHEMY, if (profit) 10.0 else 12.0)
         if (level >= 33) put(Method.WINE, if (profit) 4.0 else 3.0)
         if (level >= 56) put(Method.ORBS, 2.0)
         if (level >= 7) put(Method.ENCHANTING, 1.0)
@@ -204,13 +205,14 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * @param level The bot's current Magic level.
      * @return An alchemy script, or `null` when alchemy is unavailable.
      */
-    internal fun getAlchemyScript(bot: Bot, level: Int, profit: Boolean = false): AlchemyBotScript? {
+    internal fun getAlchemyScript(bot: Bot, level: Int, profit: Boolean = false,
+                                  duration: Duration = getDuration(bot, skillId)): AlchemyBotScript? {
         val type = when {
             level >= AlchemyType.HIGH.level -> AlchemyType.HIGH
             level >= AlchemyType.LOW.level -> AlchemyType.LOW
             else -> return null
         }
 
-        return AlchemyBotScript(bot, type, getDuration(bot, skillId), profit = profit).takeIf { it.isEligible() }
+        return AlchemyBotScript(bot, type, duration, profit = profit).takeIf { it.isEligible() }
     }
 }

@@ -8,7 +8,6 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.IdentifyHerbBotScript
 import game.bot.scripts.skills.GrindIngredientBotScript
 import game.bot.scripts.skills.MakePotionBotScript
-import game.bot.scripts.skills.TelegrabBotScript
 import game.bot.scripts.SinisterChestBotScript
 import game.skill.herblore.makePotion.FinishedPotion
 import game.bot.scripts.skills.MakeUnfPotionBotScript
@@ -28,24 +27,11 @@ import io.luna.game.model.mob.bot.Bot
  * selecting a profit activity does not guarantee a market margin.
  * Owned sinister keys can instead supply native chest herbs through a prepared Yanille Dungeon trip.
  *
- * When no recipe is available, identification queues one herb-gathering trip toward a stable 100-200-guam
- * restocking goal. Its continuation processes smaller hauls too; an empty return ends without recursively gathering.
- *
  * @author lare96
  */
 object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
-    /**
-     * Preserves native gathering opportunities justified by owned keys or unfinished ranging potions. Ingredient
-     * collection spends only already-owned runes; subsequent mixing receives a new finite economic quote.
-     */
-    internal fun getOwnedGatheringScript(bot: Bot, training: Boolean): BotScript? {
-        if (!training && SinisterChestBotScript.ready(bot)) return SinisterChestBotScript(bot, getDuration(bot, skillId))
-        return getIngredientGatheringScript(bot, ownedRunesOnly = true)
-    }
-
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         getProductionScript(bot, level, true)?.let { return it }
-        getIngredientGatheringScript(bot)?.let { return it }
         return IdentifyHerbBotScript(bot, Herb.GUAM_LEAF, getDuration(bot, skillId))
     }
 
@@ -54,21 +40,8 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
             zones += SubZone.YANILLE_DUNGEON_SINISTER_CHEST
             return SinisterChestBotScript(bot, getDuration(bot, skillId))
         }
-        return getProductionScript(bot, level, false) ?: getIngredientGatheringScript(bot) ?:
+        return getProductionScript(bot, level, false) ?:
             getTrainingScript(bot, level, zones)
-    }
-
-    /**
-     * Gathers missing ranging-potion wine when the bot owns unfinished potions but cannot mix them yet.
-     * This Herblore-owned trip continues into finished-potion mixing after collecting a real haul.
-     */
-    internal fun getIngredientGatheringScript(bot: Bot, ownedRunesOnly: Boolean = false): TelegrabBotScript? {
-        val potion = FinishedPotion.RANGING_POTION
-        if (bot.herblore.staticLevel < potion.level || bot.itemTracker.count(potion.unf) < 1 ||
-            bot.itemTracker.count(potion.secondary) > 0) return null
-        return TelegrabBotScript(bot, TelegrabBotScript.WINE, false, getDuration(bot, skillId), TelegrabBotScript.wineZones(bot),
-            herbloreContinuation = true, ownedRunesOnly = ownedRunesOnly)
-            .takeIf { it.isEligible() }
     }
 
     /**

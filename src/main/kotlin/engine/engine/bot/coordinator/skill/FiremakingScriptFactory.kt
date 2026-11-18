@@ -15,44 +15,31 @@ import kotlin.time.Duration
 /**
  * Creates Firemaking scripts for bots.
  *
- * Bots burn logs they already own, usually ones they chopped themselves, at a [FiremakingSpot]. Normal zoned travel
- * preferences choose the destination; occupied spots are discovered and rejected only after arrival. Bots without
- * eligible logs gather a bounded stock they can burn, then resume Firemaking within the same session budget.
- * Occupied burning spots do not cause bots with usable fuel to gather more. Burning logs
- * never makes money, so profit scripts always chop.
+ * Bots burn owned or purchased logs at a [FiremakingSpot]. Normal zoned travel preferences choose the
+ * destination; occupied spots are discovered and rejected only after arrival.
  *
  * Log selection is personality-based through [getBestActivity]: dextrous and intelligent bots burn their best logs,
  * while other bots may pick worse ones.
  *
- * Partial inventories are eligible, so the last owned logs can be burned before gathering more.
+ * Partial inventories are eligible, so the last owned logs can be burned.
  *
  * @author lare96
  * @author TheLining
  */
 object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
 
-    /**
-     * Four burning inventories provide a useful batch without turning preparation into a full Woodcutting session.
-     */
-    const val GATHER_TARGET = FiremakingBotScript.LOGS_PER_TRIP * 4
-
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        return getTrainingScript(bot, level, zones, getDuration(bot, skillId))
+        return getTrainingScript(bot, level, getDuration(bot, skillId))
     }
 
     /**
-     * Continues an existing Firemaking session without restarting its time budget or gathering unusable logs.
+     * Continues an existing Firemaking session within the time it has left.
      */
-    fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>, duration: Duration): BotScript {
-        if (duration <= Duration.ZERO || !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
-        BotProductionPlanner.select(bot, skillId, level, true, duration)?.let { return it }
-        if (Log.entries.any { it.level <= level && bot.itemTracker.count(it.id) > 0 }) return VoidBotScript(bot)
-        return WoodcuttingScriptFactory.getFiremakingScript(bot, level, duration, zones)
+    fun getTrainingScript(bot: Bot, level: Int, duration: Duration): BotScript {
+        return BotProductionPlanner.select(bot, skillId, level, true, duration) ?: VoidBotScript(bot)
     }
 
-    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        return WoodcuttingScriptFactory.getProfitScript(bot, bot.woodcutting.staticLevel, zones)
-    }
+    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript = VoidBotScript(bot)
 
     /**
      * Creates a script that burns logs [bot] already owns, with alternative spots for after-arrival competition.

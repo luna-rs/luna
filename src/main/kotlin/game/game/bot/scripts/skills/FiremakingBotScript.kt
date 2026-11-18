@@ -28,18 +28,18 @@ import kotlin.time.Duration.Companion.seconds
  * The script withdraws a tinderbox and up to [LOGS_PER_TRIP] logs of one [log] type, walks to the eastern end of a
  * [FiremakingLane] beside the bank, and lights one log after another. Each fire steps the bot one tile west, so the
  * fires form a straight line. When the lane runs out or a fire is in the way, the bot picks another lane, and once its
- * logs are gone it banks for more. When fuel runs out, the remaining session time passes to compatible log gathering
- * and its explicit burning continuation.
+ * logs are gone it banks for more. When fuel runs out, the remaining session time passes to the existing
+ * owned or purchased fuel selected by the production planner.
  *
  * Only one bot firemakes at each spot. A bot that finds its spot taken, or every lane there burning, rejects the zone
  * so another one can be tried.
  *
- * Partial final batches are burned before gathering more logs. Startup counts inventory and bank supplies;
+ * Partial final batches are burned before the next supply attempt. Startup counts inventory and bank supplies;
  * each bank visit sizes its batch from deposited bank stock. Inherited withdrawal verification requires
  * both unnoted logs and the tinderbox to reach the inventory. Forced bank requests use the inherited
  * bounded retry budget; verified withdrawals reset it, and snapshots retain it across resumes.
  * Pausing, finishing, and changing zones release the claimed spot and discard the transient lane.
- * Bank-relief sessions require an already owned tinderbox, consume only unreserved logs and never gather replacements.
+ * Bank-relief sessions require an already owned tinderbox, consume only unreserved logs.
  *
  * @property log The type of log this script burns.
  * @property bankRelief Whether this is a bounded owned-resource bank-relief session.
@@ -274,7 +274,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
     /**
      * A depleted session hands off only once, even if another withdrawal callback arrives before cancellation settles.
      */
-    private var gatheringQueued = false
+    private var restockQueued = false
 
     override fun withdraw(): List<Item> = withdrawBatch(bankOnly = false)
 
@@ -298,7 +298,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         val stock = if (bankOnly) bot.bank.computeAmountForId(log.id) else bot.itemTracker.count(log.id)
         if (stock < 1) {
             bot.log("I don't have enough ${itemName(log.id)} to burn.")
-            chopMoreLogs()
+            restockLogs()
             return emptyList()
         }
         if (!bankOnly) productionWithdraw(listOf(Item(log.id)), setOf(TINDERBOX), requestMissing = !bankRelief)
@@ -314,7 +314,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         }
         if (log.id !in bot.inventory && bot.bank.computeAmountForId(log.id) < 1) {
             bot.log("I've burned all of my ${itemName(log.id)}.")
-            chopMoreLogs()
+            restockLogs()
             return true
         }
 
@@ -417,15 +417,14 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
     /**
      * Hands off remaining time to compatible fuel preparation, then stops this script.
      */
-    private fun chopMoreLogs() {
-        if (gatheringQueued) return
-        gatheringQueued = true
+    private fun restockLogs() {
+        if (restockQueued) return
+        restockQueued = true
         releaseSpot()
         if (bankRelief || productionPlan != null) { stop(); return }
         val remaining = remainingDuration()
         if (remaining > Duration.ZERO) {
-            val script = FiremakingScriptFactory.getTrainingScript(bot, bot.firemaking.staticLevel,
-                mutableListOf(), remaining)
+            val script = FiremakingScriptFactory.getTrainingScript(bot, bot.firemaking.staticLevel, remaining)
             script.trainingGoal = trainingGoal
             bot.scriptStack.softPushHead(script)
         }

@@ -10,11 +10,9 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.herblore.identifyHerb.Herb
-import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Identifies one configured herb type through its normal first inventory option.
@@ -24,10 +22,7 @@ import kotlin.time.Duration.Companion.seconds
  * batch when bank stock runs low. Identification is an individual click rather than a make-item dialogue or
  * repeating action; the existing gameplay handler performs conversion, level validation, and experience awards.
  *
- * Eligibility requires one owned herb and the permanent Herblore level for its recipe. The stable 100-200-herb
- * gathering goal does not prevent processing a smaller haul. Empty startup stock tries a prepared item-market seller
- * before herb gathering,
- * which hands usable banked stock to identification without requesting another gathering trip. Current level
+ * An empty startup uses bounded wanted-item sourcing. Current level
  * is checked again during execution, while combat, locks, and strong actions defer processing. Three consecutive interactions without input
  * consumption end the session; unresolved banking requests are bounded separately. A failed or timed-out
  * withdrawal ends the script through the inherited banking hook.
@@ -48,7 +43,7 @@ class IdentifyHerbBotScript(
     val herb: Herb,
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_HERBLORE),
-    private var allowGathering: Boolean = true
+    private var allowAcquisition: Boolean = true
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
 
@@ -67,40 +62,36 @@ class IdentifyHerbBotScript(
         class HerbData : InventoryScriptData() {
             /** [Herb] enum name used to reconstruct the configured recipe. */
             var recipe = ""
-            var allowGathering = true
-            var started = false
+            var allowAcquisition = true
+            var supplyDeadline = 0L
             var produced = false
             var continued = false
-            var marketAttempted = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
-                allowGathering = data.get("allow_gathering")?.asBoolean ?: true
-                started = data.get("started")?.asBoolean ?: false
+                allowAcquisition = data.get("allow_acquisition")?.asBoolean ?: data.get("allow_gathering")?.asBoolean ?: true
+                supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 produced = data.get("produced")?.asBoolean ?: false
                 continued = data.get("continued")?.asBoolean ?: false
-                marketAttempted = data.get("market_attempted")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
-                data.addProperty("allow_gathering", allowGathering)
-                data.addProperty("started", started)
+                data.addProperty("allow_acquisition", allowAcquisition)
+                data.addProperty("supply_deadline", supplyDeadline)
                 data.addProperty("produced", produced)
                 data.addProperty("continued", continued)
-                data.addProperty("market_attempted", marketAttempted)
             }
         }
     }
 
     /** Permanent Herblore level required for selection and startup validation. */
     val requiredLevel = herb.level
-    private var started = false
     private var produced = false
+    private var supplyDeadline = 0L
     private var continued = false
-    private var marketAttempted = false
     /** One unidentified herb, the minimum supply for a single conversion. */
     private val materials = listOf(herb.idItem)
 
@@ -113,11 +104,10 @@ class IdentifyHerbBotScript(
      */
     constructor(bot: Bot, data: HerbData) : this(bot, Herb.valueOf(data.recipe), data.duration, data.zones) {
         restoreInventoryState(data)
-        allowGathering = data.allowGathering
-        started = data.started
+        allowAcquisition = data.allowAcquisition
+        supplyDeadline = data.supplyDeadline
         produced = data.produced
         continued = data.continued
-        marketAttempted = data.marketAttempted
     }
 
     /**
@@ -131,15 +121,6 @@ class IdentifyHerbBotScript(
 
     override fun withdraw(): List<Item> {
         if (bot.skill(SKILL_HERBLORE).staticLevel < requiredLevel) { stop(); return emptyList() }
-        if (!started && !bot.ownsProductionSupplies(materials)) {
-            if (allowGathering) {
-                allowGathering = false
-                bot.scriptStack.softPushHead(HerbGatheringScript(bot, herb, duration))
-            }
-            stop()
-            return emptyList()
-        }
-        started = true
         return productionWithdraw(materials, levelEligible = true, requestMissing = false)
     }
 
@@ -167,16 +148,15 @@ class IdentifyHerbBotScript(
             stop()
             return false
         }
-        if (allowGathering && productionPlan == null && !marketAttempted &&
-            !bot.ownsProductionSupplies(materials) && isActionSafe() && remainingDuration() > Duration.ZERO) {
-            marketAttempted = true
-            val deadline = System.currentTimeMillis() + minOf(45_000L, remainingDuration().inWholeMilliseconds)
-            val trade = TradeBotScript.buySpecific(bot, herb.id, herbTarget(bot), deadline)
-            if (trade != null) {
-                trade.duration = minOf(remainingDuration(), 45.seconds)
-                bot.scriptStack.pushHead(trade)
-                return false
+        if (productionPlan == null && !bot.ownsProductionSupplies(materials)) {
+            if (allowAcquisition && bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel &&
+                isActionSafe() && remainingDuration() > Duration.ZERO) {
+                if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() +
+                    minOf(120_000L, remainingDuration().inWholeMilliseconds)
+                handler.shop.obtainWantedItems(mapOf(herb.id to herbTarget(bot)), supplyDeadline)
             }
+            if (isPaused()) return false
+            if (!bot.ownsProductionSupplies(materials)) return false
         }
         return true
     }
@@ -204,11 +184,10 @@ class IdentifyHerbBotScript(
 
     override fun snapshot(): HerbData = HerbData().also {
         it.recipe = herb.name
-        it.allowGathering = allowGathering
-        it.started = started
+        it.allowAcquisition = allowAcquisition
+        it.supplyDeadline = supplyDeadline
         it.produced = produced
         it.continued = continued
-        it.marketAttempted = marketAttempted
         saveInventoryState(it)
     }
 }

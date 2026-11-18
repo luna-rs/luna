@@ -12,7 +12,6 @@ import game.content.hardwoodGrove.HardwoodGrove
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CutTreeBotScript
-import game.skill.firemaking.Log
 import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.Tree.*
 import io.luna.game.model.mob.bot.Bot
@@ -94,22 +93,6 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         return CutTreeBotScript(bot, setOf(tree), duration, zones).also {
             it.profitGathering = ProfitGatheringGoal.create(bot, options.getValue(tree), duration)
         }
-    }
-
-    /**
-     * Gathers mapped logs usable by both skills and retains Firemaking as the continuation's purpose.
-     */
-    fun getFiremakingScript(bot: Bot, firemakingLevel: Int, duration: Duration,
-                            zones: MutableList<SubZone>): CutTreeBotScript {
-        val options = routes.filterKeys { tree ->
-            Log.ID_TO_LOG[tree.logId]?.let { it.level <= firemakingLevel } == true &&
-                (tree !in setOf(TEAK, MAHOGANY) || CutTreeBotScript.groveSuppliesOwned(bot))
-        }.map { (tree, locations) -> BotSkillingActivity(setOf(tree), locations) }
-        val activity = getBestSkillingActivity(bot, bot.woodcutting.staticLevel, { it.level }, options)
-            ?: error("No Firemaking log gathering activity is available.")
-        zones.clear()
-        zones.addAll(activity.zones)
-        return CutTreeBotScript(bot, activity.tokens, duration, zones, FiremakingScriptFactory.GATHER_TARGET)
     }
 
     /**

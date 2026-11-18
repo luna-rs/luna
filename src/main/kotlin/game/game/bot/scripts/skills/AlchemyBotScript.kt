@@ -48,15 +48,14 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Alchable items are deliberately whitelisted so bots never decide to destroy arbitrary valuables. Bows may be alched
  * in either noted or unnoted form, while armour is withdrawn and alched as notes.
- * Ordinary gold jewellery through diamond may also be liquidated as notes, only with a positive net margin.
+ * Ordinary gold jewellery through diamond may also be liquidated as notes.
  * Dragonstone, onyx, quest jewellery and partially charged variants remain outside that whitelist.
  *
  * Intelligent bots usually select the item with the best current alchemy margin using Luna's economy guide price.
  * Less intelligent bots are increasingly likely to pick a random valid item instead.
  *
  * The script consumes only surplus targets and immediately acquires affordable rune batches when supplies run out.
- * Profit sessions require a positive margin after target opportunity cost and native rune costs; training sessions
- * permit only the policy's bounded gold loss per experience point. Existing gear and production reserves remain owned.
+ * Magic profit sessions require a positive margin after target and native rune costs. All sessions protect reserves.
  * Noted target withdrawals always restore normal bank mode, including failed or cancelled withdrawals.
  * Missing runes request total stock targets of at least 1,000, scaled to all owned eligible materials,
  * preserving higher wanted targets and their metadata. Stock and rune arithmetic use Long before clamping
@@ -153,7 +152,7 @@ class AlchemyBotScript(
 
         /**
          * Ordinary crafted gold jewellery and its full-charge enchantments. Existing working reservations
-         * and a strictly positive complete alchemy margin protect useful pieces in every activity mode.
+         * protect useful pieces in every activity mode.
          */
         private val JEWELLERY_IDS = setOf(
             1635, 1637, 1639, 1641, 1643, // Gold through diamond rings.
@@ -180,7 +179,7 @@ class AlchemyBotScript(
 
         /**
          * Exposes the native disposal whitelist to production valuation without creating an alchemy session.
-         * Availability, retained stock, costs and a positive margin still require separate validation.
+         * Availability and retained stock still require separate validation.
          */
         fun supportsLiquidation(id: Int): Boolean = itemDef(id).unnotedId.orElse(id) in ALCHABLE_IDS
 
@@ -316,14 +315,14 @@ class AlchemyBotScript(
         }
 
         /**
-         * Newly supported jewellery is a profitable disposal option, including during Magic training.
+         * Applies the same target policy to every whitelisted item.
          * The native surplus policy still preserves equipped, dynamic, explicit and active production stock.
          */
         private fun eligibleTarget(bot: Bot, id: Int, type: AlchemyType, profit: Boolean,
                                    staffId: Int? = null, minimumPrices: Map<Int, Long> = emptyMap(),
                                    retained: Map<Int, Int>? = null): Boolean =
             AlchemyPolicy.eligible(bot, id, type,
-                profit || itemDef(id).unnotedId.orElse(id) in JEWELLERY_IDS, staffId, minimumPrices, retained)
+                profit, staffId, minimumPrices, retained)
     }
 
     /**
@@ -637,7 +636,7 @@ class AlchemyBotScript(
             return null
         }
 
-        if (!rand(bot.personality.intelligence)) {
+        if (!profit || !rand(bot.personality.intelligence)) {
             return candidates.random()
         }
 
@@ -685,7 +684,7 @@ class AlchemyBotScript(
             return null
         }
 
-        return if (rand(bot.personality.intelligence)) {
+        return if (profit && rand(bot.personality.intelligence)) {
             candidates.maxByOrNull { AlchemyPolicy.margin(bot, it, type, staff, runePrices) }
         } else {
             candidates.random()

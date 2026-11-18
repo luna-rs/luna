@@ -25,7 +25,7 @@ import kotlin.math.ceil
 object AlchemyPolicy {
 
     /**
-     * Limits training's complete opportunity loss to twenty coins per point of native Magic experience.
+     * Shared opportunity-loss allowance for other skilling production quotes.
      */
     const val MAX_TRAINING_GP_PER_XP = 20L
 
@@ -62,8 +62,7 @@ object AlchemyPolicy {
             bot.inventory.any { it != null && it.id == id && it.isDynamic }) return false
         val available = if (retained == null) surplus(bot, id) else surplus(bot, id, retained)
         if (available < 1L) return false
-        val margin = margin(bot, id, type, fireStaffId, minimumPrices)
-        return if (profit) margin > 0L else margin >= -(type.xp * MAX_TRAINING_GP_PER_XP).toLong()
+        return !profit || margin(bot, id, type, fireStaffId, minimumPrices) > 0L
     }
 
     /**

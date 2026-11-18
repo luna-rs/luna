@@ -19,7 +19,6 @@ import engine.bot.coordinator.skill.BotProductionPlanner
 import engine.bot.economy.BotProductionMetrics
 import engine.bot.economy.BotProductionMetrics.Reason
 import engine.bot.economy.BotProductionMetrics.Source
-import game.bot.scripts.trading.TradeBotScript
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import io.luna.game.action.ActionType
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
@@ -117,6 +116,7 @@ abstract class InventoryBotScript(
              */
             var productionPlan: ProductionPlan? = null
             var productionBatch: Map<Int, Int> = emptyMap()
+            var startupSupplyDeadline = 0L
             override fun load(data: JsonObject) {
                 super.load(data)
                 failures = data.get("failures")?.asInt ?: 0
@@ -125,6 +125,7 @@ abstract class InventoryBotScript(
                 failedZones = data.getAsJsonArray("failed_zones")?.mapNotNull { SubZone.fromSavedName(it.asString) }?.toSet()
                     ?: emptySet()
                 productionPlan = data.getAsJsonObject("production_plan")?.let(ProductionPlan::load)
+                startupSupplyDeadline = data.get("startup_supply_deadline")?.asLong ?: 0L
                 productionBatch = data.getAsJsonObject("production_batch")?.also { require(it.size() <= 16) }
                     ?.entrySet()?.associate { it.key.toInt() to it.value.asInt } ?: emptyMap()
                 require(productionBatch.all { (id, amount) -> id >= 0 && amount >= 0 &&
@@ -139,6 +140,7 @@ abstract class InventoryBotScript(
                     data.add("failed_zones", JsonArray().also { array -> failedZones.forEach { array.add(it.name) } })
                 if (productionPlan == null) data.remove("production_plan") else
                     data.add("production_plan", productionPlan!!.save())
+                if (startupSupplyDeadline > 0L) data.addProperty("startup_supply_deadline", startupSupplyDeadline)
                 if (productionBatch.isEmpty()) data.remove("production_batch") else
                     data.add("production_batch", JsonObject().also { batch ->
                         productionBatch.forEach { (id, amount) -> batch.addProperty(id.toString(), amount) }
@@ -230,6 +232,7 @@ abstract class InventoryBotScript(
         data.failedZone?.let { failedProductionZones.add(it) }
         productionPlan = data.productionPlan
         plannedBatch = data.productionBatch
+        startupSupplyDeadline = data.startupSupplyDeadline
     }
 
     /** Writes common configuration and counters into a recipe snapshot using the legacy field names. */
@@ -242,6 +245,7 @@ abstract class InventoryBotScript(
         data.failedZones = failedProductionZones.toSet()
         data.productionPlan = productionPlan
         data.productionBatch = plannedBatch
+        data.startupSupplyDeadline = startupSupplyDeadline
     }
 
     /**
@@ -256,6 +260,7 @@ abstract class InventoryBotScript(
         val items: List<Item>, val tools: Set<Int>, val allowAcquisition: Boolean, val prepareMissing: () -> Boolean
     )
     private var startupSupplies: StartupSupplies? = null
+    private var startupSupplyDeadline = 0L
 
     /**
      * Plans minimum inputs and tools without ending a session solely because supplies are missing.
@@ -352,19 +357,16 @@ abstract class InventoryBotScript(
         fun stocked(required: Map<Int, Int>) = required.all { (id, amount) ->
             bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id) >= amount
         }
-        withTimeoutOrNull(120.seconds) {
-            if (!awaitActionSafety()) return@withTimeoutOrNull
-            if (!stocked(minimums)) {
-                if (targets == null) BotTradeIntentions.recordSupplies(bot, items.filter {
-                    bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
-                }, stockTarget = 1)
-                handler.shop.obtainWantedItems(minimums)
-            }
-            val purchases = if (stocked(minimums)) targets?.invoke() else null
-            if (purchases != null && !stocked(purchases) && awaitActionSafety()) {
-                handler.shop.obtainWantedItems(purchases)
-            }
+        if (startupSupplyDeadline == 0L) startupSupplyDeadline = System.currentTimeMillis() + 120_000L
+        if (!stocked(minimums) && awaitActionSafety()) {
+            handler.shop.obtainWantedItems(minimums, startupSupplyDeadline)
         }
+        val purchases = if (stocked(minimums)) targets?.invoke() else null
+        if (!isPaused() && purchases != null && !stocked(purchases) && awaitActionSafety()) {
+            val remaining = startupSupplyDeadline - System.currentTimeMillis()
+            if (remaining > 0L) withTimeoutOrNull(remaining) { handler.shop.obtainWantedItems(purchases) }
+        }
+        if (stocked(minimums) && !isPaused()) startupSupplyDeadline = 0L
         return stocked(minimums)
     }
 
@@ -733,12 +735,7 @@ abstract class InventoryBotScript(
         for ((id, target) in plan.targets()) {
             if (owned(id) >= target || !plan.attemptedMarketItems.add(id)) continue
             if (!BotProductionPlanner.remainsUseful(bot, plan)) break
-            val trade = TradeBotScript.buySpecific(bot, id, target, plan.supplyDeadline) ?: continue
-            trade.duration = minOf(duration, 30.seconds,
-                (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
-            if (trade.duration <= Duration.ZERO) break
-            bot.scriptStack.pushHead(trade)
-            return false
+            if (handler.shop.obtainWantedItem(plan, id, target, duration)) return false
         }
         if (!plan.shopAttempted && System.currentTimeMillis() < plan.supplyDeadline) {
             plan.shopAttempted = true

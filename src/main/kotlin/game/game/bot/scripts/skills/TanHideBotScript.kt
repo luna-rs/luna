@@ -1,7 +1,5 @@
 package game.bot.scripts.skills
 
-import engine.bot.coordinator.skill.CraftingScriptFactory
-import game.bot.scripts.trading.TradeBotScript
 import com.google.gson.JsonObject
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
@@ -51,7 +49,7 @@ class TanHideBotScript(
     bot: Bot,
     duration: Duration,
     zones: MutableList<SubZone> = mutableListOf(SubZone.AL_KHARID_BANK, SubZone.CANIFIS_MAIN),
-    private var allowGathering: Boolean = true
+    private var allowAcquisition: Boolean = true
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
     companion object {
@@ -61,23 +59,23 @@ class TanHideBotScript(
          * @author lare96
          */
         class TanningData : InventoryScriptData() {
-            var allowGathering = true
-            var started = false
+            var allowAcquisition = true
+            var supplyDeadline = 0L
             var made = 0
             var craftingQueued = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
-                allowGathering = data.get("allow_gathering")?.asBoolean ?: true
-                started = data.get("started")?.asBoolean ?: false
+                allowAcquisition = data.get("allow_acquisition")?.asBoolean ?: data.get("allow_gathering")?.asBoolean ?: true
+                supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 made = data.get("made")?.asInt ?: 0
                 craftingQueued = data.get("crafting_queued")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
-                data.addProperty("allow_gathering", allowGathering)
-                data.addProperty("started", started)
+                data.addProperty("allow_acquisition", allowAcquisition)
+                data.addProperty("supply_deadline", supplyDeadline)
                 data.addProperty("made", made)
                 data.addProperty("crafting_queued", craftingQueued)
             }
@@ -109,8 +107,8 @@ class TanHideBotScript(
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones) {
         if (data is InventoryScriptData) restoreInventoryState(data)
         if (data is TanningData) {
-            allowGathering = data.allowGathering
-            started = data.started
+            allowAcquisition = data.allowAcquisition
+            supplyDeadline = data.supplyDeadline
             made = data.made
             craftingQueued = data.craftingQueued
         }
@@ -123,7 +121,7 @@ class TanHideBotScript(
      * interface button.
      */
     private var tanning: Hide? = null
-    private var started = false
+    private var supplyDeadline = 0L
     private var made = 0
     private var craftingQueued = false
 
@@ -178,36 +176,18 @@ class TanHideBotScript(
 
     override fun bankWithdraw(): List<Item> = withdrawBatch(bankOnly = true)
 
-    override fun withdraw(): List<Item> {
-        if (productionPlan != null) {
-            started = true
-            return withdrawBatch(bankOnly = false)
-        }
-        if (!started) {
-            val stock = Hide.HIDE_TO_HIDE.keys.sumOf { bot.itemTracker.count(it).toLong() }
-            if (stock < CollectHidesBotScript.hideTarget(bot)) {
-                if (allowGathering) {
-                    val supply = TradeBotScript.buySpecific(bot, CollectHidesBotScript.COWHIDE,
-                        CollectHidesBotScript.hideTarget(bot))
-                        ?: CraftingScriptFactory.getCollectHidesScript(bot, mutableListOf(), pickUpHides = true)
-                    if (supply != null) {
-                        allowGathering = false
-                        bot.scriptStack.softPushHead(TanHideBotScript(bot, duration, allowGathering = false))
-                        bot.scriptStack.softPushHead(supply)
-                        stop()
-                        return emptyList()
-                    }
-                }
-                if (stock == 0L || CraftingScriptFactory.canCollectHides(bot)) {
-                    stop()
-                    requestMissingSupplies()
-                    return emptyList()
-                }
-            }
-            started = true
-        }
-        return withdrawBatch(bankOnly = false)
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (productionPlan != null || !allowAcquisition || Hide.HIDE_TO_HIDE.keys.any { bot.itemTracker.count(it) > 0 })
+            return true
+        if (remainingDuration() <= Duration.ZERO || !isActionSafe()) return false
+        if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() +
+            minOf(120_000L, remainingDuration().inWholeMilliseconds)
+        handler.shop.obtainWantedItems(mapOf(CollectHidesBotScript.COWHIDE to CollectHidesBotScript.hideTarget(bot)),
+            supplyDeadline)
+        return !isPaused()
     }
+
+    override fun withdraw(): List<Item> = withdrawBatch(bankOnly = false)
 
     /**
      * Counts owned startup supplies, or bank-only supplies after deposit, and chooses an affordable partial batch.
@@ -269,8 +249,8 @@ class TanHideBotScript(
 
     override fun snapshot(): TanningData = TanningData().also {
         saveInventoryState(it)
-        it.allowGathering = allowGathering
-        it.started = started
+        it.allowAcquisition = allowAcquisition
+        it.supplyDeadline = supplyDeadline
         it.made = made
         it.craftingQueued = craftingQueued
     }

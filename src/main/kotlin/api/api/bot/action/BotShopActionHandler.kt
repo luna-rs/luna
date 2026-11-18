@@ -7,16 +7,19 @@ import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.zone.SubZone
 import api.bot.action.trading.BotGearDemand
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotTradePurpose
 import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotUtilityPurchases
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
+import api.bot.script.ProductionPlan
 import game.bot.scripts.ObtainDustyKeyBotScript
 import game.bot.scripts.trading.TradeBotScript
 import game.obj.doors.BrassKeyDoor
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
@@ -29,6 +32,8 @@ import io.luna.game.model.mob.dialogue.NpcDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.dialogue.PlayerDialogue
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import java.util.WeakHashMap
 
@@ -293,6 +298,18 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     }
 
     /**
+     * Queues a direct purchase using the production owner's recorded deadline and spending limits.
+     */
+    internal fun obtainWantedItem(plan: ProductionPlan, id: Int, target: Int, duration: Duration): Boolean {
+        val visit = minOf(duration, 30.seconds, (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
+        if (visit <= Duration.ZERO) return false
+        val trade = TradeBotScript.buySpecific(bot, id, target, plan.supplyDeadline) ?: return false
+        trade.duration = visit
+        bot.scriptStack.pushHead(trade)
+        return true
+    }
+
+    /**
      * Obtains one usable tool from real finite sources without recording every failed tier as an exact supply.
      * The caller's saved absolute deadline also bounds child trading; each shop action retains native price,
      * access, capacity and payment guards. A funded generated bid can remain while ordinary work resumes.
@@ -361,7 +378,29 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                     ?.let { id to it } }.toMap()))
     }
 
-    private suspend fun obtainWantedItems(amounts: Map<Int, Int>, budget: PurchaseBudget?): Set<Int> {
+    /**
+     * Sources a production basket before its deadline. Each item can queue one direct trade
+     * before normal shop acquisition. The caller rechecks owned inputs when it resumes, including partial fills.
+     */
+    internal suspend fun obtainWantedItems(amounts: Map<Int, Int>, deadlineMillis: Long): Set<Int> {
+        val remaining = deadlineMillis - System.currentTimeMillis()
+        if (remaining <= 0L) return emptySet()
+        BotTradeIntentions.recordSupplies(bot, amounts.map { (id, amount) -> Item(id, amount) }, stockTarget = 1)
+        return withTimeoutOrNull(remaining) {
+            val hasNotes = amounts.keys.any { id ->
+                val note = ItemDefinition.ALL.get(id).map { it.notedId.orElse(-1) }.orElse(-1)
+                note >= 0 && (bot.inventory.contains(note) || bot.bank.contains(note))
+            }
+            if (hasNotes && !handler.banking.travelToBankDepositAll())
+                return@withTimeoutOrNull emptySet()
+            obtainWantedItems(amounts, null, deadlineMillis)
+            amounts.filter { (id, amount) -> bot.inventory.computeAmountForId(id).toLong() +
+                bot.bank.computeAmountForId(id) + bot.equipment.computeAmountForId(id) >= amount }.keys
+        }.orEmpty()
+    }
+
+    private suspend fun obtainWantedItems(amounts: Map<Int, Int>, budget: PurchaseBudget?,
+                                          deadlineMillis: Long = 0L): Set<Int> {
         require(amounts.values.all { it > 0 })
         val targets = amounts.toMap()
         fun acquired() = targets.filter { (id, amount) ->
@@ -373,8 +412,18 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             attempted?.keys?.removeAll(targets.keys)
             return targets.keys
         }
-        val needsBrassKey = budget == null && targets[BrassKeyDoor.KEY] == 1 && BrassKeyDoor.KEY !in acquired()
+        val needsBrassKey = budget == null && deadlineMillis == 0L && targets[BrassKeyDoor.KEY] == 1 && BrassKeyDoor.KEY !in acquired()
         val timeout = if (needsBrassKey) 180.seconds else 120.seconds
+        val production = deadlineMillis > 0L
+        val shopBudget = if (production) {
+            val prices = targets.mapNotNull { (id, amount) ->
+                BotSupplySources.quote(bot, id, amount)?.let { id to it.maximumUnitPrice }
+            }.toMap()
+            val coins = Currency.COINS.id
+            val allowance = ((bot.inventory.computeAmountForId(coins).toLong() +
+                bot.bank.computeAmountForId(coins)) * BotTradeIntentions.budgetFraction(bot, BotTradePurpose.BUY)).toInt()
+            PurchaseBudget(allowance, prices, {}, emptyMap(), emptyMap())
+        } else budget
         withTimeoutOrNull(timeout) {
             try {
                 for ((id, amount) in targets) {
@@ -384,12 +433,19 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         continue
                     }
                     val banked = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
-                    val dustyKey = amount == 1 && id == BotTaverleyKeys.DUSTY_KEY
-                    val key = dustyKey || (amount == 1 && id == BrassKeyDoor.KEY)
+                    val dustyKey = !production && amount == 1 && id == BotTaverleyKeys.DUSTY_KEY
+                    val key = dustyKey || (!production && amount == 1 && id == BrassKeyDoor.KEY)
                     val utilitySource = BotUtilityPurchases.shopCeiling(bot, id)
-                    if (attempted != null && id !in attempted && banked < amount &&
-                        (key || utilitySource == null)) {
-                        val deadline = System.currentTimeMillis() + 45_000L
+                    if (production && banked >= amount) {
+                        attempted?.remove(id)
+                        continue
+                    }
+                    val mayTrade = !production || id != Currency.COINS.id &&
+                        ItemDefinition.ALL.get(id).map { it.isTradeable }.orElse(false)
+                    if (attempted != null && id !in attempted && banked < amount && mayTrade &&
+                        (production || key || utilitySource == null)) {
+                        val deadline = if (production) minOf(deadlineMillis, System.currentTimeMillis() + 45_000L)
+                            else System.currentTimeMillis() + 45_000L
                         val trade = TradeBotScript.buySpecific(bot, id, amount, deadline)
                         if (trade != null) {
                             attempted[id] = SupplyAttempt.TRADE
@@ -406,7 +462,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                     }
                     // Complete this item's fallback before another supply script can pause the basket.
                     try {
-                        acquireWantedItem(id, amount, targets.keys, budget)
+                        acquireWantedItem(id, amount, targets.keys, shopBudget)
                     } finally {
                         if (utilitySource != null && id !in acquired()) BotUtilityPurchases.shopFailed(bot, id)
                     }

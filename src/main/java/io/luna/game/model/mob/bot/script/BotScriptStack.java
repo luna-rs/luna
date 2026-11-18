@@ -123,13 +123,18 @@ public final class BotScriptStack {
                 continue;
             }
             try {
+                JsonObject data = scriptData.getAsJsonObject();
+                // These saved children gathered materials for production sessions that now source through trading.
+                if (isRetiredProductionGathering(scriptClass, data)) {
+                    continue;
+                }
                 BotScriptData dataClass =
                         (BotScriptData) Class.forName(snapshot.getScriptDataClass()).getConstructor().newInstance();
-                dataClass.load(scriptData.getAsJsonObject());
+                dataClass.load(data);
                 BotScript restored = scriptManager.loadScript(scriptClass, bot, dataClass);
                 if (restored != null) {
                     restored.setTrainingGoal(snapshot.getTrainingGoal());
-                    JsonObject savedProfit = scriptData.getAsJsonObject().getAsJsonObject("profit_gathering");
+                    JsonObject savedProfit = data.getAsJsonObject("profit_gathering");
                     if (savedProfit != null) {
                         restored.setProfitGathering(ProfitGatheringGoal.load(savedProfit));
                     }
@@ -145,6 +150,14 @@ public final class BotScriptStack {
             }
         }
         buffer.removeIf(script -> script instanceof VoidBotScript); // Remove all void scripts after to maintain order.
+    }
+
+    private boolean isRetiredProductionGathering(String scriptClass, JsonObject data) {
+        return data.has("production_supply") ||
+                data.has("firemakingTarget") && data.get("firemakingTarget").getAsInt() > 0 ||
+                data.has("herbloreContinuation") && data.get("herbloreContinuation").getAsBoolean() ||
+                scriptClass.equals("game.bot.scripts.HarvestBotScript") && data.has("supplyDeadline") &&
+                        data.get("supplyDeadline").getAsLong() > 0;
     }
 
     /**

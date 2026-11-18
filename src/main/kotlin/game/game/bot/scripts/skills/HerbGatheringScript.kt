@@ -131,7 +131,7 @@ class HerbGatheringScript(
             val identification = Herb.entries.sortedWith(
                 compareByDescending<Herb> { it == herb }.thenByDescending { it.exp }
             ).asSequence().map {
-                IdentifyHerbBotScript(bot, it, remaining, allowGathering = false)
+                IdentifyHerbBotScript(bot, it, remaining, allowAcquisition = false)
             }.firstOrNull { it.isEligible() }
             if (identification != null || targetReached) {
                 if (identification != null && remaining > Duration.ZERO) {

@@ -4,13 +4,10 @@ import api.bot.script.BotScript
 import api.bot.script.InventoryBotScript
 import api.bot.action.BotCombatActionHandler
 import api.bot.zone.SubZone
-import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.CollectGroundItemBotScript
-import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.MakePotteryBotScript
@@ -117,8 +114,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         if (getUntannedHides(bot) > 0 || randBoolean()) {
             return TanHideBotScript(bot, getDuration(bot, skillId))
         }
-        zones += ProductionZones.FLAX
-        return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot, skillId), zones)
+        return if (level >= Textile.BOWSTRING.level) SpinTextileBotScript(bot, getDuration(bot, skillId))
+            else TanHideBotScript(bot, getDuration(bot, skillId))
     }
 
     /**
@@ -208,7 +205,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
                 .map { WeaveTextileBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             val moltenGlass = MakeMoltenGlassBotScript(bot, duration)
-            if (moltenGlass.isEligible() || (!training && moltenGlass.canPrepareSand()))
+            if (moltenGlass.isEligible())
                 add(moltenGlass.requiredLevel to moltenGlass)
             if (!training) {
                 addAll(WaterResource.FILLED_IDS.map { MakeSoftClayBotScript(bot, it, duration) }

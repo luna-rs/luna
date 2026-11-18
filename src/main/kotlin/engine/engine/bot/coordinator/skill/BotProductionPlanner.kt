@@ -243,9 +243,17 @@ object BotProductionPlanner {
             }
             val stock = ids.associateWith(::count)
             if (skill == SKILL_COOKING) {
-                for ((id, amount) in recipe.materials) requested = minOf(requested,
-                    ((stock[id] ?: 0L) + (source(id)?.quantity ?: 0)).div(amount).coerceAtMost(100L).toInt())
-                if (recipe.tools.any { (stock[it] ?: 0L) == 0L && source(it) == null }) return@mapNotNull null
+                for ((id, amount) in recipe.materials) {
+                    val available = (stock[id] ?: 0L) + (source(id)?.quantity ?: 0)
+                    if (available < amount && itemDef(id).isTradeable) {
+                        // A bounded direct trade can supply a recipe without current shop stock.
+                        requested = minOf(requested, if (training) 28 else 1)
+                    } else {
+                        requested = minOf(requested, (available / amount).coerceAtMost(100L).toInt())
+                    }
+                }
+                if (recipe.tools.any { (stock[it] ?: 0L) == 0L && source(it) == null && !itemDef(it).isTradeable })
+                    return@mapNotNull null
             }
             if (requested < 1) {
                 lastRejection = if (capacity < 1) Reason.NO_SPACE else Reason.MATERIALS_UNAVAILABLE

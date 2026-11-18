@@ -33,9 +33,7 @@ import kotlin.time.Duration
  * Once a bar type is selected, the script withdraws a balanced inventory of its required ores, travels to a furnace,
  * uses the appropriate ore on the furnace, and repeats until the required ore combination is no longer available.
  *
- * When no smeltable ore combination can be found, the script queues a mining script so the bot can gather additional
- * resources. After this script finishes, capable bots may queue a smithing script to process the bars they produced.
- * Bank-relief sessions instead use only the selected owned ores, reject loot and finish without either followup.
+ * The script ends when there is no usable ore combination after supply acquisition.
  *
  * @param bot The bot running this script.
  * @param selectedBar The specific bar type to smelt, or `null` to choose from available banked ores.

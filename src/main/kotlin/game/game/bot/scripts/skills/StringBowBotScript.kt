@@ -15,8 +15,6 @@ import com.google.gson.JsonObject
 import game.skill.fletching.stringBow.Bow
 import game.skill.fletching.stringBow.StringBowAction
 import game.skill.crafting.textileCrafting.Textile
-import game.bot.scripts.trading.TradeBotScript
-import kotlinx.coroutines.withTimeoutOrNull
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
@@ -66,23 +64,23 @@ class StringBowBotScript(
             /** Bow enum retained under its existing snapshot field name. */
             var bow: Bow = Bow.SHORTBOW
             var supplyAttempts = 0
-            var marketAttempted = false
             var supplyDeadline = 0L
+            var purchaseDeadline = 0L
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 bow = Bow.valueOf(data.get("bow").asString)
                 supplyAttempts = data.get("supplyAttempts")?.asInt ?: 0
-                marketAttempted = data.get("marketAttempted")?.asBoolean ?: false
                 supplyDeadline = data.get("supplyDeadline")?.asLong ?: 0L
+                purchaseDeadline = data.get("purchaseDeadline")?.asLong ?: 0L
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("bow", bow.name)
                 data.addProperty("supplyAttempts", supplyAttempts)
-                data.addProperty("marketAttempted", marketAttempted)
                 data.addProperty("supplyDeadline", supplyDeadline)
+                data.addProperty("purchaseDeadline", purchaseDeadline)
             }
         }
     }
@@ -92,15 +90,15 @@ class StringBowBotScript(
     /** One matching unstrung bow and string, the minimum complete recipe. */
     private val materials = listOf(bow.unstrungItem, Item(Bow.BOW_STRING))
     private var supplyAttempts = 0
-    private var marketAttempted = false
     private var supplyDeadline = 0L
+    private var purchaseDeadline = 0L
 
     /** Restores the legacy bow field together with saved zones and shared retry counters. */
     constructor(bot: Bot, data: StringBowData) : this(bot, data.bow, data.duration, data.zones) {
         restoreInventoryState(data)
         supplyAttempts = data.supplyAttempts
-        marketAttempted = data.marketAttempted
         supplyDeadline = data.supplyDeadline
+        purchaseDeadline = data.purchaseDeadline
     }
 
     /**
@@ -127,14 +125,15 @@ class StringBowBotScript(
         if (bows == 0L || supplyAttempts >= 1 || !isActionSafe() ||
             bot.fletching.staticLevel < requiredLevel) return false
         if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() + duration.inWholeMilliseconds
-        supplyAttempts++
+        if (purchaseDeadline == 0L) purchaseDeadline = minOf(supplyDeadline, System.currentTimeMillis() + 120_000L)
         val target = minOf(28L, bows).toInt()
-        withTimeoutOrNull(minOf(120.seconds, supplyTime())) {
-            handler.shop.obtainWantedItem(Bow.BOW_STRING, target)
-        }
+        handler.shop.obtainWantedItems(mapOf(Bow.BOW_STRING to target), purchaseDeadline)
+        if (isPaused()) return false
+        supplyAttempts++
         if (supplyTime() <= Duration.ZERO || !isActionSafe()) return false
         if (FletchingProduction.owned(bot, Bow.BOW_STRING) > 0) return true
-        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_CRAFTING) ||
+        if (FletchingProduction.owned(bot, SpinTextileBotScript.FLAX) == 0L ||
+            !BotCombatActionHandler.mayGainExperience(bot, SKILL_CRAFTING) ||
             bot.crafting.staticLevel < Textile.BOWSTRING.level &&
             !BotCombatActionHandler.wantsToTrain(bot, SKILL_CRAFTING)) return false
         bot.scriptStack.pushHead(SpinTextileBotScript(bot, duration,
@@ -142,23 +141,7 @@ class StringBowBotScript(
         return false
     }
 
-    override suspend fun beforeInventoryInit(): Boolean {
-        if (!marketAttempted && supplyTime() > Duration.ZERO && isActionSafe() &&
-            FletchingProduction.owned(bot, Bow.BOW_STRING) == 0L &&
-            FletchingProduction.owned(bot, bow.unstrung) > 0L && bot.fletching.staticLevel >= requiredLevel) {
-            if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() + duration.inWholeMilliseconds
-            marketAttempted = true
-            val target = minOf(28L, FletchingProduction.owned(bot, bow.unstrung)).toInt()
-            val trade = TradeBotScript.buySpecific(bot, Bow.BOW_STRING, target,
-                minOf(supplyDeadline, System.currentTimeMillis() + 45_000L))
-            if (trade != null) {
-                trade.duration = minOf(45.seconds, supplyTime())
-                bot.scriptStack.pushHead(trade)
-                return false
-            }
-        }
-        return prepareStrings()
-    }
+    override suspend fun beforeInventoryInit(): Boolean = prepareStrings()
 
     override fun withdraw(): List<Item> = productionWithdraw(materials,
         levelEligible = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel)
@@ -183,7 +166,7 @@ class StringBowBotScript(
         attemptProduction(bow.unstrung) { startProduction() }
         if (bot.inventory.computeAmountForId(bow.unstrung) < before) {
             supplyAttempts = 0
-            marketAttempted = false
+            purchaseDeadline = 0L
         }
         return true
     }
@@ -205,7 +188,7 @@ class StringBowBotScript(
         it.bow = bow
         saveInventoryState(it)
         it.supplyAttempts = supplyAttempts
-        it.marketAttempted = marketAttempted
         it.supplyDeadline = supplyDeadline
+        it.purchaseDeadline = purchaseDeadline
     }
 }

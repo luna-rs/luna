@@ -97,7 +97,7 @@ internal object ProductionCatalogue {
             Hide.entries.forEach { hide ->
                 add(fixed(recipe("tan:${hide.name}", SKILL_CRAFTING, 1,
                     listOf(Item(hide.hide)), hide.tan, 0.0).copy(coinCost = hide.cost.toLong()),
-                    { bot, duration -> TanHideBotScript(bot, duration, allowGathering = false) }))
+                    { bot, duration -> TanHideBotScript(bot, duration, allowAcquisition = false) }))
             }
             Battlestaff.entries.forEach { staff ->
                 add(fixed(recipe("staff:${staff.name}", SKILL_CRAFTING, staff.level,
@@ -194,7 +194,7 @@ internal object ProductionCatalogue {
             Herb.entries.forEach { herb ->
                 add(fixed(recipe("identify:${herb.name}", SKILL_HERBLORE, herb.level,
                     listOf(herb.idItem), herb.identified, herb.exp),
-                    { bot, duration -> IdentifyHerbBotScript(bot, herb, duration, allowGathering = false) }))
+                    { bot, duration -> IdentifyHerbBotScript(bot, herb, duration, allowAcquisition = false) }))
             }
             UnfPotion.entries.forEach { potion ->
                 add(fixed(recipe("unfinished:${potion.name}", SKILL_HERBLORE, potion.level,

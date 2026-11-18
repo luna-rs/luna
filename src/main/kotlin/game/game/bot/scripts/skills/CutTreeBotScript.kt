@@ -47,15 +47,13 @@ import kotlin.time.Duration.Companion.seconds
  * @param trees The tree types this bot is allowed to chop.
  * @param duration How long this script should continue running before completing normally.
  * @param zones The candidate zones this script may operate in.
- * @property firemakingTarget A bounded owned-log target for Firemaking preparation, or zero for ordinary Woodcutting.
  * @author lare96
  */
-class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones: MutableList<SubZone>,
-                       val firemakingTarget: Int = 0) :
+class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones: MutableList<SubZone>) :
     SkillingBotScript<GameObject>(bot, duration, zones, bot.woodcutting), SocialBotScript {
 
     override fun wildernessNotingItems(): Set<Int> =
-        if (firemakingTarget == 0) trees.mapTo(HashSet()) { it.logId } else emptySet()
+        trees.mapTo(HashSet()) { it.logId }
 
     override fun ambientConversationTopic(): ConversationSpeech = ConversationSpeech.WOODCUTTING
 
@@ -104,19 +102,15 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
             /**
              * The Firemaking preparation stock target; old Woodcutting snapshots remain ordinary sessions.
              */
-            var firemakingTarget = 0
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 trees = loadEnumSet("trees", data) { Tree.valueOf(it) }
-                firemakingTarget = (data.get("firemakingTarget")?.asInt ?: 0)
-                    .coerceIn(0, FiremakingScriptFactory.GATHER_TARGET)
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 saveEnumSet("trees", data, trees)
-                data.addProperty("firemakingTarget", firemakingTarget)
             }
         }
     }
@@ -128,7 +122,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
      * @param data The saved Woodcutting script data to restore from.
      */
     constructor(bot: Bot, data: CutTreeData) :
-        this(bot, data.trees, data.duration, data.zones, data.firemakingTarget)
+        this(bot, data.trees, data.duration, data.zones)
 
     /**
      * The live tree object ids that match the configured [trees].
@@ -152,10 +146,6 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
      */
     private var pickedUp: Int? = null
 
-    /**
-     * Prevents a stock-target exit and a completion callback from dispatching the same continuation twice.
-     */
-    private var firemakingQueued = false
 
     private val hardwood = trees.any { it == Tree.TEAK || it == Tree.MAHOGANY }
 
@@ -240,12 +230,6 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     }
 
     override suspend fun onExecuteSkilling(searching: Boolean) {
-        if (firemakingTarget > 0 && trees.sumOf { bot.itemTracker.count(it.logId).toLong() } >= firemakingTarget) {
-            queueFiremaking()
-            bot.actions.first(CutTreeAction::class.java)?.interrupt()
-            stop()
-            return
-        }
         // Search nearby for birds nests and loot if we have enough inventory space.
         if (bot.walking.isEmpty && bot.inventory.computeRemainingSize() >= 2) {
             val nests = world.locator.findItems(bot, 5) { it.view.isViewableFor(bot) && Nest.isNest(it.id) }
@@ -289,19 +273,10 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         data.duration = duration
         data.zones = originalZones.toMutableList()
         data.trees = trees
-        data.firemakingTarget = firemakingTarget
         return data
     }
 
-    override suspend fun finish() {
-        if (firemakingTarget > 0) bot.actions.first(CutTreeAction::class.java)?.interrupt()
-    }
-
     override suspend fun completed() {
-        if (firemakingTarget > 0) {
-            queueFiremaking()
-            return
-        }
         // Chance to burn the logs we chopped, more likely for bots that like Firemaking. Burning logs never makes
         // money, so bots chopping for profit keep them.
         val firemakingChance = if (SKILL_FIREMAKING in bot.preferences.skills) 0.5 else 0.2
@@ -317,16 +292,5 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
                 FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
             bot.scriptStack.pushTail(script, 2)
         }
-    }
-
-    /**
-     * Burns actual owned fuel with the remaining session time; failed gathering cannot recursively gather again.
-     */
-    private fun queueFiremaking() {
-        if (firemakingQueued) return
-        val remaining = remainingDuration()
-        if (remaining <= Duration.ZERO) return
-        firemakingQueued = true
-        FiremakingScriptFactory.getBurnScript(bot, duration = remaining)?.let { bot.scriptStack.softPushHead(it) }
     }
 }

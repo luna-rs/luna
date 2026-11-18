@@ -4,7 +4,6 @@ import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotCombatActionHandler
-import game.bot.scripts.trading.TradeBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
@@ -18,8 +17,6 @@ import engine.bot.coordinator.skill.CraftingScriptFactory
 import engine.bot.coordinator.skill.FletchingScriptFactory
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.profitMode
 import engine.bot.gear.BotGearLocator
-import game.bot.scripts.HarvestBotScript
-import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.skill.crafting.textileCrafting.Textile
 import game.skill.crafting.textileCrafting.TextileType
 import game.skill.crafting.textileCrafting.MakeTextileActionItem
@@ -43,7 +40,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Owned inputs are withdrawn in partial or full batches and converted by [MakeTextileActionItem]. Current
  * Crafting level is checked before each interaction. [InventoryBotScript] supplies verified unnoted banking,
  * safety checks, progress detection, and persistent retry budgets. Missing wool or roots request total stock
- * targets of 1,000; missing flax first uses a prepared item-market seller, then shops and harvesting.
+ * targets of 1,000; missing flax uses bounded market, trade and shop acquisition.
  * Bowstring sessions below level ten pause for normal glove training and resume the same session.
  * Three prerequisite attempts without earned Crafting XP end the session; this budget survives saved state.
  *
@@ -88,7 +85,7 @@ class SpinTextileBotScript(
             var levelPreparationExperience = -1.0
             var supplyTarget = 0
             var supplyDeadline = 0L
-            var flaxSupplyPhase = 0
+            var flaxPurchaseDeadline = 0L
 
             override fun load(data: JsonObject) {
                 super.load(data)
@@ -97,7 +94,7 @@ class SpinTextileBotScript(
                 levelPreparationExperience = data.get("level_preparation_experience")?.asDouble ?: -1.0
                 supplyTarget = data.get("supplyTarget")?.asInt ?: 0
                 supplyDeadline = data.get("supplyDeadline")?.asLong ?: 0L
-                flaxSupplyPhase = data.get("flaxSupplyPhase")?.asInt ?: 0
+                flaxPurchaseDeadline = data.get("flaxPurchaseDeadline")?.asLong ?: 0L
             }
 
             override fun save(data: JsonObject) {
@@ -107,7 +104,7 @@ class SpinTextileBotScript(
                 data.addProperty("level_preparation_experience", levelPreparationExperience)
                 data.addProperty("supplyTarget", supplyTarget)
                 data.addProperty("supplyDeadline", supplyDeadline)
-                data.addProperty("flaxSupplyPhase", flaxSupplyPhase)
+                data.addProperty("flaxPurchaseDeadline", flaxPurchaseDeadline)
             }
         }
 
@@ -238,9 +235,9 @@ class SpinTextileBotScript(
         (data as? TextileData)?.supplyTarget ?: 0, (data as? TextileData)?.supplyDeadline ?: 0L) {
         if (data is InventoryScriptData) restoreInventoryState(data)
         if (data is TextileData) {
+            flaxPurchaseDeadline = data.flaxPurchaseDeadline
             levelPreparationAttempts = data.levelPreparationAttempts
             levelPreparationExperience = data.levelPreparationExperience
-            flaxSupplyPhase = data.flaxSupplyPhase
         }
     }
 
@@ -248,7 +245,6 @@ class SpinTextileBotScript(
     val requiredLevel = textile.level
     private var levelPreparationAttempts = 0
     private var levelPreparationExperience = -1.0
-    private var flaxSupplyPhase = 0
     /** Non-stackable input consumed by one player action. */
     private val materials = listOf(textile.rawItem)
 
@@ -262,6 +258,8 @@ class SpinTextileBotScript(
             if (amount == 0) null else item.withAmount(amount)
         }
     }
+
+    private var flaxPurchaseDeadline = 0L
 
     private fun ownedRaw(): Long = bot.inventory.computeAmountForId(FLAX).toLong() + bot.bank.computeAmountForId(FLAX)
     private fun ownedStrings(): Int = (bot.inventory.computeAmountForId(Textile.BOWSTRING.processedItem.id).toLong() +
@@ -289,34 +287,19 @@ class SpinTextileBotScript(
             supplyTarget > 0 && !bot.profitMode &&
             !BotCombatActionHandler.wantsToTrain(bot, SKILL_FLETCHING)) return false
         if (!normalizeTradedFlax()) return false
-        if (ownedRaw() > 0) return true
+        if (ownedRaw() > 0) {
+            flaxPurchaseDeadline = 0L
+            return true
+        }
         if (supplyTarget > 0 && ownedStrings() > 0) return false
         if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() + duration.inWholeMilliseconds
         val target = if (supplyTarget == 0) 28 else (supplyTarget - ownedStrings()).coerceAtLeast(1)
-        if (flaxSupplyPhase == 0) {
-            flaxSupplyPhase = 1
-            val deadline = minOf(supplyDeadline, System.currentTimeMillis() + 120_000L)
-            val trade = TradeBotScript.buySpecific(bot, FLAX, target, deadline)
-            if (trade != null) {
-                trade.duration = minOf(45.seconds, supplyTime())
-                bot.scriptStack.pushHead(trade)
-                return false
-            }
-        }
-        if (supplyTime() <= Duration.ZERO || !isActionSafe()) return false
-        if (ownedRaw() > 0) return true
-        if (flaxSupplyPhase == 1) {
-            flaxSupplyPhase = 2
-            withTimeoutOrNull(minOf(120.seconds, supplyTime())) { handler.shop.obtainWantedItem(FLAX, target) }
-        }
-        if (supplyTime() <= Duration.ZERO || !isActionSafe()) return false
-        if (ownedRaw() > 0) return true
-        if (flaxSupplyPhase == 2 && supplyTime() > Duration.ZERO) {
-            flaxSupplyPhase = 3
-            bot.scriptStack.pushHead(HarvestBotScript(bot, Harvestable.FLAX, duration,
-                ProductionZones.FLAX.toMutableList(), targetAmount = target, supplyDeadline = supplyDeadline))
-        }
-        return false
+        if (flaxPurchaseDeadline == 0L)
+            flaxPurchaseDeadline = minOf(supplyDeadline, System.currentTimeMillis() + 120_000L)
+        handler.shop.obtainWantedItems(mapOf(FLAX to target), flaxPurchaseDeadline)
+        if (isPaused() || ownedRaw() < 1L) return false
+        flaxPurchaseDeadline = 0L
+        return true
     }
 
     override suspend fun beforeInventoryInit(): Boolean {
@@ -357,9 +340,7 @@ class SpinTextileBotScript(
             return true
         }
         if (!productionReady(bot.inventory.containsAll(materials), bot.crafting.level >= requiredLevel)) return true
-        val before = bot.inventory.computeAmountForId(textile.rawItem.id)
         attemptProduction(textile.rawItem.id, outputId = textile.processedItem.id) { startProduction() }
-        if (supplyTarget == 0 && bot.inventory.computeAmountForId(textile.rawItem.id) < before) flaxSupplyPhase = 0
         return true
     }
 
@@ -412,7 +393,7 @@ class SpinTextileBotScript(
         it.levelPreparationExperience = levelPreparationExperience
         it.supplyTarget = supplyTarget
         it.supplyDeadline = supplyDeadline
-        it.flaxSupplyPhase = flaxSupplyPhase
+        it.flaxPurchaseDeadline = flaxPurchaseDeadline
         saveInventoryState(it)
     }
 
