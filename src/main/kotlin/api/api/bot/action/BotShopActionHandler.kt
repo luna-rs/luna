@@ -51,9 +51,16 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     fun canTradeWith(shop: Shop): Boolean = visits.canTradeWith(shop)
 
     /**
-     * Tracks supply scripts already queued for this activity across its pauses.
+     * Tracks the last supply script queued for each item by the owning activity.
      */
-    private val supplyAttempts = WeakHashMap<BotScript, MutableSet<Int>>()
+    private val supplyAttempts = WeakHashMap<BotScript, MutableMap<Int, SupplyAttempt>>()
+
+    /**
+     * Separates a completed trade attempt from the later visit to Velrak.
+     *
+     * @author lare96
+     */
+    private enum class SupplyAttempt { TRADE, VELRAK }
 
     /**
      * One finite GP budget shared by every item in a guarded acquisition basket.
@@ -277,13 +284,11 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     suspend fun obtainWantedItem(id: Int): Boolean = obtainWantedItem(id, 1)
 
     /**
-     * Obtains the minimum carried quantity through owned bank stock and normal shop purchases.
+     * Obtains the minimum carried quantity from owned stock, direct trades, or the item's other sources.
      */
     suspend fun obtainWantedItem(id: Int, amount: Int): Boolean {
         require(amount > 0)
-        if (id != BotTaverleyKeys.DUSTY_KEY) {
-            BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
-        }
+        BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
         return id in obtainWantedItems(mapOf(id to amount))
     }
 
@@ -363,9 +368,9 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount
         }.keys
         val owner = if (budget == null) bot.scriptStack.current()?.takeUnless { it is TradeBotScript } else null
-        val attempted = owner?.let { supplyAttempts.getOrPut(it) { hashSetOf() } }
+        val attempted = owner?.let { supplyAttempts.getOrPut(it) { hashMapOf() } }
         if (acquired().size == targets.size) {
-            attempted?.removeAll(targets.keys)
+            attempted?.keys?.removeAll(targets.keys)
             return targets.keys
         }
         val needsBrassKey = budget == null && targets[BrassKeyDoor.KEY] == 1 && BrassKeyDoor.KEY !in acquired()
@@ -379,29 +384,27 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         continue
                     }
                     val banked = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
-                    if (id == BotTaverleyKeys.DUSTY_KEY) {
-                        if (amount == 1 && banked == 0L && attempted != null &&
-                            id !in attempted && BotTaverleyKeys.canAttempt(bot)) {
-                            attempted += id
-                            bot.scriptStack.pushHead(ObtainDustyKeyBotScript(bot, targets.keys))
-                            return@withTimeoutOrNull
-                        }
-                        acquireWantedItem(id, amount, targets.keys, budget)
-                        if (id in acquired()) attempted?.remove(id)
-                        continue
-                    }
+                    val dustyKey = amount == 1 && id == BotTaverleyKeys.DUSTY_KEY
+                    val key = dustyKey || (amount == 1 && id == BrassKeyDoor.KEY)
                     val utilitySource = BotUtilityPurchases.shopCeiling(bot, id)
-                    if (attempted != null && id !in attempted && banked < amount && utilitySource == null) {
+                    if (attempted != null && id !in attempted && banked < amount &&
+                        (key || utilitySource == null)) {
                         val deadline = System.currentTimeMillis() + 45_000L
                         val trade = TradeBotScript.buySpecific(bot, id, amount, deadline)
                         if (trade != null) {
-                            attempted.add(id)
+                            attempted[id] = SupplyAttempt.TRADE
                             trade.duration = 45.seconds
                             bot.scriptStack.pushHead(trade)
                             return@withTimeoutOrNull
                         }
                     }
-                    // Complete this item's fallback before another market child can pause the basket.
+                    if (dustyKey && banked == 0L && attempted != null &&
+                        attempted[id] != SupplyAttempt.VELRAK && BotTaverleyKeys.canAttempt(bot)) {
+                        attempted[id] = SupplyAttempt.VELRAK
+                        bot.scriptStack.pushHead(ObtainDustyKeyBotScript(bot, targets.keys))
+                        return@withTimeoutOrNull
+                    }
+                    // Complete this item's fallback before another supply script can pause the basket.
                     try {
                         acquireWantedItem(id, amount, targets.keys, budget)
                     } finally {
@@ -434,7 +437,6 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             }
         }
         if (carried() >= amount) return true
-        if (id == BotTaverleyKeys.DUSTY_KEY) return false
         if (budget != null) return acquireQuotedItem(id, amount, basket, budget)
         if (id == BrassKeyDoor.KEY && amount == 1 && BotBrassKeys.obtain(bot, basket)) return true
         if (!ActionSafety.NON_COMBAT.allows(bot)) return false

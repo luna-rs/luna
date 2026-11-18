@@ -9,7 +9,6 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.item.teleport.SpadeDigSpot
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.TaverleyJailDoor
-import api.bot.action.BotTaverleyKeys
 import game.skill.agility.yanille.YanilleDungeon
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
@@ -3240,11 +3239,6 @@ enum class SubZone(
             else -> null
         }
 
-        TAVERLEY_DUNGEON_ZAMORAK_MONKS, TAVERLY_BLACK_DEMONS, TAVERLY_HELLHOUND,
-        TAVERLY_DUNGEON_BLUE_DRAGONS ->
-            if (this !in bot.subZones && !canEnterTaverleyWest(bot))
-                "the western section of Taverley Dungeon needs a dusty key" else null
-
         WATERFALL_FIRE_GIANTS_WEST, WATERFALL_FIRE_GIANTS_EAST ->
             if (!bot.itemTracker.contains(295)) "the Waterfall entrance needs Glarial's amulet" else null
 
@@ -3263,10 +3257,4 @@ enum class SubZone(
             EDGEVILLE_DUNGEON_HOBGOBLINS -> BrassKeyDoor.KEY
             else -> null
         }
-
-    /**
-     * Checks for an owned dusty key or a bot that can obtain one from Velrak.
-     */
-    private fun canEnterTaverleyWest(bot: Bot): Boolean =
-        bot.itemTracker.contains(TaverleyJailDoor.DUSTY_KEY_GATE.key) || BotTaverleyKeys.canAttempt(bot)
 }
