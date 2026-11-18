@@ -212,7 +212,7 @@ object BotTradeManager {
         if (purpose != BotTradePurpose.BUY && purpose != BotTradePurpose.MERCHANT_BUY) return available
         val fraction = BotTradeIntentions.budgetFraction(bot, purpose).coerceIn(0.0, 1.0)
         val coins = available.filter { it.item.id == 995 }.mapNotNull { quote ->
-            val amount = (quote.item.amount.toDouble() * fraction).toInt()
+            val amount = BotMerchantCapital.purse(bot, (quote.item.amount.toDouble() * fraction).toInt())
             if (amount > 0) BotTradeItem(Item(995, amount), quote.price, quote.purpose, quote.bot) else null
         }
         return coins + spendingStock(available.filter { it.item.id != 995 }, fraction)
@@ -412,6 +412,7 @@ object BotTradeManager {
         } else if (purpose == BotTradePurpose.MERCHANT_BUY) {
             val candidates = ArrayList<BotTradeItem>()
             val useful = BotTradeIntentions.purchases(bot).associateBy { it.id }
+            val capital = if (BotMerchantCapital.active(bot)) BotMerchantCapital.snapshot(bot) else null
             val specialty = BotMerchantSpecialty.forBot(bot)
             val cosmetics = if (specialty == BotMerchantSpecialty.GENERAL ||
                 specialty == BotMerchantSpecialty.EQUIPMENT) BotEquipmentPreferences.cosmeticIds().asSequence()
@@ -429,12 +430,15 @@ object BotTradeManager {
                 if (BotFoodDemand.handles(bot, id)) continue
                 val resale = BotMerchantSpecialty.accepts(bot, id)
                 if (id !in useful && !resale) continue
-                val quantity = if (resale) Int.MAX_VALUE else useful[id]?.let {
+                val personal = useful[id]?.let {
                     (it.target.toLong() - bot.totalItemAmount(id)).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
                 } ?: 0
-                if (quantity <= 0) continue
-                val quote = pricing.buy(id, BotMerchantValuation.peekGuide(id), id in useful, priceStrategy)
-                candidates += BotTradeItem(Item(id, quantity), quote.coerceAtLeast(1), purpose, bot)
+                var quantity = if (personal > 0) personal else if (resale) Int.MAX_VALUE else 0
+                var quote = pricing.buy(id, BotMerchantValuation.peekGuide(id), personal > 0, priceStrategy)
+                if (capital != null) quantity = capital.quantity(id, quantity, quote)
+                if (personal == 0) quote = BotMerchantProceeds.ceiling(bot, id, quantity, quote)
+                if (quantity <= 0 || quote < 1L) continue
+                candidates += BotTradeItem(Item(id, quantity), quote, purpose, bot)
             }
             return prioritizePurchases(bot, candidates + potionPurchases + foodPurchases)
         }

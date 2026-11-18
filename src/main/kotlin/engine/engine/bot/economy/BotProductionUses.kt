@@ -36,9 +36,11 @@ object BotProductionUses {
      * a twenty-percent allowance for sale uncertainty. Alchemy counts only supported, profitable targets
      * after the currently usable spell's rune costs, using a conservative purchase premium for those runes.
      * Missing exits have zero recoverable value; they may still be worth producing for bounded training XP.
+     * Cash-exit callers can exclude recent sale expectations without changing production uncertainty allowances.
      */
     fun recoverableValues(bot: Bot, products: Map<Int, Int>,
-                          operations: Int = ProductionEconomics.MAX_OPERATIONS): Map<Int, Long> {
+                          operations: Int = ProductionEconomics.MAX_OPERATIONS,
+                          includeRecentTrades: Boolean = true): Map<Int, Long> {
         require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
         val definitions = LinkedHashMap<Int, ItemDefinition>()
         val amounts = HashMap<Int, Int>()
@@ -63,7 +65,7 @@ object BotProductionUses {
         val values = HashMap<Int, Long>()
         for (id in definitions.keys) {
             val observed = bot.world.economy.getRecentTradeReference(id)?.price ?: 0.0
-            values[id] = if (observed.isFinite() && observed > 0.0) (observed * 0.80).toLong() else 0L
+            values[id] = if (includeRecentTrades && observed.isFinite() && observed > 0.0) (observed * 0.80).toLong() else 0L
         }
 
         // Merchant scripts do not execute ordinary shop liquidation; do not invent that exit for them.

@@ -161,8 +161,11 @@ object MerchantStoreBargains {
     private fun retryDelay(bot: Bot, tick: Long): Long =
         600L + Math.floorMod(bot.usernameHash xor (tick * -7046029254386353131L), 2_401L)
 
-    private fun spendingLimit(bot: Bot): Int =
-        minOf(MAX_BUDGET.toLong(), bot.itemTracker.count(995).toLong() / 5).toInt()
+    private fun spendingLimit(bot: Bot): Int {
+        val capital = BotMerchantCapital.snapshot(bot)
+        if (capital.cashRecovery) return 0
+        return minOf(MAX_BUDGET.toLong(), bot.itemTracker.count(995).toLong() / 5, capital.electiveCoins).toInt()
+    }
 
     private fun refreshShops(nowMillis: Long) {
         val manager = world.shops
@@ -207,19 +210,9 @@ object MerchantStoreBargains {
         val limit = minOf(requested.toLong(), stock.amount.toLong(), if (definition.isStackable) 100L else 26L,
             (stashLimit - owned).coerceAtLeast(0)).toInt()
         if (limit < 1) return null
-        var low = 1
-        var high = limit
-        var quantity = 0
-        var cost = 0
-        while (low <= high) {
-            val middle = (low + high) ushr 1
-            val price = shop.computeBuyValue(id, middle).orElse(-1)
-            if (price > 0 && price <= budget && price.toLong() <= resale * middle * 85 / 100) {
-                quantity = middle
-                cost = price
-                low = middle + 1
-            } else high = middle - 1
-        }
+        val purchase = BotMerchantProceeds.shopPurchase(bot, shop, id, limit, budget, resale) ?: return null
+        val quantity = purchase.quantity
+        val cost = purchase.coins
         if (quantity == 0) return null
         val minimumStackValue = Luna.settings().bots().merchantSaleMinimumStackValue()
         if (quantity * resale - cost < MIN_PROFIT || (owned + quantity) * resale <= minimumStackValue) return null
@@ -230,7 +223,7 @@ object MerchantStoreBargains {
         val retained = maxOf(reserves()[id] ?: 0, personalCopy).toLong()
         val resaleStock = (owned + quantity - retained).coerceAtLeast(0)
         val acquiredForResale = minOf(quantity.toLong(), resaleStock)
-        if (acquiredForResale * resale - cost < MIN_PROFIT ||
+        if (BotMerchantProceeds.net(acquiredForResale * resale, BotMerchantMarket.available(bot)) - cost < MIN_PROFIT ||
             resaleStock * resale <= minimumStackValue) return null
         return Deal(shop, id, quantity, budget, resale, expiresAt)
     }

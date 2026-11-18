@@ -298,6 +298,13 @@ class TradeBotScript(bot: Bot,
     private var prepared = false
 
     /**
+     * Exposes only this active finite personal purchase, preserving its existing deadline and native purse guards.
+     */
+    internal fun merchantPurchaseTarget(): Item? = purchaseTarget?.takeIf {
+        bot.scriptStack.current() === this && it.amount > 0 && !purchaseExpired()
+    }
+
+    /**
      * Reads one still-funded personal purchase without changing the prepared trade or its payment.
      */
     internal fun profitGatheringPurchase(id: Int): BotTradeItem? {
@@ -826,8 +833,8 @@ class TradeBotScript(bot: Bot,
         val profile = advertisementProfile
         val fraction = BotTradeIntentions.spendingFraction(profile.intelligence, profile.greedy, profile.merchant)
         val available = BotTradeManager.transferableAmount(bot, COINS)
-        val budget = BigDecimal.valueOf(available.toLong()).multiply(BigDecimal.valueOf(fraction))
-            .setScale(0, RoundingMode.FLOOR).toInt()
+        val budget = BotMerchantCapital.purse(bot, BigDecimal.valueOf(available.toLong()).multiply(BigDecimal.valueOf(fraction))
+            .setScale(0, RoundingMode.FLOOR).toInt())
         sellerCashBudget = budget
         val held = bot.inventory.filterNotNull().filter { it.id == COINS && !it.isDynamic }
             .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
@@ -1621,7 +1628,8 @@ class TradeBotScript(bot: Bot,
             val coins = sellerCashBudget?.let { minOf(held, it.toLong()).toInt() }
                 ?: BigDecimal.valueOf(held).multiply(BigDecimal.valueOf(fraction))
                     .setScale(0, RoundingMode.FLOOR).toInt()
-            if (coins > 0) mapOf(COINS to coins) else emptyMap()
+            val admitted = BotMerchantCapital.purse(bot, coins)
+            if (admitted > 0) mapOf(COINS to admitted) else emptyMap()
         }
         advertisementFunding = selected.toMap()
         if (curiosityRemaining == null) {
@@ -2395,6 +2403,14 @@ class TradeBotScript(bot: Bot,
                     else bids[id] = buyer.resalePrice(id)
                 }
             }
+            if (BotMerchantCapital.active(buyer.bot) && buyer.purchaseTarget == null) {
+                for (id in quantities.keys.toList()) {
+                    if (buyer.personalDemand(id) > 0) continue
+                    val amount = minOf(quantities.getValue(id), stock[id] ?: 0)
+                    val limit = BotMerchantProceeds.ceiling(buyer.bot, id, amount, bids[id] ?: 0L)
+                    if (limit < 1L) { quantities.remove(id); bids.remove(id) } else bids[id] = limit
+                }
+            }
             return TradeBasket.exchange(stock, quantities, asks, bids, funding, paymentPrices, seller.salePriority())
         }
         var selected = select(buyer.expected)
@@ -2437,7 +2453,14 @@ class TradeBotScript(bot: Bot,
                 if (normalValue > Long.MAX_VALUE - resaleValue) Long.MAX_VALUE else normalValue + resaleValue
             } else TradeBasket.value(selected, unitPrices)
             val payment = quantities(humanPaymentStock().toItems(), true)
-            val coins = minOf(budget, (payment[COINS] ?: 0).toLong()).toInt()
+            val resaleLimit = if (BotMerchantCapital.active(bot) && purchaseTarget == null && selected.keys.none { personalDemand(it) > 0 }) {
+                selected.entries.fold(0L) { total, (id, amount) ->
+                    com.google.common.math.LongMath.saturatedAdd(total,
+                        com.google.common.math.LongMath.saturatedMultiply(amount.toLong(),
+                            BotMerchantProceeds.ceiling(bot, id, amount, unitPrices[id] ?: 0L)))
+                }
+            } else budget
+            val coins = minOf(budget, resaleLimit, (payment[COINS] ?: 0).toLong()).toInt()
             return if (coins > 0) mapOf(COINS to coins) else emptyMap()
         }
         val stock = humanSaleStock()
@@ -2528,11 +2551,12 @@ class TradeBotScript(bot: Bot,
     private fun merchantQuote(id: Int, paymentStock: Map<Int, Int> = carriedOffer): BotTradeItem? {
         if (id == COINS || !itemDef(id).isTradeable) return null
         val resale = BotMerchantSpecialty.accepts(bot, id)
-        val demand = if (resale) Int.MAX_VALUE else merchantPersonalDemand(id)
+        val personal = merchantPersonalDemand(id)
+        val demand = if (personal > 0) personal else if (resale) Int.MAX_VALUE else 0
         if (demand <= 0) return null
         val quote = merchantQuotes.getOrPut(id) {
             val price = merchantPriceSnapshot().buy(id, BotMerchantValuation.peekGuide(id),
-                !resale, tradePrice)
+                personal > 0, tradePrice)
             BotTradeItem(Item(id, demand), price, BotTradePurpose.MERCHANT_BUY, bot)
         }
         val carried = quantities(paymentStock.toItems(), true)
@@ -2540,7 +2564,11 @@ class TradeBotScript(bot: Bot,
             val amount = carried[it.item.id] ?: return@mapNotNull null
             BotTradeItem(Item(it.item.id, amount), it.price, it.purpose, bot)
         }
-        val current = productionPurchaseQuote(BotTradeItem(Item(id, demand), quote.price, quote.purpose, bot))
+        val capital = if (BotMerchantCapital.active(bot)) BotMerchantCapital.snapshot(bot) else null
+        val quantity = capital?.quantity(id, demand, quote.price) ?: demand
+        val price = if (personalDemand(id) > 0) quote.price else BotMerchantProceeds.ceiling(bot, id, quantity, quote.price)
+        if (quantity < 1 || price < 1L) return null
+        val current = productionPurchaseQuote(BotTradeItem(Item(id, quantity), price, quote.purpose, bot))
             ?: return null
         return BotTradeManager.affordablePurchases(listOf(current), payment).firstOrNull()
     }
@@ -2712,7 +2740,8 @@ class TradeBotScript(bot: Bot,
         fun unchanged() = !purchaseExpired() && (!ordinaryVisit || !visitBudget.expired(System.currentTimeMillis())) &&
                 original.revision == ownRevision && original.otherOffer.revision == otherRevision &&
                 bot.inventory.hasSpaceForAll(theirs) && offer.other.inventory.hasSpaceForAll(mine) &&
-                BotTradeManager.outgoingAllowed(bot, mine) && productionTradeAllowed(own, receiving) && validate()
+                BotTradeManager.outgoingAllowed(bot, mine) && productionTradeAllowed(own, receiving) &&
+                BotMerchantCapital.allows(bot, mine, theirs) && validate()
         original.guardNativeTrade(validate = {
             bot.scriptStack.current() === this && !purchaseExpired() && unchanged()
         }, settle = {

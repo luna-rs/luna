@@ -6,6 +6,9 @@ import api.bot.action.trading.BotTradePrice
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotMarketCooldown
 import api.bot.action.trading.MerchantStoreBargains
+import api.bot.action.trading.BotMerchantCapital
+import api.attr.Attr
+import io.luna.game.model.mob.bot.brain.BotActivity
 import api.bot.script.BotScript.ActionSafety
 import api.predef.*
 import api.bot.action.trading.BotMarketplace
@@ -33,6 +36,8 @@ import io.luna.game.model.item.shop.Currency
  * @author lare96
  */
 object MerchantingCoordinator : BotCoordinator {
+
+    private val nextFundingCheck = Attr.long()
 
     /**
      * Creates a selling-only follow-up for a completed activity without changing merchant preferences.
@@ -65,19 +70,27 @@ object MerchantingCoordinator : BotCoordinator {
         val canMarketSell = BotMarketCooldown.ready(bot, BotTradePurpose.SELL)
         val canMarketBuyNow = BotMarketCooldown.ready(bot, BotTradePurpose.BUY)
         if (bot.preferences.isMerchant) {
-            if (!canMarketSell && !canMarketBuyNow) return
+            val capital = BotMerchantCapital.snapshot(bot)
+            if (!canMarketSell && !canMarketBuyNow) {
+                if (capital.cashRecovery) fundMerchant(bot)
+                return
+            }
             val selling = sellingPurpose(bot)
-            val canBuy = canMarketBuyNow && bot.totalItemAmount(995).toDouble() *
-                BotTradeIntentions.budgetFraction(bot, BotTradePurpose.MERCHANT_BUY) >= BotTradeManager.MINIMUM_OFFER_VALUE
+            val canBuy = canMarketBuyNow && !capital.busy &&
+                (capital.electiveCoins >= BotTradeManager.MINIMUM_OFFER_VALUE || capital.hasPersonalDemand() &&
+                    capital.coins.toDouble() * BotTradeIntentions.budgetFraction(bot, BotTradePurpose.MERCHANT_BUY) >=
+                        BotTradeManager.MINIMUM_OFFER_VALUE)
             val purpose = when {
+                selling != null && (capital.cashRecovery || capital.stockHeavy) -> selling
                 chooseSelling(selling != null, canBuy) -> selling
                 canBuy -> BotTradePurpose.MERCHANT_BUY
                 else -> null
             }
             if (purpose != null) {
                 bot.scriptStack.push(TradeBotScript(bot, purpose, BotMarketplace.select(bot)))
-                MerchantStoreBargains.poll(bot)?.let { bot.scriptStack.pushTail(BuyStoreBargainBotScript(bot, it)) }
-            }
+                if (!capital.cashRecovery && !capital.stockHeavy)
+                    MerchantStoreBargains.poll(bot)?.let { bot.scriptStack.pushTail(BuyStoreBargainBotScript(bot, it)) }
+            } else if (capital.cashRecovery) fundMerchant(bot)
             return
         }
         val selling = sellingPurpose(bot)
@@ -119,6 +132,20 @@ object MerchantingCoordinator : BotCoordinator {
                 bot.scriptStack.push(BuyFromStoreBotScript(bot, shopBudget))
             }
         }
+    }
+
+    /**
+     * Uses existing permitted profit activities after useful liquidation is unavailable, with a bounded retry.
+     */
+    private fun fundMerchant(bot: Bot) {
+        val interest = bot.preferences.activities[BotActivity.GENERAL_PROFIT] ?: return
+        if (!interest.isFinite() || interest <= 0.0 ||
+            !bot.preferences.canChooseActivity(BotActivity.GENERAL_PROFIT)) return
+        val now = System.currentTimeMillis()
+        val attributes = bot.attributes()
+        if (attributes.has(nextFundingCheck.attr) && now < attributes[nextFundingCheck.attr]) return
+        attributes[nextFundingCheck.attr] = now + 300_000L
+        GeneralProfitCoordinator.getScript(bot)?.let { bot.scriptStack.push(it) }
     }
 
     /**

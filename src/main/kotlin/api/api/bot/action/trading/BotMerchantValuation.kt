@@ -2,11 +2,9 @@ package api.bot.action.trading
 
 import api.predef.*
 import engine.bot.gear.BotEquipmentPreferences
-import game.skill.magic.Rune
+import engine.bot.economy.BotProductionUses
 import game.skill.magic.lowHighAlch.AlchemyType
 import io.luna.game.model.def.ItemEconomyDefinition
-import io.luna.game.model.item.shop.Currency
-import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import kotlin.math.floor
@@ -33,13 +31,11 @@ object BotMerchantValuation {
     }
 
     /**
-     * Captures personality, mood, rune costs and shop access once. Broad catalogue preparation omits shop
-     * probing; offered items can use the full snapshot without scanning all item definitions.
+     * Captures personality and mood once. Broad catalogue preparation omits native exit probing; offered
+     * items reuse the existing actor-specific recovery policy for a complete owned batch.
      */
     fun snapshot(bot: Bot, includeShops: Boolean = true): Quotes = Quotes(bot,
-        bot.personality.intelligence, bot.emotions.isFeeling(EmotionType.GREEDY), bot.magic.staticLevel,
-        peekGuide(Rune.NATURE.id), peekGuide(Rune.FIRE.id), if (includeShops) world.shops.values()
-            .filter { it.currency == Currency.COINS && it.botAccess.apply(bot) } else emptyList())
+        bot.personality.intelligence, bot.emotions.isFeeling(EmotionType.GREEDY), includeShops)
 
     /**
      * Stable unit quotes for one prepared basket or negotiation, with shared shop-access and emotional state.
@@ -47,21 +43,30 @@ object BotMerchantValuation {
      * @author lare96
      */
     class Quotes internal constructor(private val bot: Bot, private val intelligence: Double,
-                                       private val greedy: Boolean, private val magic: Int,
-                                       private val nature: Long, private val fire: Long,
-                                       private val shops: List<Shop>) {
+                                       private val greedy: Boolean, private val probeExits: Boolean) {
         private val references = HashMap<Int, Long>()
         private val liquidations = HashMap<Int, Long>()
         private val bids = HashMap<Pair<Int, Boolean>, Long>()
         private val asks = HashMap<Int, Long>()
+        private val ownedQuantities by lazy(LazyThreadSafetyMode.NONE) {
+            (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
+                .filter { !it.isDynamic && it.id != 995 && it.itemDef.isTradeable }
+                .groupBy { it.itemDef.unnotedId.orElse(it.id) }.mapValues { (_, items) ->
+                    items.sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                }
+        }
+        private val nativeRecovery by lazy(LazyThreadSafetyMode.NONE) {
+            BotProductionUses.recoverableValues(bot, ownedQuantities, operations = 1, includeRecentTrades = false)
+        }
 
         /**
-         * Resolves only this item against the accessible shops and net alchemy proceeds.
+         * Resolves only this item against actual native recovery and funded market exits for the owned batch.
          */
         fun reference(id: Int, guide: Long): Long = references.getOrPut(id) {
-            val shop = shops.asSequence().filter { it.computeCanSell(id) }
-                .map { it.computeSellValue(id, 1).toLong() }.maxOrNull() ?: 0L
-            val liquidation = liquidationReference(0L, shop, itemDef(id).value, magic, nature, fire)
+            val quantity = if (probeExits) (ownedQuantities[id] ?: 1).coerceAtLeast(1) else 1
+            val liquidation = if (!probeExits) 0L else maxOf(
+                nativeRecovery[id] ?: BotProductionUses.recoverableValues(bot, mapOf(id to quantity), operations = 1, includeRecentTrades = false)[id] ?: 0L,
+                BotMerchantMarket.fundedNet(bot, id, quantity) / quantity)
             liquidations[id] = liquidation
             maxOf(guide, liquidation)
         }
@@ -99,7 +104,7 @@ object BotMerchantValuation {
     fun reference(bot: Bot, id: Int, guide: Long): Long = snapshot(bot).reference(id, guide)
 
     /**
-     * Excludes unavailable alchemy spells and subtracts their rune costs from the unit proceeds.
+     * Computes raw spell arithmetic; executable recovery additionally requires the shared native policy.
      */
     internal fun liquidationReference(guide: Long, shop: Long, baseValue: Int, magic: Int,
                                       naturePrice: Long, firePrice: Long): Long {

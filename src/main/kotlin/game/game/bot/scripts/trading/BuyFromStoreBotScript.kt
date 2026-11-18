@@ -1,6 +1,9 @@
 package game.bot.scripts.trading
 
+import api.bot.Suspendable.delay
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotMerchantProceeds
+import api.bot.action.trading.BotMerchantCapital
 import api.bot.action.trading.BotFoodDemand
 import api.bot.action.trading.BotTradeSelection
 import api.bot.script.DynamicBotScript
@@ -19,6 +22,7 @@ import io.luna.game.model.mob.bot.brain.BotActivity
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Purchases wanted items and optional speculative stock from registered shops while the bot is at home.
@@ -326,6 +330,9 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      * - Intelligent bots deliberately spread their money across several different items.
      */
     private suspend fun spendSpeculatively(shops: List<Shop>, budget: Int): Int {
+        if (!BotMerchantCapital.active(bot)) return 0
+        val capital = BotMerchantCapital.snapshot(bot)
+        if (capital.cashRecovery || capital.electiveCoins < 1L) return 0
         val merchant = bot.preferences.likesActivity(BotActivity.MERCHANTING)
 
         val candidates = shops
@@ -397,6 +404,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 shop = shop,
                 id = id,
                 maxAmount = Int.MAX_VALUE,
+                speculative = true,
                 // Let an early expensive choice buy at least one before cheaper choices consume its budget.
                 budget = maxOf(itemBudget, shop.computeBuyValue(id, 1).orElse(0)).coerceAtMost(remainingBudget)
             )
@@ -421,6 +429,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                     shop = shop,
                     id = id,
                     maxAmount = Int.MAX_VALUE,
+                    speculative = true,
                     budget = remainingBudget
                 )
 
@@ -444,7 +453,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         maxAmount: Int,
         budget: Int,
         expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null,
-        expectedFoodIdentity: String? = null
+        expectedFoodIdentity: String? = null,
+        speculative: Boolean = false
     ): Int {
         val production = expectedProduction ?: BotTradeIntentions.productionLimit(bot, id)
         var remainingAmount = maxAmount
@@ -460,7 +470,10 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             val coinsBefore = bot.inventory.computeAmountForId(COINS_ID)
             val itemsBefore = bot.inventory.computeAmountForId(id)
 
-            val bought = handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget, production, expectedFoodIdentity)
+            val bought = if (speculative) {
+                val quote = BotMerchantProceeds.shopPurchase(bot, shop, id, remainingAmount, remainingBudget) ?: break
+                handler.shop.buyQuoted(shop, id, quote.quantity, quote.coins)
+            } else handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget, production, expectedFoodIdentity)
 
             val coinsAfter = bot.inventory.computeAmountForId(COINS_ID)
             val itemsAfter = bot.inventory.computeAmountForId(id)
@@ -476,6 +489,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             totalSpent += spent
             remainingBudget -= spent
             remainingAmount -= acquired
+            if (speculative) delay(1.seconds)
         }
 
         return totalSpent

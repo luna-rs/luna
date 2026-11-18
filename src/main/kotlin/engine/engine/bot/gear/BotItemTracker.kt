@@ -50,10 +50,8 @@ class BotItemTracker(val plr: Player) : ItemTracker() {
             val tracker = bot.itemTracker
             // A total across containers can pass Int.MAX_VALUE, and the multiset throws past it.
             val added = minOf(newItem.amount, Int.MAX_VALUE - tracker.count(newItem.id))
-            if (added > 0) {
-                tracker.add(newItem.id, added)
-                bot.itemOwnershipRevision++
-            }
+            if (added > 0) tracker.add(newItem.id, added)
+            if (newItem.amount > 0) bot.itemOwnershipRevision++
         }
     }
 
@@ -61,8 +59,8 @@ class BotItemTracker(val plr: Player) : ItemTracker() {
         if (active) {
             val bot = plr as? Bot ?: return
             val tracker = bot.itemTracker
-            if (oldItem.amount > 0 && tracker.count(oldItem.id) > 0) {
-                tracker.remove(oldItem.id, oldItem.amount)
+            if (oldItem.amount > 0) {
+                if (tracker.count(oldItem.id) > 0) tracker.remove(oldItem.id, oldItem.amount)
                 bot.itemOwnershipRevision++
             }
         }
