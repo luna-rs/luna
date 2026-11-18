@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.attr.Attr
+import api.bot.script.ProductionPlan
 import api.bot.action.trading.BotStoreSales
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScript.ActionSafety
@@ -103,8 +104,9 @@ object BotBankSpace {
      * Shares concrete and explicit reservations with planning, including an active or paused production session.
      */
     @JvmStatic
-    fun retainedStock(bot: Bot): Map<Int, Int> {
-        val retained = BotStoreSales.retainedStock(bot).toMutableMap()
+    @JvmOverloads
+    fun retainedStock(bot: Bot, consumingOwner: Any? = null, consumingPlan: ProductionPlan? = null): Map<Int, Int> {
+        val retained = BotStoreSales.retainedStock(bot, consumingOwner, consumingPlan).toMutableMap()
         for (item in bot.equipment.filterNotNull()) retained[baseId(item.id)] = maxOf(1, retained[baseId(item.id)] ?: 0)
         for (script in bot.scriptStack.scripts.filter { !it.isFinished() && !it.isTerminated() }) {
             val ids = when (script) {

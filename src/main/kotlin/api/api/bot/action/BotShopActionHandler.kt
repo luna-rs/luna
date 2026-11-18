@@ -298,15 +298,30 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     }
 
     /**
+     * Prepares a wanted-item trade so a caller can verify a complete basket before scheduling the first visit.
+     */
+    internal fun wantedItemTrade(id: Int, target: Int, deadline: Long): TradeBotScript? =
+        TradeBotScript.buySpecific(bot, id, target, deadline)
+
+    /**
+     * Queues a prepared wanted-item trade for the time still available to its owner.
+     */
+    internal fun obtainWantedItem(trade: TradeBotScript, time: Duration): Boolean {
+        if (time <= Duration.ZERO) return false
+        trade.duration = time
+        bot.scriptStack.pushHead(trade)
+        return true
+    }
+
+    /**
      * Queues a direct purchase using the production owner's recorded deadline and spending limits.
      */
     internal fun obtainWantedItem(plan: ProductionPlan, id: Int, target: Int, duration: Duration): Boolean {
         val visit = minOf(duration, 30.seconds, (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
         if (visit <= Duration.ZERO) return false
-        val trade = TradeBotScript.buySpecific(bot, id, target, plan.supplyDeadline) ?: return false
-        trade.duration = visit
-        bot.scriptStack.pushHead(trade)
-        return true
+        val trade = TradeBotScript.buySpecific(bot, id, target, plan.supplyDeadline,
+            quotedUnitPrice = plan.maximumUnitPrices[id]) ?: return false
+        return obtainWantedItem(trade, visit)
     }
 
     /**

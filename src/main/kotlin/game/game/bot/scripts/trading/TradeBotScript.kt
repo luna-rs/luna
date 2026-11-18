@@ -214,21 +214,46 @@ class TradeBotScript(bot: Bot,
                 bot.isViewableFrom(seller) && seller.isViewableFrom(bot)
 
         /**
+         * Reads currently prepared native offers for an acquisition quote. The eventual trade still checks stock,
+         * prices and counterpart availability.
+         */
+        internal fun preparedSaleQuotes(bot: Bot, allowed: Set<Int>): Map<Int, BotTradeItem> {
+            val quotes = HashMap<Int, BotTradeItem>()
+            for (market in BotMarketplace.entries) {
+                for (seller in market.tradingSessions().filterIsInstance<TradeBotScript>()) {
+                    if (seller.bot === bot || seller.buying || !seller.prepared ||
+                        seller.bot.scriptStack.current() !== seller) continue
+                    for (quote in seller.offering) {
+                        val id = seller.unnotedId(quote.item.id)
+                        if (id !in allowed || quote.price <= 0 || quote.item.amount <= 0 ||
+                            quote.price >= (quotes[id]?.price ?: Long.MAX_VALUE)) continue
+                        quotes[id] = quote
+                    }
+                }
+            }
+            return quotes
+        }
+
+        /**
          * Creates a single-item buying session only when a prepared seller has an affordable match.
          * The target is total owned stock, not an additional quantity. Normal negotiation revalidates
          * stock and payment after travel; no items or money are reserved by this scan.
          * An optional absolute deadline also bounds suspending negotiations for a temporary supply visit.
          */
-        fun buySpecific(bot: Bot, id: Int, target: Int, deadlineMillis: Long = 0L): TradeBotScript? {
+        fun buySpecific(bot: Bot, id: Int, target: Int, deadlineMillis: Long = 0L,
+                        quotedUnitPrice: Long? = null): TradeBotScript? {
             require(target > 0 && id != COINS)
             if (deadlineMillis > 0L && System.currentTimeMillis() >= deadlineMillis) return null
             if (BotReusableItems.isReusable(id))
                 BotTradeIntentions.recordSupplies(bot, listOf(Item(id, target)), stockTarget = target)
-            val guide = world.economy.getPrice(id)
-            if (guide <= 0) return null
-            val price = BotMarketExperience.buy(bot, id,
-                BotTradePrice.computePriceStrategy(bot).applyBuy(guide),
-                BotTradeIntentions.productionLimit(bot, id)?.maximumUnitPrice ?: Long.MAX_VALUE)
+            val limit = BotTradeIntentions.productionLimit(bot, id)
+            val quoted = quotedUnitPrice?.takeIf { limit != null && it in 1L..limit.maximumUnitPrice }
+            val price = quoted ?: run {
+                val guide = world.economy.getPrice(id)
+                if (guide <= 0) return null
+                BotMarketExperience.buy(bot, id, BotTradePrice.computePriceStrategy(bot).applyBuy(guide),
+                    limit?.maximumUnitPrice ?: Long.MAX_VALUE)
+            }
             for (market in BotMarketplace.entries) {
                 val script = TradeBotScript(bot, BotTradePurpose.BUY, market, 10.minutes,
                     purchaseTarget = Item(id, target), purchasePrice = price, purchaseDeadline = deadlineMillis)
@@ -286,6 +311,12 @@ class TradeBotScript(bot: Bot,
     private val messageTimer = Stopwatch.createUnstarted()
 
     /** Candidate sale stock or coin payment, using unnoted ids before withdrawal. */
+    /**
+     * Preserves explicitly targeted or already prepared sale stock during another activity's alchemy.
+     */
+    internal fun protectsAlchemyStock(id: Int): Boolean = saleTarget == id ||
+        offering.any { unnotedId(it.item.id) == id }
+
     private var offering = emptyList<BotTradeItem>()
 
     /** Wanted quantities or expected sale value resolved for the current banking trip. */

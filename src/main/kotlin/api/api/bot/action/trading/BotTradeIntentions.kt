@@ -1,6 +1,7 @@
 package api.bot.action.trading
 
 import api.attr.Attr
+import game.bot.scripts.skills.AlchemyBotScript
 import api.bot.action.CombatLoadout
 import api.bot.script.ProductionPlan
 import api.predef.ext.allSuitableFood
@@ -445,8 +446,10 @@ object BotTradeIntentions {
      * Protects concrete supplies, personal fashion copies and the strongest owned usable item in each slot.
      * Merchant resale can sell other acquired stock even when a broad default wanted entry exists.
      */
-    fun retainedStock(bot: Bot): Map<Int, Int> {
-        val retained = supplyPlans(bot, System.currentTimeMillis()).mapValuesTo(HashMap()) { it.value.target }
+    @JvmOverloads
+    fun retainedStock(bot: Bot, consumingOwner: Any? = null, consumingPlan: ProductionPlan? = null): Map<Int, Int> {
+        val ownPlan = consumingPlan?.takeIf { bot.productionPlan === it && bot.productionOwner === consumingOwner }
+        val retained = supplyPlans(bot, System.currentTimeMillis(), ownPlan).mapValuesTo(HashMap()) { it.value.target }
         for ((id, amount) in BotGearDemand.retained(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotPotionDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotFoodDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
@@ -465,6 +468,12 @@ object BotTradeIntentions {
                 val best = items.maxByOrNull { it.calculateScore() } ?: continue
                 retained.putIfAbsent(best.id, 1)
             }
+        }
+        for (script in bot.scriptStack.scripts.filterIsInstance<AlchemyBotScript>()) {
+            if (script === consumingOwner || script.isFinished() || script.isTerminated()) continue
+            val batch = script.allocatedStock() ?: continue
+            val amount = (retained[batch.id]?.toLong() ?: 0L) + batch.amount
+            retained[batch.id] = amount.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         }
         return retained
     }
@@ -522,6 +531,9 @@ object BotTradeIntentions {
             BotPotionDemand.retainedStock(bot)[id] ?: 0, BotFoodDemand.retained(bot, id),
             activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
             explicitSupplyPlan(bot, id)?.target ?: 0)
+        val allocated = bot.scriptStack.findActive(AlchemyBotScript::class.java)
+            .orElse(null)?.allocatedStock()?.takeIf { it.id == id }?.amount ?: 0
+        target = (target.toLong() + allocated).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val upgrades = attributes[toolUpgrades.attr]
         if (upgrades.isEmpty()) return target
         for ((requested, upgrade) in upgrades) {
@@ -577,7 +589,7 @@ object BotTradeIntentions {
     /**
      * Combines independent supply sources without reducing either source's minimum or stock target.
      */
-    private fun supplyPlans(bot: Bot, now: Long): Map<Int, SupplyPlan> {
+    private fun supplyPlans(bot: Bot, now: Long, consumingPlan: ProductionPlan? = null): Map<Int, SupplyPlan> {
         val result = HashMap(livePlans(bot, now))
         for (id in bot.preferences.explicitWantedItemTargets.keys) {
             val explicit = explicitSupplyPlan(bot, id) ?: continue
@@ -585,7 +597,7 @@ object BotTradeIntentions {
             result[id] = SupplyPlan(maxOf(explicit.minimum, existing?.minimum ?: 0),
                 maxOf(explicit.target, existing?.target ?: 0), Long.MAX_VALUE)
         }
-        activeProductionPlan(bot, now)?.let { plan ->
+        activeProductionPlan(bot, now)?.takeUnless { it === consumingPlan }?.let { plan ->
             for ((id, target) in plan.targets()) {
                 val existing = result[id]
                 result[id] = SupplyPlan(maxOf(plan.recipe.materials[id] ?: 1, existing?.minimum ?: 0),

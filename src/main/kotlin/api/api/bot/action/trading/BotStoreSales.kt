@@ -1,5 +1,6 @@
 package api.bot.action.trading
 
+import api.bot.script.ProductionPlan
 import api.bot.action.BotActionHandler
 import api.bot.script.BotScript.ActionSafety
 import api.predef.ext.get
@@ -28,8 +29,8 @@ class BotStoreSales(private val bot: Bot, private val handler: BotActionHandler)
          * Preserves custom wanted quantities without treating the shared default catalogue as a bank reservation.
          * Wanted-item equality compares ids only, so every persisted setting is compared explicitly.
          */
-        fun retainedStock(bot: Bot): Map<Int, Int> {
-            val retained = BotTradeIntentions.retainedStock(bot).toMutableMap()
+        fun retainedStock(bot: Bot, consumingOwner: Any? = null, consumingPlan: ProductionPlan? = null): Map<Int, Int> {
+            val retained = BotTradeIntentions.retainedStock(bot, consumingOwner, consumingPlan).toMutableMap()
             for (wanted in bot.preferences.wantedItems) {
                 if (BotReusableItems.isReusable(wanted.id())) continue
                 val default = WantedItemDefinition.DEFAULT.get(wanted.id()).orElse(null)

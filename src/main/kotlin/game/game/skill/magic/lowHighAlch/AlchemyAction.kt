@@ -50,12 +50,14 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
                 mob.sendMessage("You cannot use alchemy on that item.")
                 return
             }
-            if (mob is Bot && (mob.isRealBot() || mob.isAutomationActive)) {
-                val owner = mob.scriptStack.current() as? AlchemyBotScript
-                if (owner?.canCastNative(item.id, type) != true) return
-            }
-            mob.inventory.remove(inventoryIndex, Item(item.id))
+            val owner = if (mob is Bot && (mob.isRealBot() || mob.isAutomationActive)) {
+                val script = mob.scriptStack.current() as? AlchemyBotScript
+                if (script?.canCastNative(item.id, type) != true) return
+                script
+            } else null
+            if (!mob.inventory.remove(inventoryIndex, Item(item.id))) return
             mob.inventory.removeAll(removeItems)
+            owner?.recordCast(item.id)
             if (mob.isRealBot()) BotProductionMetrics.recordSink(item.id)
             mob.magic.addExperience(type.xp)
             mob.animation(if (lowAlch) Animations.LOW_ALCHEMY else Animations.HIGH_ALCHEMY)

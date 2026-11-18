@@ -10,6 +10,9 @@ import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
 import api.bot.script.AlchemyPolicy
+import api.bot.script.AlchemyShopOpportunities
+import api.bot.script.ProductionPlan
+import api.bot.script.ProductionEconomics
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -18,6 +21,7 @@ import api.bot.social.BotHomeGathering
 import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import api.predef.ext.totalItemAmount
 import com.google.gson.JsonObject
 import com.google.gson.JsonArray
 import engine.bot.gear.BotGearLocator
@@ -25,13 +29,17 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import game.skill.fletching.stringBow.Bow
 import game.skill.magic.CombinationRune
+import game.skill.crafting.armorCrafting.HideArmor
+import game.skill.crafting.battlestaffCrafting.Battlestaff
+import game.skill.crafting.jewelleryMaking.GoldJewelleryTable
+import game.skill.smithing.BarType
+import io.luna.game.model.def.ItemDefinition
 import game.skill.magic.Magic
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
 import game.skill.magic.Staff
 import game.skill.magic.SpellCost
 import game.skill.magic.lowHighAlch.AlchemyType
-import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Spellbook
@@ -47,9 +55,8 @@ import kotlin.time.Duration.Companion.seconds
  * Trains Magic by casting low or high alchemy on sensible banked items.
  *
  * Alchable items are deliberately whitelisted so bots never decide to destroy arbitrary valuables. Bows may be alched
- * in either noted or unnoted form, while armour is withdrawn and alched as notes.
- * Ordinary gold jewellery through diamond may also be liquidated as notes.
- * Dragonstone, onyx, quest jewellery and partially charged variants remain outside that whitelist.
+ * in either noted or unnoted form. Other targets are withdrawn and alched as notes.
+ * The whitelist covers ordinary production items, including unenchanted gold jewellery and basic gear.
  *
  * Intelligent bots usually select the item with the best current alchemy margin using Luna's economy guide price.
  * Less intelligent bots are increasingly likely to pick a random valid item instead.
@@ -77,105 +84,44 @@ class AlchemyBotScript(
 
     companion object {
 
-        /**
-         * Armour that bots may safely alch.
-         *
-         * These are the unnoted ids. Armour is always withdrawn from the bank as notes before being alched.
-         */
-        private val ARMOUR_IDS = setOf(
-            // Bronze.
-            1117, // Bronze platebody.
-            1075, // Bronze platelegs.
-            1087, // Bronze plateskirt.
-            1155, // Bronze full helm.
-            1189, // Bronze kiteshield.
-
-            // Iron.
-            1115, // Iron platebody.
-            1067, // Iron platelegs.
-            1081, // Iron plateskirt.
-            1153, // Iron full helm.
-            1191, // Iron kiteshield.
-
-            // Steel.
-            1119, // Steel platebody.
-            1069, // Steel platelegs.
-            1083, // Steel plateskirt.
-            1157, // Steel full helm.
-            1193, // Steel kiteshield.
-
-            // Mithril.
-            1121, // Mithril platebody.
-            1071, // Mithril platelegs.
-            1085, // Mithril plateskirt.
-            1159, // Mithril full helm.
-            1197, // Mithril kiteshield.
-
-            // Adamant.
-            1123, // Adamant platebody.
-            1073, // Adamant platelegs.
-            1091, // Adamant plateskirt.
-            1161, // Adamant full helm.
-            1199, // Adamant kiteshield.
-
-            // Rune.
-            1127, // Rune platebody.
-            1079, // Rune platelegs.
-            1093, // Rune plateskirt.
-            1163, // Rune full helm.
-            1201, // Rune kiteshield.
-
-            // Dragonhide.
-            1135, // Green d'hide body.
-            1099, // Green d'hide chaps.
-            2499, // Blue d'hide body.
-            2493, // Blue d'hide chaps.
-            2501, // Red d'hide body.
-            2495, // Red d'hide chaps.
-            2503, // Black d'hide body.
-            2497  // Black d'hide chaps.
-        )
+        private const val MAX_CASTS_PER_VISIT = 100
 
         /**
-         * Smelted metal bars that bots may safely alch.
-         *
-         * These are the unnoted ids. Bars are withdrawn from the bank as notes before being alched.
+         * Ordinary metal equipment names. Exact matches exclude dragon, trimmed and other variants.
          */
-        private val BAR_IDS = setOf(
-            2349, // Bronze bar.
-            2351, // Iron bar.
-            2353, // Steel bar.
-            2359, // Mithril bar.
-            2361, // Adamantite bar.
-            2363  // Runite bar.
-        )
-
-        /**
-         * Ordinary crafted gold jewellery and its full-charge enchantments. Existing working reservations
-         * protect useful pieces in every activity mode.
-         */
-        private val JEWELLERY_IDS = setOf(
-            1635, 1637, 1639, 1641, 1643, // Gold through diamond rings.
-            1654, 1656, 1658, 1660, 1662, // Gold through diamond necklaces.
-            1673, 1675, 1677, 1679, 1681, // Unstrung gold through diamond amulets.
-            1692, 1694, 1696, 1698, 1700, // Strung gold through diamond amulets.
-            2550, 3853, 2552, 2568, 2570, // Recoil, games, dueling, forging and life.
-            1727, 1729, 1725, 1731       // Magic, defence, strength and power.
-        )
-
-        /**
-         * Items that must be alched in noted form.
-         */
-        private val NOTE_REQUIRED_IDS: Set<Int> by lazy {
-            ARMOUR_IDS + BAR_IDS + JEWELLERY_IDS
+        private val METAL_EQUIPMENT_NAMES = buildSet {
+            val tiers = listOf("Bronze", "Iron", "Steel", "Black", "White", "Mithril", "Adamant", "Rune")
+            val equipment = listOf("dagger", "sword", "longsword", "2h sword", "scimitar", "mace", "warhammer",
+                "battleaxe", "axe", "pickaxe", "spear", "claws", "halberd", "throwing knife", "knife", "thrownaxe",
+                "javelin", "dart", "arrow", "med helm", "full helm", "chainbody", "platebody", "platelegs",
+                "plateskirt", "sq shield", "kiteshield", "boots", "gloves", "defender")
+            for (tier in tiers) for (piece in equipment) add("$tier $piece")
         }
 
         /**
-         * Every base item id this script may alch.
+         * Ordinary production targets using native recipes and equipped item definitions.
          */
         private val ALCHABLE_IDS: Set<Int> by lazy {
-            BOW_IDS + NOTE_REQUIRED_IDS
+            buildSet {
+                addAll(BOW_IDS)
+                addAll(BarType.ID_TO_BAR.keys)
+                addAll(GoldJewelleryTable.ID_TO_JEWELLERY.keys)
+                addAll(1692..1702 step 2)
+                addAll(listOf(6577, 6581)) // Unenchanted onyx necklace and strung amulet.
+                addAll(HideArmor.entries.filterNot { it.name.startsWith("SNAKESKIN_") }.map { it.id })
+                addAll(listOf(1379, 1389, 1381, 1383, 1385, 1387, Battlestaff.BATTLESTAFF, 3053, 6562, 6603))
+                addAll(Battlestaff.entries.map { it.staff })
+                ItemDefinition.ALL.stream().filter { definition ->
+                    definition.isTradeable && !definition.isNoted && definition.name in METAL_EQUIPMENT_NAMES &&
+                        EquipmentDefinition.ALL.get(definition.id()).isPresent
+                }.forEach { add(it.id()) }
+            }
         }
+
+        private fun ownedTargets(bot: Bot): Set<Int> =
+            (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).mapNotNullTo(linkedSetOf()) {
+                it.itemDef.unnotedId.orElse(it.id).takeIf(ALCHABLE_IDS::contains)
+            }
 
         /**
          * Exposes the native disposal whitelist to production valuation without creating an alchemy session.
@@ -229,6 +175,10 @@ class AlchemyBotScript(
              * Legacy snapshots describe Magic training rather than a guaranteed profit activity.
              */
             var profit = false
+            var castsRemaining = MAX_CASTS_PER_VISIT
+            var batchItem = -1
+            var batchRemaining = 0
+            var marketPlan: ProductionPlan? = null
 
             /**
              * One absolute recovery deadline survives targeted shopping and restart snapshots.
@@ -262,6 +212,11 @@ class AlchemyBotScript(
                 super.load(data)
                 type = AlchemyType.valueOf(data.get("type").asString)
                 profit = data.get("profit")?.asBoolean ?: false
+                castsRemaining = (data.get("casts_remaining")?.asInt ?: MAX_CASTS_PER_VISIT)
+                    .coerceIn(0, MAX_CASTS_PER_VISIT)
+                batchItem = data.get("batch_item")?.asInt ?: -1
+                batchRemaining = (data.get("batch_remaining")?.asInt ?: 0).coerceIn(0, castsRemaining)
+                marketPlan = data.getAsJsonObject("market_plan")?.let(ProductionPlan::load)
                 supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 tradedRunes = data.getAsJsonArray("traded_runes")?.map { it.asInt }?.toSet() ?: emptySet()
                 runePrices = data.getAsJsonObject("rune_prices")?.entrySet()?.associate {
@@ -278,6 +233,10 @@ class AlchemyBotScript(
                 super.save(data)
                 data.addProperty("type", type.name)
                 data.addProperty("profit", profit)
+                data.addProperty("casts_remaining", castsRemaining)
+                data.addProperty("batch_item", batchItem)
+                data.addProperty("batch_remaining", batchRemaining)
+                marketPlan?.let { data.add("market_plan", it.save()) }
                 data.addProperty("supply_deadline", supplyDeadline)
                 data.add("traded_runes", JsonArray().also { array -> tradedRunes.forEach { array.add(it) } })
                 data.add("rune_prices", JsonObject().also { prices ->
@@ -302,16 +261,19 @@ class AlchemyBotScript(
          */
         fun hasAlchableItems(bot: Bot): Boolean {
             val retained = BotBankSpace.retainedStock(bot)
-            return ALCHABLE_IDS.any { AlchemyPolicy.surplus(bot, it, retained) > 0 }
+            return ownedTargets(bot).any { AlchemyPolicy.surplus(bot, it, retained) > 0 }
         }
 
         /**
          * Checks usable surplus against the selected activity's economic policy before supplying it.
          */
         fun hasAlchableItems(bot: Bot, type: AlchemyType, profit: Boolean): Boolean {
-            val retained = BotBankSpace.retainedStock(bot)
+            val targets = ownedTargets(bot)
+            if (targets.isEmpty()) return false
             val staff = AlchemyPolicy.resolveFireStaff(bot)
-            return ALCHABLE_IDS.any { eligibleTarget(bot, it, type, profit, staff, retained = retained) }
+            val retained = BotBankSpace.retainedStock(bot).toMutableMap()
+            if (staff != null) retained[staff] = maxOf(retained[staff] ?: 0, 1)
+            return targets.any { eligibleTarget(bot, it, type, profit, staff, retained = retained) }
         }
 
         /**
@@ -320,9 +282,34 @@ class AlchemyBotScript(
          */
         private fun eligibleTarget(bot: Bot, id: Int, type: AlchemyType, profit: Boolean,
                                    staffId: Int? = null, minimumPrices: Map<Int, Long> = emptyMap(),
-                                   retained: Map<Int, Int>? = null): Boolean =
+                                   retained: Map<Int, Int>? = null, acquiredPrices: Map<Int, Long> = emptyMap()): Boolean =
             AlchemyPolicy.eligible(bot, id, type,
-                profit, staffId, minimumPrices, retained)
+                profit, staffId, minimumPrices, retained, acquiredPrices)
+
+        /**
+         * Saved acquisition metadata must still describe this script's native whitelist, spell and payout.
+         * A malformed or obsolete plan cannot exempt arbitrary recent purchases or enlarge a resumed budget.
+         */
+        internal fun validMarketPlan(plan: ProductionPlan, type: AlchemyType): Boolean {
+            val recipe = plan.recipe
+            val id = recipe.key.removePrefix("alchemy:${type.name}:").toIntOrNull() ?: return false
+            if (recipe.key != "alchemy:${type.name}:$id" || id !in ALCHABLE_IDS ||
+                plan.recipes.size != 1 || plan.training || recipe.skill != SKILL_MAGIC || recipe.level != type.level ||
+                recipe.experience != type.xp || recipe.coinCost != 0L || recipe.productProbability != 1.0 ||
+                recipe.tools.isNotEmpty() || recipe.materials[id] != 1 ||
+                recipe.products != mapOf(995 to (itemDef(id).value * type.valueMultiplier).toInt().coerceAtLeast(1)) ||
+                plan.maximumUnitPrices.keys != recipe.materials.keys) return false
+            val runes = recipe.materials.filterKeys { it != id }
+            val nature = type.requirements.filterIsInstance<RuneRequirement>().first { it.rune == Rune.NATURE }.amount
+            val fire = type.requirements.filterIsInstance<RuneRequirement>().first { it.rune == Rune.FIRE }.amount
+            if (runes[Rune.NATURE.id] != nature || runes.keys.any { it != Rune.NATURE.id && it !in FIRE_RUNE_IDS } ||
+                runes.filterKeys { it in FIRE_RUNE_IDS }.values.sumOf { it.toLong() } !in setOf(0L, fire.toLong())) return false
+            val complete = recipe.materials.entries.fold(0L) { total, (input, amount) ->
+                ProductionEconomics.saturatingAdd(total,
+                    ProductionEconomics.saturatingMultiply(plan.maximumUnitPrices.getValue(input), amount.toLong()))
+            }
+            return plan.maximumCoins <= ProductionEconomics.saturatingMultiply(complete, plan.operations.toLong())
+        }
     }
 
     /**
@@ -337,12 +324,45 @@ class AlchemyBotScript(
         pendingRune = data.pendingRune
         pendingRuneCount = data.pendingRuneCount
         pendingCoins = data.pendingCoins
+        castsRemaining = data.castsRemaining
+        batchItem = data.batchItem.takeIf { it in ALCHABLE_IDS } ?: -1
+        batchRemaining = data.batchRemaining.takeIf { batchItem >= 0 } ?: 0
+        marketPlan = data.marketPlan
     }
 
     /**
      * The item currently being alched in the inventory.
      */
+    private var marketPlan: ProductionPlan? = null
     private var targetId: Int? = null
+    private var castsRemaining = MAX_CASTS_PER_VISIT
+    private var batchItem = -1
+    private var batchRemaining = 0
+
+    /**
+     * Keeps this session's allocated targets in the common disposal reserve while shopping or paused.
+     */
+    internal fun allocatedStock(): Item? =
+        if (batchItem >= 0 && batchRemaining > 0) Item(batchItem, batchRemaining) else null
+
+    /**
+     * Records one actual native cast synchronously with consuming the item.
+     */
+    internal fun recordCast(id: Int) {
+        check(batchItem == baseId(id) && batchRemaining > 0 && castsRemaining > 0)
+        batchRemaining--
+        castsRemaining--
+        marketPlan?.recordProduction(1)
+    }
+
+    private fun allocateTarget(id: Int, available: Long): Int {
+        val base = baseId(id)
+        val limit = minOf(castsRemaining.toLong(), marketPlan?.remainingOperations?.toLong() ?: Long.MAX_VALUE, available)
+            .coerceAtLeast(0L).toInt()
+        batchRemaining = if (batchItem == base && batchRemaining > 0) minOf(batchRemaining, limit) else limit
+        batchItem = base
+        return batchRemaining
+    }
 
     /**
      * The fire-providing staff selected for this script, if one is available.
@@ -402,6 +422,7 @@ class AlchemyBotScript(
 
     override suspend fun finish() {
         onPaused()
+        if (!isPaused()) marketPlan?.let { BotTradeIntentions.clearProductionPlan(bot, it, this) }
     }
 
     override suspend fun beforeLeavingZone(): Boolean {
@@ -417,21 +438,27 @@ class AlchemyBotScript(
     /**
      * Leaves missing rune acquisition to initialization while checking the real owned target and account build.
      */
-    fun isEligible(): Boolean = BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) &&
-        bot.magic.staticLevel >= type.level && hasAlchableItems(bot, type, profit)
+    fun isEligible(): Boolean {
+        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) || bot.magic.staticLevel < type.level) return false
+        if (hasAlchableItems(bot, type, profit)) return true
+        if (marketPlan == null) marketPlan = AlchemyShopOpportunities.select(bot, type, ALCHABLE_IDS, profit)
+        return marketPlan != null
+    }
 
     /**
      * Revalidates queued native conversion at execution time, after all packet and cooldown delays.
      */
     fun canCastNative(id: Int, nativeType: AlchemyType): Boolean = type == nativeType && isRunning() &&
         bot.scriptStack.current() === this && supplySafe() && bot.spellbook == Spellbook.REGULAR &&
+        batchItem == baseId(id) && batchRemaining > 0 &&
         id in bot.inventory && baseId(id) in ALCHABLE_IDS && isValidInventoryTarget(id) && eligible(id) &&
         Magic.spellCost(bot, type.level, type.requirements) is SpellCost.Castable
 
     override suspend fun onInit(resumed: Boolean): Boolean {
         if (startupDeadline > 0L) chargeStartupTime()
         startupDeadline = System.currentTimeMillis() + duration.inWholeMilliseconds.coerceAtLeast(0)
-        if (duration <= Duration.ZERO) return false
+        if (duration <= Duration.ZERO || castsRemaining == 0) return false
+        if (marketPlan?.let { !validMarketPlan(it, type) } == true) return false
         if (pendingRune >= 0) {
             recordPurchase(pendingRune, pendingRuneCount, pendingCoins)
             pendingRune = -1
@@ -445,6 +472,7 @@ class AlchemyBotScript(
         }
 
         fireStaffId = resolveFireStaff()
+        if (marketPlan != null && !prepareTargetPurchases()) return false
         if (remainingAlchableCount() == 0L) {
             bot.log("No alchable items available. Ending script.")
             return false
@@ -498,16 +526,13 @@ class AlchemyBotScript(
         }
 
         val notedId = notedId(baseId)
-        if (notedId == null) {
-            bot.log("${itemName(baseId)} cannot be withdrawn as a note.")
-            stop()
-            return
-        }
+        val room = if (notedId != null || itemDef(baseId).isStackable) Int.MAX_VALUE
+            else bot.inventory.computeRemainingSize()
 
-        handler.banking.clickBankingMode(true)
+        handler.banking.clickBankingMode(notedId != null)
         val withdrawn = try {
-            val amount = minOf(bot.bank.computeAmountForId(baseId).toLong(), AlchemyPolicy.surplus(bot, baseId))
-                .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            val amount = allocateTarget(baseId, minOf(bot.bank.computeAmountForId(baseId).toLong(), room.toLong(),
+                AlchemyPolicy.surplus(bot, baseId, retainedStock())))
             amount > 0 && handler.banking.withdraw(Item(baseId, amount))
         } finally {
             handler.banking.clickBankingMode(false)
@@ -518,11 +543,7 @@ class AlchemyBotScript(
             return
         }
 
-        targetId = when {
-            notedId in bot.inventory -> notedId
-            baseId in BOW_IDS && baseId in bot.inventory -> baseId
-            else -> null
-        }
+        targetId = (notedId ?: baseId).takeIf { it in bot.inventory }
 
         if (targetId == null) {
             bot.log("Alchemy target was not found after withdrawal.")
@@ -566,6 +587,7 @@ class AlchemyBotScript(
             return true
         }
 
+        if (allocateTarget(target, AlchemyPolicy.surplus(bot, target, retainedStock())) < 1) return true
         castingReady = true
         val before = bot.inventory.computeAmountForId(target)
 
@@ -576,6 +598,11 @@ class AlchemyBotScript(
 
         if (!waitFor(5.seconds) { bot.inventory.computeAmountForId(target) < before }) {
             bot.log("Alchemy cast did not consume ${itemName(target)}.")
+            return true
+        }
+
+        if (castsRemaining == 0 || marketPlan?.remainingOperations == 0) {
+            stop()
             return true
         }
 
@@ -609,6 +636,10 @@ class AlchemyBotScript(
         data.zones = originalZones.toMutableList()
         data.type = type
         data.profit = profit
+        data.castsRemaining = castsRemaining
+        data.batchItem = batchItem
+        data.batchRemaining = batchRemaining
+        data.marketPlan = marketPlan
         data.supplyDeadline = supplyDeadline
         data.tradedRunes = tradedRunes.toSet()
         data.runePrices = runePrices.toMap()
@@ -628,7 +659,7 @@ class AlchemyBotScript(
      */
     private fun selectBankTarget(): Int? {
         val candidates = eligibleTargets().filter { id ->
-            bot.bank.computeAmountForId(id) > 0 && notedId(id) != null &&
+            bot.bank.computeAmountForId(id) > 0 &&
                 bot.bank.none { it != null && it.id == id && it.isDynamic }
         }
 
@@ -640,7 +671,7 @@ class AlchemyBotScript(
             return candidates.random()
         }
 
-        return candidates.maxByOrNull { AlchemyPolicy.margin(bot, it, type, minimumPrices = runePrices) }
+        return candidates.maxByOrNull { AlchemyPolicy.margin(bot, it, type, minimumPrices = runePrices, acquiredPrices = acquisitionPrices()) }
     }
 
     /**
@@ -651,41 +682,23 @@ class AlchemyBotScript(
     private fun currentInventoryTarget(): Int? {
         val staff = resolveFireStaff()
         targetId?.let {
-            if (it in bot.inventory && isValidInventoryTarget(it)) {
+            if (it in bot.inventory && isValidInventoryTarget(it) && eligible(it, staff)) {
                 return it
             }
         }
 
-        val candidates = ArrayList<Int>()
+        val candidates = bot.inventory.filterNotNull().map { it.id }.distinct()
+            .filter(::isValidInventoryTarget).toMutableList()
 
-        for (baseId in BOW_IDS) {
-            if (baseId in bot.inventory) {
-                candidates += baseId
-            }
-
-            notedId(baseId)?.let { note ->
-                if (note in bot.inventory) {
-                    candidates += note
-                }
-            }
-        }
-
-        for (baseId in NOTE_REQUIRED_IDS) {
-            notedId(baseId)?.let { note ->
-                if (note in bot.inventory) {
-                    candidates += note
-                }
-            }
-        }
-
-        val retained = BotBankSpace.retainedStock(bot)
-        candidates.removeAll { !eligibleTarget(bot, it, type, profit, staff, runePrices, retained) }
+        val retained = retainedStock()
+        candidates.removeAll { !marketTargetAllowed(it) ||
+            !eligibleTarget(bot, it, type, profit, staff, runePrices, retained, acquisitionPrices()) }
         if (candidates.isEmpty()) {
             return null
         }
 
         return if (profit && rand(bot.personality.intelligence)) {
-            candidates.maxByOrNull { AlchemyPolicy.margin(bot, it, type, staff, runePrices) }
+            candidates.maxByOrNull { AlchemyPolicy.margin(bot, it, type, staff, runePrices, acquisitionPrices()) }
         } else {
             candidates.random()
         }
@@ -804,7 +817,7 @@ class AlchemyBotScript(
 
     private fun supplySafe(): Boolean {
         chargeStartupTime()
-        return duration > Duration.ZERO && !isPaused() && !isTerminated() &&
+        return duration > Duration.ZERO && castsRemaining > 0 && !isPaused() && !isTerminated() &&
             bot.state == EntityState.ACTIVE && isActionSafe() &&
             BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) && bot.magic.level >= type.level
     }
@@ -897,7 +910,7 @@ class AlchemyBotScript(
         if ((staffId == null || !providesFireRunes(staffId)) &&
             inventoryFireRunes() + bankedFireRunes() < fireRunesPerCast()) requestFireRunes()
 
-        val limit = minOf(100L, remainingAlchableCount(), (duration.inWholeSeconds / 3).coerceAtLeast(1)).toInt()
+        val limit = minOf(castsRemaining.toLong(), remainingAlchableCount(), (duration.inWholeSeconds / 3).coerceAtLeast(1)).toInt()
         var casts = 0
         var upper = limit
         while (casts < upper) {
@@ -915,17 +928,17 @@ class AlchemyBotScript(
             if (id in tradedRunes || bot.inventory.computeAmountForId(id).toLong() +
                 bot.bank.computeAmountForId(id) >= target) continue
             tradedRunes.add(id)
-            val trade = TradeBotScript.buySpecific(bot, id, target, supplyDeadline) ?: continue
+            val trade = handler.shop.wantedItemTrade(id, target, supplyDeadline) ?: continue
             if (!supplySafe() || eligibleTargets(staffId).isEmpty()) return false
             val prices = purchasePrices(targets) ?: return false
             if (eligibleTargets(staffId, prices).isEmpty()) return false
             runePrices[id] = maxOf(runePrices[id] ?: 0L, prices[id] ?: 0L)
-            trade.duration = minOf(duration, 30.seconds, (supplyDeadline - System.currentTimeMillis()).milliseconds)
-            if (trade.duration <= Duration.ZERO) return false
+            val visit = minOf(duration, 30.seconds, (supplyDeadline - System.currentTimeMillis()).milliseconds)
+            if (visit <= Duration.ZERO) return false
             pendingRune = id
             pendingRuneCount = ownedRune(id)
             pendingCoins = ownedCoins()
-            bot.scriptStack.pushHead(trade)
+            handler.shop.obtainWantedItem(trade, visit)
             return false
         }
         withTimeoutOrNull((supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1)) {
@@ -972,19 +985,18 @@ class AlchemyBotScript(
         }
         if (eligibleTargets(staffId, prices).isEmpty()) return false
         val ready = missing.map { (id, target) ->
-            id to (TradeBotScript.buySpecific(bot, id, target, supplyDeadline) ?: return false)
+            id to (handler.shop.wantedItemTrade(id, target, supplyDeadline) ?: return false)
         }
         val (id, trade) = ready.firstOrNull { it.first !in tradedRunes } ?: return false
         if (!supplySafe() || eligibleTargets(staffId, prices).isEmpty()) return false
-        trade.duration = minOf(duration, (supplyDeadline - System.currentTimeMillis()).milliseconds)
-        if (trade.duration <= Duration.ZERO) return false
+        val visit = minOf(duration, (supplyDeadline - System.currentTimeMillis()).milliseconds)
+        if (visit <= Duration.ZERO) return false
         tradedRunes.add(id)
         runePrices[id] = maxOf(runePrices[id] ?: 0L, prices.getValue(id))
         pendingRune = id
         pendingRuneCount = ownedRune(id)
         pendingCoins = ownedCoins()
-        bot.scriptStack.pushHead(trade)
-        return true
+        return handler.shop.obtainWantedItem(trade, visit)
     }
 
     /**
@@ -1023,7 +1035,7 @@ class AlchemyBotScript(
      * Counts banked items and carried noted/unnoted items, including materials that need banking first.
      */
     private fun remainingAlchableCount(): Long {
-        val retained = BotBankSpace.retainedStock(bot)
+        val retained = retainedStock()
         return eligibleTargets(fireStaffId, retained = retained).sumOf { AlchemyPolicy.surplus(bot, it, retained) }
     }
 
@@ -1035,7 +1047,7 @@ class AlchemyBotScript(
         val baseId = baseId(id)
 
         return eligible(id, resolveFireStaff()) && (baseId in BOW_IDS ||
-            baseId in NOTE_REQUIRED_IDS && itemDef(id).isNoted)
+            baseId in ALCHABLE_IDS && (itemDef(id).isNoted || notedId(baseId) == null))
     }
 
     private fun baseId(id: Int): Int {
@@ -1048,7 +1060,8 @@ class AlchemyBotScript(
     }
 
     private fun eligible(baseId: Int, staffId: Int? = null, prices: Map<Int, Long> = emptyMap()): Boolean =
-        eligibleTarget(bot, baseId, type, profit, staffId, priceFloors(prices))
+        marketTargetAllowed(baseId) &&
+            eligibleTarget(bot, baseId, type, profit, staffId, priceFloors(prices), retainedStock(), acquisitionPrices())
 
     private fun ownedCoins(): Long = bot.inventory.computeAmountForId(995).toLong() + bot.bank.computeAmountForId(995)
 
@@ -1064,11 +1077,60 @@ class AlchemyBotScript(
         }
     }
 
+    private fun acquisitionPrices(): Map<Int, Long> = marketPlan?.maximumUnitPrices ?: emptyMap()
+
+    private fun marketTargetAllowed(id: Int): Boolean = marketPlan?.let { plan ->
+        plan.remainingOperations > 0 && System.currentTimeMillis() < plan.deadline &&
+            plan.recipe.key.substringAfterLast(':').toIntOrNull() == baseId(id)
+    } ?: true
+
+    private fun retainedStock(): Map<Int, Int> = BotBankSpace.retainedStock(bot, this, marketPlan).withWorkingStaff()
+
+    private fun Map<Int, Int>.withWorkingStaff(): Map<Int, Int> {
+        val staff = resolveFireStaff() ?: return this
+        return if ((this[staff] ?: 0) > 0) this else this + (staff to 1)
+    }
+
     private fun priceFloors(prices: Map<Int, Long>): Map<Int, Long> = (runePrices.keys + prices.keys).associateWith {
         maxOf(runePrices[it] ?: 0L, prices[it] ?: 0L)
     }
 
     private fun eligibleTargets(staffId: Int? = null, prices: Map<Int, Long> = emptyMap(),
-                                retained: Map<Int, Int> = BotBankSpace.retainedStock(bot)): List<Int> =
-        ALCHABLE_IDS.filter { eligibleTarget(bot, it, type, profit, staffId, priceFloors(prices), retained) }
+                                retained: Map<Int, Int> = retainedStock()): List<Int> =
+        ownedTargets(bot).filter { marketTargetAllowed(it) &&
+            eligibleTarget(bot, it, type, profit, staffId, priceFloors(prices), retained, acquisitionPrices()) }
+
+    /**
+     * Buys the selected target and its rune basket through the existing trade and quoted shop tiers.
+     */
+    private suspend fun prepareTargetPurchases(): Boolean {
+        val plan = marketPlan ?: return true
+        val now = System.currentTimeMillis()
+        if (!supplySafe() || now >= plan.deadline || plan.remainingOperations < 1) return false
+        AlchemyShopOpportunities.attempted(bot, now)
+        if (plan.supplyDeadline == 0L) plan.supplyDeadline = minOf(plan.deadline, now + 120_000L)
+        BotTradeIntentions.recordProductionPlan(bot, plan, this)
+        val target = plan.recipe.materials.keys.first()
+        val note = itemDef(target).notedId.orElse(-1)
+        val remainingAtStart = plan.supplyDeadline - System.currentTimeMillis()
+        if (note >= 0 && bot.inventory.contains(note) &&
+            (remainingAtStart <= 0L || withTimeoutOrNull(remainingAtStart) {
+                handler.banking.travelToBankDepositAll()
+            } != true)) return false
+        if (remainingAlchableCount() > 0L && ownsCast(fireStaffId)) return true
+        val targets = plan.targets()
+        for ((id, amount) in targets) {
+            if (bot.totalItemAmount(id) >= amount || !plan.attemptedMarketItems.add(id)) continue
+            if (handler.shop.obtainWantedItem(plan, id, amount, duration)) return false
+        }
+        val remaining = plan.supplyDeadline - System.currentTimeMillis()
+        if (!plan.shopAttempted && remaining > 0L && plan.remainingCoins > 0L) {
+            plan.shopAttempted = true
+            withTimeoutOrNull(remaining) {
+                handler.shop.obtainWantedItems(targets, plan.remainingCoins
+                    .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
+            }
+        }
+        return supplySafe() && remainingAlchableCount() > 0L && ownsCast(fireStaffId)
+    }
 }

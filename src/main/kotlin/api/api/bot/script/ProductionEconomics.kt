@@ -86,6 +86,7 @@ object ProductionEconomics {
         inputUnitPrices: Map<Int, Long>,
         recoverableOutputPrices: Map<Int, Long>,
         personalUsePrices: Map<Int, Long> = emptyMap(),
+        allowLoss: Boolean = false,
         rejected: ((Reason) -> Unit)? = null
     ): Quote? {
         fun reject(reason: Reason): Quote? {
@@ -109,9 +110,11 @@ object ProductionEconomics {
             ?: return reject(Reason.INVALID_REQUEST)) * recipe.productProbability).toLong().coerceAtLeast(0L)
         val permittedLoss = if (training)
             (recipe.experience * AlchemyPolicy.MAX_TRAINING_GP_PER_XP).toLong().coerceAtLeast(0L) else 0L
-        if (training) {
-            if (input > saturatingAdd(output, permittedLoss)) return reject(Reason.UNECONOMIC)
-        } else if (output <= input) return reject(Reason.UNECONOMIC)
+        if (!allowLoss) {
+            if (training) {
+                if (input > saturatingAdd(output, permittedLoss)) return reject(Reason.UNECONOMIC)
+            } else if (output <= input) return reject(Reason.UNECONOMIC)
+        }
 
         var limit = requestedOperations.coerceAtMost(MAX_OPERATIONS)
         if (training) limit = minOf(limit,
@@ -141,7 +144,7 @@ object ProductionEconomics {
             if (cost < Long.MAX_VALUE && cost <= maximumCoins) operations = candidate else upper = candidate - 1
         }
         if (operations < 1) return reject(Reason.INSUFFICIENT_COINS)
-        if (!economicallyUseful(operations)) return reject(Reason.UNECONOMIC)
+        if (!allowLoss && !economicallyUseful(operations)) return reject(Reason.UNECONOMIC)
         return Quote(operations, purchaseCost(operations), ids.associateWith { inputUnitPrices.getValue(it) },
             input, output, permittedLoss)
     }

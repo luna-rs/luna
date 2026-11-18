@@ -2,6 +2,11 @@ package api.bot.script
 
 import api.bot.action.BotBankSpace
 import api.predef.itemDef
+import api.predef.SKILL_FLETCHING
+import api.predef.ext.totalItemAmount
+import game.bot.scripts.trading.TradeBotScript
+import game.skill.fletching.stringBow.Bow
+import game.bot.scripts.skills.StringBowBotScript
 import api.predef.weapon
 import api.predef.world
 import game.skill.magic.Magic
@@ -38,8 +43,13 @@ object AlchemyPolicy {
     fun surplus(bot: Bot, id: Int, retained: Map<Int, Int> = BotBankSpace.retainedStock(bot)): Long {
         val base = baseId(id)
         if (bot.scriptStack.scripts.any { script ->
-                script is InventoryBotScript && !script.isFinished() && !script.isTerminated() &&
-                    script.bankSpaceProtectedItems().any { baseId(it) == base }
+                !script.isFinished() && !script.isTerminated() && when (script) {
+                    is InventoryBotScript -> (script.productionPlan?.target(base) ?: 0) > 0 ||
+                        script.bankSpaceProtectedItems().any { baseId(it) == base } ||
+                        script is StringBowBotScript && script.bow.unstrung == base
+                    is TradeBotScript -> script.protectsAlchemyStock(base)
+                    else -> false
+                }
             }) return 0L
         val transferable = (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).filter {
             !it.isDynamic && baseId(it.id) == base
@@ -47,7 +57,26 @@ object AlchemyPolicy {
         val equipped = bot.equipment.filterNotNull().filter {
             !it.isDynamic && baseId(it.id) == base
         }.sumOf { it.amount.toLong() }
-        return minOf(transferable, (transferable + equipped - (retained[base] ?: 0)).coerceAtLeast(0L))
+        val working = maxOf(retained[base] ?: 0, stringingStock(bot, base))
+        return minOf(transferable, (transferable + equipped - working).coerceAtLeast(0L))
+    }
+
+    /**
+     * Allocates the real bowstrings to eligible unfinished bows in recipe order, leaving any excess for disposal.
+     */
+    private fun stringingStock(bot: Bot, id: Int): Int {
+        val bow = Bow.entries.firstOrNull { it.unstrung == id && it.strung >= 0 } ?: return 0
+        val level = bot.skill(SKILL_FLETCHING).staticLevel
+        if (bow.level > level) return 0
+        var strings = bot.totalItemAmount(Bow.BOW_STRING)
+        for (candidate in Bow.entries.sortedByDescending { it.level }) {
+            if (strings <= 0) return 0
+            if (candidate.strung < 0 || candidate.level > level) continue
+            val count = minOf(strings, bot.totalItemAmount(candidate.unstrung))
+            if (candidate == bow) return count
+            strings -= count
+        }
+        return 0
     }
 
     /**
@@ -56,13 +85,14 @@ object AlchemyPolicy {
      * A dynamic carried copy of the exact target id blocks id-based native selection from consuming it first.
      */
     fun eligible(bot: Bot, id: Int, type: AlchemyType, profit: Boolean, fireStaffId: Int? = null,
-                 minimumPrices: Map<Int, Long> = emptyMap(), retained: Map<Int, Int>? = null): Boolean {
+                 minimumPrices: Map<Int, Long> = emptyMap(), retained: Map<Int, Int>? = null,
+                 acquiredPrices: Map<Int, Long> = emptyMap()): Boolean {
         val definition = itemDef(baseId(id))
         if (!definition.isTradeable || definition.value <= 0 ||
             bot.inventory.any { it != null && it.id == id && it.isDynamic }) return false
         val available = if (retained == null) surplus(bot, id) else surplus(bot, id, retained)
         if (available < 1L) return false
-        return !profit || margin(bot, id, type, fireStaffId, minimumPrices) > 0L
+        return !profit || margin(bot, id, type, fireStaffId, minimumPrices, acquiredPrices) > 0L
     }
 
     /**
@@ -72,10 +102,13 @@ object AlchemyPolicy {
      * An explicit staff is a preparation estimate only; the default uses actual equipment for cast revalidation.
      */
     fun margin(bot: Bot, id: Int, type: AlchemyType, fireStaffId: Int? = null,
-               minimumPrices: Map<Int, Long> = emptyMap()): Long {
+               minimumPrices: Map<Int, Long> = emptyMap(), acquiredPrices: Map<Int, Long> = emptyMap()): Long {
         val base = baseId(id)
-        fun price(itemId: Int): Long = maxOf(guidePrice(itemId),
-            minimumPrices[baseId(itemId)] ?: 0L, 1L)
+        fun price(itemId: Int): Long {
+            val canonical = baseId(itemId)
+            val acquired = acquiredPrices[canonical]?.takeIf { it > 0L }
+            return maxOf(acquired ?: guidePrice(canonical), minimumPrices[canonical] ?: 0L, 1L)
+        }
         val target = price(base)
         var remaining = proceeds(base, type) - target
         for (rune in runeCosts(bot, type, fireStaffId)) {
