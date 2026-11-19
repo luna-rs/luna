@@ -460,6 +460,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
     override suspend fun finish() {
         tacticalWithdrawal?.clearObservation()
+        pkSwitcher.clearArmourConfirmation()
         if (running) {
             bot.combat.isDisabled = false
         }

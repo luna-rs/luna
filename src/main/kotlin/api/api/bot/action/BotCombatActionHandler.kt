@@ -401,15 +401,30 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Chooses an armour counter from supply-ready disciplines allowed by the saved PK profile.
+     * Identifies a chosen discipline and whether it came from the ordinary armour comparison.
+     *
+     * @author lare96
+     */
+    internal data class PkStyleDecision(val purpose: BotGearPurpose, val armourDriven: Boolean)
+
+    /**
+     * Chooses a discipline from supply-ready options allowed by the saved PK profile.
+     */
+    fun selectPkStyle(target: Player, available: Set<BotGearPurpose>,
+                      mistakeRoll: Double = RandomUtils.nextDouble()): BotGearPurpose? =
+        selectPkStyleDecision(target, available, mistakeRoll)?.purpose
+
+    /**
+     * Chooses a discipline and classifies the decision for the fight's equipment switcher.
      * Callers supply only disciplines whose owned equipment, ammunition and damage spells are usable.
      * This policy does not equip items, initiate fights, select targets, or authorize risk from bank stock.
      * Eligible, supplied Ancient Magicks receives a 95% preference before normal counter selection.
      * Otherwise lowest armour defence wins; ties retain the current discipline to avoid pointless switching.
      * Intelligence and dexterity reduce the chance of choosing a weaker available counter.
-     * Reaction timing is supplied separately by [pkSwitchDelay] for the future PK session controller.
+     * Reaction timing is supplied separately by [pkSwitchDelay].
      */
-    fun selectPkStyle(target: Player, available: Set<BotGearPurpose>, mistakeRoll: Double = RandomUtils.nextDouble()): BotGearPurpose? {
+    internal fun selectPkStyleDecision(target: Player, available: Set<BotGearPurpose>,
+                                      mistakeRoll: Double = RandomUtils.nextDouble()): PkStyleDecision? {
         if (bot.preferences.isSkiller) return null
         val styles = bot.preferences.pk?.styles() ?: return null
         val options = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC).filter { purpose ->
@@ -423,7 +438,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         }
         if (options.isEmpty()) return null
         if (BotGearPurpose.MAGIC in options && bot.spellbook == Spellbook.ANCIENT && canUseAncients(bot) &&
-            mistakeRoll >= 0.05) return BotGearPurpose.MAGIC
+            mistakeRoll >= 0.05) return PkStyleDecision(BotGearPurpose.MAGIC, armourDriven = false)
         val current = when {
             bot.combat.magic.isAutocasting -> BotGearPurpose.MAGIC
             bot.combat.weapon.isRanged -> BotGearPurpose.RANGED
@@ -439,7 +454,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         val intelligence = bot.personality.intelligence.coerceIn(0.0, 1.0)
         val dexterity = bot.personality.dexterity.coerceIn(0.0, 1.0)
         val errorChance = 0.30 * (1.0 - intelligence) * (1.0 - dexterity / 2.0)
-        return if (mistakeRoll < errorChance) options.filter { it != best }.randomOrNull() ?: best else best
+        val selected = if (mistakeRoll < errorChance) options.filter { it != best }.randomOrNull() ?: best else best
+        return PkStyleDecision(selected, armourDriven = selected == best)
     }
 
     /**

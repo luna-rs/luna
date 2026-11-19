@@ -5,6 +5,7 @@ import api.predef.ext.*
 import engine.bot.gear.BotGearPurpose
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.item.Equipment
+import io.luna.game.model.mob.MobReference
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
@@ -41,7 +42,15 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     private val failed = mutableSetOf<BotGearPurpose>()
     private var active: Pair<BotGearPurpose, CombatLoadout>? = null
     private var nextDecision: Long? = null
+    private var pendingArmourCounter: ArmourCounter? = null
     private val magicTactics = BotCombatMagic(bot, handler)
+
+    /**
+     * An armour counter awaiting a second scheduled check against the same opponent.
+     *
+     * @author lare96
+     */
+    private data class ArmourCounter(val opponent: MobReference, val purpose: BotGearPurpose)
 
     /**
      * Uses tactical Magic only during the currently selected, permanently permitted Magic discipline.
@@ -56,20 +65,35 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     fun clear() {
         active = null
         nextDecision = null
+        clearArmourConfirmation()
         failed.clear()
         clearMagic()
     }
 
     /**
+     * Drops an unfinished observation when the fight is interrupted.
+     */
+    fun clearArmourConfirmation() {
+        pendingArmourCounter = null
+    }
+
+    /**
      * Waits one reaction window before the first switch and reconsiders counters at that same cadence.
+     * A usable loadout stays active until an armour counter wins two consecutive scheduled checks.
      * Supply loss interrupts attacks immediately; a replacement is chosen at the next decision deadline.
      * Native interaction waits can extend completion beyond the decision cadence.
      */
     suspend fun prepare(target: Player): Result {
-        if (bot.preferences.isSkiller || bot.preferences.pk == null || !validTarget(target)) return Result.UNAVAILABLE
+        if (bot.preferences.isSkiller || bot.preferences.pk == null || !validTarget(target)) {
+            clearArmourConfirmation()
+            return Result.UNAVAILABLE
+        }
+        val opponent = MobReference.capture(target)
+        if (pendingArmourCounter?.opponent != opponent) clearArmourConfirmation()
         val now = nanoTime()
         val current = active?.takeIf { acceptsPurpose(it.first) && ready(it.first, it.second) }
         if (current == null) {
+            clearArmourConfirmation()
             bot.combat.target = null
             clearMagic()
         }
@@ -84,7 +108,15 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
                 }?.takeIf { it.gear[Equipment.WEAPON] != null }
                     ?.let { purpose to it }
             }.toMap()
-        val purpose = combat.selectPkStyle(target, choices.keys) ?: return Result.UNAVAILABLE
+        val previousCounter = pendingArmourCounter
+        clearArmourConfirmation()
+        val decision = combat.selectPkStyleDecision(target, choices.keys) ?: return Result.UNAVAILABLE
+        val purpose = decision.purpose
+        if (decision.armourDriven && current != null && current.first != purpose && current.first in choices &&
+            previousCounter?.purpose != purpose) {
+            if (opponent != null) pendingArmourCounter = ArmourCounter(opponent, purpose)
+            return Result.READY
+        }
         val selected = choices.getValue(purpose)
         if (current?.first == purpose && current.second.spell == selected.spell &&
             current.second.gear[Equipment.WEAPON] == selected.gear[Equipment.WEAPON] &&
