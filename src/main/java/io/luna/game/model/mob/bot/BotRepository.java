@@ -139,7 +139,7 @@ public final class BotRepository {
      */
     public void add(Bot bot) {
         online.putIfAbsent(bot.getUsername(), bot);
-        world.getBotManager().getScheduleService().addLogoutRequest(bot.getUsernameHash(), bot.getPersonality());
+        world.getBotManager().getScheduleService().onBotLogin(bot);
         if (!bot.isTemporary()) {
             savedNames.add(bot.getUsername());
         }
@@ -154,8 +154,8 @@ public final class BotRepository {
      * @param bot The bot to remove.
      */
     public void remove(Bot bot) {
-        online.remove(bot.getUsername());
         world.getBotManager().getScheduleService().addLoginRequest(bot.getUsername(), bot.getPersonality());
+        online.remove(bot.getUsername());
         if (bot.isTemporary()) {
             String username = bot.getUsername();
             savedNames.remove(username);
