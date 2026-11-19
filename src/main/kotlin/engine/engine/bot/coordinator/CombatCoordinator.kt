@@ -87,6 +87,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.LUMBRIDGE_RIVER, 3, setOf("Goblin", "Giant spider")),
             Camp(SubZone.ICE_MOUNTAIN, 10, setOf("Icefiend", "Dwarf")),
             Camp(SubZone.EDGEVILLE_MONASTERY, 10, setOf("Monk")),
+            Camp(SubZone.WIZARDS_TOWER, 10, setOf("Wizard")),
             Camp(SubZone.ROCK_CRABS, 10, setOf("Rock Crab")),
             Camp(SubZone.WATERBIRTH_SURFACE_CRABS, 35, setOf("Rock Crab")),
             Camp(SubZone.HAM_CULT, 15, setOf("H.A.M. Guard")),
