@@ -24,7 +24,7 @@ public final class EquipItemMessageReader extends GameMessageReader<PlayerEvent>
         int itemId = msg.getPayload().getShort(false, ByteOrder.LITTLE);
         int index = msg.getPayload().getShort(false, ValueType.ADD);
         if (EquipmentDefinition.ALL.get(itemId).isPresent()) {
-            return new EquipItemEvent(player, index, itemId, interfaceId);
+            return new EquipItemEvent(player, index, itemId, interfaceId, msg.hasDispatchGuard());
         }
         return new ItemSecondClickEvent(player, itemId, index, interfaceId);
     }

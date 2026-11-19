@@ -4,6 +4,7 @@ import api.bot.SuspendableCondition
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import io.luna.game.model.def.EquipmentDefinition
+import java.util.function.BooleanSupplier
 
 /**
  * Handles equipment-related actions for a [Bot].
@@ -27,7 +28,9 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
      * @param id The item id to equip.
      * @return `true` if the item was equipped successfully, otherwise `false`.
      */
-    suspend fun equip(id: Int): Boolean {
+    suspend fun equip(id: Int): Boolean = equip(id, null)
+
+    internal suspend fun equip(id: Int, pkSwitch: BooleanSupplier?): Boolean {
         bot.log("Trying to equip ${itemName(id)}.")
 
         val index = bot.inventory.computeIndexForId(id)
@@ -48,9 +51,14 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
             return false
         }
 
-        val suspendCond = SuspendableCondition { bot.equipment[equipmentIndex.get()]?.id == id }
-        bot.output.sendInventoryItemClick(2, index, id)
-        return suspendCond.submit().await()
+        val equipped = { bot.equipment[equipmentIndex.get()]?.id == id }
+        if (pkSwitch == null) {
+            bot.output.sendInventoryItemClick(2, index, id)
+            return SuspendableCondition(equipped).submit().await()
+        }
+        bot.output.sendPkEquipClick(index, id, pkSwitch)
+        return SuspendableCondition { !pkSwitch.asBoolean || equipped() }.submit(3).await() &&
+            pkSwitch.asBoolean && equipped()
     }
 
     /**
@@ -63,7 +71,9 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
      * @param index The equipment slot index to unequip.
      * @return `true` if the slot is empty after the action, otherwise `false`.
      */
-    suspend fun unequip(index: Int): Boolean {
+    suspend fun unequip(index: Int): Boolean = unequip(index, null)
+
+    internal suspend fun unequip(index: Int, pkSwitch: BooleanSupplier?): Boolean {
         val item = bot.equipment[index] ?: return true
         if (!bot.inventory.hasSpaceFor(item)) {
             bot.log("Not enough inventory space to unequip $item.")
@@ -72,9 +82,16 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
 
         bot.log("Trying to unequip ${item.name}.")
 
-        val suspendableCond = SuspendableCondition { bot.equipment[index] == null }
-        bot.output.sendItemWidgetClick(1, index, 1688, item.id)
-        return suspendableCond.submit(3).await()
+        val unequipped = { bot.equipment[index] == null }
+        if (pkSwitch == null) {
+            bot.output.sendItemWidgetClick(1, index, 1688, item.id)
+            return SuspendableCondition(unequipped).submit(3).await()
+        }
+        bot.output.sendPkUnequipClick(index, item.id, BooleanSupplier {
+            pkSwitch.asBoolean && bot.equipment[index]?.id == item.id
+        })
+        return SuspendableCondition { !pkSwitch.asBoolean || unequipped() }.submit(3).await() &&
+            pkSwitch.asBoolean && unequipped()
     }
 
     /**

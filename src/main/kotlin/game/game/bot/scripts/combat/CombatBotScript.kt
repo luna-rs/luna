@@ -78,7 +78,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      */
     private val pkSwitcher = PkCombatSwitcher(bot, handler,
         acceptsTarget = { targetAllowed() && pkSession?.allowsPursuit(it) != false },
-        acceptsPurpose = { pkSession?.allowsCombatPurpose(it) != false })
+        acceptsPurpose = { pkSession?.allowsCombatPurpose(it) != false },
+        ownsFight = { isRunning() && !isTerminated() && bot.scriptStack.current() === this })
     private val combatPolicy = BotCombatActionHandler(bot, handler)
 
     /**

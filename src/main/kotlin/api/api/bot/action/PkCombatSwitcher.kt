@@ -8,6 +8,8 @@ import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.combat.CombatAction
+import java.util.function.BooleanSupplier
 
 /**
  * Owns timed, carried-only equipment switches for one active PK fight.
@@ -21,7 +23,8 @@ import io.luna.game.model.mob.bot.Bot
 internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotActionHandler,
                               private val acceptsTarget: (Player) -> Boolean = { true },
                               private val nanoTime: () -> Long = System::nanoTime,
-                              private val acceptsPurpose: (BotGearPurpose) -> Boolean = { true }) {
+                              private val acceptsPurpose: (BotGearPurpose) -> Boolean = { true },
+                              private val ownsFight: () -> Boolean = { true }) {
     /**
      * Whether the caller can attack, should wait for its reaction window, or must abandon an unusable fight.
      *
@@ -87,9 +90,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
             current.second.gear[Equipment.WEAPON] == selected.gear[Equipment.WEAPON] &&
             current.second.gear[Equipment.AMMUNITION] == selected.gear[Equipment.AMMUNITION] &&
             ready(purpose, current.second)) return Result.READY
-        bot.combat.target = null
-        clearMagic()
-        if (!apply(target, purpose, selected)) {
+        if (!switch(target, purpose, selected)) {
             failed += purpose
             active = null
             clearMagic()
@@ -97,6 +98,34 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
         }
         active = purpose to selected
         return Result.READY
+    }
+
+    /**
+     * Keeps the existing attack action and its approach rules until the new outfit is ready.
+     * Pending clicks expire with the switch, including when a script is paused or its target changes.
+     */
+    private suspend fun switch(target: Player, purpose: BotGearPurpose, selected: CombatLoadout): Boolean {
+        val combat = bot.combat
+        val originalTarget = combat.target?.takeIf { it === target }
+        if (combat.target !== originalTarget) combat.target = null
+        val originalAction = bot.actions.first(CombatAction::class.java)
+        val policy = originalTarget?.let { combat.getDefaultAttack(it).interactionPolicy }
+        val switch = combat.beginEquipmentSwitch(target, policy)
+        val canContinue = BooleanSupplier {
+            combat.equipmentSwitch === switch && ownsFight() && combat.target === originalTarget && validTarget(target)
+        }
+        var committed = false
+        try {
+            clearMagic()
+            committed = apply(purpose, selected, canContinue)
+            return committed
+        } finally {
+            if (!committed && combat.equipmentSwitch === switch && combat.target === target &&
+                bot.actions.first(CombatAction::class.java) === originalAction) {
+                combat.target = null
+            }
+            combat.finishEquipmentSwitch(switch)
+        }
     }
 
     /**
@@ -132,19 +161,19 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
      * Stops automatic attacks while normal equip clicks apply a carried outfit. Two-handed layouts omit shields.
      * Magic removes carried-outfit gaps with negative spell accuracy rather than leaving plate armour equipped.
      */
-    private suspend fun apply(target: Player, purpose: BotGearPurpose, selected: CombatLoadout): Boolean {
-        if (!validTarget(target)) return false
+    private suspend fun apply(purpose: BotGearPurpose, selected: CombatLoadout, canContinue: BooleanSupplier): Boolean {
+        if (!canContinue.asBoolean) return false
         val order = listOf(Equipment.WEAPON, Equipment.AMMUNITION) +
             selected.gear.indices.filter { it != Equipment.WEAPON && it != Equipment.AMMUNITION }
         for (slot in order) {
             val id = selected.gear[slot]
-            if (id != null && bot.equipment[slot]?.id != id && !handler.equipment.equip(id)) return false
-            if (!validTarget(target)) return false
+            if (id != null && bot.equipment[slot]?.id != id && !handler.equipment.equip(id, canContinue)) return false
+            if (!canContinue.asBoolean) return false
             if (purpose == BotGearPurpose.MAGIC && id == null && slot != Equipment.WEAPON) {
                 val worn = bot.equipment[slot]
                 if (worn != null && equipDef(worn.id).getBonus(Equipment.EquipmentBonus.MAGIC_ATTACK.index) < 0 &&
-                    !handler.equipment.unequip(slot)) return false
-                if (!validTarget(target)) return false
+                    !handler.equipment.unequip(slot, canContinue)) return false
+                if (!canContinue.asBoolean) return false
             }
         }
         if (purpose == BotGearPurpose.MAGIC) {
@@ -159,7 +188,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
             val style = styles.firstOrNull() ?: return false
             bot.combat.weapon.changeStyle(style.button)
         }
-        return validTarget(target) && ready(purpose, selected)
+        return canContinue.asBoolean && ready(purpose, selected)
     }
 
     /**

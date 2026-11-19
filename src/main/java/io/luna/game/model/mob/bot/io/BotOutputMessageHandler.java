@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.bot.io;
 
+import java.util.function.BooleanSupplier;
+
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Npc;
@@ -423,6 +425,17 @@ public final class BotOutputMessageHandler {
      * Widget-defined container actions use {@link #sendItemWidgetClick(int, int, int, int)} instead.
      */
     public boolean sendItemAction(int option, int index, int widgetId, int itemId) {
+        return sendItemAction(option, index, widgetId, itemId, null);
+    }
+
+    /**
+     * Queues a PK equip click that can expire before the server dispatches it.
+     */
+    public boolean sendPkEquipClick(int index, int itemId, BooleanSupplier guard) {
+        return sendItemAction(2, index, 3214, itemId, guard);
+    }
+
+    private boolean sendItemAction(int option, int index, int widgetId, int itemId, BooleanSupplier guard) {
         if (option < 1 || option > 5) {
             bot.log("Invalid inventory item click option: " + option);
             return false;
@@ -467,7 +480,7 @@ public final class BotOutputMessageHandler {
                 return false;
         }
 
-        client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
+        client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg, guard));
         return true;
     }
 
@@ -481,6 +494,17 @@ public final class BotOutputMessageHandler {
      * @return {@code true} if successfully queued, otherwise {@code false}.
      */
     public boolean sendItemWidgetClick(int option, int widgetIndex, int widgetId, int itemId) {
+        return sendItemWidgetClick(option, widgetIndex, widgetId, itemId, null);
+    }
+
+    /**
+     * Queues a PK unequip click that can expire before the server dispatches it.
+     */
+    public boolean sendPkUnequipClick(int index, int itemId, BooleanSupplier guard) {
+        return sendItemWidgetClick(1, index, 1688, itemId, guard);
+    }
+
+    private boolean sendItemWidgetClick(int option, int widgetIndex, int widgetId, int itemId, BooleanSupplier guard) {
         if (option < 1 || option > 5) {
             bot.log("Invalid widget item click option: " + option);
             return false;
@@ -519,7 +543,7 @@ public final class BotOutputMessageHandler {
                 opcode = 158;
                 break;
         }
-        client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
+        client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg, guard));
         return true;
     }
 

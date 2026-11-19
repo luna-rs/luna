@@ -156,6 +156,9 @@ public abstract class CombatAttack<T extends Mob> {
      * will not be executed.
      */
     public final void apply() {
+        if (attacker instanceof Bot bot && bot.getCombat().isEquipmentSwitching()) {
+            return;
+        }
         if (attacker instanceof Bot bot && !BotCombatActionHandler.permitsAttack(bot, this)) {
             attacker.getCombat().setTarget(null);
             return;

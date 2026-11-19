@@ -25,6 +25,11 @@ public final class EquipItemEvent extends PlayerEvent implements ControllableEve
     private final int interfaceId;
 
     /**
+     * Whether this synthetic equip belongs to a guarded PK equipment switch.
+     */
+    private final boolean preserveCombat;
+
+    /**
      * Creates a new {@link EquipItemEvent}.
      *
      * @param player The player.
@@ -33,10 +38,15 @@ public final class EquipItemEvent extends PlayerEvent implements ControllableEve
      * @param interfaceId The interface containing the clicked index.
      */
     public EquipItemEvent(Player player, int index, int itemId, int interfaceId) {
+        this(player, index, itemId, interfaceId, false);
+    }
+
+    public EquipItemEvent(Player player, int index, int itemId, int interfaceId, boolean preserveCombat) {
         super(player);
         this.index = index;
         this.itemId = itemId;
         this.interfaceId = interfaceId;
+        this.preserveCombat = preserveCombat;
     }
 
     /**
@@ -58,5 +68,9 @@ public final class EquipItemEvent extends PlayerEvent implements ControllableEve
      */
     public int getInterfaceId() {
         return interfaceId;
+    }
+
+    public boolean preservesCombat() {
+        return preserveCombat;
     }
 }

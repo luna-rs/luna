@@ -101,7 +101,7 @@ public abstract class GameMessageReader<E extends Event> {
     public final void submitMessage(Player player, GameMessage msg) {
         try {
             // Decode event object from raw client data.
-            if(msg.getPayload().refCnt() == 0) {
+            if (msg.getPayload().refCnt() == 0 || !msg.canDispatch()) {
                 return;
             }
             E event = decode(player, msg);

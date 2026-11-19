@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.combat.state;
 
+import io.luna.game.model.mob.interact.InteractionPolicy;
+
 import api.combat.player.PlayerCombatHandler;
 import api.combat.specialAttack.SpecialAttackHandler;
 import api.combat.specialAttack.dsl.SpecialAttackBuilderReceiver;
@@ -105,6 +107,48 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     private Mob pursuitTarget;
     private BooleanSupplier pursuitActive;
     private long pursuitLeaseTick;
+
+    /**
+     * A staged PK switch, with the approach rules from before any item was changed.
+     *
+     * @author lare96
+     */
+    public record EquipmentSwitch(Player target, InteractionPolicy pursuitPolicy) {
+    }
+
+    private EquipmentSwitch equipmentSwitch;
+
+    /**
+     * Defers outgoing attacks while a bot changes equipment through native clicks.
+     */
+    public EquipmentSwitch beginEquipmentSwitch(Player target, InteractionPolicy pursuitPolicy) {
+        equipmentSwitch = new EquipmentSwitch(target, pursuitPolicy);
+        return equipmentSwitch;
+    }
+
+    /**
+     * Releases only the switch owned by the finishing coroutine.
+     */
+    public void finishEquipmentSwitch(EquipmentSwitch owner) {
+        if (equipmentSwitch == owner) {
+            equipmentSwitch = null;
+        }
+    }
+
+    public EquipmentSwitch getEquipmentSwitch() {
+        return equipmentSwitch;
+    }
+
+    public boolean isEquipmentSwitching() {
+        return equipmentSwitch != null;
+    }
+
+    @Override
+    public void retaliate(Mob enemy) {
+        if (equipmentSwitch == null) {
+            super.retaliate(enemy);
+        }
+    }
 
     /**
      * Keeps ordinary combat pursuit from replacing a bot script's positioning movement.
@@ -292,6 +336,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public void reset() {
+        equipmentSwitch = null;
         releasePursuit(pursuitOwner);
         setFirstAttack(null);
         super.reset();

@@ -11,8 +11,8 @@ import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent
  */
 on(EquipItemEvent::class, EventPriority.HIGH) {
     if (!MageArena.canEquip(plr, itemId)) return@on
-    plr.interact(null)
-    plr.overlays.closeWindows()
+    if (!preservesCombat()) plr.interact(null)
+    plr.overlays.closeWindows(!preservesCombat())
     plr.equipment.equip(index)
 }
 

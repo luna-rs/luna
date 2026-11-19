@@ -12,6 +12,7 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.combat.state.PlayerCombatContext;
 import io.luna.game.model.mob.movement.NavigationRequest;
 import io.luna.game.model.mob.movement.NavigationResult;
 
@@ -117,7 +118,8 @@ public final class CombatAction extends Action<Mob> {
         CombatAttack<?> attack = pendingAttack;
         pendingAttack = null;
         Mob target = combat.getTarget();
-        if (attack == null || target != pendingAttackTarget) {
+        if (attack == null || target != pendingAttackTarget ||
+                (mob instanceof Bot bot && bot.getCombat().isEquipmentSwitching())) {
             return false;
         }
         if (!mob.isAlive() || !target.isAlive() || combat.isDisabled() ||
@@ -154,7 +156,9 @@ public final class CombatAction extends Action<Mob> {
         }
 
         // Apply auto-retaliate if a valid aggressor was remembered.
-        if (combat.getAutoRetaliateTarget() != null && (combat.isAutoRetaliate() ||
+        var switching = mob instanceof Bot bot && bot.getCombat().isEquipmentSwitching()
+                ? bot.getCombat().getEquipmentSwitch() : null;
+        if (switching == null && combat.getAutoRetaliateTarget() != null && (combat.isAutoRetaliate() ||
                 (mob instanceof Bot controller && (controller.isBot() || controller.isAutomationActive())))) {
             if (combat.getAutoRetaliateTarget().isAlive()) {
                 combat.setTarget(combat.getAutoRetaliateTarget());
@@ -171,6 +175,10 @@ public final class CombatAction extends Action<Mob> {
         // Stop combat if the target has moved too far outside local combat/view range.
         if (!mob.isWithinDistance(target, Position.VIEWING_DISTANCE + 5)) {
             return clearTarget();
+        }
+
+        if (switching != null) {
+            return continueEquipmentSwitch(target, switching);
         }
 
         // Resolve the next usable combat attack against this target.
@@ -211,6 +219,24 @@ public final class CombatAction extends Action<Mob> {
         }
 
         return tryAttack(attack);
+    }
+
+    /**
+     * Retains the last committed approach while equipment is incomplete. This phase can move, but cannot
+     * choose an attack or queue a post-movement launch.
+     */
+    private boolean continueEquipmentSwitch(Mob target, PlayerCombatContext.EquipmentSwitch switching) {
+        InteractionPolicy policy = switching.pursuitPolicy();
+        if (target != switching.target() || policy == null) {
+            cancelPlayerPursuit();
+            return pendingAttackExpired(target);
+        }
+        boolean reached = mob.getWorld().getCollisionManager().reached(mob, target, policy);
+        if (!combat.onCombatProcess(reached) || !combat.checkMultiCombat(target)) {
+            return clearTarget();
+        }
+        updatePlayerPursuit(target, policy, reached);
+        return pendingAttackExpired(target);
     }
 
     /**
