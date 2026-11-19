@@ -42,7 +42,7 @@ internal data class PkLoadoutPressure(
  */
 internal fun pkPhysicalStyle(bot: Bot, purpose: BotGearPurpose, weapon: WeaponTypeDefinition): CombatStyleDefinition? =
     BotCombatActionHandler.allowedStyles(bot, weapon.styles).firstOrNull {
-        (Skill.RANGED in it.exp) == (purpose == BotGearPurpose.RANGED)
+        Skill.MAGIC !in it.exp && (Skill.RANGED in it.exp) == (purpose == BotGearPurpose.RANGED)
     }
 
 /**
@@ -86,7 +86,8 @@ internal fun pkLoadoutPressure(bot: Bot, target: Player, purpose: BotGearPurpose
     val type = if (ranged) CombatDamageType.RANGED else CombatDamageType.MELEE
     val accuracyBonus = if (ranged) EquipmentBonus.RANGED_ATTACK else style.bonus
     val physicalType = if (ranged) PhysicalType.RANGED else PhysicalType.MELEE
-    val ammo = if (ranged) rangedAmmo(bot, weapon, equipment[Equipment.AMMUNITION]?.id()) ?: return null else null
+    val ammo = if (ranged) pkRangedAmmo(bot, weapon, equipment[Equipment.AMMUNITION]?.id(), current) ?: return null
+        else null
     val strength = ammo?.first ?: bonus(EquipmentBonus.STRENGTH)
     val unprotected = CombatFormula.calculatePhysicalMaxHit(bot, physicalType, style.stance, strength)
     val protection = if (ranged) PrayerIcon.PROTECT_FROM_MISSILES else PrayerIcon.PROTECT_FROM_MELEE
@@ -102,10 +103,17 @@ internal fun pkLoadoutPressure(bot: Bot, target: Player, purpose: BotGearPurpose
 private fun protectedCap(cap: Int, overhead: PrayerIcon, matching: PrayerIcon): Int =
     if (overhead == matching) Math.floorDiv(cap * 60L, 100L).toInt() else cap
 
-private fun rangedAmmo(bot: Bot, weapon: Int, ammoId: Int?): Pair<Int, Int>? {
+/**
+ * Resolves native compatible ammunition and its remaining shots. Current attacks require it in the equipped slot.
+ */
+internal fun pkRangedAmmo(bot: Bot, weapon: Int, ammoId: Int?, equippedOnly: Boolean): Pair<Int, Int>? {
+    fun ammoItem(slot: Int, id: Int): Item? =
+        bot.equipment[slot]?.takeIf { it.id == id } ?:
+            if (equippedOnly) null else bot.inventory.firstOrNull { it?.id == id }
+
     val ammoless = AmmoDefinition.NO_AMMO_WEAPONS[weapon]
     if (ammoless != null) {
-        val item = equippedOrCarried(bot, Equipment.WEAPON, weapon) ?: return null
+        val item = ammoItem(Equipment.WEAPON, weapon) ?: return null
         val shots = when {
             ammoless.type == AmmoType.CRYSTAL_ARROW && weapon == 4212 -> 0
             ammoless.type == AmmoType.CRYSTAL_ARROW -> (item as? DynamicItem)?.charges ?: CRYSTAL_ITEMS_CHARGES
@@ -116,12 +124,9 @@ private fun rangedAmmo(bot: Bot, weapon: Int, ammoId: Int?): Pair<Int, Int>? {
     }
     val id = ammoId ?: return null
     val ammo = AmmoDefinition.AMMO_REQUIRING_WEAPONS[id]?.takeIf { weapon in it.weapons } ?: return null
-    val item = equippedOrCarried(bot, Equipment.AMMUNITION, id)?.takeIf { it.amount > 0 } ?: return null
+    val item = ammoItem(Equipment.AMMUNITION, id)?.takeIf { it.amount > 0 } ?: return null
     return ammo.strength to item.amount
 }
-
-private fun equippedOrCarried(bot: Bot, slot: Int, id: Int): Item? =
-    bot.equipment[slot]?.takeIf { it.id == id } ?: bot.inventory.firstOrNull { it?.id == id }
 
 private fun meleePressure(bot: Bot, gear: List<EquipmentDefinition?>, accuracy: Double,
                           cap: Int, unprotected: Int): Double {

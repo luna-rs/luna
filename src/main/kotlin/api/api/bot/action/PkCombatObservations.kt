@@ -32,7 +32,7 @@ internal class PkCombatObservations(private val bot: Bot) {
         if (aggressors[victim] === attacker && threatening(victim, attacker)) return
         if (attacker !== victim && visible(attacker) && visible(victim)) {
             aggressors[attacker] = victim
-            if (clanAlly(attacker) && clanAlly(victim)) clanAggressors[attacker] = victim
+            if (clanAlly(victim)) clanAggressors[attacker] = victim
         }
     }
 
@@ -77,10 +77,15 @@ internal class PkCombatObservations(private val bot: Bot) {
     fun canProtectAgainst(attacker: Player): Boolean = aggressors[attacker]?.let { threatening(attacker, it) } == true
 
     /**
-     * Identifies only a witnessed fresh initiator against another apparent clanmate, never an inferred chase.
+     * Identifies a witnessed fresh initiator against an apparent clanmate regardless of the attacker's cape.
      * Cape changes after the witnessed attack cannot hide the initiator or retrospectively blame the victim.
      */
     fun canDefendClanAgainst(attacker: Player): Boolean = clanAggressors[attacker]?.let { threatening(attacker, it) } == true
+
+    /**
+     * Exposes only continuing witnessed threats to the local group's focus review.
+     */
+    fun clanThreats(): List<Player> = clanAggressors.keys.filter(::canDefendClanAgainst)
 
     /**
      * Reports current-cycle fleeing only, rather than labelling every witnessed attack victim as fleeing.

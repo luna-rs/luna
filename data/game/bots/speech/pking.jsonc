@@ -23,6 +23,15 @@
  * Cocky victory lines said after combat ends, usually after the bot wins.
  */
 {
+  "LIVE_EXCHANGE": [
+    "good hits",
+    "nice hit"
+  ],
+  "KNOCKOUT": [
+    "gf",
+    "good fight",
+    "well fought"
+  ],
   "POSITIVE_START": [
     "gl",
     "gl!",

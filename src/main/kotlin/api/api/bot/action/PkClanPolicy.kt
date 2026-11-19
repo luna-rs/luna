@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.isRealBot
 
 import game.bot.scripts.combat.PkBotScript
+import engine.controllers.MultiCombatAreaListener
 import engine.controllers.WildernessLocatableController.levelAt
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Equipment
@@ -59,6 +60,29 @@ internal class PkClanPolicy(private val bot: Bot) {
     fun apparentAlly(player: Player): Boolean = cape?.let { player.equipment[Equipment.CAPE]?.id == it } == true
 
     /**
+     * Confirms membership for coordination and spell safety. The other bot must be on an active group outing,
+     * wearing its actual assignment and on the same Wilderness multi plane.
+     */
+    fun combatAlly(player: Player): Boolean {
+        val id = cape ?: return false
+        return player !== bot && player.isRealBot() && player.state == EntityState.ACTIVE && player.isAlive &&
+            player.position.z == bot.position.z && levelAt(player.position) > 0 &&
+            MultiCombatAreaListener.inside(player.position) && player.equipment[Equipment.CAPE]?.id == id &&
+            bot.world.botManager.clanRegistry.capeFor(player.username) == id &&
+            player.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.isGroupOuting() == true
+    }
+
+    /**
+     * Counts recent native attack launches that clanmates are still pursuing. A queued follow, incidental splash,
+     * abandoned target or stale record cannot establish focus. Only nearby combatants can influence this fight.
+     */
+    fun combatSupport(players: Collection<Player>, now: Long): Map<Player, Int> = players.asSequence()
+        .filter { near(it, GROUP_RADIUS) && combatAlly(it) }.mapNotNull { ally ->
+            val attack = ally.combat.lastAttackSent ?: return@mapNotNull null
+            (attack.victim as? Player)?.takeIf { ally.combat.target === it && now - attack.launchTick in 0..12 }
+        }.groupingBy { it }.eachCount()
+
+    /**
      * Online assigned clanmates must be alive. Trip eligibility can include members doing other activities;
      * tactical cooperation requires this same active PK script. A paused PK parent beneath combat counts.
      * Newly started members count before bank preparation so simultaneous departures cannot deadlock.
@@ -100,7 +124,7 @@ internal class PkClanPolicy(private val bot: Bot) {
     /**
      * Checks proximity on the same plane rather than treating a distant online assignment as support.
      */
-    fun near(member: Bot, radius: Int): Boolean = bot.position.z == member.position.z &&
+    fun near(member: Player, radius: Int): Boolean = bot.position.z == member.position.z &&
         bot.position.computeLongestDistance(member.position) <= radius
 
     /**
@@ -111,6 +135,28 @@ internal class PkClanPolicy(private val bot: Bot) {
     companion object {
         const val FOLLOW_RADIUS = 4
         const val GROUP_RADIUS = 10
+
+        /**
+         * Keeps a viable focus without a stronger reason to help elsewhere. Fresh defence takes priority, then
+         * committed clan pressure. A wounded target can break a support tie only with a clear health advantage.
+         * The caller supplies only locally legal candidates with at least one reason to engage.
+         */
+        fun selectFocus(current: Player?, candidates: Collection<Player>, support: Map<Player, Int>,
+                        defending: (Player) -> Boolean): Player? {
+            val best = candidates.asSequence().filter { it !== current }.maxWithOrNull(
+                compareBy<Player> { defending(it) }.thenBy { support[it] ?: 0 }.thenBy { -it.healthPercent }
+            ) ?: return null
+            if (current == null) return best
+            val bestDefends = defending(best)
+            val currentDefends = defending(current)
+            if (bestDefends != currentDefends) return best.takeIf { bestDefends }
+            val bestSupport = support[best] ?: 0
+            val currentSupport = support[current] ?: 0
+            return best.takeIf {
+                bestSupport > currentSupport || (bestSupport > 0 && bestSupport == currentSupport &&
+                    best.healthPercent <= 35 && current.healthPercent - best.healthPercent >= 20)
+            }
+        }
 
         /**
          * Gives confident personalities a 7–10 percent solo chance per outing, rather than retrying every tick.

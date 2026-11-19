@@ -6,7 +6,9 @@ import api.bot.zone.SubZone
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotPotionActionHandler
+import api.bot.action.eating.CarriedFood
 import api.bot.action.PkCombatSwitcher
+import api.bot.action.PkFinisher
 import api.bot.action.PkRiskBudget
 import api.bot.action.PvmFight
 import api.bot.action.prayer.PvmPrayer
@@ -25,12 +27,12 @@ import api.bot.script.lastEscape
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
-import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
 import engine.bot.speech.BotReactions
 import engine.combat.prayer.CombatPrayer
 import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.LootItemReflexScript
 import game.player.item.consume.food.Food
+import game.player.item.consume.food.Food.Companion.lastEat
 import game.player.item.consume.potion.Potion
 import io.luna.Luna
 import io.luna.game.model.Position
@@ -41,8 +43,8 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
-import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import java.time.Instant
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -81,6 +83,13 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         acceptsPurpose = { pkSession?.allowsCombatPurpose(it) != false },
         ownsFight = { isRunning() && !isTerminated() && bot.scriptStack.current() === this })
     private val combatPolicy = BotCombatActionHandler(bot, handler)
+    private val pkRecovery = PkCombatRecovery(bot)
+    private var finisherWeapon: Int? = null
+    private var finisherArmedAt: Instant? = null
+    private var finisherExpiresAt = 0L
+    private var nextFinisherAt = 0L
+    private var acknowledgedExchange = false
+    private var clanCall: Player? = null
 
     private val tacticalWithdrawal = if (bot.isBot && !bot.isConnectedPlayer) pkSession?.let { session ->
         PkTacticalWithdrawal(bot, combatPolicy, ::ownsTacticalTurn,
@@ -116,7 +125,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             return false
         }
         if (usesPkSwitching) {
-            return when (pkSwitcher.prepare(focus as Player)) {
+            val target = focus as Player
+            val weapon = chooseFinisher(target)
+            return when (pkSwitcher.prepare(target, forcedMeleeWeapon = weapon)) {
                 PkCombatSwitcher.Result.READY -> pkSwitcher.prepareSpell(focus as Player)
                 PkCombatSwitcher.Result.WAITING -> false
                 PkCombatSwitcher.Result.UNAVAILABLE -> {
@@ -365,17 +376,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 bot.speechStack.setDisableGeneral(true)
                 if (!prepareAttack()) return isTerminated()
                 if (!targetAllowed()) return true
+                if (usesPkSwitching) armFinisher(focus as Player)
                 bot.combat.attack(focus)
                 delay(600.milliseconds)
-
-                // PK speech shares a cooldown across encounters and fight stages.
-                if (focus is Player && BotPkingSpeechPool.canSpeak(bot)) {
-                    val text = BotPkingSpeechPool.take(bot,
-                                                       if (rand(bot.personality.kindness)) PkingSpeech.POSITIVE_START
-                                                       else PkingSpeech.NEGATIVE_START)
-                    val delay = rand(2, 5)
-                    bot.speechStack.pushHead(BotSpeech(text, delay))
-                }
             }
 
             InitialState.RUN -> running = true
@@ -398,26 +401,22 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 if (isActionSafe()) lootItems()
                 return true
             }
+            reassessClanFocus()
             if (!focus.isAlive || !focus.isViewableFrom(bot)) return true
             if (stopStalledPkFight()) return !running
             val target = focus as Player
-            if (tacticalWithdrawal?.afterThaw(target) == true) {
+            if (tacticalWithdrawal?.createSpace(target) == true) {
                 if (!ownsTacticalTurn()) return isTerminated()
-                if (bot.healthPercent < PkTacticalWithdrawal.SURVIVAL_HEALTH_PERCENT) {
-                    recoverAfterWithdrawal()
-                    if (!ownsTacticalTurn()) return isTerminated()
-                    if (bot.healthPercent < PkTacticalWithdrawal.SURVIVAL_HEALTH_PERCENT) {
-                        fleePkFight()
-                        return true
-                    }
-                }
+                recoverAfterWithdrawal()
+                if (!ownsTacticalTurn()) return isTerminated()
                 if (!canResumeAfterWithdrawal(target)) return true
+            } else {
+                eatFood(retarget = false)
+                if (isTerminated()) return true
             }
             targetEnemy()
             if (isTerminated() || !focus.isAlive) return true
             talk()
-            eatFood()
-            if (isTerminated()) return true
             drinkPotion()
             activatePrayer()
             useSpecialAttack()
@@ -461,6 +460,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     override suspend fun finish() {
         tacticalWithdrawal?.clearObservation()
         pkSwitcher.clearStyleConfirmation()
+        clearFinisher()
         if (running) {
             bot.combat.isDisabled = false
         }
@@ -482,6 +482,24 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private fun ownsTacticalTurn(): Boolean =
         isRunning() && !isTerminated() && bot.scriptStack.current() === this && isActionSafe()
 
+    private fun reassessClanFocus() {
+        if (!allowPlayerRetargeting || lootOnVictory || !targetAllowed() || !ownsTacticalTurn()) return
+        val old = focus as? Player ?: return
+        val next = pkSession?.reassessClanFocus(old) ?: return
+        clearFinisher()
+        tacticalWithdrawal?.clearObservation()
+        if (bot.combat.target === old) bot.combat.target = null
+        if (bot.navigator.currentTarget === old) {
+            bot.navigator.cancel()
+            bot.walking.clear()
+        }
+        focus = next
+        focusSpawn = null
+        startedAt = System.currentTimeMillis()
+        acknowledgedExchange = false
+        clanCall = next
+    }
+
     private fun canResumeAfterWithdrawal(target: Player): Boolean =
         focus === target && targetAllowed() && pkSession?.allowsPursuit(target) == true &&
             bot.combat.lastCombatWith === target && (bot.combat.target == null || bot.combat.target === target) &&
@@ -491,7 +509,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         val combat = bot.combat
         val hold = combat.beginTacticalWithdrawal() ?: return
         try {
-            eatFood(retarget = false)
+            eatFood(retarget = false, spaced = true)
         } finally {
             combat.finishTacticalWithdrawal(hold)
         }
@@ -530,7 +548,13 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             // Equipping can suspend; do not initiate against a dead, vanished or newly contested target.
             if (!focus.isAlive || !focus.isViewableFrom(bot) || !bot.combat.checkMultiCombat(focus)) return
             if (usesPkSwitching && !combatPolicy.canAttackPlayer(focus as Player)) return
+            if (usesPkSwitching) armFinisher(focus as Player)
             bot.combat.attack(focus)
+            if (clanCall === focus) {
+                BotPkingSpeechPool.exchange(bot, focus as Player, focusChanged = true)
+                clanCall = null
+                acknowledgedExchange = true
+            }
             if (!usesPkSwitching) delay(1200.milliseconds, 3.seconds)
             return
         }
@@ -550,25 +574,44 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * Makes bots talk in a PKing context while the fight is ongoing.
      */
     private fun talk() {
-        // Less chance to talk while fighting.
-        if (focus is Player && BotPkingSpeechPool.canSpeak(bot)) {
-            val text =
-                BotPkingSpeechPool.take(bot, if (rand(bot.personality.kindness)) PkingSpeech.POSITIVE_FIGHTING else
-                    PkingSpeech.NEGATIVE_FIGHTING)
-            bot.speechStack.pushHead(BotSpeech(text, 0))
-        }
+        val opponent = focus as? Player ?: return
+        if (acknowledgedExchange || !bot.inWilderness() || bot.combat.target !== opponent) return
+        val hit = bot.combat.lastDamageReceived ?: return
+        if (hit.attacker !== opponent || hit.rawAmount < 12 || bot.combat.lastCombatWith !== opponent) return
+        acknowledgedExchange = true
+        BotPkingSpeechPool.exchange(bot, opponent)
     }
 
     /**
-     * Eats food when the bot is nervous about its health, or under 30% in a PK session.
+     * Eats food when the bot is nervous about its health. PK sessions also account for incoming damage and space.
      *
-     * A bot with no food leaves the fight when its personality says so ([leavesFight]); in a PK session it flees once
-     * it is under 30%. After eating, the bot refreshes its target so it can continue fighting if still safe enough to
-     * do so.
+     * A bot with no food leaves according to [leavesFight], or at the survival threshold in a PK session.
      */
-    private suspend fun eatFood(retarget: Boolean = true) {
+    private suspend fun eatFood(retarget: Boolean = true, spaced: Boolean = false) {
+        val opponent = focus as? Player
+        if (pkSession != null && opponent != null) {
+            if (bot.healthPercent > 75 || !isActionSafe()) return
+            val incoming = pkRecovery.pressure(opponent)
+            val emergency = bot.healthPercent < PkCombatRecovery.SURVIVAL_HEALTH_PERCENT
+            val roomToEat = spaced && !world.collisionManager.reached(opponent, bot, PkCombatRecovery.attackReach(opponent))
+            if (!emergency && !PkCombatRecovery.shouldEat(bot.health, bot.totalHealth, incoming, roomToEat)) return
+            val food = CarriedFood.choose(CarriedFood.of(bot).filter { it.food.heal > 0 },
+                bot.totalHealth - bot.health, emergency || incoming >= bot.health, careful = true)
+            if (food == null) {
+                if (emergency) {
+                    activatePlayerPrayer()
+                    fleePkFight()
+                }
+                return
+            }
+            val lastEat = bot.lastEat
+            if (lastEat.isRunning && lastEat.durationTicks < food.food.delay) return
+            if (handler.inventory.eat(food.index, food.id) && retarget) targetEnemy()
+            return
+        }
+
         val nervous = if (pkSession == null) bot.emotions.isNervousAboutHp
-            else bot.healthPercent < PkTacticalWithdrawal.SURVIVAL_HEALTH_PERCENT
+            else bot.healthPercent < PkCombatRecovery.SURVIVAL_HEALTH_PERCENT
         if (nervous && handler.inventory.eatAnyFood()) {
             if (retarget) targetEnemy()
             return
@@ -805,9 +848,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private suspend fun useSpecialAttack() {
         val weaponId = bot.equipment.weapon?.id
         if (usesPkSwitching) {
-            // Tactical special-weapon swaps are deferred; never override a chosen ranged or Magic phase.
-            if (!bot.combat.magic.isAutocasting && weaponId in SpecialAttackHandler.getAllWeaponIds() &&
-                bot.combat.specialBar.energy >= SpecialAttackHandler.getDrain(weaponId!!) &&
+            if (finisherWeapon == null && weaponId != null && weaponId != PkFinisher.WHIP &&
+                weaponId != PkFinisher.DRAGON_DAGGER_S && !bot.combat.magic.isAutocasting &&
+                PkFinisher.canSpec(weaponId, bot.combat.specialBar.energy) &&
                 combatPolicy.prepareTrainingStyle()) bot.combat.specialBar.toggleOn()
             return
         }
@@ -863,6 +906,61 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             return
         }
         bot.combat.specialBar.toggleOn()
+    }
+
+    /**
+     * Retains a choice until its first native launch or the opportunity expires.
+     */
+    private fun chooseFinisher(target: Player): Int? {
+        val now = world.currentTick
+        val weapon = finisherWeapon
+        if (weapon != null) {
+            val attack = bot.combat.lastAttackSent
+            val armedAt = finisherArmedAt
+            if (armedAt != null && attack != null && attack.victim === target &&
+                !attack.timestamp.isBefore(armedAt)) {
+                clearFinisher()
+                nextFinisherAt = now + 6
+            } else if (now <= finisherExpiresAt && finisherAvailable(target, weapon)) {
+                return weapon
+            } else {
+                clearFinisher()
+                nextFinisherAt = now + 2
+            }
+        }
+        if (now < nextFinisherAt || bot.combat.attackDelay > 2) return null
+        return PkFinisher.choose(finisherAvailable(target, PkFinisher.WHIP),
+            finisherAvailable(target, PkFinisher.DRAGON_DAGGER_S))?.also {
+            finisherWeapon = it
+            finisherExpiresAt = now + 10
+        }
+    }
+
+    private fun finisherAvailable(target: Player, weapon: Int): Boolean =
+        target.healthPercent <= 35 && bot.healthPercent >= 35 && pkSwitcher.canUseFinisherWeapon(target, weapon) &&
+            (weapon == PkFinisher.WHIP || PkFinisher.canSpec(weapon, bot.combat.specialBar.energy))
+
+    private fun armFinisher(target: Player) {
+        val weapon = finisherWeapon ?: return
+        if (!finisherAvailable(target, weapon) || bot.equipment.weapon?.id != weapon) {
+            clearFinisher()
+            nextFinisherAt = world.currentTick + 2
+            return
+        }
+        if (finisherArmedAt != null) return
+        val bar = bot.combat.specialBar
+        if (weapon == PkFinisher.DRAGON_DAGGER_S && !bar.isActivated && !bar.toggleOn()) {
+            clearFinisher()
+            return
+        }
+        if (weapon == PkFinisher.WHIP) bar.toggleOff()
+        finisherArmedAt = Instant.now()
+    }
+
+    private fun clearFinisher() {
+        if (finisherArmedAt != null && finisherWeapon == PkFinisher.DRAGON_DAGGER_S) bot.combat.specialBar.toggleOff()
+        finisherArmedAt = null
+        finisherWeapon = null
     }
 
     /**

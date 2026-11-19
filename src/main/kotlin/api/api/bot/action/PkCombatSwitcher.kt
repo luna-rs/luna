@@ -3,7 +3,12 @@ package api.bot.action
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearPurpose.MAGIC
+import engine.bot.gear.BotGearPurpose.MELEE
+import engine.bot.gear.BotGearPurpose.RANGED
 import io.luna.game.model.def.CombatSpellDefinition
+import io.luna.game.model.def.EquipmentDefinition
+import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.MobReference
 import io.luna.game.model.mob.Player
@@ -11,6 +16,8 @@ import io.luna.game.model.mob.PrayerIcon
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatAction
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 import java.util.function.BooleanSupplier
 
 /**
@@ -33,6 +40,13 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
      * @author lare96
      */
     enum class Result { READY, WAITING, UNAVAILABLE }
+
+    /**
+     * An interrupted click remains retryable when the fight and its reach change again.
+     *
+     * @author lare96
+     */
+    private enum class SwitchOutcome { APPLIED, CANCELLED, FAILED }
 
     /**
      * A stable policy instance and per-fight selection state; failed disciplines are not retried indefinitely.
@@ -95,9 +109,10 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
      * Waits one reaction window before the first switch and reconsiders counters at that same cadence.
      * A usable loadout stays active until an armour or prayer counter wins two consecutive scheduled checks.
      * Supply loss interrupts attacks immediately; a replacement is chosen at the next decision deadline.
-     * Native interaction waits can extend completion beyond the decision cadence.
+     * A frozen bot can use a carried style that reaches, or wait with its current style ready for thaw.
+     * An explicitly chosen finisher can equip immediately while that weapon can reach.
      */
-    suspend fun prepare(target: Player): Result {
+    suspend fun prepare(target: Player, forcedMeleeWeapon: Int? = null): Result {
         if (bot.preferences.isSkiller || bot.preferences.pk == null || !validTarget(target)) {
             clearStyleConfirmation()
             return Result.UNAVAILABLE
@@ -108,6 +123,9 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
         if (prayerCounterOpponent != opponent || !ancient) prayerCounterOpponent = null
         val now = nanoTime()
         val current = active?.takeIf { acceptsPurpose(it.first) && ready(it.first, it.second) }
+        if (forcedMeleeWeapon != null && canUseFinisherWeapon(target, forcedMeleeWeapon)) {
+            return prepareFinisher(target, forcedMeleeWeapon, now)
+        }
         if (current == null) {
             clearStyleConfirmation()
             prayerCounterOpponent = null
@@ -120,7 +138,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
         if (now < nextDecision!!) return if (current != null) Result.READY else Result.WAITING
         nextDecision = now + combat.pkSwitchDelay().inWholeNanoseconds
 
-        val choices = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
+        val carried = listOf(MELEE, RANGED, MAGIC)
             .filter { it !in failed && acceptsPurpose(it) }.mapNotNull { purpose ->
                 selection.select(purpose, carriedOnly = true)?.also { outfit ->
                     clan.cape?.let { outfit.gear[Equipment.CAPE] = it }
@@ -129,36 +147,127 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
             }.toMap()
         val previousCounter = pendingCounter
         pendingCounter = null
+        if (carried.isEmpty()) return Result.UNAVAILABLE
+        val frozen = bot.status.isImmobilized()
+        val projectileOpportunity = current != null && current.first != MELEE && target.status.isImmobilized()
+        val currentReaches = (frozen || projectileOpportunity) && current != null &&
+            reaches(target, current.first, current.second, worn = true)
+        val keepSpacing = !frozen && projectileOpportunity && currentReaches
+        val choices = if (frozen || keepSpacing) carried.filter { (purpose, loadout) ->
+            reaches(target, purpose, loadout)
+        }.toMutableMap().apply {
+            if (current != null && currentReaches) putIfAbsent(current.first, current.second)
+        } else carried
+        if (choices.isEmpty()) {
+            return if (current != null) Result.READY else Result.WAITING
+        }
+        val reachDriven = frozen && !currentReaches
+        if (reachDriven) {
+            prayerCounterOpponent = null
+        }
         val decision = combat.selectPkStyleDecision(target, choices.keys) ?: return Result.UNAVAILABLE
         val prayerCounterActive = prayerCounterOpponent != null
         val protectionSustained = prayerObservation?.let { it.protecting && it.last > it.since } == true
-        val prayerChoice = if (ancient && current != null && current.first in choices && BotGearPurpose.MAGIC in choices &&
+        val prayerChoice = if (!reachDriven && ancient && current != null && current.first in choices && MAGIC in choices &&
             (prayerCounterActive || decision.purpose == BotGearPurpose.MAGIC &&
                 current.first == BotGearPurpose.MAGIC && protectionSustained)) {
             ancientPrayer.counter(target, current, choices)
         } else null
         val purpose = prayerChoice ?: decision.purpose
         val prayerDriven = prayerChoice != null || prayerCounterActive
-        if ((decision.armourDriven || prayerDriven) && current != null && current.first != purpose &&
-            current.first in choices &&
-            (previousCounter?.purpose != purpose || previousCounter.prayerDriven != prayerDriven)) {
-            if (opponent != null) pendingCounter = StyleCounter(opponent, purpose, prayerDriven)
-            return Result.READY
+        if (!reachDriven && (decision.armourDriven || prayerDriven) && current != null && current.first != purpose &&
+            current.first in choices) {
+            if (previousCounter?.purpose != purpose || previousCounter.prayerDriven != prayerDriven) {
+                if (opponent != null) pendingCounter = StyleCounter(opponent, purpose, prayerDriven)
+                return Result.READY
+            }
         }
         val selected = choices.getValue(purpose)
         if (current?.first == purpose && current.second.spell == selected.spell &&
             current.second.gear[Equipment.WEAPON] == selected.gear[Equipment.WEAPON] &&
             current.second.gear[Equipment.AMMUNITION] == selected.gear[Equipment.AMMUNITION] &&
             ready(purpose, current.second)) return Result.READY
-        if (!switch(target, purpose, selected)) {
-            failed += purpose
-            active = null
-            clearMagic()
-            return if (failed.size == 3) Result.UNAVAILABLE else Result.WAITING
+        val outcome = switch(target, purpose, selected) {
+            val movingCanHelp = !bot.status.isImmobilized() && !(keepSpacing && target.status.isImmobilized())
+            movingCanHelp || reaches(target, purpose, selected)
+        }
+        if (outcome != SwitchOutcome.APPLIED) {
+            if (outcome == SwitchOutcome.FAILED) failed += purpose
+            return interruptedSwitch()
         }
         active = purpose to selected
-        prayerCounterOpponent = opponent.takeIf { prayerDriven && purpose != BotGearPurpose.MAGIC }
+        prayerCounterOpponent = opponent.takeIf { prayerDriven && purpose != MAGIC }
         return Result.READY
+    }
+
+    /**
+     * Checks the actual carried finisher, the native melee stance and the present target before any equip.
+     */
+    fun canUseFinisherWeapon(target: Player, weapon: Int): Boolean =
+        ownsFight() && acceptsPurpose(MELEE) && MELEE in selection.purposes() &&
+            validTarget(target) && bot.position != target.position &&
+            CombatLoadout.carried(bot, weapon) > 0 &&
+            physicalPolicy(MELEE, weapon)?.let { policy ->
+                bot.world.collisionManager.reached(bot, target, policy)
+            } == true
+
+    /**
+     * Applies the carried melee setup and can be cancelled as soon as a now-unreachable opponent moves away.
+     */
+    private suspend fun prepareFinisher(target: Player, weapon: Int, now: Long): Result {
+        nextDecision = now + combat.pkSwitchDelay().inWholeNanoseconds
+        clearStyleConfirmation()
+        prayerCounterOpponent = null
+        val current = active
+        if (current?.first == MELEE && current.second.gear[Equipment.WEAPON] == weapon &&
+            ready(MELEE, current.second)) return Result.READY
+        val outfitted = selection.select(MELEE, carriedOnly = true) ?: return Result.WAITING
+        outfitted.gear[Equipment.WEAPON] = weapon
+        clan.cape?.let { outfitted.gear[Equipment.CAPE] = it }
+        if (equipDef(weapon).isTwoHanded) outfitted.gear[Equipment.SHIELD] = null
+        val outcome = switch(target, MELEE, outfitted) {
+            canUseFinisherWeapon(target, weapon)
+        }
+        if (outcome != SwitchOutcome.APPLIED) return interruptedSwitch()
+        active = MELEE to outfitted
+        return Result.READY
+    }
+
+    /**
+     * Tests current-tile reach using the policy native combat applies after the selected gear is ready.
+     */
+    private fun reaches(target: Player, purpose: BotGearPurpose, loadout: CombatLoadout, worn: Boolean = false): Boolean {
+        if (bot.position == target.position) return false
+        val weapon = loadout.gear[Equipment.WEAPON] ?: return false
+        if (purpose == RANGED && pkRangedAmmo(bot, weapon, loadout.gear[Equipment.AMMUNITION], worn) == null) return false
+        val policy = when {
+            purpose == MAGIC -> InteractionPolicy.STANDARD_LINE_OF_SIGHT
+            worn -> bot.combat.getDefaultAttack(target).interactionPolicy
+            else -> physicalPolicy(purpose, weapon) ?: return false
+        }
+        return bot.world.collisionManager.reached(bot, target, policy)
+    }
+
+    /**
+     * Uses the stance applied by an equip and rejects weapon swaps that cannot fit the displaced equipment.
+     */
+    private fun physicalPolicy(purpose: BotGearPurpose, weapon: Int): InteractionPolicy? {
+        val equipment = EquipmentDefinition.ALL.get(weapon).orElse(null) ?: return null
+        val currentWeapon = bot.equipment.weapon
+        if (!equipment.meetsAllRequirements(bot) ||
+            equipment.isTwoHanded && currentWeapon != null && currentWeapon.id != weapon &&
+            bot.equipment.shield != null && bot.inventory.isFull) return null
+        val type = WeaponDefinition.ALL.get(weapon).orElse(null)?.typeDef ?: return null
+        val style = pkPhysicalStyle(bot, purpose, type) ?: return null
+        if (style.range < 1) return null
+        return InteractionPolicy(if (purpose == RANGED) InteractionType.LINE_OF_SIGHT else InteractionType.SIZE,
+            style.range)
+    }
+
+    private fun interruptedSwitch(): Result {
+        active = null
+        clearMagic()
+        return if (failed.size == 3) Result.UNAVAILABLE else Result.WAITING
     }
 
     /**
@@ -182,7 +291,8 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
      * Keeps the existing attack action and its approach rules until the new outfit is ready.
      * Pending clicks expire with the switch, including when a script is paused or its target changes.
      */
-    private suspend fun switch(target: Player, purpose: BotGearPurpose, selected: CombatLoadout): Boolean {
+    private suspend fun switch(target: Player, purpose: BotGearPurpose, selected: CombatLoadout,
+                               stillUseful: () -> Boolean): SwitchOutcome {
         val combat = bot.combat
         val originalTarget = combat.target?.takeIf { it === target }
         if (combat.target !== originalTarget) combat.target = null
@@ -190,13 +300,18 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
         val policy = originalTarget?.let { combat.getDefaultAttack(it).interactionPolicy }
         val switch = combat.beginEquipmentSwitch(target, policy)
         val canContinue = BooleanSupplier {
-            combat.equipmentSwitch === switch && ownsFight() && combat.target === originalTarget && validTarget(target)
+            combat.equipmentSwitch === switch && ownsFight() && combat.target === originalTarget &&
+                validTarget(target) && stillUseful()
         }
         var committed = false
         try {
             clearMagic()
             committed = apply(purpose, selected, canContinue)
-            return committed
+            return when {
+                committed -> SwitchOutcome.APPLIED
+                canContinue.asBoolean -> SwitchOutcome.FAILED
+                else -> SwitchOutcome.CANCELLED
+            }
         } finally {
             if (!committed && combat.equipmentSwitch === switch && combat.target === target &&
                 bot.actions.first(CombatAction::class.java) === originalAction) {
@@ -228,10 +343,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
                     bot.combat.magic.isAutocasting && bot.combat.magic.autocastSpell == spell)
         }
         if (bot.combat.magic.isAutocasting || bot.combat.magic.selectedSpell != CombatSpellDefinition.NONE) return false
-        if (purpose == BotGearPurpose.RANGED) {
-            val ammo = selected.gear[Equipment.AMMUNITION] ?: weapon
-            if (bot.equipment.computeAmountForId(ammo) == 0) return false
-        }
+        if (purpose == RANGED && pkRangedAmmo(bot, weapon, selected.gear[Equipment.AMMUNITION], true) == null) return false
         return bot.combat.weapon.styleDef in BotCombatActionHandler.allowedStyles(bot, bot.combat.weapon.typeDef.styles)
     }
 

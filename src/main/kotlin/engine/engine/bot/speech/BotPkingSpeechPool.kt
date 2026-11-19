@@ -4,7 +4,9 @@ import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
 import io.luna.game.model.mob.bot.speech.BotSpeechPool
 import api.attr.Attr
 import api.predef.rand
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.speech.BotSpeech
 import java.nio.file.Paths
 
 /**
@@ -27,14 +29,39 @@ object BotPkingSpeechPool :
      */
     private var Bot.nextPkSpeechAt by Attr.obj { 0L }
 
+    private var Player.nextExchangeSpeechAt by Attr.obj { 0L }
+
     /**
      * Rolls a reduced social chance and spaces accepted lines by 45-90 seconds.
      */
-    fun canSpeak(bot: Bot): Boolean {
+    private fun canSpeak(bot: Bot): Boolean {
         val now = System.currentTimeMillis()
-        if (now < bot.nextPkSpeechAt || !rand(bot.personality.social / 4)) return false
+        if (bot.speechStack.isAllDisabled || now < bot.nextPkSpeechAt || !rand(bot.personality.social / 4)) return false
         bot.nextPkSpeechAt = now + rand(45, 90) * 1000L
         return true
+    }
+
+    /**
+     * Shares a short speech window between both sides of an exchange, including active clan calls.
+     */
+    fun exchange(bot: Bot, opponent: Player, focusChanged: Boolean = false) {
+        if (!bot.isAlive || !opponent.isAlive || !opponent.isViewableFrom(bot)) return
+        val now = System.currentTimeMillis()
+        if (now < bot.nextExchangeSpeechAt || now < opponent.nextExchangeSpeechAt || !canSpeak(bot)) return
+        bot.nextExchangeSpeechAt = now + 20_000
+        opponent.nextExchangeSpeechAt = bot.nextExchangeSpeechAt
+        val text = if (focusChanged) "on ${opponent.username}" else take(bot, PkingSpeech.LIVE_EXCHANGE) ?: return
+        bot.speechStack.pushHead(BotSpeech(text, 0))
+    }
+
+    /**
+     * Uses the native death hook's credited killer and emits no claim about possession of the drops.
+     */
+    fun knockout(killer: Bot, victim: Player) {
+        if (killer.isAlive && victim.isViewableFrom(killer) && canSpeak(killer)) {
+            val text = take(killer, PkingSpeech.KNOCKOUT) ?: return
+            killer.speechStack.pushHead(BotSpeech(text, 0))
+        }
     }
 
     /**
@@ -73,6 +100,10 @@ object BotPkingSpeechPool :
         /**
          * Lines a bot may say after a PK encounter ends negatively, such as after dying, losing loot, or failing to kill.
          */
-        NEGATIVE_END
+        NEGATIVE_END,
+
+        LIVE_EXCHANGE,
+
+        KNOCKOUT
     }
 }

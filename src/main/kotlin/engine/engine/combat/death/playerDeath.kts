@@ -9,6 +9,8 @@ import api.bot.social.BotWildernessLures
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotReactions
+import engine.bot.speech.BotPkingSpeechPool
+import engine.controllers.Controllers.inWilderness
 import engine.item.developerItem.DeveloperItemHandler
 import game.bot.scripts.DeathReflexScript.Companion.lastKiller
 import game.player.Animations
@@ -71,6 +73,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
     }
 
     postDeath {
+        if (source.isRealBot() && victim.inWilderness()) BotPkingSpeechPool.knockout(source, victim)
         val respawnPosition = Luna.settings().game().startingPosition()
         victim.move(respawnPosition)
     }

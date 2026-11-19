@@ -269,6 +269,17 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             for (outfit in selected.values.drop(1)) for (slot in listOf(Equipment.CHEST, Equipment.LEGS)) {
                 outfit.gear[slot]?.takeIf { it !in quantities }?.let { add(it) }
             }
+            if (BotGearPurpose.MELEE in purposes) {
+                for (weapon in listOf(PkFinisher.WHIP, PkFinisher.DRAGON_DAGGER_S)) {
+                    if (weapon !in quantities && (stock[weapon] ?: 0) > 0 &&
+                        EquipmentDefinition.ALL.retrieve(weapon).meetsAllRequirements(bot) &&
+                        BotCombatActionHandler.allowedStyles(bot, WeaponDefinition.ALL.retrieve(weapon).typeDef.styles)
+                            .any { style -> style.exp.none { it == io.luna.game.model.mob.Skill.MAGIC ||
+                                it == io.luna.game.model.mob.Skill.RANGED } }) {
+                        add(weapon)
+                    }
+                }
+            }
             fun extend(costs: Map<Int, Int>, limit: Int) {
                 if (costs.isEmpty()) return
                 val baseline = quantities.toMap()

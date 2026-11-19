@@ -6,9 +6,7 @@ import api.attr.Attr
 import api.bot.action.BotCombatThreat
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
-import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
 import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
-import engine.controllers.Controllers.inWilderness
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.def.ItemNicknameDefinition
 import io.luna.game.model.item.Item
@@ -78,28 +76,13 @@ object BotReactions {
     /**
      * Makes nearby bots react after a player dies.
      *
-     * If both the killer and victim are bots and the death happened in the Wilderness, the killer and victim may also queue
-     * PK-specific end-of-fight speech before nearby witnesses react. Witnessing bots then roll against their social
-     * personality trait and may queue an [ReactionSpeech.OTHER_DIED] line with a short randomized delay.
+     * Witnessing bots roll against their social personality trait and may queue an [ReactionSpeech.OTHER_DIED] line
+     * with a short randomized delay.
      *
      * @param source The mob that caused the death, or `null` if there is no known source.
      * @param died The player who died.
      */
     fun reactToOtherDied(source: Mob?, died: Player) {
-        if (source.isRealBot() && died.isRealBot() && died.inWilderness()) {
-            val delay = 1..3
-            if (BotPkingSpeechPool.canSpeak(source)) {
-                val sourceText =
-                    BotPkingSpeechPool.take(source, if (rand(source.personality.kindness)) PkingSpeech.POSITIVE_END else
-                        PkingSpeech.NEGATIVE_END)
-                source.speechStack.pushHead(BotSpeech(sourceText, rand(delay)))
-            }
-            if (BotPkingSpeechPool.canSpeak(died)) {
-                val diedText = BotPkingSpeechPool.take(died, PkingSpeech.POSITIVE_END)
-                died.speechStack.pushHead(BotSpeech(diedText, rand(delay)))
-            }
-        }
-
         // Ignore if the source or victim, if currently in combat with a player, or if the social check fails.
         world.locator.findViewablePlayers(died) { it != died && it.combat.target !is Player && it != source &&
                 it.isRealBot() && rand(it.personality.social) }

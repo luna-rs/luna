@@ -1,7 +1,9 @@
 package api.combat.magic
 
+import api.bot.isRealBot
 import api.combat.CombatHandler.displayCombatOverlay
 import engine.controllers.Controllers.inMultiArea
+import game.bot.scripts.combat.PkBotScript
 import io.luna.game.model.area.Area
 import engine.combat.status.hooks.ImmobilizedStatusEffect
 import engine.combat.prayer.CombatPrayer
@@ -10,6 +12,7 @@ import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.CombatRestriction
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
@@ -146,6 +149,7 @@ object CombatSpellHandler {
      *
      * Preserves the existing primary-accuracy gate. Both primary participants and each secondary must be in multi
      * combat. Each secondary must be alive, attackable, and allowed by the attacker's controllers.
+     * Autonomous clan outings can spare confirmed teammates from incidental Ancient effects.
      * Standard area attacks reuse the primary roll's captured offence; each recipient still supplies its own defence.
      *
      * @param attack The primary magic attack whose impact is being processed.
@@ -160,12 +164,15 @@ object CombatSpellHandler {
         }
         val area = Area.of(victim.position, spell.radius)
         val viewable: Set<Mob> = attacker.world.locator.findViewable(victim.type, victim.position)
+        val clanSession = if (spell.spellbook == Spellbook.ANCIENT && attacker.isRealBot()) {
+            attacker.scriptStack.findActive(PkBotScript::class.java).orElse(null)
+        } else null
         return viewable.asSequence().filter {
             it !== attacker && it !== victim && it.isAlive && area.contains(it) && it.inMultiArea() &&
                     it.combat.isAttackable && attacker.combat.checkMultiCombat(it) &&
                     CombatRestriction.permits(attacker, it) &&
                     (attacker !is Player || attacker.controllers.checkCombat(it))
-        }.take(8).map { attack.calculateDamage(it) }.toList()
+        }.filterNot { it is Player && clanSession?.protectsClanSplash(it) == true }.take(8).map { attack.calculateDamage(it) }.toList()
     }
 
     /**

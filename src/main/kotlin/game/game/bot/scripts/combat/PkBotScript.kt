@@ -19,7 +19,9 @@ import engine.bot.gear.BotGearPurpose
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
+import engine.controllers.MultiCombatAreaListener
 import engine.controllers.WildernessLocatableController.levelAt
+import io.luna.game.model.EntityState
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
@@ -92,6 +94,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Bounds a prepared clan outing's wait for nearby hunting company.
      */
     private var clanRallyStartedAt: Long? = null
+
+    /**
+     * Separates our reviews from other members and gives a fresh focus time to launch before switching again.
+     */
+    private var reviewedClanFocus: Player? = null
+    private var nextClanFocusReview = 0L
 
     /**
      * One recently unreachable opponent, retained briefly so patrol does not immediately restart the same chase.
@@ -707,6 +715,47 @@ class PkBotScript(bot: Bot, val duration: Duration,
             targets.sortedByDescending { combatPolicy.pkTargetVulnerability(it, observations.isFleeing(it)) }
         else -> targets
     }
+
+    /**
+     * Cooperates with nearby clanmates during a multi fight. Losing the old focus can expose a replacement at
+     * once. Voluntary switches wait for the bot's own review interval and a stronger attack or defence cue.
+     */
+    internal fun reassessClanFocus(current: Player, now: Long = world.currentTick): Player? {
+        if (!isGroupOuting() || !clan.wearingCape() || !MultiCombatAreaListener.inside(bot.position)) return null
+        val currentVisible = current.state == EntityState.ACTIVE && current.isAlive && current.isViewableFrom(bot)
+        if (currentVisible && (!MultiCombatAreaListener.inside(current.position) || bot.status.isImmobilized())) return null
+        val interval = 4 + (bot.usernameHash % 4).toInt()
+        if (reviewedClanFocus !== current) {
+            reviewedClanFocus = current
+            nextClanFocusReview = now + interval
+        }
+        if (currentVisible && now < nextClanFocusReview) return null
+        nextClanFocusReview = now + interval
+        val nearby = world.locator.findViewablePlayers(bot)
+        val support = clan.combatSupport(nearby, now)
+        val threats = observations.clanThreats().filter { it in nearby }
+        if (support.isEmpty() && (threats.isEmpty() ||
+            nearby.none { clan.near(it, PkClanPolicy.GROUP_RADIUS) && clan.combatAlly(it) })) return null
+        val eligible = (support.keys + threats).filter {
+            it !== current && it.isWithinDistance(bot, PkClanPolicy.GROUP_RADIUS) &&
+                MultiCombatAreaListener.inside(it.position) && permitsPursuit(it) && wantsToAttack(it) &&
+                combatPolicy.canAttackWildernessPlayer(it)
+        }
+        if (eligible.isEmpty() || !combatPolicy.pkRiskBudget().withinBudget) return null
+        val newFocus = PkClanPolicy.selectFocus(current.takeIf { currentVisible }, eligible, support,
+            observations::canDefendClanAgainst) ?: return null
+        reviewedClanFocus = newFocus
+        bot.log("Clan focus changed from ${current.username} to ${newFocus.username}.")
+        return newFocus
+    }
+
+    /**
+     * Excludes verified group members from this bot's incidental Ancient damage. Direct exchanges and visible
+     * clan infighting retain native eligibility. Other spellcasters and apparent allies retain native behavior.
+     */
+    internal fun protectsClanSplash(target: Player): Boolean = isGroupOuting() && clan.wearingCape() &&
+        clan.combatAlly(target) && bot.combat.target !== target &&
+        !observations.canDefendClanAgainst(target) && !combatPolicy.canRetaliateAgainst(target)
 
     /**
      * Prioritizes a known aggressor over ordinary patrol travel, without interrupting another active fight.
