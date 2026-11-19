@@ -1,19 +1,31 @@
 package engine.bot.coordinator
 
+import api.bot.action.BotCombatActionHandler
+import api.bot.action.BotPyramidTravel
 import api.bot.action.CombatLoadout
+import api.bot.isRealBot
+import api.bot.script.BotScript.ActionSafety
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePurpose
 import api.bot.script.EquipmentDropPlan
 import api.bot.zone.SubZone
+import api.predef.equipDef
 import api.predef.ext.totalItemAmount
+import api.predef.SKILL_MAGIC
+import api.predef.prayer
 import api.predef.slayer
 import com.google.common.collect.ImmutableSetMultimap
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import engine.combat.prayer.CombatPrayer
+import engine.controllers.Controllers.inWilderness
+import game.bot.scripts.AncientStaffHuntBotScript
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.NpcDropGatheringScript
 import game.player.item.consume.food.Food
+import game.npc.spawn.shantayPass.ShantayPass
+import io.luna.game.model.EntityState
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
@@ -43,23 +55,46 @@ internal object EquipmentDropJobs {
     private const val ICE_QUEEN_GUARD = 145
 
     /**
+     * Books a personal first-copy hunt after the calling coordinator's roll.
+     */
+    fun ancientStaffCandidate(bot: Bot): AncientStaffHuntBotScript? {
+        if (!ancientStaffEligible(bot) || bot.totalItemAmount(EquipmentDropSources.ANCIENT_STAFF) != 0 ||
+            bot.inWilderness() || !ActionSafety.NON_COMBAT.allows(bot) || !BotPyramidTravel.canSupplyPass(bot)) return null
+        return candidate(bot, System.currentTimeMillis(), ancientStaffOnly = true) as? AncientStaffHuntBotScript
+    }
+
+    private fun ancientStaffEligible(bot: Bot): Boolean =
+        bot.isRealBot() && !bot.isConnectedPlayer && !bot.isTemporary && !bot.client.isPendingLogout &&
+            bot.state == EntityState.ACTIVE && !bot.preferences.isSkiller &&
+            BotCombatActionHandler.canUseAncients(bot) && BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) &&
+            equipDef(EquipmentDropSources.ANCIENT_STAFF).meetsAllRequirements(bot)
+
+    /**
      * Admission checks a small prebuilt source list at an ordinary activity boundary, never scanning player holdings.
      */
-    fun candidate(bot: Bot, now: Long = System.currentTimeMillis()): NpcDropGatheringScript? {
+    fun candidate(bot: Bot, now: Long = System.currentTimeMillis()): NpcDropGatheringScript? =
+        candidate(bot, now, ancientStaffOnly = false)
+
+    private fun candidate(bot: Bot, now: Long, ancientStaffOnly: Boolean): NpcDropGatheringScript? {
         if (bot.preferences.isSkiller || !bot.isAlive || bot.combat.inCombat()) return null
         expire(now)
         val personalTargets = BotTradeIntentions.generatedEquipmentAspirations(bot)
         val purse = bot.totalItemAmount(995).toLong()
         val allowance = (BotTradeManager.transferableAmount(bot, 995).toDouble() *
             BotTradeIntentions.budgetFraction(bot, BotTradePurpose.BUY)).toLong()
-        val candidates = EquipmentDropSources.all().shuffled().sortedByDescending { it.itemId in personalTargets }
+        val candidates = EquipmentDropSources.all()
+            .filter { (it.itemId == EquipmentDropSources.ANCIENT_STAFF) == ancientStaffOnly }
+            .shuffled().sortedByDescending { it.itemId in personalTargets }
         for (source in candidates) {
             if (source.zone in leases) continue
             val owned = bot.totalItemAmount(source.itemId)
             if (owned == Int.MAX_VALUE) continue
-            val personal = if (source.itemId == EquipmentDropSources.ICE_GLOVES) owned == 0 else
-                source.itemId in personalTargets ||
-                BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, source.itemId)
+            val personal = when {
+                ancientStaffOnly -> true
+                source.itemId == EquipmentDropSources.ICE_GLOVES -> owned == 0
+                else -> source.itemId in personalTargets ||
+                    BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, source.itemId)
+            }
             if (!personal) continue
             if (loadout(bot, source) == null) continue
             val carriedFood = bot.inventory.filterNotNull().filter { it.id in Food.ID_TO_FOOD }.map { it.id }.distinct()
@@ -71,7 +106,12 @@ internal object EquipmentDropJobs {
             val foodCount = minOf(20, bot.totalItemAmount(food.id))
             // This personal outing uses only its finite physically owned food basket.
             val price = 0L
-            val travelCoins = if (source.zone == SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS) 875L else 0L
+            val travelCoins = when (source.zone) {
+                SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS -> 875L
+                SubZone.JALDRAOCHT_PYRAMID_MUMMIES -> if (bot.totalItemAmount(ShantayPass.PASS) == 0)
+                    BotPyramidTravel.PASS_BUDGET.toLong() else 0L
+                else -> 0L
+            }
             val cost = price * foodCount + travelCoins
             if (travelCoins > allowance || cost > allowance) continue
             val minimumBid = 0
@@ -80,6 +120,7 @@ internal object EquipmentDropJobs {
                 mapOf(food.id to price), purse, lastOwned = mapOf(food.id to bot.totalItemAmount(food.id)),
                 minimumBid = minimumBid)
             if (!acquire(bot, plan, source, now)) continue
+            if (ancientStaffOnly) return AncientStaffHuntBotScript(bot, plan)
             val names = ImmutableSetMultimap.builder<SubZone, String>()
                 .putAll(source.zone, source.names).build()
             return NpcDropGatheringScript(bot, source.itemId, plan.stockTarget,
@@ -102,7 +143,22 @@ internal object EquipmentDropJobs {
         val weapon = selected.gear[Equipment.WEAPON] ?: return null
         if (!bot.itemTracker.contains(weapon) ||
             NpcCombatScript.travelTools(bot, listOf(source.zone)).any { !bot.itemTracker.contains(it.id) }) return null
+        if (source.itemId == EquipmentDropSources.ANCIENT_STAFF && !mummyProtectionReady(bot, selected)) return null
         return selected
+    }
+
+    /**
+     * The pyramid mummies can hit 24. Bring armour for both body slots or usable melee protection.
+     */
+    private fun mummyProtectionReady(bot: Bot, loadout: CombatLoadout): Boolean {
+        if (bot.prayer.staticLevel >= CombatPrayer.PROTECT_FROM_MELEE.level && bot.prayer.level > 0) return true
+        return listOf(Equipment.CHEST, Equipment.LEGS).all { slot ->
+            val id = loadout.gear[slot] ?: return@all false
+            val armour = equipDef(id)
+            armour.getBonus(Equipment.EquipmentBonus.STAB_DEFENCE.index) > 0 &&
+                armour.getBonus(Equipment.EquipmentBonus.SLASH_DEFENCE.index) > 0 &&
+                armour.getBonus(Equipment.EquipmentBonus.CRUSH_DEFENCE.index) > 0
+        }
     }
 
     fun acquire(bot: Bot, plan: EquipmentDropPlan, source: EquipmentDropSources.Source,
@@ -158,13 +214,18 @@ internal object EquipmentDropJobs {
         val opponent = bot.combat.lastCombatWith
         val defendingAgainstGuard = source.zone == SubZone.ICE_QUEEN_LAIR && opponent is Npc &&
             opponent.id == ICE_QUEEN_GUARD && opponent.basePosition in source.zone.area
-        if (!plan.mayContinue(now) || !bot.isAlive || bot.healthPercent < 35.0 ||
-            bot.combat.inCombat() && !defendingAgainstGuard && (opponent !is Npc || opponent.id !in source.npcIds) ||
+        // The combat timer outlives an NPC's last-opponent reference and its delayed drop callback.
+        val fightingOtherOpponent = bot.combat.inCombat() && opponent != null && !defendingAgainstGuard &&
+            (opponent !is Npc || opponent.id !in source.npcIds)
+        if (!plan.mayContinue(now) || !bot.isAlive || bot.healthPercent < 35.0 || fightingOtherOpponent ||
             source.zone.entryBlocker(bot) != null ||
             CombatCoordinator.combatReadiness(bot, BotGearPurpose.MELEE) < source.minimumReadiness ||
             source.monster?.let { bot.slayer.level < it.level } == true) return false
         if (!plan.personal) return false
         if (source.itemId == EquipmentDropSources.ICE_GLOVES) return plan.startingStock == 0
+        if (source.itemId == EquipmentDropSources.ANCIENT_STAFF) {
+            return plan.startingStock == 0 && ancientStaffEligible(bot)
+        }
         return source.itemId in BotTradeIntentions.generatedEquipmentAspirations(bot) ||
             BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, source.itemId) || bot.totalItemAmount(source.itemId) >= plan.stockTarget
     }

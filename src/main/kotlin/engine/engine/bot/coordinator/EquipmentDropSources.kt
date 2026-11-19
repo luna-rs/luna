@@ -32,12 +32,13 @@ internal object EquipmentDropSources {
         }
         val minimumFoodCount: Int get() = when (zone) {
             SubZone.ASGARNIAN_WYVERNS -> 20
-            SubZone.ICE_QUEEN_LAIR -> 10
+            SubZone.ICE_QUEEN_LAIR, SubZone.JALDRAOCHT_PYRAMID_MUMMIES -> 10
             else -> 14
         }
     }
 
     const val ICE_GLOVES = 1580
+    const val ANCIENT_STAFF = 4675
 
     /**
      * The reviewed allowlist supplies access/readiness policy, while native data supplies identity and probability.
@@ -49,6 +50,8 @@ internal object EquipmentDropSources {
 
     private val reviews by lazy { listOf(
         Review(ICE_GLOVES, SubZone.ICE_QUEEN_LAIR, setOf(795), 65),
+        Review(ANCIENT_STAFF, SubZone.JALDRAOCHT_PYRAMID_MUMMIES,
+            setOf(1961, 1962, 1963, 1964, 1965, 1967, 1968), 60),
         Review(4129, SubZone.SLAYER_TOWER_SECOND_FLOOR, setOf(1610, 1611), 100, SlayerTaskType.GARGOYLE),
         Review(4131, SubZone.SLAYER_TOWER_SECOND_FLOOR, setOf(1613), 110, SlayerTaskType.NECHRYAEL),
         Review(4127, SubZone.FREMENNIK_SLAYER_DUNGEON, (1637..1642).toSet(), 80, SlayerTaskType.JELLY),

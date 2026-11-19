@@ -118,7 +118,7 @@ import kotlin.time.Duration.Companion.minutes
  * explosive stocks, source-native dormant-form attacks, exact wall-beast front tiles and owned Mogre throws.
  * Waterfall trips keep Glarial's amulet equipped; metal dragons retain owned antifire and stronger food.
  *
- * Magic sessions switch to their saved spell's book at home before preparing equipment. Ancient Magicks requires
+ * Magic sessions switch to their saved spell's book at the Ancient altar before preparing equipment. Ancient Magicks requires
  * combat level 60, a compatible staff and owned rune supplies.
  *
  * @property purpose The combat discipline retained throughout this session.

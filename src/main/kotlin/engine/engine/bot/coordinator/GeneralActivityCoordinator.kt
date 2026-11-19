@@ -80,6 +80,10 @@ object GeneralActivityCoordinator : BotCoordinator {
             val skill = UseLampBotScript.selectSkill(bot)
             if (skill != null) return UseLampBotScript(bot, skill, duration)
         }
+        if (PkingCoordinator.activityWeight(bot) > 0.0 &&
+            bot.preferences.pk?.styles()?.uses(SKILL_MAGIC) == true && rand(0.25)) {
+            EquipmentDropJobs.ancientStaffCandidate(bot)?.let { return it }
+        }
         RuneRunningCoordinator.profitScript(bot)?.let { return it }
         bot.actionHandler.prayerRestoration.preparation()?.let { return it }
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)

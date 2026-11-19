@@ -249,6 +249,9 @@ object WebWalkLiveGenerator {
                 obj.id in ShipGangplanks.LEAVING_PLANKS -> leavingPlanks += obj
             }
         }
+        val pyramidExit = Entrance.JALDRAOCHT_PYRAMID_PORTAL
+        world.objects.findAll(checkNotNull(pyramidExit.position)).filter { it.id == pyramidExit.id }.findFirst()
+            .ifPresent { entrance(it, climbs, report) }
         essenceWizards(climbs, report)
         climbs += AbyssRouteGenerator.gather(report, { climbingTiles(it).firstOrNull() }, ::standableNear)
         climbs += PiscatorisRouteGenerator.gather(report, ::standableNear)

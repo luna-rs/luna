@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScript.ActionSafety
 import api.combat.death.PlayerDeathItems
+import engine.bot.coordinator.EquipmentDropSources
 import engine.bot.gear.BotGearPurpose
 import engine.controllers.Controllers.inWilderness
 import game.player.item.consume.food.Food
@@ -312,14 +313,23 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     }
 
     /**
-     * Uses an already supplied kit and the current spellbook before procuring missing essentials for another book.
-     * Both choices are projected without changing live spell state; switching at home happens before banking.
+     * Tries a supplied Ancient staff kit first, then other supplied kits before any procurement.
+     * Projects each kit before visiting the altar or banking.
      */
     private fun preparationSpellbooks(): List<Spellbook> {
         val books = listOf(bot.spellbook, Spellbook.REGULAR, Spellbook.ANCIENT).distinct().filter {
             BotCombatActionHandler.canUseSpellbook(bot, it)
         }
-        return books.sortedBy { if (plan(allowMissingClanCape = true, spellbook = it) != null) 0 else 1 }
+        return books.sortedBy { book ->
+            val kit = plan(allowMissingClanCape = true, spellbook = book)
+            when {
+                kit == null -> 2
+                book == Spellbook.ANCIENT && (kit.equipment + kit.inventory).any {
+                    it.id == EquipmentDropSources.ANCIENT_STAFF
+                } -> 0
+                else -> 1
+            }
+        }
     }
 
     /**

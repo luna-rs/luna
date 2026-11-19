@@ -43,7 +43,7 @@ import java.util.IdentityHashMap
  * @property sellOnCompletion Whether to offer the gathered item for sale.
  * @author lare96
  */
-class NpcDropGatheringScript(
+open class NpcDropGatheringScript(
     bot: Bot,
     val itemId: Int,
     val stockTarget: Int,
@@ -225,8 +225,11 @@ class NpcDropGatheringScript(
                 plan.supplies.size != 1 || plan.supplies.values.any { it !in 1..20 } ||
                 plan.supplies.keys.any { (Food.ID_TO_FOOD[it]?.heal ?: 0) < source.minimumFoodHeal } ||
                 monsterRequirement != source.monster || slayerTask != null || slayerMaster != null ||
-                targetNames[source.zone].toSet() != source.names ||
-                !EquipmentDropJobs.acquire(bot, plan, source) || !EquipmentDropJobs.valid(bot, plan)) return false
+                targetNames[source.zone].toSet() != source.names || !EquipmentDropJobs.acquire(bot, plan, source)) return false
+            if (!EquipmentDropJobs.valid(bot, plan)) {
+                EquipmentDropJobs.release(bot, plan)
+                return false
+            }
             EquipmentDropJobs.attach(bot, this)
         }
         return levelEligible(itemId, bot.combatLevel) &&

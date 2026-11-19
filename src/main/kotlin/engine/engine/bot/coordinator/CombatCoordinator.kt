@@ -201,7 +201,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
 
         /**
          * Selects owned Ancient supplies for an expensive Magic session, with at least fifty casts available.
-         * Planning projects the spellbook without changing game state; the combat script switches at home.
+         * Planning projects the spellbook without changing game state; the combat script visits the altar.
          */
         internal fun ancientMagicLoadout(bot: Bot): CombatLoadout? {
             if (!BotCombatActionHandler.canUseAncients(bot) ||
@@ -330,6 +330,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 bot.scriptStack.push(it)
                 return
             }
+        }
+        if (rand(0.25)) EquipmentDropJobs.ancientStaffCandidate(bot)?.let {
+            bot.scriptStack.push(it)
+            return
         }
         EquipmentDropJobs.candidate(bot)?.let {
             bot.scriptStack.push(it)

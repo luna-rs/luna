@@ -11,7 +11,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.math.roundToInt
 import api.bot.Suspendable.waitFor
-import api.combat.magic.CombatSpellHandler.resetAutocast
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
@@ -528,23 +527,21 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Switches the bot's spellbook programmatically at home before combat supplies are prepared.
-     * Rechecks safety, location and eligibility after travel, and clears the previous combat spell state.
+     * Changes books through the native pyramid altar and waits for the click to change the actual book.
      */
     suspend fun switchSpellbook(spellbook: Spellbook): Boolean {
-        fun safe(): Boolean = bot.state == EntityState.ACTIVE && ActionSafety.NON_COMBAT.allows(bot) &&
+        fun safe(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive &&
+            !bot.client.isPendingLogout && ActionSafety.NON_COMBAT.allows(bot) &&
             !bot.inWilderness() && canUseSpellbook(bot, spellbook)
         if (bot.state != EntityState.ACTIVE || !bot.isAlive || !canUseSpellbook(bot, spellbook)) return false
         if (bot.spellbook == spellbook) return true
-        if (!safe()) return false
-        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
-        if (!safe() || SubZone.HOME !in bot.subZones) return false
+        if (!BotPyramidTravel.travel(bot, handler, BotPyramidTravel.altarStand, BankAccess.ALL, ::safe)) return false
         if (bot.spellbook == spellbook) return true
+        val altar = bot.world.objects.findAll(BotPyramidTravel.altarPosition)
+            .filter { it.id == BotPyramidTravel.ALTAR }.findFirst().orElse(null) ?: return false
         bot.combat.target = null
-        bot.combat.magic.selectedSpell = CombatSpellDefinition.NONE
-        bot.spellbook = spellbook
-        bot.combat.magic.resetAutocast()
-        return true
+        if (!handler.interactions.interact(1, altar) { safe() && bot.spellbook != spellbook }) return false
+        return waitFor(6.seconds) { bot.spellbook == spellbook || !safe() } && bot.spellbook == spellbook
     }
 
     /**

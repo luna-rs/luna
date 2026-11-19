@@ -424,6 +424,14 @@ enum class SubZone(
         area = SimpleBoxArea.of(3040, 4693, 3049, 4702, -1),
         parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
+    /**
+     * The mummy galleries reached from the first ladder inside Jaldraocht Pyramid.
+     */
+    JALDRAOCHT_PYRAMID_MUMMIES(
+        inside = Position(2910, 4952, 3),
+        area = SimpleBoxArea.of(2890, 4938, 2931, 4975, 3),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
     WATER_OBELISK(
         inside = Position(2844, 3425),

@@ -75,7 +75,7 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
          * PK planning may exclude expensive preferred weapons or lower the damage-spell tier when a kit exceeds risk.
          * Task constraints restrict selection before scoring, so required shields never replace a two-handed weapon
          * after it was chosen. Magic Dart is considered only when explicitly requested and with its native staff.
-         * An explicit spellbook plans a switch at home without changing the bot's live spellbook during selection.
+         * An explicit spellbook projects the available gear without changing the bot's live spellbook.
          * Disabling requireRunes is for shortage planning only; normal admission always checks real rune ownership.
          */
         fun find(bot: Bot, purpose: BotGearPurpose, requested: CombatSpell? = null,

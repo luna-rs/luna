@@ -231,6 +231,8 @@ enum class Entrance(val id: Int,
     // TODO Once Desert Treasure is added, the passage only leads anywhere after the quest ("This passage doesn't seem
     //  to lead anywhere...").
     JALDRAOCHT_PYRAMID_TUNNEL(id = 6481, landing = tile(3233, 9313)),
+    JALDRAOCHT_PYRAMID_PORTAL(id = 6551, landing = tile(3233, 2887), position = Position(3233, 9312),
+                             useFrom = listOf(Position(3233, 9313))),
 
     // Out of the rift under Mort Myre (A Soul's Bane).
     TOLNAS_RIFT_OUT(id = 13999, landing = tile(3312, 3450), delay = 1, animation = 828),
