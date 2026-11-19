@@ -4,6 +4,7 @@
   { "closed": 1530, "open": 1531 },
   { "closed": 3, "open": 1531 },
   { "closed": 1533, "open": 1534 },
+  { "closed": 1805, "open": 1534 },
   { "closed": 1536, "open": 1537 },
   { "closed": 1539, "open": 1540, "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE" },
   { "closed": 11707, "open": 11708 },

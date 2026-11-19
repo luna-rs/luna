@@ -38,6 +38,7 @@ import engine.bank.Banking
 import engine.obj.Hatch
 import engine.obj.LadderDestination
 import engine.obj.LadderType
+import engine.obj.SpecialLadder
 import engine.obj.StairDestination
 import engine.obj.TrapdoorLanding
 import io.luna.game.model.EntityState
@@ -430,7 +431,10 @@ object WebWalkLiveGenerator {
             report.skipped += "ladder ${obj.id} at ${DoorObstacles.describe(obj.position)}: $refusal"
             return
         }
-        climb(EdgeType.LADDER, obj, StairDestination.directions(obj), climbs, report) { from, up ->
+        // Explicit destinations can be used from the physical floor even when the ladder is stored above it.
+        val tiles = if (SpecialLadder.forPosition(obj.position) == null) climbingTiles(obj) else
+            EntranceStands.of(obj).sortedWith(LANDING_ORDER)
+        climb(EdgeType.LADDER, obj, StairDestination.directions(obj), climbs, report, tiles) { from, up ->
             LadderDestination.destination(obj, from, up)
         }
     }
@@ -677,8 +681,8 @@ object WebWalkLiveGenerator {
      * can be climbed from. The same crossing is never made twice, because some objects ignore the direction.
      */
     private fun climb(type: EdgeType, obj: GameObject, directions: Set<Boolean>, climbs: MutableList<GeneratedObstacle>,
-                      report: GenerationReport, destination: (Position, Boolean) -> Position?) {
-        val tiles = climbingTiles(obj)
+                      report: GenerationReport, tiles: List<Position> = climbingTiles(obj),
+                      destination: (Position, Boolean) -> Position?) {
         if (directions.isEmpty()) {
             report.skipped += "${type.name.lowercase()} ${obj.id} at ${DoorObstacles.describe(obj.position)}: " +
                     "no way to climb it"
@@ -733,7 +737,7 @@ object WebWalkLiveGenerator {
      * Finds the tiles that an object can be climbed from, in the same order every time.
      */
     private fun climbingTiles(obj: GameObject) =
-        LadderDestination.climbingTiles(obj).sortedWith(compareBy({ it.z }, { it.x }, { it.y }))
+        LadderDestination.climbingTiles(obj).sortedWith(LANDING_ORDER)
 
     /**
      * Reads the waypoints of `waypoints_manual.json`, which [finish] copies into the graph as they are, so that [scatter] can leave

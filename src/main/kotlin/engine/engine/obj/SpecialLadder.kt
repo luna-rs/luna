@@ -111,6 +111,7 @@ enum class SpecialLadder(val ladder: Position, val destination: Position) {
     ENTRANA_HOUSE_UP(ladder = Position(2816, 3352), destination = Position(2817, 3352, 1)),
 
     // Ladders out to the trapdoor above.
+    CHAMPIONS_GUILD_UP(ladder = Position(3190, 9758, 1), destination = Position(3190, 3356)),
     CANIFIS_CELLAR_UP(ladder = Position(3477, 9846), destination = Position(3494, 3464)),
     WEREWOLF_AGILITY_COURSE_UP(ladder = Position(3549, 9864), destination = Position(3543, 3462)),
     ECTOFUNTUS_UP(ladder = Position(3668, 9888, 3), destination = Position(3653, 3519)),
