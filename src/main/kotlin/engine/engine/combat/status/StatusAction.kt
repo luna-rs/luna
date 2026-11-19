@@ -66,7 +66,12 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
     /**
      * Checks the freeze window and its five-tick immunity period without extending either on a rejected spell.
      */
-    fun isFreezeImmune(): Boolean = freezeUntil >= 0 && mob.world.currentTick < freezeUntil + 5
+    fun isFreezeImmune(): Boolean = isFreezeImmuneAt(mob.world.currentTick)
+
+    /**
+     * Tests the current freeze deadline and its immunity window at a prospective impact tick.
+     */
+    internal fun isFreezeImmuneAt(tick: Long): Boolean = freezeUntil >= 0 && tick < freezeUntil + 5
 
     /**
      * Adds a status effect to this mob.

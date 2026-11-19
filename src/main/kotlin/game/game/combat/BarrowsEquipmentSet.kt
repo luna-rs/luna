@@ -52,11 +52,16 @@ enum class BarrowsEquipmentSet(
     /**
      * Checks base pieces and the four usable degradation states; broken items and bank notes do not match.
      */
-    fun isWorn(equipment: Equipment): Boolean =
-        matches(equipment.computeIdForIndex(Equipment.HEAD), head, degradedHead) &&
-                matches(equipment.computeIdForIndex(Equipment.WEAPON), weapon, degradedHead + 6) &&
-                matches(equipment.computeIdForIndex(Equipment.CHEST), body, degradedHead + 12) &&
-                matches(equipment.computeIdForIndex(Equipment.LEGS), legs, degradedHead + 18)
+    fun isWorn(equipment: Equipment): Boolean = isWorn(equipment::computeIdForIndex)
+
+    /**
+     * Checks the set against a prospective outfit without changing the live equipment.
+     */
+    fun isWorn(itemIdAt: (Int) -> Int): Boolean =
+        matches(itemIdAt(Equipment.HEAD), head, degradedHead) &&
+                matches(itemIdAt(Equipment.WEAPON), weapon, degradedHead + 6) &&
+                matches(itemIdAt(Equipment.CHEST), body, degradedHead + 12) &&
+                matches(itemIdAt(Equipment.LEGS), legs, degradedHead + 18)
 
     private fun matches(id: Int, base: Int, degraded: Int): Boolean = id == base || id in degraded..degraded + 3
 

@@ -7,7 +7,8 @@ import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.MobReference
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.Skill
+import io.luna.game.model.mob.PrayerIcon
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatAction
 import java.util.function.BooleanSupplier
@@ -42,15 +43,26 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     private val failed = mutableSetOf<BotGearPurpose>()
     private var active: Pair<BotGearPurpose, CombatLoadout>? = null
     private var nextDecision: Long? = null
-    private var pendingArmourCounter: ArmourCounter? = null
+    private var pendingCounter: StyleCounter? = null
     private val magicTactics = BotCombatMagic(bot, handler)
+    private val ancientPrayer = PkAncientPrayer(bot)
+    private var prayerObservation: PrayerObservation? = null
+    private var prayerCounterOpponent: MobReference? = null
 
     /**
-     * An armour counter awaiting a second scheduled check against the same opponent.
+     * A counter awaiting a second scheduled check against the same opponent for the same kind of evidence.
      *
      * @author lare96
      */
-    private data class ArmourCounter(val opponent: MobReference, val purpose: BotGearPurpose)
+    private data class StyleCounter(val opponent: MobReference, val purpose: BotGearPurpose, val prayerDriven: Boolean)
+
+    /**
+     * An overhead observed on uninterrupted ticks against one opponent.
+     *
+     * @author lare96
+     */
+    private data class PrayerObservation(val opponent: MobReference, val protecting: Boolean,
+                                         val since: Long, var last: Long)
 
     /**
      * Uses tactical Magic only during the currently selected, permanently permitted Magic discipline.
@@ -65,7 +77,8 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     fun clear() {
         active = null
         nextDecision = null
-        clearArmourConfirmation()
+        clearStyleConfirmation()
+        prayerCounterOpponent = null
         failed.clear()
         clearMagic()
     }
@@ -73,30 +86,36 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     /**
      * Drops an unfinished observation when the fight is interrupted.
      */
-    fun clearArmourConfirmation() {
-        pendingArmourCounter = null
+    fun clearStyleConfirmation() {
+        pendingCounter = null
+        prayerObservation = null
     }
 
     /**
      * Waits one reaction window before the first switch and reconsiders counters at that same cadence.
-     * A usable loadout stays active until an armour counter wins two consecutive scheduled checks.
+     * A usable loadout stays active until an armour or prayer counter wins two consecutive scheduled checks.
      * Supply loss interrupts attacks immediately; a replacement is chosen at the next decision deadline.
      * Native interaction waits can extend completion beyond the decision cadence.
      */
     suspend fun prepare(target: Player): Result {
         if (bot.preferences.isSkiller || bot.preferences.pk == null || !validTarget(target)) {
-            clearArmourConfirmation()
+            clearStyleConfirmation()
             return Result.UNAVAILABLE
         }
         val opponent = MobReference.capture(target)
-        if (pendingArmourCounter?.opponent != opponent) clearArmourConfirmation()
+        if (pendingCounter?.opponent != opponent) pendingCounter = null
+        val ancient = bot.spellbook == Spellbook.ANCIENT && BotCombatActionHandler.canUseAncients(bot)
+        if (prayerCounterOpponent != opponent || !ancient) prayerCounterOpponent = null
         val now = nanoTime()
         val current = active?.takeIf { acceptsPurpose(it.first) && ready(it.first, it.second) }
         if (current == null) {
-            clearArmourConfirmation()
+            clearStyleConfirmation()
+            prayerCounterOpponent = null
             bot.combat.target = null
             clearMagic()
         }
+        if (current != null && opponent != null && ancient) observePrayer(target, opponent)
+        else prayerObservation = null
         if (nextDecision == null) nextDecision = now + combat.pkSwitchDelay().inWholeNanoseconds
         if (now < nextDecision!!) return if (current != null) Result.READY else Result.WAITING
         nextDecision = now + combat.pkSwitchDelay().inWholeNanoseconds
@@ -108,13 +127,22 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
                 }?.takeIf { it.gear[Equipment.WEAPON] != null }
                     ?.let { purpose to it }
             }.toMap()
-        val previousCounter = pendingArmourCounter
-        clearArmourConfirmation()
+        val previousCounter = pendingCounter
+        pendingCounter = null
         val decision = combat.selectPkStyleDecision(target, choices.keys) ?: return Result.UNAVAILABLE
-        val purpose = decision.purpose
-        if (decision.armourDriven && current != null && current.first != purpose && current.first in choices &&
-            previousCounter?.purpose != purpose) {
-            if (opponent != null) pendingArmourCounter = ArmourCounter(opponent, purpose)
+        val prayerCounterActive = prayerCounterOpponent != null
+        val protectionSustained = prayerObservation?.let { it.protecting && it.last > it.since } == true
+        val prayerChoice = if (ancient && current != null && current.first in choices && BotGearPurpose.MAGIC in choices &&
+            (prayerCounterActive || decision.purpose == BotGearPurpose.MAGIC &&
+                current.first == BotGearPurpose.MAGIC && protectionSustained)) {
+            ancientPrayer.counter(target, current, choices)
+        } else null
+        val purpose = prayerChoice ?: decision.purpose
+        val prayerDriven = prayerChoice != null || prayerCounterActive
+        if ((decision.armourDriven || prayerDriven) && current != null && current.first != purpose &&
+            current.first in choices &&
+            (previousCounter?.purpose != purpose || previousCounter.prayerDriven != prayerDriven)) {
+            if (opponent != null) pendingCounter = StyleCounter(opponent, purpose, prayerDriven)
             return Result.READY
         }
         val selected = choices.getValue(purpose)
@@ -129,7 +157,25 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
             return if (failed.size == 3) Result.UNAVAILABLE else Result.WAITING
         }
         active = purpose to selected
+        prayerCounterOpponent = opponent.takeIf { prayerDriven && purpose != BotGearPurpose.MAGIC }
         return Result.READY
+    }
+
+    /**
+     * Requires adjacent world-tick observations. A changed overhead or a missed tick invalidates a pending
+     * prayer decision, including a return to Magic after a temporary drop in protection.
+     */
+    private fun observePrayer(target: Player, opponent: MobReference) {
+        val tick = bot.world.currentTick
+        val protecting = target.prayerIcon == PrayerIcon.PROTECT_FROM_MAGIC
+        val previous = prayerObservation
+        if (previous != null && previous.opponent == opponent && previous.protecting == protecting &&
+            tick in previous.last..previous.last + 1) {
+            previous.last = tick
+        } else {
+            if (pendingCounter?.prayerDriven == true) pendingCounter = null
+            prayerObservation = PrayerObservation(opponent, protecting, tick, tick)
+        }
     }
 
     /**
@@ -214,10 +260,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
                 if (!combat.selectAndUseSpell(spell.spell)) return false
             } else if (!combat.setAutocastSpell(spell)) return false
         } else {
-            val styles = BotCombatActionHandler.allowedStyles(bot, bot.combat.weapon.typeDef.styles).filter {
-                if (purpose == BotGearPurpose.RANGED) Skill.RANGED in it.exp else Skill.RANGED !in it.exp
-            }
-            val style = styles.firstOrNull() ?: return false
+            val style = pkPhysicalStyle(bot, purpose, bot.combat.weapon.typeDef) ?: return false
             bot.combat.weapon.changeStyle(style.button)
         }
         return canContinue.asBoolean && ready(purpose, selected)

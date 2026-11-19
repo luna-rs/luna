@@ -223,6 +223,27 @@ public final class CombatFormula {
     }
 
     /**
+     * Calculates ordinary player hit probability from a selected outfit's accuracy and stance, without equipping it.
+     * Skill levels, active combat buffs and the target's defence are read from the current combat state.
+     *
+     * @param attacker The player considering the outfit.
+     * @param victim The target of the prospective attack.
+     * @param type The prospective damage family.
+     * @param stance The prospective combat stance.
+     * @param attackStyleBonus The equipment accuracy slot for the prospective attack.
+     * @param equipmentAccuracy The outfit's total bonus in that slot.
+     * @return The ordinary hit probability.
+     */
+    public static double calculatePlayerHitChance(Player attacker, Player victim, CombatDamageType type,
+                                                   CombatStance stance, EquipmentBonus attackStyleBonus,
+                                                   int equipmentAccuracy) {
+        int attackRoll = calculatePlayerAttackRoll(attacker, type, stance, equipmentAccuracy);
+        int defenceRoll = type == CombatDamageType.MAGIC ? calculateMagicDefenceRoll(victim) :
+                calculatePhysicalDefenceRoll(victim, attackStyleBonus);
+        return calculateHitChanceFromRolls(attackRoll, defenceRoll);
+    }
+
+    /**
      * Converts offensive and defensive roll limits into the shared hit probability.
      *
      * @param attackRoll The offensive roll limit.
@@ -250,8 +271,21 @@ public final class CombatFormula {
      * @return The maximum physical hit that can be dealt.
      */
     public static int calculatePhysicalMaxHit(Player player, PhysicalType type) {
-        double effectiveStrength = calculateEffectivePhysicalStrength(player, type);
-        double strengthBonus = getPhysicalDamageBonus(player, type);
+        return calculatePhysicalMaxHit(player, type, player.getCombat().getStyleDef().getStance(),
+                getPhysicalDamageBonus(player, type));
+    }
+
+    /**
+     * Calculates the ordinary physical maximum for a prospective stance and outfit without changing equipment.
+     *
+     * @param player The player considering the attack.
+     * @param type The physical damage family.
+     * @param stance The prospective combat stance.
+     * @param strengthBonus The outfit's melee strength or selected ammunition's ranged strength.
+     * @return The ordinary physical maximum hit.
+     */
+    public static int calculatePhysicalMaxHit(Player player, PhysicalType type, CombatStance stance, int strengthBonus) {
+        double effectiveStrength = calculateEffectivePhysicalStrength(player, type, stance);
         int maxHit = (int) Math.floor(0.5 + effectiveStrength * (strengthBonus + 64.0) / 640.0);
         if (maxHit < 1) {
             maxHit = 1;
@@ -271,24 +305,32 @@ public final class CombatFormula {
      * @return The calculated offensive roll.
      */
     private static int calculateAttackRoll(Mob attacker, EquipmentBonus attackStyleBonus, CombatDamageType type) {
-        int skill;
-        if (type == CombatDamageType.MAGIC) {
-            skill = Skill.MAGIC;
-        } else if (type == CombatDamageType.RANGED) {
-            skill = Skill.RANGED;
-        } else {
-            skill = Skill.ATTACK;
-        }
-
-        int level = attacker.getSkills().getSkill(skill).getLevel();
+        int accuracy = getOffensiveAccuracyBonus(attacker, attackStyleBonus);
         if (attacker instanceof Npc) {
-            return (level + 9) * (getOffensiveAccuracyBonus(attacker, attackStyleBonus) + 64);
+            int level = attacker.getSkills().getSkill(attackSkill(type)).getLevel();
+            return (level + 9) * (accuracy + 64);
         }
 
         Player player = attacker.asPlr();
+        CombatStance stance = type == CombatDamageType.MAGIC ? CombatStance.ACCURATE :
+                player.getCombat().getStyleDef().getStance();
+        return calculatePlayerAttackRoll(player, type, stance, accuracy);
+    }
+
+    private static int calculatePlayerAttackRoll(Player player, CombatDamageType type, CombatStance stance,
+                                                 int equipmentAccuracy) {
+        int level = player.getSkills().getSkill(attackSkill(type)).getLevel();
         return (int) (Math.floor(level * getAttackRollPrayerMultiplier(player, type))
-                + (type == CombatDamageType.MAGIC ? 1 : getAttackRollStanceBonus(player)) + 8)
-                * (getOffensiveAccuracyBonus(player, attackStyleBonus) + 64);
+                + (type == CombatDamageType.MAGIC ? 1 : getAttackRollStanceBonus(stance)) + 8)
+                * (equipmentAccuracy + 64);
+    }
+
+    private static int attackSkill(CombatDamageType type) {
+        return switch (type) {
+            case MAGIC -> Skill.MAGIC;
+            case RANGED -> Skill.RANGED;
+            case MELEE -> Skill.ATTACK;
+        };
     }
 
     /**
@@ -347,13 +389,14 @@ public final class CombatFormula {
      *
      * @param player The attacking player.
      * @param type The physical combat family being used.
+     * @param stance The selected combat stance.
      * @return The effective physical strength level.
      */
-    private static double calculateEffectivePhysicalStrength(Player player, PhysicalType type) {
+    private static double calculateEffectivePhysicalStrength(Player player, PhysicalType type, CombatStance stance) {
         int skill = type == PhysicalType.RANGED ? Skill.RANGED : Skill.STRENGTH;
         double prayerMultiplier = getPhysicalStrengthPrayerMultiplier(player, type == PhysicalType.RANGED ?
                 CombatDamageType.RANGED : CombatDamageType.MELEE);
-        int stanceBonus = getPhysicalStrengthStanceBonus(player, type);
+        int stanceBonus = getPhysicalStrengthStanceBonus(stance, type);
 
         return Math.floor(player.getSkills().getSkill(skill).getLevel() * prayerMultiplier) + stanceBonus + 8;
     }
@@ -415,12 +458,10 @@ public final class CombatFormula {
     /**
      * Gets the stance bonus applied to a player's attack roll.
      *
-     * @param player The attacking player.
+     * @param stance The selected combat stance.
      * @return The stance-based attack bonus.
      */
-    private static int getAttackRollStanceBonus(Player player) {
-        CombatStance stance = player.getCombat().getStyleDef().getStance();
-
+    private static int getAttackRollStanceBonus(CombatStance stance) {
         if (stance == CombatStance.ACCURATE) {
             return 3;
         } else if (stance == CombatStance.CONTROLLED) {
@@ -449,13 +490,11 @@ public final class CombatFormula {
     /**
      * Gets the stance bonus applied to effective physical strength.
      *
-     * @param player The attacking player.
+     * @param stance The selected combat stance.
      * @param type The physical combat family being used.
      * @return The stance-based physical strength bonus.
      */
-    private static int getPhysicalStrengthStanceBonus(Player player, PhysicalType type) {
-        CombatStance stance = player.getCombat().getStyleDef().getStance();
-
+    private static int getPhysicalStrengthStanceBonus(CombatStance stance, PhysicalType type) {
         if (type == PhysicalType.RANGED) {
             return stance == CombatStance.ACCURATE ? 3 : 0;
         }
