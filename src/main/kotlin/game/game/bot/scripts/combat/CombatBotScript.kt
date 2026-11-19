@@ -82,6 +82,12 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         ownsFight = { isRunning() && !isTerminated() && bot.scriptStack.current() === this })
     private val combatPolicy = BotCombatActionHandler(bot, handler)
 
+    private val tacticalWithdrawal = if (bot.isBot && !bot.isConnectedPlayer) pkSession?.let { session ->
+        PkTacticalWithdrawal(bot, combatPolicy, ::ownsTacticalTurn,
+            allowsFight = { target -> target === focus && targetAllowed() && session.allowsPursuit(target) },
+            allowsTile = session::allowsHuntingAt)
+    } else null
+
     /**
      * Only player fights with a saved PK profile use carried mixed-style switching.
      */
@@ -394,6 +400,19 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             }
             if (!focus.isAlive || !focus.isViewableFrom(bot)) return true
             if (stopStalledPkFight()) return !running
+            val target = focus as Player
+            if (tacticalWithdrawal?.afterThaw(target) == true) {
+                if (!ownsTacticalTurn()) return isTerminated()
+                if (bot.healthPercent < PkTacticalWithdrawal.SURVIVAL_HEALTH_PERCENT) {
+                    recoverAfterWithdrawal()
+                    if (!ownsTacticalTurn()) return isTerminated()
+                    if (bot.healthPercent < PkTacticalWithdrawal.SURVIVAL_HEALTH_PERCENT) {
+                        fleePkFight()
+                        return true
+                    }
+                }
+                if (!canResumeAfterWithdrawal(target)) return true
+            }
             targetEnemy()
             if (isTerminated() || !focus.isAlive) return true
             talk()
@@ -440,6 +459,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     }
 
     override suspend fun finish() {
+        tacticalWithdrawal?.clearObservation()
         if (running) {
             bot.combat.isDisabled = false
         }
@@ -456,6 +476,24 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
     override suspend fun completed() {
         restoreWeapons()
+    }
+
+    private fun ownsTacticalTurn(): Boolean =
+        isRunning() && !isTerminated() && bot.scriptStack.current() === this && isActionSafe()
+
+    private fun canResumeAfterWithdrawal(target: Player): Boolean =
+        focus === target && targetAllowed() && pkSession?.allowsPursuit(target) == true &&
+            bot.combat.lastCombatWith === target && (bot.combat.target == null || bot.combat.target === target) &&
+            combatPolicy.canAttackWildernessPlayer(target)
+
+    private suspend fun recoverAfterWithdrawal() {
+        val combat = bot.combat
+        val hold = combat.beginTacticalWithdrawal() ?: return
+        try {
+            eatFood(retarget = false)
+        } finally {
+            combat.finishTacticalWithdrawal(hold)
+        }
     }
 
     /**
@@ -527,10 +565,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * it is under 30%. After eating, the bot refreshes its target so it can continue fighting if still safe enough to
      * do so.
      */
-    private suspend fun eatFood() {
-        val nervous = if (pkSession == null) bot.emotions.isNervousAboutHp else bot.healthPercent < 30
+    private suspend fun eatFood(retarget: Boolean = true) {
+        val nervous = if (pkSession == null) bot.emotions.isNervousAboutHp
+            else bot.healthPercent < PkTacticalWithdrawal.SURVIVAL_HEALTH_PERCENT
         if (nervous && handler.inventory.eatAnyFood()) {
-            targetEnemy()
+            if (retarget) targetEnemy()
             return
         }
         // An empty-handed escape may finish this script immediately; consider survival before handing it off.
@@ -541,11 +580,15 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 running = true
             }
         } else if (nervous) {
-            val inWilderness = bot.inWilderness()
-            handler.combat.fleeCombat()
-            if (inWilderness && !bot.inWilderness()) BotReactions.reactToEscape(bot)
-            if (usesPkSwitching) stop()
+            fleePkFight()
         }
+    }
+
+    private suspend fun fleePkFight() {
+        val inWilderness = bot.inWilderness()
+        handler.combat.fleeCombat()
+        if (inWilderness && !bot.inWilderness()) BotReactions.reactToEscape(bot)
+        if (usesPkSwitching) stop()
     }
 
     /**

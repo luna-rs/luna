@@ -119,6 +119,39 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     private EquipmentSwitch equipmentSwitch;
 
     /**
+     * The owner of an active withdrawal hold, kept separately from explicit combat disables.
+     */
+    private Object tacticalWithdrawal;
+
+    /**
+     * Suppresses outgoing combat while an active PK fight takes a short step back.
+     * The returned owner can release this hold independently of other combat restrictions.
+     *
+     * @return The hold owner, or {@code null} if an existing restriction prevents withdrawal.
+     */
+    public Object beginTacticalWithdrawal() {
+        if (isDisabled() || isEquipmentSwitching()) {
+            return null;
+        }
+        tacticalWithdrawal = new Object();
+        return tacticalWithdrawal;
+    }
+
+    /**
+     * Releases the hold only for the withdrawal that acquired it.
+     */
+    public void finishTacticalWithdrawal(Object owner) {
+        if (tacticalWithdrawal == owner) {
+            tacticalWithdrawal = null;
+        }
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return tacticalWithdrawal != null || super.isDisabled();
+    }
+
+    /**
      * Defers outgoing attacks while a bot changes equipment through native clicks.
      */
     public EquipmentSwitch beginEquipmentSwitch(Player target, InteractionPolicy pursuitPolicy) {
@@ -336,6 +369,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public void reset() {
+        tacticalWithdrawal = null;
         equipmentSwitch = null;
         releasePursuit(pursuitOwner);
         setFirstAttack(null);

@@ -379,6 +379,23 @@ public final class WalkingQueue {
     }
 
     /**
+     * Returns the exact queued tile when there is only one pending step.
+     * The returned object can be used to release just that step on cancellation.
+     */
+    public Position getSingleStep() {
+        return current.size() == 1 ? current.peekFirst() : null;
+    }
+
+    /**
+     * Cancels an owned single step if it has not executed or been replaced.
+     */
+    public void cancelSingleStep(Position step) {
+        if (step != null && step == getSingleStep()) {
+            clear();
+        }
+    }
+
+    /**
      * Returns the number of remaining queued tiles in this walking queue.
      *
      * @return The amount of remaining steps.

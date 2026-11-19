@@ -536,7 +536,13 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * Prefer distance from the threat's centre, trying lateral steps when a direct retreat is blocked. Never step
      * closer or outside the caller's permitted area; a boxed-in bot waits instead of clipping or replacing its path.
      */
-    fun stepAwayFrom(threat: Mob, accepts: (Position) -> Boolean = { true }): Boolean {
+    fun stepAwayFrom(threat: Mob, accepts: (Position) -> Boolean = { true }): Boolean =
+        stepAwayFrom(threat, retraceHistory = true, accepts = accepts)
+
+    /**
+     * Applies the same retreat policy to callers that require a direct step and a strict tile bound.
+     */
+    internal fun stepAwayFrom(threat: Mob, retraceHistory: Boolean, accepts: (Position) -> Boolean): Boolean {
         if (bot.state != EntityState.ACTIVE || !bot.isAlive || bot.isLocked || bot.walking.isLocked ||
             bot.navigator.isActive || !bot.walking.isEmpty || threat.state != EntityState.ACTIVE || !threat.isAlive ||
             bot.position.z != threat.position.z || !threat.isViewableFrom(bot)) return false
@@ -552,7 +558,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         return Direction.ALL_EXCEPT_NONE.map { it to origin.translate(1, it) }
             .filter { (_, next) -> accepts(next) && distance(next) > before }
             .sortedByDescending { (_, next) -> distance(next) }
-            .any { (direction, _) -> bot.navigator.step(direction) }
+            .any { (direction, _) -> bot.navigator.step(direction, retraceHistory) }
     }
 
     /**

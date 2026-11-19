@@ -267,10 +267,25 @@ public class WalkingNavigator {
      * @return {@code true} if the step was queued, otherwise {@code false}.
      */
     public boolean step(Direction direction) {
+        return step(direction, true);
+    }
+
+    /**
+     * Queues a collision-checked step, optionally discarding walking history to go directly to the adjacent tile.
+     *
+     * @param direction The direction to step from the current tile.
+     * @param retraceHistory Whether to allow a path along recently visited tiles.
+     * @return Whether the step was queued.
+     */
+    public boolean step(Direction direction, boolean retraceHistory) {
         if (direction != Direction.NONE &&
                 collisionManager.traversable(mob.getPosition(), mob.getType(), direction, mob.size(),
                         mob.getRouteStrategy())) {
-            mob.getWalking().addStep(direction);
+            WalkingQueue walking = mob.getWalking();
+            if (!retraceHistory) {
+                walking.clear();
+            }
+            walking.addStep(direction);
             return true;
         }
         return false;
