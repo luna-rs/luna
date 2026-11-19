@@ -6,6 +6,7 @@ import api.bot.action.BotCombatActionHandler
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.coordinator.isEarlyGame
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.CollectGroundItemBotScript
 import game.bot.scripts.skills.CollectHidesBotScript
@@ -61,11 +62,6 @@ import io.luna.util.RandomUtils.roll
  * @author lare96
  */
 object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
-    /**
-     * Cow-hide collection is an early combat activity, independent of the bot's Crafting level.
-     */
-    internal fun canCollectHides(bot: Bot): Boolean = bot.combatLevel < 35
-
     /**
      * Cow fields with a bank close by. Intelligent bots only collect hides here.
      */
@@ -142,7 +138,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
     internal fun getCollectHidesScript(
         bot: Bot, zones: MutableList<SubZone>, pickUpHides: Boolean? = null
     ): BotScript? {
-        if (!canCollectHides(bot)) return null
+        if (!bot.isEarlyGame()) return null
         zones += if (bot.personality.isIntelligent) NEAR_BANK_COW_FIELDS else ALL_COW_FIELDS
         if (listOf(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE, Skill.RANGED, Skill.MAGIC)
                 .none { BotCombatActionHandler.mayGainExperience(bot, it) }) {

@@ -12,7 +12,7 @@ plugin {
         -> Making battlestaves
         -> Cutting gems 
         -> Pottery shaping and firing
-        -> Spinning wheel and loom
+        -> Sheep shearing, spinning wheel and loom
         -> Making gold and silver jewellery with correct interfaces 
         """
     version = "1.0"

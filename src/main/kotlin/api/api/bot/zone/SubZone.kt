@@ -465,6 +465,10 @@ enum class SubZone(
         inside = Position(3233, 3294),
         area = SimpleBoxArea.of(3225, 3287, 3236, 3301),
         parent = { LUMBRIDGE }),
+    LUMBRIDGE_SHEEP_PEN(
+        inside = Position(3204, 3262),
+        area = SimpleBoxArea.of(3192, 3257, 3213, 3275),
+        parent = { LUMBRIDGE }),
     ICE_MOUNTAIN(
         inside = Position(3025, 3462),
         area = SimpleBoxArea.of(2990, 3442, 3033, 3542),

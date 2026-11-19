@@ -59,21 +59,6 @@ open class NpcDropGatheringScript(
     slayerTask, slayerMaster, monsterRequirement = monsterRequirement) {
 
     /**
-     * Shares item-specific level restrictions with profit trip selection.
-     *
-     * @author lare96
-     */
-    companion object {
-        private const val FEATHERS = 314
-
-        /**
-         * Keeps feather collection below combat level 20 without restricting other NPC drops.
-         */
-        internal fun levelEligible(itemId: Int, combatLevel: Int): Boolean =
-            itemId != FEATHERS || combatLevel < 20
-    }
-
-    /**
      * Persists the exact target and NPC restrictions alongside the inherited combat session.
      *
      * @author lare96
@@ -208,13 +193,6 @@ open class NpcDropGatheringScript(
     private fun carryingResource(): Boolean = itemId in bot.inventory ||
         notedItemId in bot.inventory
 
-    private fun canContinueGathering(): Boolean {
-        if (levelEligible(itemId, bot.combatLevel)) return true
-        bot.combat.target = null
-        stop()
-        return false
-    }
-
     override suspend fun onInit(resumed: Boolean): Boolean {
         val plan = equipmentPlan
         if (plan != null) {
@@ -232,8 +210,7 @@ open class NpcDropGatheringScript(
             }
             EquipmentDropJobs.attach(bot, this)
         }
-        return levelEligible(itemId, bot.combatLevel) &&
-            ItemDefinition.isIdValid(itemId) && stockTarget > 0 && originalZones.isNotEmpty() &&
+        return ItemDefinition.isIdValid(itemId) && stockTarget > 0 && originalZones.isNotEmpty() &&
             originalZones.all { targetNames[it].isNotEmpty() } &&
             ((slayerTask == null) == (slayerMaster == null)) &&
             super.onInit(resumed)
@@ -248,7 +225,6 @@ open class NpcDropGatheringScript(
     override fun buryLootedBones(): Boolean = false
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
-        if (!canContinueGathering()) return false
         val plan = equipmentPlan
         if (plan != null) {
             val source = EquipmentDropSources.find(plan.sourceKey) ?: return false
@@ -264,7 +240,6 @@ open class NpcDropGatheringScript(
     }
 
     override suspend fun beforeZoneWork(): Boolean {
-        if (!canContinueGathering()) return true
         val plan = equipmentPlan
         if (plan != null) {
             observeEquipmentSupplies()

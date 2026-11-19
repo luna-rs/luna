@@ -11,8 +11,6 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.totalItemAmount
 import com.google.gson.JsonObject
-import engine.bot.coordinator.skill.CraftingScriptFactory
-import game.bot.scripts.skills.CollectHidesBotScript
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.def.ItemDefinition
@@ -103,22 +101,14 @@ class CollectGroundItemBotScript(
     private fun carryingResource(): Boolean = itemId in bot.inventory ||
         itemDef(itemId).notedId.orElse(-1) in bot.inventory
 
-    private fun levelEligible(): Boolean = itemId != CollectHidesBotScript.COWHIDE ||
-        CraftingScriptFactory.canCollectHides(bot)
-
     override suspend fun onInit(resumed: Boolean): Boolean =
-        levelEligible() && ItemDefinition.isIdValid(itemId) && stockTarget > 0 &&
-                (!goalReached() || carryingResource())
+        ItemDefinition.isIdValid(itemId) && stockTarget > 0 && (!goalReached() || carryingResource())
 
     override suspend fun equipment() = null
 
     override fun allowsLoot(item: GroundItem): Boolean = item.id == itemId && !goalReached()
 
     override suspend fun beforeZoneWork(): Boolean {
-        if (!levelEligible()) {
-            stop()
-            return true
-        }
         if (!goalReached()) return false
         if (carryingResource()) {
             forceBanking = true
@@ -145,10 +135,6 @@ class CollectGroundItemBotScript(
     }
 
     override suspend fun onAssignFocus(newFocus: GroundItem): Boolean {
-        if (!levelEligible()) {
-            stop()
-            return false
-        }
         if (bot.inventory.isFull || goalReached()) {
             if (goalReached()) forceBanking = true
             return false
@@ -159,7 +145,7 @@ class CollectGroundItemBotScript(
     override suspend fun interactWithTarget(option: Int, target: GroundItem): Boolean {
         val zone = activeZone ?: return false
         return handler.loot.pickup(target) {
-            levelEligible() && isActionSafe() && activeZone == zone && !goalReached() && target.position in zone.area
+            isActionSafe() && activeZone == zone && !goalReached() && target.position in zone.area
         }
     }
 

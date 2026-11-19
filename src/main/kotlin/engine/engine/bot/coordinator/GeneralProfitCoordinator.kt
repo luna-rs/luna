@@ -35,9 +35,8 @@ import kotlin.time.Duration.Companion.minutes
  * Selects money-making tasks that do not train a skill or initiate combat.
  *
  * Existing paid rune deliveries and population-limited scavenging retain their own admission rules. Store bargains,
- * owned reward containers, key processing, mole exchanges, raw flax, Lumbridge eggs, safe Herblore secondary
- * ground spawns, and filled containers use their native scripts. Buckets of sand have their own bounded purchase,
- * fill and targeted sale path.
+ * owned reward containers, key processing, and mole exchanges use their native scripts. Early-game accounts can
+ * also collect raw flax or Lumbridge eggs, fill containers, or buy and fill empty buckets for sale.
  * Sale visits advertise actual transferable stock through the existing player marketplace. Candidate factories are
  * shuffled before invocation so unchosen rune reservations and store-bargain polls have no side effects.
  *
@@ -46,21 +45,8 @@ import kotlin.time.Duration.Companion.minutes
 object GeneralProfitCoordinator : BotCoordinator {
     private const val FLAX = 1779
     private const val EGG = 1944
-    private const val SNAPE_GRASS = 231
     private const val MAX_RAW_FLAX_STOCK = 112
     private const val MAX_EGG_STOCK = 32
-
-    /**
-     * A verified ground spawn and bounded collection goal.
-     *
-     * @author lare96
-     */
-    private data class GroundSecondary(val itemId: Int, val stockCap: Int, val batch: Int,
-                                       val zone: SubZone, val minimumCombat: Int = 3)
-
-    private val groundSecondaries = listOf(
-        GroundSecondary(SNAPE_GRASS, 56, 14, SubZone.CRAFTING_GUILD_SNAPE_GRASS, 57)
-    )
 
     private val chestPositions by lazy {
         world.objects.filter { it.id == OpenCrystalChestBotScript.CHEST }.map { it.position }
@@ -88,12 +74,6 @@ object GeneralProfitCoordinator : BotCoordinator {
         val candidates = mutableListOf<() -> BotScript?>(
             { RuneRunningCoordinator.profitScript(bot) },
             { MerchantStoreBargains.poll(bot)?.let { BuyStoreBargainBotScript(bot, it) } },
-            { starterVials(bot) },
-            { if (BucketSandProfitBotScript.eligible(bot)) BucketSandProfitBotScript(bot) else null },
-            { fillOwnedContainers(bot) },
-            { rawFlax(bot) },
-            { collectEggs(bot) },
-            { collectGroundSecondaries(bot) },
             { MerchantingCoordinator.getSellingScript(bot) },
             {
                 if (!bot.preferences.isMerchant && (bot.personality.isDumb ||
@@ -103,10 +83,19 @@ object GeneralProfitCoordinator : BotCoordinator {
                 else null
             }
         )
-        candidates += {
-            if (ScavengingCoordinator.canDispatch(bot) && ScavengingCoordinator.permits(bot))
-                WildernessScavengeBotScript(bot, introductory = true, duration = 30.minutes)
-            else null
+        if (bot.isEarlyGame()) {
+            candidates += listOf(
+                { starterVials(bot) },
+                { if (BucketSandProfitBotScript.eligible(bot)) BucketSandProfitBotScript(bot) else null },
+                { fillOwnedContainers(bot) },
+                { rawFlax(bot) },
+                { collectEggs(bot) },
+                {
+                    if (ScavengingCoordinator.canDispatch(bot) && ScavengingCoordinator.permits(bot))
+                        WildernessScavengeBotScript(bot, introductory = true, duration = 30.minutes)
+                    else null
+                }
+            )
         }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             candidates += {
@@ -151,25 +140,6 @@ object GeneralProfitCoordinator : BotCoordinator {
         val duration = rand(15, 30).minutes
         return CollectGroundItemBotScript(bot, EGG, target, duration,
             mutableListOf(SubZone.LUMBRIDGE_CHICKEN_COOP), sellOnCompletion = true).also {
-            it.profitGathering = ProfitGatheringGoal.create(bot, quote, duration)
-        }
-    }
-
-    private fun collectGroundSecondaries(bot: Bot): BotScript? = groundSecondaries.shuffled().firstNotNullOfOrNull {
-        secondary ->
-        if (bot.combatLevel < secondary.minimumCombat ||
-            secondary.minimumCombat > 3 && bot.preferences.isSkiller ||
-            secondary.zone.entryBlocker(bot) != null) {
-            return@firstNotNullOfOrNull null
-        }
-        val current = owned(bot, secondary.itemId)
-        if (current >= secondary.stockCap) return@firstNotNullOfOrNull null
-        val quote = ProfitGatheringDemand.quote(bot, secondary.itemId, ticks = 6.0)
-            ?: return@firstNotNullOfOrNull null
-        val target = minOf(secondary.stockCap.toLong(), current + minOf(secondary.batch, quote.quantity)).toInt()
-        val duration = rand(20, 40).minutes
-        CollectGroundItemBotScript(bot, secondary.itemId, target, duration,
-            mutableListOf(secondary.zone), sellOnCompletion = true).also {
             it.profitGathering = ProfitGatheringGoal.create(bot, quote, duration)
         }
     }

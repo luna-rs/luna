@@ -148,6 +148,7 @@ import game.bot.scripts.skills.MakeCannonballBotScript.Companion.CannonballData
 import game.bot.scripts.skills.SmeltOreBotScript
 import game.bot.scripts.skills.SmithBarBotScript
 import game.bot.scripts.skills.SpinTextileBotScript
+import game.bot.scripts.skills.ShearSheepBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
 import game.bot.scripts.skills.StringBowBotScript
@@ -224,6 +225,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CannonballData>(MakeCannonballBotScript::class) { bot, data -> MakeCannonballBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinTextileBotScript::class) { bot, data -> SpinTextileBotScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(ShearSheepBotScript::class) { bot, data -> ShearSheepBotScript(bot, data.duration) }
     // Older flax snapshots keep their original class name but restore through the generalized constructor.
     scriptManager.scriptMap["game.bot.scripts.skills.SpinFlaxBotScript"] =
         scriptManager.scriptMap.getValue(SpinTextileBotScript::class.qualifiedName!!)

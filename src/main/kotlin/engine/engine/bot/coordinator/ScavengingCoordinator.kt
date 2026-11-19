@@ -70,7 +70,7 @@ object ScavengingCoordinator : BotCoordinator {
     }
 
     fun canDispatch(bot: Bot): Boolean {
-        if (!bot.preferences.scavenging.isIntroductory || bot.scriptStack.size() != 0) return false
+        if (!bot.preferences.scavenging.isIntroductory || bot.scriptStack.size() != 0 || !bot.isEarlyGame()) return false
         refresh(bot)
         return admitted.size < limit
     }

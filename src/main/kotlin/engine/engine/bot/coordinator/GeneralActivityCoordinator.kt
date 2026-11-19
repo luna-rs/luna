@@ -17,18 +17,21 @@ import game.bot.scripts.RepairGatheringToolBotScript
 import game.skill.firemaking.lightSource.LightSource
 import game.bot.scripts.SearchNestBotScript
 import game.bot.scripts.TradeMolePartsBotScript
+import game.bot.scripts.skills.ShearSheepBotScript
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 /**
  * Selects useful general activities from supplies the bot already owns.
  *
  * Owned crystal keys are used at a loaded chest, matched halves can be assembled, and empty water containers
- * are filled toward their wanted-stock target. Wanted buckets of milk and sand use the same native filling task.
+ * are filled toward their wanted-stock target by early-game bots, who can also shear sheep. Wanted buckets of milk
+ * and sand use the same native filling task.
  * Owned unsearched bird nests can also be opened and their contents banked. Owned experience lamps are redeemed
  * in the highest eligible skill below 99. Depleted glories can be recharged at the native Fountain of Heroes.
  * Owned mole claws and skins can be exchanged with Wyson before the resulting nests enter ordinary nest searching.
@@ -114,7 +117,13 @@ object GeneralActivityCoordinator : BotCoordinator {
         RepairGatheringToolBotScript.TOOLS.flatMap { tool ->
             listOf(false, true).map { RepairGatheringToolBotScript(bot, tool, it, duration) }
         }.filter { it.isEligible() }.randomOrNull()?.let { return it }
-        val filling = buildList {
+        return starterScript(bot, duration)
+    }
+
+    internal fun starterScript(bot: Bot, duration: Duration): BotScript? {
+        if (!bot.isEarlyGame()) return null
+        val candidates = buildList<BotScript> {
+            if (ShearSheepBotScript.eligible(bot)) add(ShearSheepBotScript(bot, minOf(duration, 20.minutes)))
             for (source in Source.entries) {
                 for (empty in source.emptyIds) {
                     val filled = requireNotNull(source.resource.getFilled(empty))
@@ -129,6 +138,6 @@ object GeneralActivityCoordinator : BotCoordinator {
                 }
             }
         }
-        return filling.randomOrNull()
+        return candidates.randomOrNull()
     }
 }
