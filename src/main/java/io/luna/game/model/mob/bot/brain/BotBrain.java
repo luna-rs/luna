@@ -6,6 +6,7 @@ import engine.bot.coordinator.BankResourceCoordinator;
 import engine.bot.coordinator.GeneralProfitCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
 import engine.bot.coordinator.RuneRunningCoordinator;
+import engine.bot.coordinator.PkCoverage;
 import game.bot.scripts.CannonBotSupport;
 import game.bot.scripts.RecoverCannonBotScript;
 import game.bot.scripts.BankCleanupBotScript;
@@ -104,6 +105,10 @@ public class BotBrain {
                     return owner -> owner.getScriptStack().push(starterProfit);
                 }
             }
+        }
+        BotScript coverage = PkCoverage.idleScript(bot);
+        if (coverage != null) {
+            return owner -> owner.getScriptStack().push(coverage);
         }
         var map = BotActivityWeights.weights(bot);
         BotActivity activity = RandomUtils.weightedRoll(map);

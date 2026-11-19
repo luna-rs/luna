@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.isRealBot
 import api.bot.boss.BossOutings
 
+import engine.bot.coordinator.PkCoverage
 import engine.bot.gear.BotGearPurpose
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
@@ -248,6 +249,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             if (attacker === victim) return
             val fresh = !(attacker.combat.inCombat() && attacker.combat.lastCombatWith !is Npc) &&
                 !(victim.combat.inCombat() && victim.combat.lastCombatWith !is Npc)
+            if (fresh && attacker.isRealBot()) PkCoverage.live.recordFight(attacker, victim)
             val witnessedDanger = BotPvpAwareness.canWitnessAttack(attacker, victim)
             if (!fresh && !witnessedDanger) return
             val players = attacker.world.locator.findViewablePlayers(attacker)

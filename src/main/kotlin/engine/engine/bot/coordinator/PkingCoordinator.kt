@@ -60,17 +60,25 @@ object PkingCoordinator : BotCoordinator {
      * Restricted Magic accounts use shared wanted-item acquisition or earn its funding before starting an outing.
      * Other missing supplies enter the ordinary preparation stage.
      */
-    internal fun getScript(bot: Bot): BotScript? {
+    internal fun getScript(bot: Bot, coverage: Boolean = false): BotScript? {
         if (bot.state != EntityState.ACTIVE || bot.preferences.isSkiller || bot.preferences.pk == null ||
             !bot.preferences.canChooseActivity(BotActivity.PKING) || !ActionSafety.NON_COMBAT.allows(bot) ||
-            bot.scriptStack.size() > 0) return null
+            (!coverage && bot.scriptStack.size() > 0) ||
+            coverage && (!PkCoverage.eligible(bot) || !PkCoverage.safeToRecruit(bot))) return null
         val preparation = PkLoadoutPreparation(bot, bot.actionHandler)
         if (preparation.magicRestockRequired()) {
+            if (coverage) {
+                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.RUNES)
+                return null
+            }
             return PkRuneRestocking.getScript(bot, preparation.magicSupplyRequirements().orEmpty())
         }
         val solo = PkClanPolicy.chooseSolo(bot)
         val clan = PkClanPolicy(bot)
-        if (clan.clanOuting && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) return null
+        if (clan.clanOuting && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) {
+            PkCoverage.live.recordFailure(bot, PkCoverage.Failure.CLAN)
+            return null
+        }
         return PkBotScript(bot, sessionDuration(bot), solo)
     }
 }

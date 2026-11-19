@@ -4,6 +4,7 @@ import api.bot.Suspendable.delay
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkCombatObservations
 import api.bot.action.PkLoadoutPreparation
+import engine.bot.coordinator.PkCoverage
 import engine.bot.coordinator.ScavengingCoordinator
 import api.bot.action.PkClanPolicy
 import api.bot.script.BotScript
@@ -61,7 +62,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Restores the outing's remaining duration, solo decision and current destination without rerolling identity.
      */
     constructor(bot: Bot, data: PkData) : this(bot, data.duration, data.soloClanOuting) {
-        patrolDestination = data.patrolDestination?.takeIf { it in patrolGroups(bot).flatten() &&
+        patrolArea = data.patrolArea
+        patrolDestination = data.patrolDestination?.takeIf { it in outingPatrolGroups().flatten() &&
             allowsHuntingAt(it) && bot.recentEscape?.avoids(it) != true }
     }
 
@@ -82,7 +84,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
     private var preparationState = PreparationState.NOT_PREPARED
         set(value) {
             field = value
-            if (value == PreparationState.RESTOCKING || value == PreparationState.LEAVING) bot.combat.target = null
+            if (value == PreparationState.PREPARING || value == PreparationState.RESTOCKING ||
+                value == PreparationState.LEAVING) bot.combat.target = null
         }
 
     /**
@@ -105,13 +108,31 @@ class PkBotScript(bot: Bot, val duration: Duration,
      *
      * @author lare96
      */
-    private enum class PreparationState { NOT_PREPARED, READY, RESTOCKING, LEAVING }
+    private enum class PreparationState { NOT_PREPARED, PREPARING, READY, RESTOCKING, LEAVING }
 
     /**
      * Leaves escape and bank preparation with the parent instead of repeatedly queuing defensive combat children.
      */
-    fun isRestocking(): Boolean = preparationState in setOf(PreparationState.RESTOCKING, PreparationState.LEAVING)
+    fun isRestocking(): Boolean = preparationState == PreparationState.PREPARING ||
+        preparationState == PreparationState.RESTOCKING || preparationState == PreparationState.LEAVING
 
+    /**
+     * Counts a ready wilderness parent even while its ordinary combat child is running.
+     */
+    internal fun coverageActive(now: Long): Boolean = !isTerminated() && !isFinished() &&
+        preparationState == PreparationState.READY && now < expireAt && bot.inWilderness() &&
+        allowsHuntingAt(bot.position) && (clanRallyStartedAt == null || bot.combat.inCombat())
+
+    /**
+     * Identifies a live departure that can reserve coverage while normal preparation and travel finish.
+     */
+    internal fun coverageIncoming(now: Long): Boolean = !isTerminated() && !isFinished() &&
+        preparationState != PreparationState.RESTOCKING && preparationState != PreparationState.LEAVING &&
+        now < expireAt && !coverageActive(now)
+
+    internal var patrolArea: PkPatrolArea? = null
+
+    internal fun incomingArea(): PkPatrolArea = patrolDestination?.let(PkPatrolArea::at) ?: patrolArea ?: PkPatrolArea.OTHER
 
     /**
      * Shared PK bot constants.
@@ -121,11 +142,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
         /**
          * Shared patrol groups for hunting and supply-starved scavenging.
          */
-        internal fun patrolGroups(bot: Bot): List<List<Position>> {
+        internal fun patrolGroups(bot: Bot, area: PkPatrolArea? = null): List<List<Position>> {
             return if (bot.preferences.pk?.purpose() == Purpose.SKILL) {
-                listOf(PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION &&
+                if (area != null && area != PkPatrolArea.EDGEVILLE) return emptyList()
+                listOf(PkArea.LOW_LEVEL.anchors.filter { it.regionId == PkPatrolArea.EDGEVILLE_REGION &&
                     levelAt(it) > 0 && bot.recentEscape?.avoids(it) != true }).filter { it.isNotEmpty() }
-            } else hotspotGroups(bot)
+            } else hotspotGroups(bot, area)
         }
 
         /**
@@ -133,10 +155,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
          * Wilderness agility course, KBD entrance, runite rocks and eastern greater demons. Clan outings retain
          * their minimum hunting depth of Wilderness level 30.
          */
-        internal fun hotspotGroups(bot: Bot): List<List<Position>> {
+        internal fun hotspotGroups(bot: Bot, area: PkPatrolArea? = null): List<List<Position>> {
             if (bot.preferences.pk?.purpose() == Purpose.SKILL) return emptyList()
             val groups = mutableListOf(
-                PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION },
+                PkArea.LOW_LEVEL.anchors.filter { it.regionId == PkPatrolArea.EDGEVILLE_REGION },
                 PkArea.GREEN_DRAGONS.anchors)
             if (bot.combatLevel >= 70) groups += listOf(
                 listOfNotNull(SubZone.WILDERNESS_AGILITY.entrance(bot)),
@@ -145,15 +167,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 PkArea.DEMONIC_RUINS.anchors)
             val minimumDepth = if (bot.preferences.pk?.purpose() == Purpose.CLAN) 30 else 1
             val escape = bot.recentEscape
-            return groups.map { group -> group.filter { it.z == 0 && levelAt(it) >= minimumDepth && escape?.avoids(it) != true } }
+            return groups.map { group -> group.filter { it.z == 0 && levelAt(it) >= minimumDepth &&
+                escape?.avoids(it) != true && (area == null || PkPatrolArea.at(it) == area) } }
                 .filter { it.isNotEmpty() }
         }
-
-        /**
-         * The surface region immediately north of Edgeville, covering native Wilderness levels 1 through 8.
-         * Existing LOW_LEVEL patrol anchors in this region supply entry and wandering destinations.
-         */
-        private const val EDGEVILLE_PK_REGION = 12343
 
         private const val MIN_TRAVEL_SEARCH_CYCLES = 4
         private const val MAX_TRAVEL_SEARCH_CYCLES = 8
@@ -191,9 +208,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
             var duration = Duration.ZERO
             var soloClanOuting = false
             var patrolDestination: Position? = null
+            internal var patrolArea: PkPatrolArea? = null
             override fun load(data: JsonObject) {
                 duration = data.get("duration").asLong.milliseconds
                 soloClanOuting = data.get("soloClanOuting")?.asBoolean ?: false
+                val savedArea = data.get("patrolArea")?.takeIf { it.isJsonPrimitive }?.asString
+                patrolArea = PkPatrolArea.staffed.firstOrNull { it.name == savedArea }
                 patrolDestination = data.getAsJsonObject("patrol")?.let {
                     Position(it.get("x").asInt, it.get("y").asInt, it.get("z").asInt)
                 }
@@ -202,6 +222,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             override fun save(data: JsonObject) {
                 data.addProperty("duration", duration.inWholeMilliseconds)
                 data.addProperty("soloClanOuting", soloClanOuting)
+                patrolArea?.let { data.addProperty("patrolArea", it.name) }
                 patrolDestination?.let { position ->
                     data.add("patrol", JsonObject().apply {
                         addProperty("x", position.x)
@@ -520,7 +541,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * their combat-level matchups still use the ordinary two-sided Wilderness range.
      */
     internal fun allowsHuntingAt(position: Position): Boolean = !isSkillSession ||
-        (position.z == 0 && position.regionId == EDGEVILLE_PK_REGION && levelAt(position) > 0)
+        (position.z == 0 && position.regionId == PkPatrolArea.EDGEVILLE_REGION && levelAt(position) > 0)
 
     /**
      * Keeps both ends of an owned pursuit inside the hunting area, including after equipment suspensions.
@@ -708,7 +729,15 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Travel is delegated to the shared walker.
      */
     internal fun patrolAnchors(): List<Position> {
-        return patrolGroups(bot).randomOrNull().orEmpty()
+        return outingPatrolGroups().randomOrNull().orEmpty()
+    }
+
+    private fun outingPatrolGroups(): List<List<Position>> {
+        val area = patrolArea ?: return patrolGroups(bot)
+        val groups = patrolGroups(bot, area)
+        if (groups.isNotEmpty()) return groups
+        patrolArea = null
+        return patrolGroups(bot)
     }
 
     /**
@@ -721,7 +750,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             val leader = clan.patrolLeader(members)
             if (leader !== bot) return leader.position.takeUnless { bot.recentEscape?.avoids(it) == true }
             if (members.isEmpty()) {
-                val groups = hotspotGroups(bot).ifEmpty { patrolGroups(bot) }
+                val groups = outingPatrolGroups()
                 if (groups.isEmpty()) return null
                 val capeIndex = ((clan.cape ?: 4315) - 4315) / 2
                 val anchors = groups[capeIndex % groups.size]
@@ -884,8 +913,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
             return false
         }
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
-        if (!clan.ensureCape()) preparationState = PreparationState.LEAVING
-        if (!clanCanHunt()) preparationState = PreparationState.LEAVING
+        if (!clan.ensureCape() || !clanCanHunt()) {
+            if (preparationState != PreparationState.LEAVING) PkCoverage.live.recordFailure(bot, PkCoverage.Failure.CLAN)
+            preparationState = PreparationState.LEAVING
+        }
         if (System.currentTimeMillis() > expireAt) {
             preparationState = PreparationState.LEAVING
         }
@@ -893,13 +924,15 @@ class PkBotScript(bot: Bot, val duration: Duration,
             return handler.combat.fleeWilderness()
         }
         if (preparationState != PreparationState.READY || !preparation.ready()) {
-            preparationState = PreparationState.RESTOCKING
+            preparationState = if (preparationState == PreparationState.NOT_PREPARED ||
+                preparationState == PreparationState.PREPARING) PreparationState.PREPARING else PreparationState.RESTOCKING
             if (bot.inWilderness()) {
                 handler.combat.fleeWilderness()
                 return false
             }
             if (!ActionSafety.NON_COMBAT.allows(bot)) return false
             if (!preparation.prepare()) {
+                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.KIT)
                 preparationState = PreparationState.LEAVING
                 if (!preparation.magicRestockRequired()) {
                     ScavengingCoordinator.detour(bot, preparation)?.let { bot.scriptStack.softPushHead(it) }
@@ -912,12 +945,14 @@ class PkBotScript(bot: Bot, val duration: Duration,
             return false
         }
         if (clanRallyExpired()) {
+            PkCoverage.live.recordFailure(bot, PkCoverage.Failure.CLAN)
             bot.log("Clan did not regroup within five minutes. Ending this outing.")
             preparationState = PreparationState.LEAVING
             return handler.combat.fleeWilderness()
         }
         val risk = combatPolicy.pkRiskBudget()
         if (!risk.withinBudget) {
+            PkCoverage.live.recordFailure(bot, PkCoverage.Failure.RISK)
             preparationState = PreparationState.LEAVING
             bot.log(if (risk.hasProtectedCosmetics) "Banking protected cosmetics before another PK outing." else
                 "PK death loss ${risk.deathLoss} exceeds allowance ${risk.maximumLoss}. Ending the trip safely.")
@@ -966,6 +1001,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         data.duration = remaining.coerceAtLeast(0).milliseconds
         data.soloClanOuting = soloClanOuting
         data.patrolDestination = patrolDestination
+        data.patrolArea = patrolArea
         return data
     }
 
@@ -1078,6 +1114,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             if (members.any { !clan.near(it, PkClanPolicy.GROUP_RADIUS) }) return
             if (members.isEmpty()) {
                 val rally = selectPatrolDestination() ?: run {
+                    PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
                     preparationState = PreparationState.LEAVING
                     return
                 }
@@ -1094,6 +1131,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             bot.walking.isEmpty && bot.cycles >= nextPatrolCycle
         ) {
             val anchor = patrolDestination ?: selectPatrolDestination()?.also { patrolDestination = it } ?: run {
+                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
                 preparationState = PreparationState.LEAVING
                 return
             }
@@ -1124,10 +1162,11 @@ class PkBotScript(bot: Bot, val duration: Duration,
         if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
             val anchor = patrolDestination?.takeUnless { bot.recentEscape?.avoids(it) == true } ?: when {
                 isGroupOuting() -> selectPatrolDestination()
-                isSkillSession -> patrolAnchors().randomOrNull()
+                isSkillSession || patrolArea != null -> patrolAnchors().randomOrNull()
                 rand(2 of 3) -> hotspotGroups(bot).randomOrNull()?.randomOrNull() ?: patrolAnchors().randomOrNull()
                 else -> patrolAnchors().randomOrNull()
             } ?: run {
+                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
                 preparationState = PreparationState.LEAVING
                 return false
             }
@@ -1137,6 +1176,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             val reached = if (isGroupOuting()) walkWithClan(anchor, PkClanPolicy.FOLLOW_RADIUS) else
                 walkHuntingRoute(anchor)
             if (!reached && !huntingTravelInterrupted && (!isGroupOuting() || !clanTravelInterrupted)) {
+                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
                 patrolDestination = null
             }
 
