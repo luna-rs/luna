@@ -40,10 +40,21 @@ public abstract class ThrottledAction<T extends Mob> extends Action<T> {
 
     @Override
     public boolean run() {
-        mob.getWalking().clear();
+        if (stopsMovement()) {
+            mob.getWalking().clear();
+        }
         if (source.ready(delay)) {
             execute();
         }
+        return true;
+    }
+
+    /**
+     * Determines whether running this action discards queued walking steps.
+     *
+     * @return Whether to stop the mob's movement before checking the throttle.
+     */
+    protected boolean stopsMovement() {
         return true;
     }
 

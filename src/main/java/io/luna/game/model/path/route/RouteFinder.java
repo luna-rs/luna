@@ -29,6 +29,11 @@ import java.util.List;
  */
 public final class RouteFinder {
 
+    @FunctionalInterface
+    interface Destination {
+        boolean reached(int x, int y);
+    }
+
     /**
      * The width and length of the square of tiles that is searched.
      */
@@ -148,6 +153,16 @@ public final class RouteFinder {
      */
     public Route find(CollisionView view, int level, int startX, int startY, int destX, int destY, int size,
                       int extraFlag, RouteStrategy strategy, boolean moveNear, int maxWaypoints) {
+        return find(view, level, startX, startY, destX, destY, size, extraFlag, strategy, moveNear, maxWaypoints, null);
+    }
+
+    /**
+     * Searches for the nearest reachable tile accepted by the interaction, using the target as the partial-route
+     * reference when no tile in the search area satisfies the interaction. Interaction routes stay within view
+     * of the target, since leaving that area ends tracking.
+     */
+    Route find(CollisionView view, int level, int startX, int startY, int destX, int destY, int size,
+               int extraFlag, RouteStrategy strategy, boolean moveNear, int maxWaypoints, Destination destination) {
         reset();
         int baseX = startX - SEARCH_SIZE / 2;
         int baseY = startY - SEARCH_SIZE / 2;
@@ -157,7 +172,8 @@ public final class RouteFinder {
         int localDestY = destY - baseY;
         add(localStartX, localStartY, START_DIRECTION, 0);
 
-        boolean found = search(view, level, baseX, baseY, localDestX, localDestY, size, extraFlag, strategy);
+        boolean found = search(view, level, baseX, baseY, localDestX, localDestY, size, extraFlag, strategy,
+                destination);
         if (!found) {
             if (!moveNear || !findClosestTile(localDestX, localDestY)) {
                 return Route.FAILED;
@@ -201,16 +217,21 @@ public final class RouteFinder {
      * the destination.
      */
     private boolean search(CollisionView view, int level, int baseX, int baseY, int destX, int destY, int size,
-                           int extraFlag, RouteStrategy strategy) {
+                           int extraFlag, RouteStrategy strategy, Destination destination) {
         StepValidator.Walker walker = new StepValidator.Walker(view, level, extraFlag, strategy);
         // A large mob must fit inside the search area, so it stops short of the far edges by its size.
         int last = SEARCH_SIZE - size;
+        int minX = destination == null ? 0 : Math.max(0, destX - Position.VIEWING_DISTANCE);
+        int minY = destination == null ? 0 : Math.max(0, destY - Position.VIEWING_DISTANCE);
+        int maxX = destination == null ? last : Math.min(last, destX + Position.VIEWING_DISTANCE);
+        int maxY = destination == null ? last : Math.min(last, destY + Position.VIEWING_DISTANCE);
         while (writer != reader) {
             currentX = queueX[reader];
             currentY = queueY[reader];
             reader = (reader + 1) & (QUEUE_SIZE - 1);
 
-            if (currentX == destX && currentY == destY) {
+            if (destination == null ? currentX == destX && currentY == destY
+                    : destination.reached(baseX + currentX, baseY + currentY)) {
                 return true;
             }
 
@@ -225,7 +246,8 @@ public final class RouteFinder {
                 int stepY = STEP_Y[direction];
                 int nextX = x + stepX;
                 int nextY = y + stepY;
-                if (nextX >= 0 && nextX <= last && nextY >= 0 && nextY <= last && unreached(nextX, nextY) &&
+                if (nextX >= minX && nextX <= maxX && nextY >= minY && nextY <= maxY &&
+                        unreached(nextX, nextY) &&
                         StepValidator.canTravel(walker, absX, absY, stepX, stepY, size)) {
                     add(nextX, nextY, CAME_FROM[direction], next);
                 }

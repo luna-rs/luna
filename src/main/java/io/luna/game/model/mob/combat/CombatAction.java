@@ -186,6 +186,11 @@ public final class CombatAction extends Action<Mob> {
             return clearTarget();
         }
 
+        // Singles can reject a PvP engagement during approach as well as at attack range.
+        if (!reached && mob instanceof Player && target instanceof Player && !combat.checkMultiCombat(target)) {
+            return clearTarget();
+        }
+
         if (mob instanceof Player) {
             updatePlayerPursuit(target, policy, reached);
         } else if (mob instanceof Npc) {

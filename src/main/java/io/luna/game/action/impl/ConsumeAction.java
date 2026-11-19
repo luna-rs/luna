@@ -12,7 +12,8 @@ import io.luna.game.model.mob.Player;
  * <p>
  * An unfinished {@link ActionType#STRONG} action prevents consumption without advancing the throttle. Otherwise,
  * the shared {@link TimeSource} determines whether {@link #execute()} may run. The action completes during
- * submission, including when the throttle rejects it, and is not retained for a second execution.
+ * submission, including when the throttle rejects it, and is not retained for a second execution. Running this
+ * action preserves the player's queued movement.
  *
  * @author lare96
  */
@@ -27,6 +28,11 @@ public abstract class ConsumeAction extends ThrottledAction<Player> {
      */
     public ConsumeAction(Player player, TimeSource source, int delay) {
         super(player, source, delay);
+    }
+
+    @Override
+    protected final boolean stopsMovement() {
+        return false;
     }
 
     /**

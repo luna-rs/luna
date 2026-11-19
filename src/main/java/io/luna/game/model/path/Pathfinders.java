@@ -25,8 +25,14 @@ public final class Pathfinders {
      * @return The new pathfinder.
      */
     public static GamePathfinder<Position> forPlayer(Mob mob) {
-        return withFallback(new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(), 0,
-                RouteStrategy.NORMAL));
+        return withFallback(localForPlayer(mob));
+    }
+
+    /**
+     * Creates the local player route finder for interactions that are restricted to viewing range.
+     */
+    public static RoutePathfinder localForPlayer(Mob mob) {
+        return new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(), 0, RouteStrategy.NORMAL);
     }
 
     /**

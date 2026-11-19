@@ -6,6 +6,7 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
 
@@ -201,9 +202,10 @@ final class NavigationAction extends Action<Mob> {
                     request.getPolicy().getDistance() > 0 &&
                     (request.getPolicy().getType() == InteractionType.SIZE ||
                             request.getPolicy().getType() == InteractionType.LINE_OF_SIGHT);
-            // Ranged and magic pursuit also need a reachable side when a wall blocks the direct attack.
-            // The reach check above still stops movement as soon as the selected attack is in range.
-            if (objectApproach || mobApproach) {
+            if (mob instanceof Player && target instanceof Mob targetMob && request.getOffsetDir().isEmpty() &&
+                    request.getPolicy().getType() == InteractionType.LINE_OF_SIGHT) {
+                current = navigator.walkIntoLineOfSight(targetMob, request.getPolicy().getDistance(), request.isAsync());
+            } else if (objectApproach || mobApproach) {
                 current = navigator.walkToInteraction((Entity) target, request.getOffsetDir(), request.getPathfinder(), request.isAsync());
             } else {
                 current = isTargetMob ?

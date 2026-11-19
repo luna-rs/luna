@@ -14,6 +14,7 @@ import io.luna.game.model.object.GameObject;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.model.path.PathResult;
 import io.luna.game.model.path.PathResultType;
+import io.luna.game.model.path.Pathfinders;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +29,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 
 import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFactory;
 
@@ -397,9 +399,15 @@ public class WalkingNavigator {
      */
     public CompletableFuture<Deque<Position>> findPath(Position start, Position target,
                                                        GamePathfinder<Position> pathfinder, boolean async) {
+        return findPath(start, target, pathfinder::find, async);
+    }
+
+    private CompletableFuture<Deque<Position>> findPath(Position start, Position target,
+                                                       BiFunction<Position, Position, PathResult<Position>> find,
+                                                       boolean async) {
         CompletableFuture<PathResult<Position>> pathResultFuture = async
-                ? CompletableFuture.supplyAsync(() -> pathfinder.find(start, target), pool)
-                : CompletableFuture.completedFuture(pathfinder.find(start, target));
+                ? CompletableFuture.supplyAsync(() -> find.apply(start, target), pool)
+                : CompletableFuture.completedFuture(find.apply(start, target));
 
         CompletableFuture<Deque<Position>> pathFuture = pathResultFuture.thenApply(it -> {
             if (it.getType() == PathResultType.FAILED) {
@@ -437,10 +445,26 @@ public class WalkingNavigator {
      * @return A future that completes once the path has been computed and queued, or dropped.
      */
     CompletableFuture<Void> walk(Locatable destination, GamePathfinder<Position> pathfinder, boolean async) {
+        return queuePath(destination, pathfinder::find, async);
+    }
+
+    /**
+     * Approaches the first reachable line-of-sight attack tile using the ordinary player walk rules.
+     */
+    CompletableFuture<Void> walkIntoLineOfSight(Mob target, int range, boolean async) {
+        var pathfinder = Pathfinders.localForPlayer(mob);
+        int targetSize = Math.max(1, target.size());
+        return queuePath(target.getPosition(),
+                (start, end) -> pathfinder.findInLineOfSight(start, end, targetSize, range), async);
+    }
+
+    private CompletableFuture<Void> queuePath(Locatable destination,
+                                              BiFunction<Position, Position, PathResult<Position>> find,
+                                              boolean async) {
         Position start = mob.getPosition();
         NavigationRequest request = active;
         int generation = pathGeneration.incrementAndGet();
-        CompletableFuture<Deque<Position>> search = findPath(start, destination.abs(), pathfinder, async);
+        CompletableFuture<Deque<Position>> search = findPath(start, destination.abs(), find, async);
         CompletableFuture<Void> result = search.thenAcceptAsync(path -> {
                     if (isStale(start, request, generation)) {
                         return;

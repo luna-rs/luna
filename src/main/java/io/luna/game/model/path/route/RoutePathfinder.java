@@ -2,6 +2,7 @@ package io.luna.game.model.path.route;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
+import io.luna.game.model.collision.CollisionView;
 import io.luna.game.model.path.FallbackPathfinder;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.model.path.PathResult;
@@ -92,9 +93,38 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
 
         Route route = FINDERS.get().find(collisionManager.view(true), origin.getZ(), origin.getX(), origin.getY(),
                 target.getX(), target.getY(), size, extraFlag, strategy, true, MAX_WAYPOINTS);
-        if (!route.isSuccess() || route.getWaypoints().isEmpty()) {
+        return toPathResult(route);
+    }
+
+    /**
+     * Routes to the closest walkable tile with a clear attack from the supplied range. Movement and sight use
+     * the same collision view, and a failed search retains the usual closest-tile fallback.
+     */
+    public PathResult<Position> findInLineOfSight(Position origin, Position target, int targetSize, int range) {
+        if (!origin.isViewable(target)) {
+            return failed();
+        }
+        CollisionView view = collisionManager.view(true);
+        int x = target.getX();
+        int y = target.getY();
+        int level = origin.getZ();
+        // Match live reach: visibility uses the anchors and range uses the nearest footprint edges.
+        int before = Math.min(Position.VIEWING_DISTANCE, range + size - 1);
+        int after = Math.min(Position.VIEWING_DISTANCE, range + targetSize - 1);
+        Route route = FINDERS.get().find(view, level, origin.getX(), origin.getY(), x, y, size, extraFlag, strategy,
+                true, MAX_WAYPOINTS, (srcX, srcY) -> srcX >= x - before && srcX <= x + after &&
+                        srcY >= y - before && srcY <= y + after && (srcX != x || srcY != y) &&
+                        LineOfSight.hasLineOfSight(view, level, srcX, srcY, x, y, size, size, targetSize, targetSize, 0));
+        return toPathResult(route);
+    }
+
+    private static PathResult<Position> toPathResult(Route route) {
+        if (!route.isSuccess() || (route.isAlternative() && route.getWaypoints().isEmpty())) {
             // Either nothing was found, or the closest tile that could be reached is the one the mob is on.
             return failed();
+        }
+        if (route.getWaypoints().isEmpty()) {
+            return new PathResult<>(PathResultType.EMPTY, new ArrayDeque<>(0));
         }
 
         PathResultType type = route.isAlternative() ? PathResultType.PARTIAL : PathResultType.COMPLETE;
