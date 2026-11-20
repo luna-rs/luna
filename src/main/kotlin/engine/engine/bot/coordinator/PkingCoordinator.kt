@@ -1,7 +1,6 @@
 package engine.bot.coordinator
 
 import api.bot.action.PkClanPolicy
-import api.bot.action.PkLoadoutPreparation
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
 import api.predef.rand
@@ -59,8 +58,7 @@ object PkingCoordinator : BotCoordinator {
 
     /**
      * Preserves permanent purpose/styles/build and declines duplicate or unsafe sessions.
-     * Restricted Magic accounts use shared wanted-item acquisition or earn its funding before starting an outing.
-     * Other missing supplies enter the ordinary preparation stage.
+     * All recruits use the same preparation and supply purchases before travelling to the Wilderness.
      */
     internal fun getScript(bot: Bot, coverage: Boolean = false,
                            purpose: Purpose? = bot.preferences.pk?.purpose()): BotScript? {
@@ -68,14 +66,6 @@ object PkingCoordinator : BotCoordinator {
             !bot.preferences.canChooseActivity(BotActivity.PKING) || !ActionSafety.NON_COMBAT.allows(bot) ||
             (!coverage && bot.scriptStack.size() > 0) ||
             coverage && (!PkCoverage.eligible(bot) || !PkCoverage.safeToRecruit(bot))) return null
-        val preparation = PkLoadoutPreparation(bot, bot.actionHandler)
-        if (preparation.magicRestockRequired()) {
-            if (coverage) {
-                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.RUNES)
-                return null
-            }
-            return PkRuneRestocking.getScript(bot, preparation.magicSupplyRequirements().orEmpty())
-        }
         val solo = !coverage && PkClanPolicy.chooseSolo(bot)
         val clan = PkClanPolicy(bot, purpose)
         if (clan.clanOuting && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) {

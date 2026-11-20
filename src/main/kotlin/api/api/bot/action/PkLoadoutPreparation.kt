@@ -41,11 +41,12 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * Tests for any permanently assigned discipline with a carried weapon and its actual ammunition or spell cast.
      * Food exhaustion triggers a return to bank; no saved identity is changed because stock ran out.
      */
-    fun ready(): Boolean {
+    fun ready(allowMagic: Boolean = true): Boolean {
         val purposes = purposes()
         return clan.wearingCape() && purposes.isNotEmpty() && bot.inventory.any {
             it != null && Food.ID_TO_FOOD[it.id]?.heal?.let { heal -> heal > 0 } == true
-        } && purposes.any { selection.select(it, carriedOnly = true)?.gear?.get(Equipment.WEAPON) != null }
+        } && purposes.any { (allowMagic || it != BotGearPurpose.MAGIC) &&
+            selection.select(it, carriedOnly = true)?.gear?.get(Equipment.WEAPON) != null }
     }
 
     /**
@@ -63,13 +64,13 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     }
 
     /**
-     * A Magic profile short of fifty supplied casts can fall back only to its permitted melee discipline.
-     * Ranged-only profiles retain their ordinary departure rules.
+     * Hybrids short of casts prepare a legal melee or ranged kit. Mage-only profiles can procure a Magic kit.
      */
     private fun departurePurposes(spellbook: Spellbook): List<BotGearPurpose> {
         val purposes = purposes()
-        return if (BotGearPurpose.MAGIC in purposes && selection.select(BotGearPurpose.MAGIC, spellbook = spellbook) == null)
-            purposes.filter { it == BotGearPurpose.MELEE } else purposes
+        return if (purposes.size > 1 && BotGearPurpose.MAGIC in purposes &&
+            selection.select(BotGearPurpose.MAGIC, spellbook = spellbook) == null)
+            purposes.filterNot { it == BotGearPurpose.MAGIC } else purposes
     }
 
     /**
@@ -111,12 +112,11 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     }
 
     /**
-     * Directs a supply-starved Magic account to shared wanted-item acquisition when no physically owned melee fallback
-     * can be used. Stock in any eligible spellbook satisfies the fifty-cast departure requirement.
+     * Only Magic-exclusive profiles need rune restocking before another attempt. Stock in any eligible
+     * spellbook satisfies their fifty-cast departure requirement.
      */
-    fun magicRestockRequired(): Boolean = BotGearPurpose.MAGIC in purposes() &&
-        magicSpellbooks().none { selection.select(BotGearPurpose.MAGIC, spellbook = it) != null } &&
-        selection.select(BotGearPurpose.MELEE) == null
+    fun magicRestockRequired(): Boolean = purposes().singleOrNull() == BotGearPurpose.MAGIC &&
+        magicSpellbooks().none { selection.select(BotGearPurpose.MAGIC, spellbook = it) != null }
 
     /**
      * Keeps a supplied owned discipline before considering purchases for one essential weapon and its supplies.
@@ -136,7 +136,8 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
         }
         val supplied = purposes.firstNotNullOfOrNull { selection.select(it, spellbook = spellbook) }
         val required = supplied?.let(::requirements) ?: purposes.mapNotNull {
-            selection.select(it, desired = true, spellbook = spellbook, preferOwned = true)?.let(::requirements)
+            selection.select(it, desired = true, spellbook = spellbook, preferOwned = true,
+                preferCheapest = it == BotGearPurpose.MAGIC)?.let(::requirements)
         }.minByOrNull { candidate -> candidate.entries.sumOf { (id, amount) ->
             bot.world.economy.getPrice(id).coerceAtLeast(0).toDouble() *
                 (amount - selection.owned(id)).coerceAtLeast(0)
@@ -358,13 +359,6 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * Wilderness entry; a failed preparation finishes at the bank rather than retrying an impossible kit forever.
      */
     suspend fun prepare(): Boolean {
-        if (magicRestockRequired()) {
-            magicSupplyRequirements()?.takeIf { it.isNotEmpty() }?.let { required ->
-                BotTradeIntentions.recordSupplies(bot, required.map { (id, amount) -> Item(id, amount) })
-                required.forEach { (id, amount) -> bot.preferences.raiseWantedItemTarget(id, amount) }
-                return false
-            }
-        }
         for (spellbook in preparationSpellbooks()) {
             if (bot.state != EntityState.ACTIVE || !ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness()) return false
             if (plan(allowMissingClanCape = true, spellbook = spellbook) == null) {

@@ -65,8 +65,15 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
             // Quote all missing items together so funding does not repeatedly sell and return to the bank.
             val cost = quoteMissing(required)
             if (cost != null && coins() < cost && !fund(cost, required.keys)) return@withTimeoutOrNull false
+            if (exact.keys.any { it in Rune.ID_TO_RUNE }) {
+                val shopCost = quoteMissing(exact)
+                if (shopCost != null && shopCost in 1L..minOf(coins(), Int.MAX_VALUE.toLong())) {
+                    handler.shop.obtainWantedItems(exact, shopCost.toInt(), exact.keys.associateWith { shopCost })
+                }
+            }
             for ((id, amount) in required) {
                 if (!safe()) return@withTimeoutOrNull false
+                if (bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount) continue
                 val obtained = if (id in Food.ID_TO_FOOD && !BotTradeIntentions.hasLiteralSupplyDemand(bot, id)) {
                     val owned = selection.owned(id)
                     val missing = (amount - owned).coerceAtLeast(0)

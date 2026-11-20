@@ -5,6 +5,7 @@ import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkCombatObservations
 import api.bot.action.PkLoadoutPreparation
 import engine.bot.coordinator.PkCoverage
+import engine.bot.coordinator.PkRuneRestocking
 import engine.bot.coordinator.ScavengingCoordinator
 import api.bot.action.PkClanPolicy
 import api.bot.script.BotScript
@@ -112,9 +113,9 @@ class PkBotScript(bot: Bot, val duration: Duration,
     private var stalledTarget: Pair<Long, Long>? = null
 
     /**
-     * Keeps an under-supplied Magic profile's fallback outing on melee even if it later loots a few runes.
+     * Keeps a rune-short hybrid on its prepared physical styles until it packs its next kit.
      */
-    private var meleeOnlyOuting = false
+    private var allowMagic = true
 
     /**
      * Keeps resupply separate from a final departure, so an aborted trip cannot restart after prices change.
@@ -614,7 +615,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
     /**
      * Allows a stocked Magic outing to use its remaining casts while keeping a melee fallback on melee.
      */
-    internal fun allowsCombatPurpose(purpose: BotGearPurpose): Boolean = !meleeOnlyOuting || purpose == BotGearPurpose.MELEE
+    internal fun allowsCombatPurpose(purpose: BotGearPurpose): Boolean = allowMagic || purpose != BotGearPurpose.MAGIC
 
     /**
      * Keeps target-independent risk valuation outside bounded travel scans. A synchronous clan snapshot may
@@ -934,7 +935,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                         scouting.onAwait { target ->
                             huntingTravelInterrupted = true
                             travel.cancelAndJoin()
-                            if (canSearchWhileTravelling() && preparation.ready() && checkTarget(target)) {
+                            if (canSearchWhileTravelling() && preparation.ready(allowMagic) && checkTarget(target)) {
                                 bot.scriptStack.pushHead(CombatBotScript(bot, target, pkSession = this@PkBotScript))
                                 coroutineContext.ensureActive()
                             }
@@ -986,7 +987,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         val clanReady = !clan.clanOuting || clanReadyToHunt()
         val eligible = local.filter { permitsPursuit(it, clanReady) && wantsToAttack(it, clanReady) &&
             combatPolicy.canAttackWildernessPlayer(it) }
-        if (eligible.isEmpty() || !preparation.ready() || !combatPolicy.pkRiskBudget().withinBudget) return null
+        if (eligible.isEmpty() || !preparation.ready(allowMagic) || !combatPolicy.pkRiskBudget().withinBudget) return null
         return orderTargets(eligible).firstOrNull()
     }
 
@@ -1033,7 +1034,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             nextClanCallAt = now + 1.minutes.inWholeMilliseconds
             PkCoverage.live.requestClanmates(bot, this, now)
         }
-        if (preparationState != PreparationState.READY || !preparation.ready()) {
+        if (preparationState != PreparationState.READY || !preparation.ready(allowMagic)) {
             preparationState = if (preparationState == PreparationState.NOT_PREPARED ||
                 preparationState == PreparationState.PREPARING) PreparationState.PREPARING else PreparationState.RESTOCKING
             if (bot.inWilderness()) {
@@ -1042,15 +1043,18 @@ class PkBotScript(bot: Bot, val duration: Duration,
             }
             if (!ActionSafety.NON_COMBAT.allows(bot)) return false
             if (!preparation.prepare()) {
-                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.KIT)
+                val needsRunes = preparation.magicRestockRequired()
+                PkCoverage.live.recordFailure(bot, if (needsRunes) PkCoverage.Failure.RUNES else PkCoverage.Failure.KIT)
                 preparationState = PreparationState.LEAVING
-                if (!preparation.magicRestockRequired()) {
+                if (needsRunes) {
+                    PkRuneRestocking.getScript(bot, preparation.magicSupplyRequirements().orEmpty())
+                        ?.let { bot.scriptStack.softPushHead(it) }
+                } else {
                     ScavengingCoordinator.detour(bot, preparation)?.let { bot.scriptStack.softPushHead(it) }
                 }
                 return if (bot.inWilderness()) handler.combat.fleeWilderness() else true
             }
-            meleeOnlyOuting = bot.preferences.pk?.styles()?.uses(SKILL_MAGIC) == true &&
-                !preparation.hasCarriedMagicForDeparture()
+            allowMagic = preparation.hasCarriedMagicForDeparture()
             preparationState = PreparationState.READY
             return false
         }
@@ -1072,7 +1076,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         if (bot.inventory.isFull && !bot.combat.inCombat()) {
             val noted = handler.banking.noteWildernessItems(handler.banking.wildernessLootIds(), canVisit = ::allowsHuntingAt) {
                 !isTerminated() && !isPaused() && System.currentTimeMillis() <= expireAt &&
-                    preparationState == PreparationState.READY && preparation.ready() &&
+                    preparationState == PreparationState.READY && preparation.ready(allowMagic) &&
                     combatPolicy.pkRiskBudget().withinBudget
             }
             if (!noted && bot.inventory.isFull) preparationState = PreparationState.RESTOCKING

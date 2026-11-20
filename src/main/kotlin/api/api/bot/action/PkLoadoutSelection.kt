@@ -110,8 +110,9 @@ internal class PkLoadoutSelection(private val bot: Bot) {
         fun spellFor(weapon: Int): CombatSpellDefinition? = weaponSpells.getOrPut(weapon) {
             val compatible = spells.filter { spell -> spell.required.all {
                 it is RuneRequirement || it is EquipmentRequirement && it.id == weapon
-            } && (!purchasePlanning || CombatLoadout.runeCosts(spell, weapon).all { (id, amount) ->
-                (stock[id] ?: 0) >= amount.toLong() * minimumCasts || purchasable(id)
+            } && (!desired || CombatLoadout.runeCosts(spell, weapon).all { (id, amount) ->
+                (stock[id] ?: 0) >= amount.toLong() * minimumCasts ||
+                    if (purchasePlanning) purchasable(id) else stocked(id)
             }) }
             val supplied = compatible.filter { spell -> CombatLoadout.runeCosts(spell, weapon).all { (id, amount) ->
                 (stock[id] ?: 0) >= amount.toLong() * minimumCasts
