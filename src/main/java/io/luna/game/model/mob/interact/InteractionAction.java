@@ -6,15 +6,18 @@ import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent;
 import io.luna.game.event.impl.InteractableEvent;
+import io.luna.game.event.impl.NpcClickEvent;
 import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFirstClickEvent;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnNpcEvent;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.object.GameObject;
@@ -24,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * An {@link Action} that advances a player toward an interaction target and executes matched interaction listeners
@@ -47,6 +51,11 @@ import java.util.Set;
  * @author lare96
  */
 public final class InteractionAction extends Action<Player> {
+
+    /**
+     * Bounds server path searches while an NPC continues to wander during one click.
+     */
+    private static final int MAX_NPC_REROUTES = 3;
 
     /**
      * A one-tick action that executes deferred interaction listeners after the parent interaction has been prepared.
@@ -126,6 +135,14 @@ public final class InteractionAction extends Action<Player> {
     private Position lastAttemptPosition;
 
     /**
+     * The last NPC tile used for the client route or for a server reroute.
+     */
+    private Position routedNpcPosition;
+
+    private int npcReroutes;
+    private CompletableFuture<Void> npcRoute;
+
+    /**
      * @return {@link ActionPhase#INTERACTION}, before listeners can establish outgoing combat.
      */
     @Override
@@ -155,6 +172,7 @@ public final class InteractionAction extends Action<Player> {
         this.listeners = listeners;
         this.target = target;
         this.event = event;
+        routedNpcPosition = target instanceof Npc ? target.getPosition() : null;
         claimFirstAttack(this);
     } // todo navigation action can handle most of this?
 
@@ -223,6 +241,13 @@ public final class InteractionAction extends Action<Player> {
             return true;
         }
 
+        boolean normalNpcClick = target instanceof Npc && event instanceof NpcClickEvent &&
+                !(event instanceof AttackNpcEvent);
+        if (normalNpcClick && (target.getState() != EntityState.ACTIVE || !((Npc) target).isAlive() ||
+                !mob.getPosition().isViewable(target.getPosition()))) {
+            return true;
+        }
+
         CollisionManager collisionManager = mob.getWorld().getCollisionManager();
 
         InteractionPolicy trigger = null;
@@ -248,18 +273,47 @@ public final class InteractionAction extends Action<Player> {
         }
 
         if (!pending.isEmpty()) {
+            cancelNpcRoute();
             boolean instantEvent = event instanceof AttackNpcEvent || event instanceof PlayerFirstClickEvent ||
                     event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent || event instanceof PickupItemEvent;
             onReached(target instanceof Mob, instantEvent, trigger, pending);
             return true;
         } else if (mob.getWalking().isEmpty() && !listeners.isEmpty()) {
-            if(!retry) {
+            if (npcRoute != null && !npcRoute.isDone()) {
+                return false;
+            }
+            if (!retry) {
                 retry = true;
+                return false;
+            }
+            if (normalNpcClick && rerouteMovedNpc((Npc) target, listeners.getFirst().getPolicy())) {
                 return false;
             }
             onStanding();
             return true;
         } else return listeners.isEmpty();
+    }
+
+    /**
+     * Replaces an exhausted client route when the NPC has left the tile it was headed toward.
+     */
+    private boolean rerouteMovedNpc(Npc npc, InteractionPolicy policy) {
+        Position position = npc.getPosition();
+        if (position.equals(routedNpcPosition) || npcReroutes >= MAX_NPC_REROUTES ||
+                mob.getWalking().isLocked() || mob.getStatus().isImmobilized() || mob.getNavigator().isActive()) {
+            return false;
+        }
+        routedNpcPosition = position;
+        npcReroutes++;
+        npcRoute = mob.getNavigator().walkToNpcInteraction(npc, policy);
+        return true;
+    }
+
+    private void cancelNpcRoute() {
+        if (npcRoute != null) {
+            npcRoute.cancel(false);
+            npcRoute = null;
+        }
     }
 
     /**
@@ -298,6 +352,7 @@ public final class InteractionAction extends Action<Player> {
 
     @Override
     public void onFinished() {
+        cancelNpcRoute();
         mob.getCombat().finishFirstAttack(this);
     }
 
@@ -442,8 +497,11 @@ public final class InteractionAction extends Action<Player> {
      * @param target The new interaction target.
      */
     public void setTarget(Entity target) {
+        cancelNpcRoute();
         mob.getCombat().finishFirstAttack(this);
         this.target = target;
+        routedNpcPosition = target instanceof Npc ? target.getPosition() : null;
+        npcReroutes = 0;
         claimFirstAttack(this);
         retry = false;
     }

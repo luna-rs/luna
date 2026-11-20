@@ -7,6 +7,7 @@ import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
@@ -461,6 +462,19 @@ public class WalkingNavigator {
      */
     CompletableFuture<Void> walk(Locatable destination, GamePathfinder<Position> pathfinder, boolean async) {
         return queuePath(destination, pathfinder::find, async);
+    }
+
+    /**
+     * Queues an asynchronous local path to a moved NPC. The owning interaction still checks its live reach policy.
+     */
+    public CompletableFuture<Void> walkToNpcInteraction(Npc target, InteractionPolicy policy) {
+        if (policy.getType() == InteractionType.LINE_OF_SIGHT) {
+            return walkIntoLineOfSight(target, policy.getDistance(), true);
+        }
+        var pathfinder = Pathfinders.localForPlayer(mob);
+        return policy.getDistance() == 0
+                ? walk(target.getPosition(), pathfinder, true)
+                : walkToInteraction(target, Optional.empty(), pathfinder, true);
     }
 
     /**
