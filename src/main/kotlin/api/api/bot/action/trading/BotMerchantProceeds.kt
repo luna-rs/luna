@@ -2,7 +2,6 @@ package api.bot.action.trading
 
 import com.google.common.math.LongMath
 import engine.bot.economy.BotProductionUses
-import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
@@ -75,40 +74,30 @@ object BotMerchantProceeds {
     data class Purchase(val quantity: Int, val coins: Int)
 
     /**
-     * Shares batch pricing and projected capital checks with both merchant shop acquisition paths.
-     * Native recovery is examined once for the largest batch; smaller batches retain that conservative estimate.
+     * Quotes one shop purchase at current prices, with a small guide-backed allowance beyond funded demand.
      */
     fun shopPurchase(bot: Bot, shop: Shop, id: Int, maximum: Int, budget: Int,
                      resaleUnit: Long? = null, capital: BotMerchantCapital.Balance = BotMerchantCapital.snapshot(bot)): Purchase? {
         if (!BotMerchantCapital.active(bot) || shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) return null
         val slot = shop.items.computeIndexForId(id)
-        if (slot < 0 || shop.items[slot]?.isDynamic != false || maximum < 1 || budget < 1) return null
-        var low = 1
-        var high = minOf(maximum, shop.items.computeAmountForId(id), 100)
-        if (high < 1) return null
-        val base = ItemDefinition.ALL.retrieve(id).unnotedId.orElse(id)
-        val recovery = recoverable(bot, base, high)
+        val stock = if (slot >= 0) shop.items[slot] else null
+        if (stock == null || stock.isDynamic || !stock.itemDef.isTradeable || maximum < 1 || budget < 1) return null
+        val base = stock.unnotedItemDef.id()
+        if (!BotShopResale.canResell(base) || BotTradeIntentions.productionLimit(bot, base) != null) return null
+        val guide = minOf(BotShopResale.guide(bot.world, base).toLong(), resaleUnit ?: Long.MAX_VALUE)
+        val demand = BotShopResale.demand(bot, base)
+        val quiet = BotShopResale.quietBatch(base, bot.preferences.isMerchant)
+        val available = BotShopResale.available(shop.originalStock(slot), stock.amount)
+        val limit = minOf(maximum, available, 100, BotShopResale.remainingStock(bot, base),
+            (demand(1) + quiet.toLong()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
         val taxed = BotMerchantMarket.available(bot)
-        var funded = 0
-        while (low <= high) {
-            val quantity = (low + high) ushr 1
+        val margin = margin(bot)
+        for (quantity in limit downTo 1) {
             val cost = shop.computeBuyValue(id, quantity).orElse(-1)
-            if (cost > 0 && cost <= budget &&
-                bot.inventory.hasSpaceFor(Item(id, quantity)) && capital.permits(base, quantity, cost.toLong(), personal = false)) {
-                funded = quantity; low = quantity + 1
-            } else high = quantity - 1
-        }
-        // Whole-GP tax rounding need not be profitable for one unit even when a larger batch is profitable.
-        for (quantity in funded downTo 1) {
-            val cost = shop.computeBuyValue(id, quantity).orElse(-1)
-            val ceiling = ceiling(bot, base, quantity, Long.MAX_VALUE, recovery)
-            val saleLimit = resaleUnit?.let {
-                val value = net(LongMath.saturatedMultiply(it, quantity.toLong()), taxed)
-                value / 100L * 85L + value % 100L * 85L / 100L
-            }
-                ?: Long.MAX_VALUE
-            if (cost > 0 && cost <= budget && cost.toLong() <= LongMath.saturatedMultiply(ceiling, quantity.toLong()) &&
-                cost <= saleLimit) return Purchase(quantity, cost)
+            if (cost !in 1..budget || !bot.inventory.hasSpaceFor(Item(id, quantity)) ||
+                !capital.permitsShopPurchase(base, quantity, cost.toLong())) continue
+            val floor = BotShopResale.floor(cost, quantity, taxed, margin)
+            if (BotShopResale.permitsQuantity(quantity, demand(floor), quiet, guide, floor)) return Purchase(quantity, cost)
         }
         return null
     }

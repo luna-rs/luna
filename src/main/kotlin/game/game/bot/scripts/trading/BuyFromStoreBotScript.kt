@@ -1,7 +1,7 @@
 package game.bot.scripts.trading
 
-import api.bot.Suspendable.delay
 import api.bot.action.stockIdFor
+import api.bot.action.trading.BotShopResale
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotMerchantProceeds
 import api.bot.action.trading.BotMerchantCapital
@@ -319,13 +319,15 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
     private suspend fun spendSpeculatively(shops: List<Shop>, budget: Int): Int {
         if (!BotMerchantCapital.active(bot)) return 0
         val capital = BotMerchantCapital.snapshot(bot)
-        if (capital.cashRecovery || capital.electiveCoins < 1L) return 0
+        if ((capital.cashRecovery || capital.electiveCoins < 1L) && capital.stockingCoins < 1L) return 0
 
         val candidates = shops
             .associateWith { candidate ->
                 candidate.items.filterNotNull()
                     .filter { it.amount > 0 && !it.isDynamic && it.id != COINS_ID }
-                    .map { it.unnotedItemDef.id() }.distinct().filter { canBuyOne(candidate, it, budget) }
+                    .map { it.unnotedItemDef.id() }.distinct().filter {
+                        BotShopResale.remainingStock(bot, it) > 0 && canBuyOne(candidate, it, budget)
+                    }
             }
             .filterValues { it.isNotEmpty() }
         // Choose the desired affordable stock before its shop, retaining the supply category decision below.
@@ -399,34 +401,6 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             remainingBudget -= spent
         }
 
-        // A selected item might not have been able to consume its slice because it was too expensive, went out of
-        // stock, or could not fit. Give the remaining money another chance to be spent on the selected item set.
-        var madeProgress = true
-
-        while (remainingBudget > 0 && madeProgress) {
-            madeProgress = false
-
-            for (id in ShopPurchaseSelection.order(selectedItems) { shoppingWeight(it) }) {
-                if (remainingBudget < 1) {
-                    break
-                }
-
-                val spent = spendOnItem(
-                    shop = shop,
-                    id = id,
-                    maxAmount = Int.MAX_VALUE,
-                    speculative = true,
-                    budget = remainingBudget
-                )
-
-                if (spent > 0) {
-                    totalSpent += spent
-                    remainingBudget -= spent
-                    madeProgress = true
-                }
-            }
-        }
-
         return totalSpent
     }
 
@@ -476,7 +450,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             totalSpent += spent
             remainingBudget -= spent
             remainingAmount -= acquired
-            if (speculative) delay(1.seconds)
+            if (speculative) break
         }
 
         return totalSpent

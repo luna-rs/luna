@@ -5,11 +5,13 @@ import api.attr.getValue
 import api.attr.setValue
 import api.bot.action.stockIdFor
 import api.bot.action.trading.BotFoodDemand
+import api.bot.action.trading.BotMerchantCapital
+import api.bot.action.trading.BotMerchantProceeds
+import api.bot.action.trading.BotShopResale
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.NativeOutputDemand
 import api.bot.script.DynamicBotScript
-import api.bot.script.ProductionSaleGuard
 import api.predef.ext.rebalanceWantedItems
 import api.predef.ext.totalItemAmount
 import api.predef.rand
@@ -23,7 +25,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 
 /**
- * Uses a small independent purse to fill wants at a general store and resell profitably against funded demand.
+ * Uses a small independent purse to fill wants at a general store and buy surplus at a profit.
  * The follow-up runs after the purchasing activity so a recipe or filling script keeps its own budget and timing.
  *
  * @author lare96
@@ -92,16 +94,18 @@ class GeneralStoreShoppingScript private constructor(
     }
 
     /**
-     * A single batch priced from the current shop quote and the current executable buyer depth.
+     * A single batch priced from the current shop quote, guide margin and buyer depth.
      *
      * @author lare96
      */
     private data class Surplus(val id: Int, val stockId: Int, val amount: Int, val cost: Int,
-                               val floor: Long, val margin: Long)
+                               val floor: Long, val margin: Long, val funded: Boolean)
 
     private fun surplusQuote(budget: Int): Surplus? {
         if (budget < 1) return null
         val reserves = BotTradeIntentions.retainedStock(bot)
+        val capital = if (BotMerchantCapital.active(bot)) BotMerchantCapital.snapshot(bot) else null
+        val margin = BotMerchantProceeds.margin(bot)
         val cap = when (interest) {
             2 -> 60
             1 -> 30
@@ -111,39 +115,56 @@ class GeneralStoreShoppingScript private constructor(
             .filter { it.amount > 0 && !it.isDynamic && it.id != coins && it.itemDef.isTradeable }
             .mapNotNull { stock ->
                 val id = stock.itemDef.unnotedId.orElse(stock.id)
-                if (bot.totalItemAmount(id) < (reserves[id] ?: 0) ||
-                    BotTradeIntentions.productionLimit(bot, id) != null ||
-                    BotTradeManager.saleableAmount(bot, id) > 0) return@mapNotNull null
-                val depth = NativeOutputDemand.depth(bot, id)
-                val maximum = minOf(stock.amount, cap, depth.maxOfOrNull { it.quantity } ?: 0)
+                if (!BotShopResale.canResell(id) || BotTradeIntentions.productionLimit(bot, id) != null) return@mapNotNull null
+                val stocking = bot.preferences.isMerchant && BotShopResale.target(id) > 0
+                if (!stocking && (bot.totalItemAmount(id) < (reserves[id] ?: 0) ||
+                    BotTradeManager.saleableAmount(bot, id) > 0)) return@mapNotNull null
+                val slots = shop.items.computeIndexForId(stock.id)
+                if (slots < 0) return@mapNotNull null
+                val available = BotShopResale.available(shop.originalStock(slots), stock.amount)
+                val demand = BotShopResale.demand(bot, id)
+                val guide = BotShopResale.guide(bot.world, id).toLong()
+                val quiet = BotShopResale.quietBatch(id, bot.preferences.isMerchant)
+                val maximum = minOf(available, cap, BotShopResale.remainingStock(bot, id),
+                    (demand(1) + quiet.toLong()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
                 (maximum downTo 1).firstNotNullOfOrNull { amount ->
                     if (!bot.inventory.hasSpaceFor(Item(stock.id, amount))) return@firstNotNullOfOrNull null
                     val cost = shop.computeBuyValue(stock.id, amount).orElse(-1)
-                    if (cost !in 1..budget) return@firstNotNullOfOrNull null
-                    val floor = ProductionSaleGuard.minimumGross(cost.toLong(), amount.toLong(), taxed = false)
-                    val bid = depth.firstOrNull { it.quantity >= amount && it.unitPrice >= floor }
-                        ?: return@firstNotNullOfOrNull null
-                    Surplus(id, stock.id, amount, cost, floor, (bid.unitPrice - floor + 1L) * amount)
+                    if (cost !in 1..budget || capital?.permitsShopPurchase(id, amount, cost.toLong()) == false)
+                        return@firstNotNullOfOrNull null
+                    val floor = BotShopResale.floor(cost, amount, taxed = false, margin)
+                    val funded = demand(floor)
+                    if (!BotShopResale.permitsQuantity(amount, funded, quiet, guide, floor))
+                        return@firstNotNullOfOrNull null
+                    Surplus(id, stock.id, amount, cost, floor, (guide - floor).coerceAtLeast(0L) * amount +
+                        minOf(amount, funded), funded >= amount)
                 }
             }.maxByOrNull { it.margin }
     }
 
-    private fun buySurplus(budget: Int) {
+    private suspend fun buySurplus(budget: Int) {
         if (!isActionSafe()) return
         val quote = surplusQuote(minOf(budget, bot.inventory.computeAmountForId(coins))) ?: return
         val identity = UUID.randomUUID().toString()
         val deadline = System.currentTimeMillis() + 120_000L
-        if (!NativeOutputDemand.reserve(bot, identity, mapOf(quote.id to quote.amount.toLong()),
-                deadline, mapOf(quote.id to quote.floor))) return
-        if (handler.shop.buyQuoted(shop, quote.stockId, quote.amount, quote.cost)) {
-            val sale = NativeProductionSaleScript.createForOutput(bot, identity, quote.id, quote.amount,
-                quote.floor, deadline)
+        val quantity = mapOf(quote.id to quote.amount.toLong())
+        val reserved = if (quote.funded) NativeOutputDemand.reserve(bot, identity, quantity,
+            deadline, minimumPrices = mapOf(quote.id to quote.floor))
+        else NativeOutputDemand.track(bot, identity, quantity, deadline)
+        if (!reserved) return
+        val before = bot.inventory.computeNonDynamicAmountForId(quote.stockId)
+        handler.shop.buyQuoted(shop, quote.stockId, quote.amount, quote.cost)
+        val acquired = bot.inventory.computeNonDynamicAmountForId(quote.stockId) - before
+        if (acquired > 0) {
+            val sale = if (quote.funded) NativeProductionSaleScript.createForOutput(bot, identity, quote.id,
+                acquired, quote.floor, deadline) else null
             if (sale != null) {
                 bot.scriptStack.softPushHead(sale)
                 return
             }
         }
         NativeOutputDemand.release(identity)
+        if (acquired > 0) handler.banking.travelToBankDepositAll()
     }
 
     override suspend fun finish() {

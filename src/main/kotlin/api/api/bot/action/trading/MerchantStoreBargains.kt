@@ -7,12 +7,9 @@ import api.bot.isRealBot
 import api.bot.script.BotScript.ActionSafety
 import api.predef.world
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import io.luna.Luna
 import io.luna.game.model.EntityState
 import io.luna.game.model.World
-import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
-import io.luna.game.model.def.ItemEconomyDefinition
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
@@ -20,7 +17,7 @@ import io.luna.game.model.item.shop.ShopManager
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Samples sold-in general-store stock without repeating a world-wide shop scan for each merchant.
+ * Samples stock sold into NPC shops without repeating a world-wide shop scan for each merchant.
  * One shared cursor visits a bounded number of slots, with a separate global valuation and dispatch allowance.
  * Expensive personal reserve checks happen only after a candidate has passed the cheap stock and price checks.
  * A quote reserves no stock or money; the purchase script must revalidate immediately before the native purchase.
@@ -33,7 +30,6 @@ object MerchantStoreBargains {
     internal const val MAX_QUOTES_PER_POLL = 2
     internal const val MAX_QUOTES_PER_TICK = 4
     private const val MAX_BUDGET = 25_000
-    private const val MIN_PROFIT = 100L
     private const val QUOTE_LIFETIME_MILLIS = 120_000L
     private const val CACHE_LIFETIME_MILLIS = 60_000L
     private const val ADMISSION_IDLE_MILLIS = 4_200L
@@ -105,7 +101,6 @@ object MerchantStoreBargains {
         if (budget < 1) return null
         var examined = 0
         var valued = 0
-        var retained: Map<Int, Int>? = null
         while (examined < MAX_SLOTS_PER_POLL && slotsUsed < MAX_SLOTS_PER_TICK &&
             valued < MAX_QUOTES_PER_POLL && quotesUsed < MAX_QUOTES_PER_TICK) {
             val shop = cachedShops[shopCursor]
@@ -123,9 +118,7 @@ object MerchantStoreBargains {
             valued++
             quotesUsed++
             val candidate = quote(bot, shop, item.id, Int.MAX_VALUE, budget, Long.MAX_VALUE,
-                nowMillis + QUOTE_LIFETIME_MILLIS) {
-                retained ?: BotTradeIntentions.retainedStock(bot).also { retained = it }
-            } ?: continue
+                nowMillis + QUOTE_LIFETIME_MILLIS) ?: continue
             dispatchesUsed++
             return candidate
         }
@@ -141,9 +134,7 @@ object MerchantStoreBargains {
         if (!permitted(bot) || nowMillis >= deal.expiresAt || maxQuantity < 1 || budget < 1 ||
             world.shops.lookup(deal.shop.name).orElse(null) !== deal.shop) return null
         return quote(bot, deal.shop, deal.itemId, minOf(maxQuantity, deal.quantity),
-            minOf(budget, deal.budget, spendingLimit(bot)), deal.resaleUnit, deal.expiresAt) {
-            BotTradeIntentions.retainedStock(bot)
-        }
+            minOf(budget, deal.budget, spendingLimit(bot)), deal.resaleUnit, deal.expiresAt)
     }
 
     /**
@@ -163,8 +154,9 @@ object MerchantStoreBargains {
 
     private fun spendingLimit(bot: Bot): Int {
         val capital = BotMerchantCapital.snapshot(bot)
-        if (capital.cashRecovery) return 0
-        return minOf(MAX_BUDGET.toLong(), bot.itemTracker.count(995).toLong() / 5, capital.electiveCoins).toInt()
+        val elective = if (capital.cashRecovery) 0L else capital.electiveCoins
+        return minOf(MAX_BUDGET.toLong(), bot.itemTracker.count(995).toLong() / 5,
+            maxOf(elective, capital.stockingCoins)).toInt()
     }
 
     private fun refreshShops(nowMillis: Long) {
@@ -180,53 +172,25 @@ object MerchantStoreBargains {
         if (nextIndex < 0 || slotCursor !in 0 until refreshed[nextIndex].items.capacity()) slotCursor = 0
     }
 
-    private fun eligibleShop(shop: Shop): Boolean = !shop.isGeneralStore && shop.currency == Currency.COINS &&
+    private fun eligibleShop(shop: Shop): Boolean = shop.currency == Currency.COINS &&
         shop.buyPolicy == BuyPolicy.ALL && shop.npcSellers.isNotEmpty()
 
     private fun eligibleItem(id: Int): Boolean {
         val definition = ItemDefinition.ALL.get(id).orElse(null) ?: return false
         val base = definition.unnotedId.orElse(id)
-        return base != 995 && base != 0 && definition.isTradeable
+        return definition.isTradeable && BotShopResale.canResell(base)
     }
 
-    private fun knownGuide(id: Int): Long = world.economy.prices[id]?.price?.toLong()
-        ?: ItemEconomyDefinition.ALL.get(id).orElse(null)?.initialPrice?.toLong() ?: 0L
-
     private fun quote(bot: Bot, shop: Shop, id: Int, requested: Int, budget: Int, resaleCeiling: Long,
-                      expiresAt: Long, reserves: () -> Map<Int, Int>): Deal? {
+                      expiresAt: Long): Deal? {
         if (budget < 1 || !eligibleShop(shop) || !eligibleItem(id)) return null
         val slot = shop.items.computeIndexForId(id)
         if (slot < 0 || shop.isOriginallyStocked(slot)) return null
         val stock = shop.items[slot] ?: return null
-        if (stock.amount < 1 || stock.isDynamic) return null
-        val definition = stock.unnotedItemDef
-        val base = definition.id()
-        val guide = knownGuide(base)
-        if (guide <= 0) return null
-        val resale = minOf(resaleCeiling, guide * 4 / 5)
-        if (resale <= 0) return null
-        val note = definition.notedId.orElse(-1)
-        val owned = bot.itemTracker.count(base).toLong() +
-            if (note >= 0 && note != base) bot.itemTracker.count(note).toLong() else 0L
-        val stashLimit = if (stock.itemDef.isStackable) 200 else 26
-        val limit = minOf(requested.toLong(), stock.amount.toLong(), if (stock.itemDef.isStackable) 100L else 26L,
-            (stashLimit - owned).coerceAtLeast(0)).toInt()
-        if (limit < 1) return null
-        val purchase = BotMerchantProceeds.shopPurchase(bot, shop, id, limit, budget, resale) ?: return null
-        val quantity = purchase.quantity
-        val cost = purchase.coins
-        if (quantity == 0) return null
-        val minimumStackValue = Luna.settings().bots().merchantSaleMinimumStackValue()
-        if (quantity * resale - cost < MIN_PROFIT || (owned + quantity) * resale <= minimumStackValue) return null
-        // New usable gear can become a retained personal copy after purchase, even when it is not currently owned.
-        val personalCopy = EquipmentDefinition.ALL.get(base).orElse(null)?.let {
-            if (it.meetsAllRequirements(bot)) 1 else 0
-        } ?: 0
-        val retained = maxOf(reserves()[base] ?: 0, personalCopy).toLong()
-        val resaleStock = (owned + quantity - retained).coerceAtLeast(0)
-        val acquiredForResale = minOf(quantity.toLong(), resaleStock)
-        if (BotMerchantProceeds.net(acquiredForResale * resale, BotMerchantMarket.available(bot)) - cost < MIN_PROFIT ||
-            resaleStock * resale <= minimumStackValue) return null
-        return Deal(shop, id, quantity, budget, resale, expiresAt)
+        val base = stock.unnotedItemDef.id()
+        if (BotTradeIntentions.productionLimit(bot, base) != null) return null
+        val resale = minOf(resaleCeiling, BotShopResale.guide(bot.world, base).toLong())
+        val purchase = BotMerchantProceeds.shopPurchase(bot, shop, id, requested, budget, resale) ?: return null
+        return Deal(shop, id, purchase.quantity, budget, resale.coerceAtLeast(1L), expiresAt)
     }
 }

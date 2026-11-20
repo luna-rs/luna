@@ -15,7 +15,7 @@ import io.luna.game.model.mob.varp.PersistentVarp
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Visits a real NPC seller for one funded batch, then hands the acquired goods to a bounded native sale.
+ * Visits an NPC shop, then banks the stock or hands it to a funded native sale.
  *
  * @author lare96
  */
@@ -43,6 +43,10 @@ internal class NativeShopProfitScript(bot: Bot, private val deal: NativeShopOppo
             val acquired = bot.inventory.computeNonDynamicAmountForId(quote.stockId) - before
             val spent = cashBefore - wallet()
             if (acquired < 1 || spent !in 1..quote.cost) return@withTimeoutOrNull
+            if (!quote.funded) {
+                handler.banking.travelToBankDepositAll()
+                return@withTimeoutOrNull
+            }
             val floor = maxOf(quote.floor, (spent.toLong() + acquired - 1L) / acquired)
             val saleUntil = System.currentTimeMillis() + 180_000L
             val sale = NativeProductionSaleScript.create(bot,

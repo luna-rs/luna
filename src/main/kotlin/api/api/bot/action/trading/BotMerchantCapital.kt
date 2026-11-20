@@ -97,6 +97,9 @@ object BotMerchantCapital {
         val electiveCoins: Long get() = if (busy) 0L else minOf((coins - reservedCoins).coerceAtLeast(0L),
             (capital / 4L - exposure).coerceAtLeast(0L))
         val stockHeavy: Boolean get() = exposure > 0L && electiveCoins == 0L
+        val stockingCoins: Long get() = if (!bot.preferences.isMerchant || busy ||
+            coins < BotTradeManager.MINIMUM_OFFER_VALUE) 0L
+            else minOf(coins / 20L, (coins - reservedCoins).coerceAtLeast(0L))
         val cashRecovery: Boolean get() = coins < BotTradeManager.MINIMUM_OFFER_VALUE ||
             coins < maxOf(requiredCoins, (capital.toDouble() * (1.0 - fraction)).toLong())
 
@@ -111,6 +114,13 @@ object BotMerchantCapital {
         fun permits(id: Int, quantity: Int, cost: Long, personal: Boolean = true): Boolean {
             return permitsQuantity(id, quantity, cost, if (personal) personalDeficit(id) else 0L, personal)
         }
+
+        /**
+         * Allows a small cash-funded restock of useful default stock when guide marks constrain speculative capital.
+         */
+        fun permitsShopPurchase(id: Int, quantity: Int, cost: Long): Boolean =
+            quantity > 0 && cost > 0 && (BotShopResale.target(id) > 0 && cost <= stockingCoins ||
+                !cashRecovery && permits(id, quantity, cost, personal = false))
 
         private fun permitsQuantity(id: Int, quantity: Int, cost: Long, personalLimit: Long, personal: Boolean): Boolean {
             if (busy || quantity < 1 || cost < 0L || cost > coins) return false

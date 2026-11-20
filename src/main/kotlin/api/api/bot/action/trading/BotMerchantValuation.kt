@@ -4,6 +4,7 @@ import api.predef.*
 import engine.bot.gear.BotEquipmentPreferences
 import engine.bot.economy.BotProductionUses
 import game.skill.magic.lowHighAlch.AlchemyType
+import io.luna.game.model.World
 import io.luna.game.model.def.ItemEconomyDefinition
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
@@ -22,7 +23,9 @@ object BotMerchantValuation {
     /**
      * Reads a guide without registering unused items as observed economy prices.
      */
-    fun peekGuide(id: Int): Long {
+    fun peekGuide(id: Int): Long = peekGuide(world, id)
+
+    internal fun peekGuide(world: World, id: Int): Long {
         val definition = itemDef(id)
         val base = definition.unnotedId.orElse(id)
         val observed = world.economy.prices[base]?.price?.toLong()

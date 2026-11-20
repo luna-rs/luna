@@ -44,7 +44,7 @@ internal object MerchantWork {
 
     fun script(bot: Bot, capital: BotMerchantCapital.Balance? = null,
                now: Long = System.currentTimeMillis()): BotScript? {
-        if (capital?.busy == true || capital?.stockHeavy == true || !bot.isRealBot() ||
+        if (capital?.busy == true || !bot.isRealBot() ||
             bot.isTemporary || bot.isConnectedPlayer || !BotMarketPreference.profitSeeking(bot) ||
             now < bot.nextProfitCheck || bot.state != EntityState.ACTIVE ||
             bot.inWilderness() || !ActionSafety.NON_COMBAT.allows(bot)) return null
@@ -64,11 +64,11 @@ internal object MerchantWork {
         bot.nextProfitCheck = now + 20_000L + jitter
 
         val ids = NativeOutputDemand.candidateIds(world)
-        if (ids.isEmpty()) return null
-        val canSkill = bot.preferences.canChooseActivity(BotActivity.PROFIT_SKILLS) &&
+        val canSkill = capital?.stockHeavy != true && bot.preferences.canChooseActivity(BotActivity.PROFIT_SKILLS) &&
             bot.preferences.activities[BotActivity.PROFIT_SKILLS]?.let { it.isFinite() && it > 0.0 } == true
         val production = if (canSkill && capital?.cashRecovery != true) NativeProductionOpportunities.merchantHint(bot) else 0.0
-        val shops = if (capital?.cashRecovery == true) null else NativeShopOpportunities.preview(bot, ids, now, capital)
+        val shops = if (capital?.cashRecovery == true && capital.stockingCoins < 1L) null
+            else NativeShopOpportunities.preview(bot, ids, now, capital)
         val gathering = if (canSkill) gather(bot, ids.toSet()) else null
         val exponent = 0.5 + bot.personality.intelligence.coerceIn(0.0, 1.0)
         val work = linkedMapOf<() -> BotScript?, Double>()

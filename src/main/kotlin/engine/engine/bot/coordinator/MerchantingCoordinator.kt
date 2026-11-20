@@ -74,7 +74,7 @@ object MerchantingCoordinator : BotCoordinator {
         if (bot.preferences.isMerchant) {
             val capital = BotMerchantCapital.snapshot(bot)
             val selling = sellingPurpose(bot)
-            if ((selling == null || !capital.cashRecovery && !capital.stockHeavy) &&
+            if ((selling == null || !capital.cashRecovery && !capital.stockHeavy || capital.stockingCoins > 0L) &&
                 !capital.busy) {
                 MerchantWork.script(bot, capital)?.let {
                     bot.scriptStack.push(it)
