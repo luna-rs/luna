@@ -67,9 +67,6 @@ public class BotBrain {
         if (ScavengingCoordinator.INSTANCE.canDispatch(bot)) {
             return ScavengingCoordinator.INSTANCE;
         }
-        if (bot.getPreferences().getRuneRunning().isIntroductory() && RuneRunningCoordinator.INSTANCE.canDispatch(bot)) {
-            return RuneRunningCoordinator.INSTANCE;
-        }
         BotScript resourceRelief = BankResourceCoordinator.select(bot);
         if (resourceRelief != null) {
             return owner -> owner.getScriptStack().push(resourceRelief);
@@ -89,7 +86,10 @@ public class BotBrain {
         if (furnaceRepair != null) {
             return owner -> owner.getScriptStack().push(furnaceRepair);
         }
-        BotScript runeCrafter = RuneRunningCoordinator.INSTANCE.introductoryCrafterScript(bot);
+        if (RuneRunningCoordinator.INSTANCE.canDispatch(bot)) {
+            return RuneRunningCoordinator.INSTANCE;
+        }
+        BotScript runeCrafter = RuneRunningCoordinator.INSTANCE.idleCrafterScript(bot);
         if (runeCrafter != null) {
             return owner -> owner.getScriptStack().push(runeCrafter);
         }

@@ -1,22 +1,21 @@
 package game.bot.scripts
 
 import api.bot.Suspendable.delay
+import api.bot.action.BotActionHandler.Companion.WEB_WALK_ATTEMPTS
 import api.bot.action.trading.RuneRunningTrade
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
-import api.bot.social.BotConversations
 import api.bot.social.SocialBotScript
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.Zone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.RuneRunningCoordinator
-import engine.bot.coordinator.MerchantingCoordinator
 import engine.bot.coordinator.RuneRunningCoordinator.BATCH
 import engine.bot.coordinator.RuneRunningCoordinator.COINS
-import engine.bot.coordinator.RuneRunningCoordinator.NATURE_FARE
-import game.skill.runecrafting.enterAltar.Altar
+import engine.bot.coordinator.RuneRunningCoordinator.Route
 import game.obj.entrances.Zanaris
+import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -27,9 +26,8 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Carries real essence between a bank and a funded skiller's outside-ruins exchange point.
- * Runners never craft or enter an altar. Their first load can be funded once through a native noted-essence gift;
- * subsequent deliveries receive the actual crafted rune output and a replacement load of noted essence.
+ * Delivers one loose load from a bank and returns there to unnote the replacement.
+ * Each confirmed delivery earns an agreed fee from the crafter's carried coins.
  *
  * @author lare96
  */
@@ -37,27 +35,24 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
 
     val altar = data.altar
     val essenceId = data.essenceId
-    private val essence get() = essenceId
     val introductory = data.introductory
+    internal val minimumFee = maxOf(data.minimumFee, RuneRunningCoordinator.fare(altar) + 1)
+    internal var paidTrips = data.paidTrips
+    private val route = Route(altar, essenceId)
     private val deadline = data.deadline
-    private var seedUsed = data.seedUsed
     private var introducedHost = data.introducedHost
     private var prepared = false
     private var failures = 0
     private var delivery: RuneRunningCoordinator.Delivery? = null
-    private var guardsInstalled = false
-    private var previousCombatDisabled = false
-    private var failed = false
+    private var previousCombatDisabled: Boolean? = null
 
-    /**
-     * Creates a bounded job; offline time cannot renew its absolute expiry.
-     */
     constructor(bot: Bot, altar: Altar, introductory: Boolean, duration: Duration,
-                essenceId: Int = RuneRunningCoordinator.essence(altar)) : this(bot, RunnerData().also {
+                essenceId: Int = RuneRunningCoordinator.essence(altar), minimumFee: Int = 1) : this(bot, RunnerData().also {
         it.altar = altar
         it.essenceId = essenceId
         it.introductory = introductory
         it.deadline = System.currentTimeMillis() + duration.inWholeMilliseconds
+        it.minimumFee = minimumFee
     })
 
     override val allowsCombatResponse = false
@@ -65,20 +60,15 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
 
     override fun allowsLoot(item: GroundItem): Boolean = false
 
-    override fun canSocialize(): Boolean = delivery?.dialogue?.let {
-        (!ending() || it.acknowledging) && it.canSocialize(bot)
-    } == true
+    override fun canSocialize(): Boolean = delivery?.dialogue?.canSocialize(bot) == true
 
     override suspend fun init(resumed: Boolean): Boolean {
-        if (ending() || !RuneRunningCoordinator.validEssence(altar, essence) ||
-            RuneRunningCoordinator.reserve(bot, altar, essence) == null) return true
-        if (!guardsInstalled) {
-            previousCombatDisabled = bot.combat.isDisabled
-            bot.combat.isDisabled = true
-            guardsInstalled = true
-        }
+        if (ending() || !RuneRunningCoordinator.attach(this)) return true
+        previousCombatDisabled = bot.combat.isExplicitlyDisabled
+        bot.combat.isDisabled = true
         bot.combat.target = null
-        prepared = bot.inventory.computeAmountForId(essence) == BATCH && bot.position.isWithinDistance(altar.exit, 3)
+        prepared = bot.inventory.computeAmountForId(essenceId) == BATCH &&
+            RuneRunningCoordinator.atMeeting(bot, route)
         return false
     }
 
@@ -88,7 +78,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
     override suspend fun run(): Boolean {
         bot.combat.target = null
         if (bot.combat.inCombat()) {
-            RuneRunningCoordinator.release(bot)
+            RuneRunningCoordinator.release(this)
             withTimeoutOrNull(30.seconds) {
                 while (bot.isAlive && bot.combat.inCombat()) {
                     handler.combat.fleeCombat()
@@ -98,7 +88,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
             bankEarnings()
             return true
         }
-        if (ending() || !RuneRunningCoordinator.runnerEligible(bot) || RuneRunningCoordinator.host(bot) == null) {
+        if (ending() || !RuneRunningCoordinator.hasWork(this)) {
             bankEarnings()
             return true
         }
@@ -107,53 +97,38 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
             prepared = true
         }
         val reached = withTimeoutOrNull(RuneRunningCoordinator.tripTimeout(altar)) {
-            handler.webWalkTo(altar.exit, radius = 2, bank = BankAccess.NONE, fallback = false)
+            handler.webWalkTo(altar.exit, radius = 2, attempts = WEB_WALK_ATTEMPTS,
+                bank = BankAccess.NONE, fallback = false)
         } == true
         if (!reached || !isActionSafe(ActionSafety.NON_COMBAT)) return failedAttempt()
-        val needsSeed = bot.inventory.computeAmountForId(essence) < BATCH
-        if (needsSeed && seedUsed) return true
-        // A busy host may be serving another reserved runner. Bound waiting independently of trade-screen timeouts.
+
         val agreement = withTimeoutOrNull(2.minutes) {
-            var next: RuneRunningCoordinator.Delivery? = null
-            while (!ending() && RuneRunningCoordinator.host(bot) != null &&
-                isActionSafe(ActionSafety.NON_COMBAT) && next == null) {
-                next = RuneRunningCoordinator.request(bot, needsSeed)
-                if (next == null) delay(2.seconds)
+            while (!ending() && RuneRunningCoordinator.hasWork(this@RuneRunnerBotScript) &&
+                isActionSafe(ActionSafety.NON_COMBAT)) {
+                RuneRunningCoordinator.requestDelivery(this@RuneRunnerBotScript)?.let { return@withTimeoutOrNull it }
+                delay(2.seconds)
             }
-            next
+            null
         } ?: return failedAttempt()
         delivery = agreement
-        RuneRunningCoordinator.start(agreement, bot)
-        val success = try {
-            val discussed = agreement.dialogue.beforeTrade(bot, introducedHost != agreement.crafter.username)
-            if (agreement.dialogue.introductionDelivered) introducedHost = agreement.crafter.username
-            // Consume the gift allowance only after the spoken terms, before its native trade can complete.
-            if (discussed && agreement.seed) seedUsed = true
-            val exchanged = discussed && RuneRunningTrade.exchange(bot, agreement.crafter,
-                agreement.runnerGives, agreement.crafterGives) {
+        try {
+            if (agreement.dialogue.beforeTrade(bot, introducedHost != agreement.crafter.username)) {
+                introducedHost = agreement.crafter.username
+                RuneRunningTrade.exchange(bot, agreement.crafter, agreement.runnerGives, agreement.crafterGives) {
                     !ending() && RuneRunningCoordinator.valid(agreement)
+                }
+                agreement.dialogue.afterTrade(bot)
             }
-            agreement.dialogue.afterTrade(bot, exchanged, leaving = ending())
-            exchanged
         } finally {
-            agreement.dialogue.close()
-            RuneRunningCoordinator.complete(agreement, bot)
+            RuneRunningCoordinator.finishDelivery(agreement, bot)
             delivery = null
         }
-        if (!success) return failedAttempt()
-        if (agreement.dialogue.hostFinished) {
-            bankEarnings()
-            return true
-        }
+        if (!agreement.paid) return failedAttempt()
         failures = 0
         prepared = false
         return false
     }
 
-    /**
-     * Banks earned runes and unnotes replacement essence through ordinary banking controls.
-     * Nature trips carry their real return fare; Cosmic trips retain their owned dramen staff for native entry.
-     */
     private suspend fun pack(): Boolean = withTimeoutOrNull(RuneRunningCoordinator.tripTimeout(altar)) {
         val previous = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)
         try {
@@ -161,32 +136,21 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
                 !handler.banking.depositInventory() || !handler.equipment.unequipAll() ||
                 !handler.banking.depositInventory()) return@withTimeoutOrNull false
             handler.banking.clickBankingMode(false)
-            if (altar == Altar.COSMIC && (!handler.banking.withdraw(Item(Zanaris.STAFF)) ||
-                    !bot.inventory.contains(Zanaris.STAFF))) return@withTimeoutOrNull false
-            if (altar == Altar.NATURE) {
-                if (bot.bank.computeAmountForId(COINS) < NATURE_FARE ||
-                    !handler.banking.withdraw(Item(COINS, NATURE_FARE)) ||
-                    bot.inventory.computeAmountForId(COINS) != NATURE_FARE) return@withTimeoutOrNull false
-            }
-            if (bot.bank.computeAmountForId(essence) >= BATCH) {
-                if (!handler.banking.withdraw(Item(essence, BATCH)) ||
-                    bot.inventory.computeAmountForId(essence) != BATCH) return@withTimeoutOrNull false
-            } else if (seedUsed) return@withTimeoutOrNull false
-            isActionSafe(ActionSafety.NON_COMBAT)
+            if (altar == Altar.COSMIC && !handler.banking.withdraw(Item(Zanaris.STAFF))) return@withTimeoutOrNull false
+            val fare = RuneRunningCoordinator.fare(altar)
+            if (fare > 0 && !handler.banking.withdraw(Item(COINS, fare))) return@withTimeoutOrNull false
+            if (!handler.banking.withdraw(Item(essenceId, BATCH)) ||
+                bot.inventory.computeAmountForId(essenceId) != BATCH) return@withTimeoutOrNull false
         } finally {
             if (bot.bank.isOpen) handler.banking.clickBankingMode(previous != 0)
             bot.overlays.closeWindows()
         }
+        (altar != Altar.COSMIC || handler.equipment.equip(Zanaris.STAFF)) && isActionSafe(ActionSafety.NON_COMBAT)
     } == true
 
-    /**
-     * A failed trip cannot monopolize the base activity forever. Owned partial stock remains bankable.
-     */
     private suspend fun failedAttempt(): Boolean {
-        prepared = false
-        failures++
-        if (failures >= 3 || ending()) {
-            failed = failures >= 3
+        prepared = prepared && bot.inventory.computeAmountForId(essenceId) == BATCH
+        if (++failures >= 2 || ending() || !RuneRunningCoordinator.hasWork(this)) {
             bankEarnings()
             return true
         }
@@ -205,54 +169,38 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
         }
     }
 
-    /**
-     * Nature's supported surface loop uses Draynor rather than treating the closed Shilo gate as bank access.
-     */
     private suspend fun openBank(): Boolean {
+        if (bot.bank.isOpen) return true
         if (altar == Altar.NATURE && !handler.webWalkTo(Zone.DRAYNOR, bank = BankAccess.NONE, fallback = false))
             return false
-        return handler.banking.travelToBankOpen()
+        val bank = handler.webWalkToNearestBank(attempts = WEB_WALK_ATTEMPTS, fallback = false) ?: return false
+        return handler.banking.open(bank)
     }
 
     override fun paused() {
-        delivery?.dialogue?.close()
-        BotConversations.cancel(bot)
-        RuneRunningCoordinator.release(bot)
+        RuneRunningCoordinator.release(this)
         bot.navigator.cancel()
         bot.walking.clear()
     }
 
     override suspend fun finish() {
-        delivery?.dialogue?.close()
-        BotConversations.cancel(bot)
-        delivery?.let { RuneRunningCoordinator.complete(it, bot) }
-        delivery = null
-        RuneRunningCoordinator.release(bot)
-        if (!isPaused()) {
-            if (introductory && (failed || bot.combatLevel >= 50)) bot.preferences.runeRunning.completeIntroduction()
-            if (guardsInstalled) {
-                bot.combat.isDisabled = previousCombatDisabled
-                guardsInstalled = false
-            }
-        }
-    }
-
-    override suspend fun completed() {
-        if (introductory && bot.preferences.runeRunning.isIntroductory) return
-        MerchantingCoordinator.getSellingScript(bot)?.let { bot.scriptStack.softPushHead(it) }
+        RuneRunningCoordinator.release(this)
+        previousCombatDisabled?.let { bot.combat.isDisabled = it }
+        previousCombatDisabled = null
     }
 
     override fun snapshot(): BotScriptData = RunnerData().also {
         it.altar = altar
-        it.essenceId = essence
+        it.essenceId = essenceId
         it.introductory = introductory
         it.deadline = deadline
-        it.seedUsed = seedUsed
+        it.minimumFee = minimumFee
+        it.paidTrips = paidTrips
         it.introducedHost = introducedHost
     }
 
     /**
-     * Persists intent and the consumed starter gift; live partners and trade interfaces are always rebuilt.
+     * Stores route, deadline and paid trip count. The current partner and native trade are session-local.
      *
      * @author lare96
      */
@@ -261,7 +209,8 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
         var essenceId = 1436
         var introductory = false
         var deadline = 0L
-        var seedUsed = false
+        var minimumFee = 1
+        var paidTrips = 0
         var introducedHost: String? = null
 
         override fun load(data: JsonObject) {
@@ -269,7 +218,8 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
             essenceId = data.get("essenceId")?.asInt ?: RuneRunningCoordinator.legacyEssence(altar)
             introductory = data.get("introductory")?.asBoolean ?: false
             deadline = data.get("deadline")?.asLong ?: 0L
-            seedUsed = data.get("seedUsed")?.asBoolean ?: false
+            minimumFee = data.get("minimumFee")?.asInt ?: 1
+            paidTrips = (data.get("paidTrips")?.asInt ?: 0).coerceIn(0, RuneRunningCoordinator.MAX_TRIPS_PER_RUNNER)
             introducedHost = data.get("introducedHost")?.takeUnless { it.isJsonNull }?.asString
         }
 
@@ -278,7 +228,8 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
             data.addProperty("essenceId", essenceId)
             data.addProperty("introductory", introductory)
             data.addProperty("deadline", deadline)
-            data.addProperty("seedUsed", seedUsed)
+            data.addProperty("minimumFee", minimumFee)
+            data.addProperty("paidTrips", paidTrips)
             data.addProperty("introducedHost", introducedHost)
         }
     }

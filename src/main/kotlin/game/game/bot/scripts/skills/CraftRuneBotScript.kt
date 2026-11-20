@@ -17,6 +17,8 @@ import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.RuneRunningCoordinator
+import engine.bot.coordinator.RuneRunningCoordinator.Route
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.gear.BotGearLocator
 import engine.controllers.Controllers.inWilderness
@@ -262,6 +264,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
      * This is resolved from [CraftableRune.insideAltarObject] and cleared when the script is paused.
      */
     private var altarObject: GameObject? = null
+    private var runnerOffer: Route? = null
 
     /**
      * The rune being crafted by this script.
@@ -365,6 +368,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {
+        withdrawRunnerOffer()
         val craftingRune = CraftableRune.ALTAR_TO_RUNE[altar] ?: return false
         if (!hasEssence() && compatibleEssence(bot, craftingRune) == null) {
             if (viaAbyss && (inAbyss() || bot.inWilderness() || bot.combat.inCombat()) && !retreat()) {
@@ -427,8 +431,27 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             return true
         }
 
-        attemptProduction(essence!!, dexterityDelay = false) {
-            handler.interactions.interact(1, altarObj)
+        val input = essence!!
+        val before = bot.inventory.computeAmountForId(input)
+        val plan = productionPlan
+        val offer = if (!viaAbyss && plan?.saleGuard == null && plan?.hasNextStage() != true && bot.scriptStack.size() == 1 &&
+            (plan?.remainingOperations ?: 0) <= before) Route(altar, input) else null
+        if (offer != null) {
+            runnerOffer = offer
+            RuneRunningCoordinator.advertise(this, offer, training = !profit)
+        }
+        attemptProduction(input, dexterityDelay = false) {
+            handler.interactions.interactLocally(1, altarObj) { isActionSafe() }
+        }
+        if (offer != null && !hasEssence() && bot.inventory.computeAmountForId(input) < before) {
+            settlePlannedProduction()
+            if ((plan?.remainingOperations ?: 0) == 0 && isActionSafe()) {
+                RuneRunningCoordinator.activeCrafterScript(this, offer)?.let { host ->
+                    bot.scriptStack.pushHead(host)
+                    return true
+                }
+            }
+            withdrawRunnerOffer()
         }
 
         bot.naturalDecisionDelay()
@@ -445,11 +468,17 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     }
 
     override fun onPaused() {
+        withdrawRunnerOffer()
         altarObject = null
         if (ownsDialogue) {
             bot.overlays.closeWindows()
             ownsDialogue = false
         }
+    }
+
+    private fun withdrawRunnerOffer() {
+        runnerOffer?.let { RuneRunningCoordinator.withdrawOffer(this, it) }
+        runnerOffer = null
     }
 
     /**
@@ -625,6 +654,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     } == true
 
     override suspend fun finish() {
+        withdrawRunnerOffer()
         if (isPaused()) return
         try {
             if (viaAbyss && bot.state == EntityState.ACTIVE && bot.isAlive) {

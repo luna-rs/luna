@@ -141,7 +141,14 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * Starting a new web trip here would recursively plan the very obstacle being opened.
      */
     internal suspend fun interactOnLeg(option: Int, target: Entity?): Boolean =
-        withTimeoutOrNull(10.seconds) { interact(option, target, onWebWalkLeg = true) } == true
+        interactLocally(option, target, timeout = 10.seconds)
+
+    /**
+     * Approaches an object in the current scene using its native collision policy, then sends the ordinary click.
+     */
+    internal suspend fun interactLocally(option: Int, target: Entity?, timeout: Duration = 20.seconds,
+                                         allowed: () -> Boolean = { true }): Boolean =
+        withTimeoutOrNull(timeout) { interact(option, target, local = true, allowed = allowed) } == true
 
     /**
      * Attempts to make this bot interact with [target] using [option].
@@ -166,14 +173,14 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * or a condition timeout.
      * @throws IllegalStateException If [target] is an entity type that this handler does not know how to interact with.
      */
-    suspend fun interact(option: Int, target: Entity?): Boolean = interact(option, target, onWebWalkLeg = false)
+    suspend fun interact(option: Int, target: Entity?): Boolean = interact(option, target, local = false)
 
     /**
      * Rechecks script-specific permission throughout the web approach and before sending the click.
      * This prevents an assignment that expires during an approach from authorizing a stale attack.
      */
     suspend fun interact(option: Int, target: Entity?, allowed: () -> Boolean): Boolean =
-        interact(option, target, onWebWalkLeg = false, allowed = allowed)
+        interact(option, target, local = false, allowed = allowed)
 
     /**
      * Runs a one-time prerequisite after reaching the target and rechecking permission, immediately before the
@@ -181,16 +188,16 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      */
     suspend fun interactBeforeSubmit(option: Int, target: Entity?, allowed: () -> Boolean,
                                     beforeSubmit: () -> Boolean): Boolean =
-        interact(option, target, onWebWalkLeg = false, allowed = allowed, beforeSubmit = beforeSubmit)
+        interact(option, target, local = false, allowed = allowed, beforeSubmit = beforeSubmit)
 
     /**
      * Approaches with a content handler's native reach policy, such as a rope swing two tiles away.
      * The ordinary interaction packet still applies the server's registered policy and validation.
      */
     suspend fun interact(option: Int, target: Entity?, policy: InteractionPolicy, allowed: () -> Boolean): Boolean =
-        interact(option, target, onWebWalkLeg = false, allowed = allowed, reachPolicy = policy)
+        interact(option, target, local = false, allowed = allowed, reachPolicy = policy)
 
-    private suspend fun interact(option: Int, target: Entity?, onWebWalkLeg: Boolean,
+    private suspend fun interact(option: Int, target: Entity?, local: Boolean,
                                  allowed: () -> Boolean = { true }, reachPolicy: InteractionPolicy? = null,
                                  beforeSubmit: (() -> Boolean)? = null): Boolean {
         if (target == null || !allowed()) {
@@ -209,7 +216,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         }")
 
         val policy = reachPolicy ?: interactionPolicy(option, target)
-        val reached = if (onWebWalkLeg) {
+        val reached = if (local) {
             val request = NavigationRequest.builder(bot).async(true).continuous(false).policy(policy).target(target)
             val pending = bot.navigator.submit(request.build())
             try {
@@ -223,7 +230,8 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             }
         } else approach(target, policy, canContinue = allowed)
         if (!reached) {
-            bot.log("Interaction failed: web approach did not reach the target.")
+            bot.log(if (local) "Interaction failed: local approach did not reach the target."
+                else "Interaction failed: web approach did not reach the target.")
             return false
         }
         if (!allowed() || beforeSubmit?.invoke() == false) return false

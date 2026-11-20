@@ -10,13 +10,11 @@ import game.bot.scripts.skills.CraftRuneBotScript
 import game.skill.runecrafting.craftRune.CraftableRune
 import game.player.item.consume.food.Food
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import engine.bot.coordinator.RuneRunningCoordinator
 
 /**
  * Creates Runecrafting scripts for skilling bots.
  *
- * Funded skiller accounts may host essence runners for experience. Ordinary training ranks supplied,
- * level-eligible runes by native XP per essence. Profit ranks their guide-price return
+ * Ordinary training ranks supplied, level-eligible runes by native XP per essence. Profit ranks their guide-price return
  * after the compatible essence cost, including the native multiple-rune output at the bot's current level.
  * Intelligence and dexterity apply the same best/worst/random choice used by other skilling factories.
  * These are per-essence comparisons, not fabricated hourly rates or a guarantee that every guide-price sale fills.
@@ -27,10 +25,8 @@ import engine.bot.coordinator.RuneRunningCoordinator
  */
 object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
 
-    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        RuneRunningCoordinator.crafterScript(bot, getDuration(bot, skillId))?.let { return it }
-        return createScript(bot, level, zones, training = true)
-    }
+    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
+        createScript(bot, level, zones, training = true)
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
         createScript(bot, level, zones, training = false)

@@ -16,6 +16,7 @@ import api.bot.zone.SubZone
 import api.predef.rand
 import api.predef.world
 import com.google.gson.JsonObject
+import engine.bot.coordinator.RuneRunningCoordinator
 import engine.bot.speech.BotConversationPool
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import io.luna.game.model.Position
@@ -98,6 +99,13 @@ open class IdleBotScript(bot: Bot, private val destination: SubZone, private val
         }
         BotConversations.tick(bot)
         val now = System.currentTimeMillis()
+        if (javaClass == IdleBotScript::class.java && !BotConversations.engaged(bot) &&
+            !BotSocialInteractions.engaged(bot)) {
+            RuneRunningCoordinator.idleCrafterScript(bot, this)?.let {
+                bot.scriptStack.softPushHead(it)
+                return true
+            }
+        }
         if (BotConversations.engaged(bot)) {
             nextConsideration = now + 60_000
         } else if (ambientConversationTopic() == null && now >= nextConsideration && BotConversations.available(bot)) {

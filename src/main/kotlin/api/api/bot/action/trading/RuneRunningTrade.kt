@@ -13,8 +13,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Exchanges agreed rune-running baskets through each participant's own native trade actions.
- * Empty payment is permitted for a crafter-funded first load; two empty baskets never form a trade.
+ * Exchanges exact rune-running baskets through each participant's own native trade actions.
  *
  * @author lare96
  */
@@ -34,9 +33,6 @@ object RuneRunningTrade {
         return result
     }
 
-    /**
-     * Requires exact ids and quantities, including an empty basket for an explicitly agreed starter gift.
-     */
     internal fun matches(items: Collection<Item?>, expected: List<Item>): Boolean {
         val actual = quantities(items) ?: return false
         val target = quantities(expected) ?: return false
@@ -44,19 +40,20 @@ object RuneRunningTrade {
     }
 
     /**
-     * Offers a fixed basket and validates both participants again on each acceptance screen.
-     * Calls run independently in the two owning bot coroutines; no partner's actions are performed here.
-     * Unanswered requests, interrupted sessions and changed baskets close only this participant's trade.
+     * Checks the current partnership, exact baskets and both inventory capacities at native settlement.
+     * The two participating scripts send their own request, offer and acceptance actions.
      */
     suspend fun exchange(bot: Bot, other: Bot, give: List<Item>, receive: List<Item>,
-                         canContinue: () -> Boolean): Boolean {
-        if (bot === other || give.isEmpty() && receive.isEmpty()) return false
+                         onPaid: () -> Unit = {}, canContinue: () -> Boolean): Boolean {
+        if (bot === other || give.isEmpty() || receive.isEmpty()) return false
         val outgoing = quantities(give) ?: return false
         if (quantities(receive) == null || outgoing.any { (id, amount) ->
                 bot.inventory.computeAmountForId(id).toLong() < amount
             }) return false
+
         fun ready() = bot.state == EntityState.ACTIVE && other.state == EntityState.ACTIVE &&
             ActionSafety.NON_COMBAT.allows(bot) && ActionSafety.NON_COMBAT.allows(other) && canContinue()
+        var offer: OfferTradeInterface? = null
         var success = false
         try {
             success = withTimeoutOrNull(75.seconds) {
@@ -65,29 +62,31 @@ object RuneRunningTrade {
                     ?: return@withTimeoutOrNull false
                 val screen = bot.overlays[OfferTradeInterface::class]
                     ?: return@withTimeoutOrNull false
-                if (screen.other !== other || screen.items.filterNotNull().isNotEmpty()) {
+                if (screen.other !== other || screen.items.filterNotNull().isNotEmpty())
                     return@withTimeoutOrNull false
-                }
+                offer = screen
                 screen.samplesMarketPrices = false
                 if (!stage.offerAll(give)) return@withTimeoutOrNull false
-                fun valid(): Boolean = ready() && matches(screen.items.filterNotNull(), give) &&
-                    screen.otherOffer.other === bot && matches(screen.otherOffer.items.filterNotNull(), receive)
+                val partner = screen.otherOffer
+                fun valid(): Boolean = ready() && partner.other === bot &&
+                    matches(screen.items.filterNotNull(), give) && matches(partner.items.filterNotNull(), receive) &&
+                    bot.inventory.hasSpaceForAll(partner.items) && other.inventory.hasSpaceForAll(screen.items)
+                screen.guardNativeTrade(validate = ::valid, settle = onPaid)
                 if (!waitFor(20.seconds) {
                         !ready() || bot.overlays[OfferTradeInterface::class] !== screen || valid()
                     } || !valid() || bot.overlays[OfferTradeInterface::class] !== screen) {
                     return@withTimeoutOrNull false
                 }
                 val confirmation = stage.offerAndAwait(::valid) ?: return@withTimeoutOrNull false
-                val own = bot.overlays[ConfirmTradeInterface::class]
-                val partner = other.overlays[ConfirmTradeInterface::class]
-                if (own?.offer !== screen || partner?.offer !== screen.otherOffer || !valid()) {
+                if (bot.overlays[ConfirmTradeInterface::class]?.offer !== screen ||
+                    other.overlays[ConfirmTradeInterface::class]?.offer !== partner || !valid())
                     return@withTimeoutOrNull false
-                }
                 confirmation.confirmAndAwait()
             } == true
             return success
         } finally {
-            if (!success) BotTradeStage(bot, other).decline()
+            if (!success && offer != null && (bot.overlays[OfferTradeInterface::class] === offer ||
+                    bot.overlays[ConfirmTradeInterface::class]?.offer === offer)) BotTradeStage(bot, other).decline()
             if (bot.tradingWith == other.index) bot.tradingWith = -1
         }
     }
