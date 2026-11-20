@@ -91,6 +91,11 @@ class SmithBarBotScript(
             bot.smithing.staticLevel < it.level || bot.itemTracker.count(it.barType.id) < SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
         }
         if (selectedItems.isEmpty()) {
+            if (productionPlan != null) {
+                bot.log("The planned smithing recipe is no longer available.")
+                stop()
+                return emptyList()
+            }
             // Important: Always attempt bars from the lowest -> the highest level.
             var smithingBar: BarType? = null
             for (bar in BarType.VALUES) {

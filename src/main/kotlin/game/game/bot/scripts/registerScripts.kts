@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import game.bot.scripts.trading.NativeProductionSaleScript
+
 import game.bot.scripts.BarrowsBotScript.BarrowsData
 import game.bot.scripts.trading.BuyStoreBargainBotScript
 import game.bot.scripts.trading.BuyStoreBargainBotScript.Companion.BargainData
@@ -183,6 +185,9 @@ on(ServerLaunchEvent::class) {
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
     scriptManager.addScript<BargainData>(BuyStoreBargainBotScript::class) { bot, data -> BuyStoreBargainBotScript(bot, data) }
+    scriptManager.addScript<NativeProductionSaleScript.SaleData>(NativeProductionSaleScript::class) { bot, data ->
+        NativeProductionSaleScript(bot, data)
+    }
     scriptManager.addScript<RechargeData>(RechargeTeleportSuppliesBotScript::class) { bot, data -> RechargeTeleportSuppliesBotScript(bot, data) }
     scriptManager.addScript<TeleOtherData>(TeleOtherBotScript::class) { bot, data -> TeleOtherBotScript(bot, data) }
     scriptManager.addScript<BarrowsData>(BarrowsBotScript::class) { bot, data -> BarrowsBotScript(bot, data) }

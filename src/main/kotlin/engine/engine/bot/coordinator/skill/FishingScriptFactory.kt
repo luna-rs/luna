@@ -219,10 +219,14 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         bot: Bot,
         level: Int,
         zones: MutableList<SubZone>
-    ): BotScript {
+    ): BotScript = profitCandidate(bot, level)?.start(zones) ?: VoidBotScript(bot)
+
+    internal fun profitCandidate(bot: Bot, level: Int, marketOnly: Boolean = false,
+                                 items: Set<Int>? = null): GatheringOpportunity? {
         val choices = linkedMapOf<Tool, ProfitGatheringDemand.Quote>()
         val destinations = HashMap<Tool, List<SubZone>>()
         for (tool in BOT_TOOLS) {
+            if (items != null && tool.fish.none { it.id in items }) continue
             val baitId = if (tool == KARAMBWAN_VESSEL) Fish.KARAMBWANJI.id else tool.bait
             val ownsTool = ProfitGatheringGoal.physical(bot, tool.id) > 0L ||
                 tool == KARAMBWAN_VESSEL && ProfitGatheringGoal.physical(bot, Tool.EMPTY_KARAMBWAN_VESSEL) > 0L
@@ -245,21 +249,18 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             val bait = baitId?.let { ProfitGatheringDemand.inputPrice(bot, it) } ?: 0.0
             val baitPerAttempt = bait * if (tool == KARAMBWAN_VESSEL) 1.0 else probabilities.values.sum()
             val outputs = probabilities.mapNotNull { (id, probability) ->
-                if (probability <= 0.0) null else ProfitGatheringDemand.quote(bot, id,
-                    tool.delay.toDouble() / probability, baitPerAttempt / probability)
+                if (probability <= 0.0 || items != null && id !in items) null
+                else ProfitGatheringDemand.quote(bot, id,
+                    tool.delay.toDouble() / probability, baitPerAttempt / probability, marketOnly = marketOnly)
             }
             val best = outputs.maxByOrNull { it.score } ?: continue
             choices[tool] = best.copy(score = outputs.sumOf { it.score })
             destinations[tool] = locations
         }
-        val tool = ProfitGatheringDemand.select(bot, choices) ?: return VoidBotScript(bot)
-        zones.clear()
-        zones.addAll(destinations.getValue(tool))
-        if (zones.isEmpty()) return VoidBotScript(bot)
-        val duration = getDuration(bot, skillId)
-        return FishBotScript(bot, tool, duration, zones).also {
-            it.profitGathering = ProfitGatheringGoal.create(bot, choices.getValue(tool), duration,
-                tool.fish.mapTo(linkedSetOf()) { fish -> fish.id })
+        val tool = ProfitGatheringDemand.select(bot, choices) ?: return null
+        return GatheringOpportunity(choices.getValue(tool), destinations.getValue(tool), bot, getDuration(bot, skillId),
+            tool.fish.mapTo(linkedSetOf()) { fish -> fish.id }) { duration, zones ->
+            FishBotScript(bot, tool, duration, zones)
         }
     }
 

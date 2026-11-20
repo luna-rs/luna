@@ -6,6 +6,7 @@ import api.bot.action.trading.BotMarketplace
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePrice
 import api.bot.action.trading.BotTradePurpose
+import game.bot.scripts.trading.NativeProductionSaleScript
 import game.bot.scripts.trading.TradeBotScript
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -23,7 +24,8 @@ import kotlin.time.Duration
  */
 class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Set<Int>,
                           maximumProduced: Int, private var lastPhysicalStock: Long,
-                          val deadline: Long, val minimumUnitPrice: Long, produced: Int = 0) {
+                          val deadline: Long, val minimumUnitPrice: Long, produced: Int = 0,
+                          val marketOnly: Boolean = false, private val openingOutputStock: Long = 0L) {
     private var nextReview = 0L
     private var rejected = false
     private var ownershipRevision = Long.MIN_VALUE
@@ -36,7 +38,7 @@ class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Se
         require(UUID.fromString(identity).toString() == identity)
         require(itemId >= 0 && itemId in outputs && outputs.size in 1..16)
         require(maximumProduced in 1..56 && produced in 0..maximumProduced && lastPhysicalStock >= 0L &&
-            deadline > 0 && minimumUnitPrice > 0)
+            deadline > 0 && minimumUnitPrice > 0 && openingOutputStock >= 0L)
     }
 
     /**
@@ -63,7 +65,7 @@ class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Se
         if (now < nextReview) return true
         nextReview = now + 10_000L
         val quote = ProfitGatheringDemand.quote(bot, itemId, minimumUnitPrice = minimumUnitPrice,
-            excluding = identity)
+            excluding = identity, marketOnly = marketOnly, gathered = if (marketOnly) gathered(bot) else 0)
         if (quote == null) {
             rejected = true
             release()
@@ -88,6 +90,16 @@ class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Se
      * Offers only real transferable surplus through the existing native sale path.
      */
     fun completed(bot: Bot) {
+        if (marketOnly) {
+            observe(bot)
+            val amount = minOf(gathered(bot), BotTradeManager.saleableAmount(bot, itemId))
+            if (!BotTradeManager.hasNativeSaleStock(bot, itemId, amount)) return
+            val saleDeadline = System.currentTimeMillis() + 300_000L
+            val sale = NativeProductionSaleScript.createForOutput(bot, identity, itemId, amount,
+                minimumUnitPrice, saleDeadline) ?: return
+            bot.scriptStack.softPushHead(sale)
+            return
+        }
         if (!BotMarketCooldown.ready(bot, BotTradePurpose.SELL)) return
         val quote = BotTradeManager.computeTargetedSaleItem(bot, BotTradePrice.computePriceStrategy(bot), itemId)
             ?: return
@@ -95,6 +107,9 @@ class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Se
         bot.scriptStack.softPushHead(TradeBotScript(bot, BotTradePurpose.SELL,
             BotMarketplace.select(bot), saleTarget = itemId))
     }
+
+    private fun gathered(bot: Bot): Int =
+        minOf(produced.toLong(), (physical(bot, itemId) - openingOutputStock).coerceAtLeast(0L)).toInt()
 
     fun save(): JsonObject = JsonObject().also { data ->
         data.addProperty("identity", identity)
@@ -106,6 +121,10 @@ class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Se
         data.addProperty("deadline", deadline)
         data.addProperty("minimumPrice", minimumUnitPrice)
         data.addProperty("rejected", rejected)
+        if (marketOnly) {
+            data.addProperty("marketOnly", true)
+            data.addProperty("openingOutputStock", openingOutputStock)
+        }
     }
 
     companion object {
@@ -118,7 +137,8 @@ class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Se
             return ProfitGatheringGoal(UUID.randomUUID().toString(), quote.itemId, outputs,
                 amount, outputs.sumOf { physical(bot, it) },
                 System.currentTimeMillis() + duration.inWholeMilliseconds.coerceAtLeast(1L),
-                quote.minimumUnitPrice)
+                quote.minimumUnitPrice, marketOnly = quote.marketOnly,
+                openingOutputStock = if (quote.marketOnly) physical(bot, quote.itemId) else 0L)
                 .also { if (!ProfitGatheringDemand.reserve(bot, it, amount)) it.rejected = true }
         }
 
@@ -128,7 +148,9 @@ class ProfitGatheringGoal(val identity: String, val itemId: Int, val outputs: Se
             data.getAsJsonArray("outputs").map { it.asInt }.toSet(),
             data.get("maximumProduced").asInt, data.get("lastPhysicalStock").asLong,
             data.get("deadline").asLong, data.get("minimumPrice").asLong,
-            data.get("produced").asInt).also {
+            data.get("produced").asInt,
+            data.get("marketOnly")?.asBoolean ?: false,
+            data.get("openingOutputStock")?.asLong ?: 0L).also {
                 it.rejected = data.get("rejected")?.asBoolean ?: false
             }
 

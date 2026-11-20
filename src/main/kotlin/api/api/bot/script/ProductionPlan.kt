@@ -21,11 +21,14 @@ class ProductionPlan(
     attemptedMarketItems: Set<Int> = emptySet(),
     continuationRecipes: List<ProductionRecipe> = emptyList(),
     currentStageIndex: Int = 0,
-    personalUsePrices: Map<Int, Long> = emptyMap()
+    personalUsePrices: Map<Int, Long> = emptyMap(),
+    stageRatios: List<Int>? = null,
+    val saleGuard: ProductionSaleGuard? = null
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
         materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
         zeroValueByproducts = native.zeroValueByproducts.toSet()) }
+    private val ratios = stageRatios?.toList() ?: List(recipes.size) { 1 }
     val maximumUnitPrices = maximumUnitPrices.toMap()
     val personalUsePrices = personalUsePrices.toMap()
     var currentStageIndex = currentStageIndex
@@ -38,20 +41,32 @@ class ProductionPlan(
     val attemptedMarketItems = attemptedMarketItems.toMutableSet()
     var supplyDeadline = 0L
     var shopAttempted = false
+    var guardedOutputProduced = 0
+        private set
     private var targetCache: Map<Int, Int>? = null
 
-    val remainingOperations: Int get() = (operations - completedOperations).coerceAtLeast(0)
+    val currentStageOperations: Int get() = stages[currentStageIndex].operations
+    val remainingOperations: Int get() = currentStageOperations - completedOperations
+
+    /**
+     * The native operation count of every stage in the committed batch.
+     */
+    val stages: List<ProductionStage>
     val remainingCoins: Long get() = (maximumCoins - spentCoins).coerceAtLeast(0L)
 
     init {
         require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
-        require(completedOperations in 0..operations && maximumCoins >= 0L && spentCoins >= 0L)
+        require(maximumCoins >= 0L && spentCoins >= 0L)
         require(deadline > 0L && maximumUnitPrices.size <= 64)
         require(maximumUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
         require(recipes.size <= ProductionChainEconomics.MAX_STAGES && currentStageIndex in recipes.indices)
+        require(ratios.size == recipes.size && ratios.last() == 1)
+        require(ratios.all { it in 1..ProductionEconomics.MAX_OPERATIONS / operations })
+        stages = recipes.mapIndexed { index, native -> ProductionStage(native, ratios[index] * operations) }
+        require(completedOperations in 0..currentStageOperations)
         require(recipes.all { native -> (native.materials.keys + native.tools).all { it in maximumUnitPrices } })
         require(attemptedMarketItems.size <= 64 && attemptedMarketItems.all { it in maximumUnitPrices })
-        require(ProductionChainEconomics.aggregate(recipes.map { ProductionStage(it, operations) }) != null)
+        require(ProductionChainEconomics.aggregate(stages) != null)
         require(personalUsePrices.size <= 64 && personalUsePrices.all { (id, price) -> id >= 0 && price > 0L })
     }
 
@@ -70,12 +85,13 @@ class ProductionPlan(
     /**
      * Counts only remaining native work, including supplied future stages, when refreshing economic policy.
      */
-    fun economicRecipe(): ProductionRecipe? {
-        val stages = recipes.drop(currentStageIndex).mapIndexedNotNull { index, native ->
-            val amount = if (index == 0) remainingOperations else operations
-            if (amount > 0) ProductionStage(native, amount) else null
-        }
-        return ProductionChainEconomics.aggregate(stages)
+    fun economicRecipe(): ProductionRecipe? = ProductionChainEconomics.aggregate(remainingStages())
+
+    /**
+     * Reports unfinished native operations beginning with the current stage.
+     */
+    fun remainingStages(): List<ProductionStage> = stages.drop(currentStageIndex).mapIndexedNotNull { index, stage ->
+        if (index > 0) stage else remainingOperations.takeIf { it > 0 }?.let { stage.copy(operations = it) }
     }
 
     fun hasNextStage(): Boolean = currentStageIndex < recipes.lastIndex
@@ -103,9 +119,14 @@ class ProductionPlan(
     /**
      * Counts verified complete native operations, bounded by the original goal.
      */
-    fun recordProduction(amount: Int) {
-        require(amount >= 0)
-        completedOperations = minOf(operations.toLong(), completedOperations.toLong() + amount).toInt()
+    fun recordProduction(amount: Int, guardedOutput: Int = 0) {
+        require(amount >= 0 && guardedOutput >= 0)
+        completedOperations = minOf(currentStageOperations.toLong(), completedOperations.toLong() + amount).toInt()
+        if (saleGuard != null && !hasNextStage()) {
+            val maximum = completedOperations.toLong() * recipe.products.getValue(saleGuard.itemId)
+            guardedOutputProduced = (guardedOutputProduced.toLong() + guardedOutput)
+                .coerceAtMost(minOf(maximum, Int.MAX_VALUE.toLong())).toInt()
+        }
         targetCache = null
     }
 
@@ -120,6 +141,11 @@ class ProductionPlan(
         data.addProperty("stage", currentStageIndex)
         data.addProperty("training", training)
         data.addProperty("operations", operations)
+        if (ratios.any { it != 1 }) data.add("stage_ratios", JsonArray().also { array ->
+            ratios.forEach { array.add(it) }
+        })
+        saleGuard?.let { data.add("sale_guard", it.save()) }
+        if (guardedOutputProduced > 0) data.addProperty("guarded_output", guardedOutputProduced)
         data.addProperty("completed", completedOperations)
         data.addProperty("maximum_coins", maximumCoins)
         data.addProperty("spent_coins", spentCoins)
@@ -147,14 +173,28 @@ class ProductionPlan(
             require(prices.size() <= 64 && attempted.size() <= 64 && continuations.size() < ProductionChainEconomics.MAX_STAGES)
             require(personal.size() <= 64)
             val recipe = loadRecipe(data)
+            val ratios = data.getAsJsonArray("stage_ratios")?.let { raw ->
+                require(raw.size() == continuations.size() + 1)
+                raw.map { value ->
+                    require(value.isJsonPrimitive && value.asJsonPrimitive.isNumber)
+                    value.asString.toInt()
+                }
+            }
             return ProductionPlan(recipe, data.get("training").asBoolean, data.get("operations").asInt,
                 data.get("maximum_coins").asLong,
                 prices.entrySet().associate { it.key.toInt() to it.value.asLong }, data.get("deadline").asLong,
                 data.get("completed").asInt, data.get("spent_coins").asLong,
                 attempted.map { it.asInt }.toSet(), continuations.map { loadRecipe(it.asJsonObject) },
-                data.get("stage")?.asInt ?: 0, personal.entrySet().associate { it.key.toInt() to it.value.asLong }).also {
+                data.get("stage")?.asInt ?: 0, personal.entrySet().associate { it.key.toInt() to it.value.asLong },
+                ratios, data.getAsJsonObject("sale_guard")?.let(ProductionSaleGuard::load)).also {
                 it.supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 it.shopAttempted = data.get("shop_attempted")?.asBoolean ?: false
+                it.guardedOutputProduced = data.get("guarded_output")?.asInt ?: 0
+                val maximum = it.saleGuard?.let { guard ->
+                    if (it.hasNextStage()) 0L else
+                        it.completedOperations.toLong() * (it.recipe.products[guard.itemId] ?: 0)
+                } ?: 0L
+                require(it.guardedOutputProduced.toLong() in 0..maximum)
                 require(it.supplyDeadline >= 0L)
             }
         }

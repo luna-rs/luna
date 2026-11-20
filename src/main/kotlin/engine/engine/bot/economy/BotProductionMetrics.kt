@@ -105,6 +105,25 @@ object BotProductionMetrics {
     private val ledger = Ledger()
     private val decisions = DecisionCounts()
     private val latestDecision = Attr.nullableObj(Decision::class)
+    private var merchantSales = MerchantSales(0, 0, 0, 0)
+
+    /**
+     * Native merchant goods whose coin payment settled, with their estimated input cost.
+     *
+     * @author lare96
+     */
+    data class MerchantSales(val units: Long, val netCoins: Long, val estimatedCost: Long, val totalFillMillis: Long)
+
+    /**
+     * Records the verified trade completion on the game thread.
+     */
+    fun recordMerchantSale(units: Int, coins: Long, estimatedCost: Long, delay: Long) {
+        val previous = merchantSales
+        merchantSales = MerchantSales(previous.units + units, previous.netCoins + coins,
+            previous.estimatedCost + estimatedCost, previous.totalFillMillis + delay * units)
+    }
+
+    fun merchantSales(): MerchantSales = merchantSales
 
     /**
      * Records one existing decision boundary without reading inventories, prices, offers or the bot population.

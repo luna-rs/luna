@@ -13,6 +13,9 @@ import io.luna.game.model.mob.bot.brain.BotActivity
  */
 internal object BotMarketPreference {
 
+    fun profitSeeking(bot: Bot): Boolean =
+        bot.preferences.isMerchant || bot.preferences.likesActivity(BotActivity.MERCHANTING)
+
     /**
      * Uses a zero-based percentile roll: liked merchanting gets 25 percent, loved merchanting 50 percent,
      * and dedicated merchants always inspect. Other ordinary bots never perform the additional scan.

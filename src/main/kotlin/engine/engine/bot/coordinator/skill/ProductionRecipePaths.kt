@@ -7,8 +7,8 @@ import api.bot.script.ProductionStage
 
 /**
  * Enumerates short native preparation paths through the existing recipe indexes.
- * Each stage performs the same number of operations: only deterministic single-item prefixes
- * can replace a one-unit input. Other ratios, uncertain intermediate yields and other skills stay separate.
+ * Stage counts express whole native operations for one final operation. Intermediate production must
+ * reliably provide the exact requirement, without leaving stock that the remaining stages cannot use.
  *
  * @author lare96
  */
@@ -22,45 +22,55 @@ internal object ProductionRecipePaths {
      */
     fun forRecipe(recipe: ProductionRecipe,
                   describe: (ProductionCatalogue.Entry) -> ProductionRecipe?,
-                  preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionRecipe>> =
-        expand(listOf(recipe), describe, preparation)
+                  allowOtherSkills: Boolean = false,
+                  preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionStage>> =
+        expand(listOf(recipe), { id -> nativeRecipes(id, recipe.skill.takeUnless { allowOtherSkills }, describe) },
+            allowOtherSkills, preparation)
 
     /**
      * Shares one traversal allowance across alternative native recipes for the exact requested output.
      */
     fun forOutput(output: Int, skill: Int,
                   describe: (ProductionCatalogue.Entry) -> ProductionRecipe?,
-                  preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionRecipe>> {
-        val recipes = ProductionCatalogue.byOutput[output].orEmpty().take(16).mapNotNull { entry ->
-            if (entry.skill != skill) null else describe(entry)?.takeIf { it.products[output] == 1 }
-        }
-        return expand(recipes, describe, preparation)
-    }
+                  allowOtherSkills: Boolean = false,
+                  preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionStage>> =
+        expand(nativeRecipes(output, skill, describe).filter { it.products[output] == 1 },
+            { id -> nativeRecipes(id, skill.takeUnless { allowOtherSkills }, describe) }, allowOtherSkills, preparation)
 
-    private fun expand(recipes: List<ProductionRecipe>,
-                       describe: (ProductionCatalogue.Entry) -> ProductionRecipe?,
-                       preparation: (ProductionRecipe) -> Boolean): List<List<ProductionRecipe>> {
-        val result = ArrayList<List<ProductionRecipe>>()
-        val queue = ArrayDeque<List<ProductionRecipe>>()
-        val seen = HashSet<List<String>>()
-        recipes.forEach { queue.add(listOf(it)) }
-        var visits = 0
-        while (queue.isNotEmpty() && result.size < MAX_PATHS && visits++ < MAX_VISITS) {
+    private fun nativeRecipes(id: Int, skill: Int?,
+                              describe: (ProductionCatalogue.Entry) -> ProductionRecipe?): List<ProductionRecipe> =
+        ProductionCatalogue.byOutput[id].orEmpty().take(16).mapNotNull { entry ->
+            if (skill == null || entry.skill == skill) describe(entry) else null
+        }
+
+    /**
+     * Builds bounded dependency paths using only indexed, executable native recipes for each input.
+     */
+    internal fun expand(recipes: List<ProductionRecipe>, nativeRecipes: (Int) -> List<ProductionRecipe>,
+                        allowOtherSkills: Boolean = false,
+                        preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionStage>> {
+        val result = ArrayList<List<ProductionStage>>()
+        val queue = ArrayDeque<List<ProductionStage>>()
+        val seen = HashSet<List<Pair<String, Int>>>()
+        val producers = HashMap<Int, List<ProductionRecipe>>()
+        fun enqueue(path: List<ProductionStage>) {
+            if (seen.size < MAX_VISITS && seen.add(path.map { it.recipe.key to it.operations })) queue.add(path)
+        }
+        recipes.forEach { enqueue(listOf(ProductionStage(it, 1))) }
+        while (queue.isNotEmpty() && result.size < MAX_PATHS) {
             val path = queue.removeFirst()
-            if (!seen.add(path.map { it.key })) continue
-            val aggregate = ProductionChainEconomics.aggregate(path.map { ProductionStage(it, 1) }) ?: continue
+            val aggregate = ProductionChainEconomics.aggregate(path) ?: continue
             result += path
-            if (path.size >= ProductionChainEconomics.MAX_STAGES) continue
+            if (path.size >= ProductionChainEconomics.MAX_STAGES || seen.size >= MAX_VISITS) continue
             for ((input, amount) in aggregate.materials) {
-                if (amount != 1) continue
-                for (entry in ProductionCatalogue.byOutput[input].orEmpty().take(16)) {
-                    if (entry.skill != path.last().skill) continue
-                    val prefix = describe(entry) ?: continue
-                    if (prefix.skill != path.last().skill || !preparation(prefix) ||
-                        prefix.productProbability != 1.0 || prefix.products != mapOf(input to 1) ||
-                        path.any { it.key == prefix.key } ||
-                        prefix.materials.keys.any { id -> path.any { id in it.products } }) continue
-                    queue.add(listOf(prefix) + path)
+                for (prefix in producers.getOrPut(input) { nativeRecipes(input).take(16) }) {
+                    if ((!allowOtherSkills && prefix.skill != path.last().recipe.skill) || !preparation(prefix) ||
+                        prefix.productProbability != 1.0 || input in prefix.materials ||
+                        path.any { it.recipe.key == prefix.key } ||
+                        prefix.materials.keys.any { id -> path.any { id in it.recipe.products } }) continue
+                    val yield = prefix.products.entries.singleOrNull()?.takeIf { it.key == input }?.value ?: continue
+                    if (amount % yield != 0 || amount / yield > ProductionEconomics.MAX_OPERATIONS) continue
+                    enqueue(listOf(ProductionStage(prefix, amount / yield)) + path)
                 }
             }
         }
@@ -87,7 +97,7 @@ internal object ProductionRecipePaths {
             currentStage !in path.indices || path.map { it.key }.distinct().size != path.size) return emptyMap()
         val prices = LinkedHashMap<Int, Long>()
         for (recipe in path.take(currentStage + 1)) {
-            val output = recipe.products.entries.singleOrNull()?.takeIf { it.value == 1 } ?: return prices
+            val output = recipe.products.entries.singleOrNull() ?: return prices
             if (recipe.productProbability != 1.0) return prices
             var value = recipe.coinCost
             for ((id, amount) in recipe.materials) {
@@ -97,7 +107,7 @@ internal object ProductionRecipePaths {
                     ProductionEconomics.saturatingMultiply(unit, amount.toLong()))
             }
             if (value !in 1 until Long.MAX_VALUE) return prices
-            prices[output.key] = value
+            prices[output.key] = 1 + (value - 1) / output.value
         }
         return prices
     }
@@ -107,13 +117,13 @@ internal object ProductionRecipePaths {
      * Every prefix operation and all but the last final award must precede that boundary.
      * The existing quote may then impose a smaller next-level, inventory or purchasing limit.
      */
-    fun trainingOperationLimit(path: List<ProductionRecipe>, requested: Int,
+    fun trainingOperationLimit(path: List<ProductionStage>, requested: Int,
                                remainingExperience: Double): Int {
         if (path.isEmpty() || requested < 1 || !remainingExperience.isFinite() || remainingExperience <= 0.0) return 0
-        val prefix = path.dropLast(1).sumOf { it.experience }
+        val prefix = path.dropLast(1).sumOf { it.recipe.experience * it.operations }
         var operations = requested.coerceAtMost(ProductionEconomics.MAX_OPERATIONS)
         if (prefix == 0.0) return operations
-        val final = path.last().experience
+        val final = path.last().recipe.experience
         while (operations > 0 && prefix * operations + final * (operations - 1) >= remainingExperience) operations--
         return operations
     }
@@ -133,9 +143,9 @@ internal object ProductionRecipePaths {
      * A supplied suffix of the same native lineage takes precedence over repeating its raw preparation.
      * Unrelated recipes with the same output are not treated as interchangeable work.
      */
-    fun hasSuppliedSuffix(path: List<ProductionRecipe>, supplied: Collection<List<ProductionRecipe>>): Boolean =
+    fun hasSuppliedSuffix(path: List<ProductionStage>, supplied: Collection<List<ProductionStage>>): Boolean =
         supplied.any { suffix ->
             suffix.isNotEmpty() && suffix.size < path.size &&
-                path.takeLast(suffix.size).map { it.key } == suffix.map { it.key }
+                path.takeLast(suffix.size) == suffix
         }
 }

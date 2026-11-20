@@ -71,12 +71,13 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         createScript(bot, level, zones, true)
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        profitScript(bot, level, zones)
+        profitCandidate(bot, level)?.start(zones) ?: VoidBotScript(bot)
 
-    private fun profitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+    internal fun profitCandidate(bot: Bot, level: Int, marketOnly: Boolean = false,
+                                 items: Set<Int>? = null): GatheringOpportunity? {
         val pickaxe = Pickaxe.entries.filter { it.level <= bot.mining.level &&
             ProfitGatheringGoal.physical(bot, it.id) > 0L }.minByOrNull { it.speed }
-            ?: return VoidBotScript(bot)
+            ?: return null
         val available = activities(bot, minOf(level, bot.mining.level), false).filter {
             it.zones.any { zone -> zone.entryBlocker(bot) == null && bot.recentEscape?.avoids(zone) != true }
         }.let { all -> all.filterNot { method -> method.zones.all { bot.recentlyFull(it) } }.ifEmpty { all } }
@@ -84,30 +85,28 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         for (ore in available.flatMap { it.tokens }.distinct()) {
             if (ore == GEM_ROCK || ore.sizes.isNotEmpty()) continue
             val output = if (ore == RUNE_ESSENCE && bot.mining.level >= PURE_ESSENCE.level) PURE_ESSENCE else ore
+            if (items != null && output.item !in items) continue
             val gemChance = if (ore.rollsGems) (69.0 / 70.0) /
                 (if (Mining.hasChargedGlory(bot)) 86.0 else 256.0) else 0.0
             val probability = if (ore == RUNE_ESSENCE) 1.0 else
                 Skills.successRate(ore.chance.first, ore.chance.second, bot.mining.level)
                     .coerceIn(0.0, 1.0) * (1.0 - gemChance)
             if (probability <= 0.0) continue
-            ProfitGatheringDemand.quote(bot, output.item, pickaxe.speed.toDouble() / probability)?.let {
+            ProfitGatheringDemand.quote(bot, output.item, pickaxe.speed.toDouble() / probability,
+                marketOnly = marketOnly)?.let {
                 quotes[ore] = it
             }
         }
-        val ore = ProfitGatheringDemand.select(bot, quotes) ?: return VoidBotScript(bot)
+        val ore = ProfitGatheringDemand.select(bot, quotes) ?: return null
         val locations = available.filter { ore in it.tokens }.flatMap { it.zones }.distinct().filter {
             it.entryBlocker(bot) == null && bot.recentEscape?.avoids(it) != true
         }
-        zones.clear()
-        zones.addAll(if (bot.personality.isDextrous) locations.sortedBy {
-            bot.position.computeLongestDistance(it.inside)
-        } else locations.shuffled())
-        val duration = getDuration(bot, skillId)
-        return MineBotScript(bot, setOf(ore), duration, zones, setOf(ore), profitMining = true).also {
-            it.profitGathering = ProfitGatheringGoal.create(bot, quotes.getValue(ore), duration,
-                if (ore == RUNE_ESSENCE) setOf(RUNE_ESSENCE.item, PURE_ESSENCE.item) else
-                    setOf(quotes.getValue(ore).itemId) +
-                        if (ore.rollsGems) setOf(1623, 1621, 1619, 1617) else emptySet())
+        val quote = quotes.getValue(ore)
+        return GatheringOpportunity(quote, locations, bot, getDuration(bot, skillId),
+            if (ore == RUNE_ESSENCE) setOf(RUNE_ESSENCE.item, PURE_ESSENCE.item) else
+                setOf(quote.itemId) + if (ore.rollsGems) setOf(1623, 1621, 1619, 1617) else emptySet(),
+            reorder = true) { duration, zones ->
+            MineBotScript(bot, setOf(ore), duration, zones, setOf(ore), profitMining = true)
         }
     }
 

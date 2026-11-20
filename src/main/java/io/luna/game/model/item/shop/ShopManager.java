@@ -2,13 +2,16 @@ package io.luna.game.model.item.shop;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import io.luna.game.model.item.Item;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A manager responsible for maintaining and providing access to all globally registered {@link Shop} instances.
@@ -34,6 +37,11 @@ public final class ShopManager {
     private final Map<String, Shop> shops = new HashMap<>();
 
     /**
+     * Registered native catalogue sources keyed by item.
+     */
+    private final Map<Integer, Set<Shop>> catalogue = new HashMap<>();
+
+    /**
      * Registers a {@link Shop} instance into this manager.
      * <p>
      * If a shop with the same name already exists, it will be replaced and a warning will be logged to indicate the
@@ -43,9 +51,31 @@ public final class ShopManager {
      */
     public void register(Shop shop) {
         String name = shop.getName();
-        if (shops.put(name, shop) != null) {
+        Shop previous = shops.put(name, shop);
+        if (previous != null) {
             logger.warn("Shop with name '{}' was overwritten because it already exists.", name);
+            catalogue.values().removeIf(list -> {
+                list.remove(previous);
+                return list.isEmpty();
+            });
         }
+        if (shop.getCurrency() != Currency.COINS || shop.getNpcSellers().isEmpty()) {
+            return;
+        }
+        for (int index = 0; index < shop.getItems().capacity(); index++) {
+            Item item = shop.getItems().get(index);
+            if (item != null && shop.originalStock(index) > 0) {
+                catalogue.computeIfAbsent(item.getId(), ignored -> new LinkedHashSet<>()).add(shop);
+            }
+        }
+    }
+
+    /**
+     * Finds NPC shops that normally stock an item. Current stock and access are checked by the caller.
+     */
+    public Set<Shop> catalogueSources(int id) {
+        Set<Shop> sources = catalogue.get(id);
+        return sources == null ? Set.of() : Collections.unmodifiableSet(sources);
     }
 
     /**

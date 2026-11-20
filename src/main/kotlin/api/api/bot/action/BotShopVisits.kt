@@ -46,6 +46,10 @@ internal class BotShopVisits(private val bot: Bot, private val handler: BotActio
             ActionSafety.NON_COMBAT.allows(bot)
     }
 
+    fun distance(shop: Shop): Long? = findSellers(shop).firstOrNull()?.let { (npc, _) ->
+        bot.position.computeLongestDistance(npc.position).toLong()
+    }
+
     suspend fun open(shop: Shop, canContinue: () -> Boolean): ShopInterface? {
         fun eligible() = bot.state == EntityState.ACTIVE && ActionSafety.NON_COMBAT.allows(bot) && canContinue()
         if (!eligible()) return null

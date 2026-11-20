@@ -62,14 +62,16 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         createScript(bot, level, zones)
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        profitScript(bot, level, zones)
+        profitCandidate(bot, level)?.start(zones) ?: VoidBotScript(bot)
 
-    private fun profitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+    internal fun profitCandidate(bot: Bot, level: Int, marketOnly: Boolean = false,
+                                 items: Set<Int>? = null): GatheringOpportunity? {
         val axes = Axe.entries.filter { it.level <= bot.woodcutting.level &&
             ProfitGatheringGoal.physical(bot, it.id) > 0L }
-        if (axes.isEmpty()) return VoidBotScript(bot)
+        if (axes.isEmpty()) return null
         val options = linkedMapOf<Tree, ProfitGatheringDemand.Quote>()
         for ((tree, locations) in routes) {
+            if (items != null && tree.logId !in items) continue
             if (tree.level > minOf(level, bot.woodcutting.level) ||
                 tree in setOf(TEAK, MAHOGANY) &&
                     ProfitGatheringGoal.physical(bot, HardwoodGrove.STICKS) < HardwoodGrove.FEE ||
@@ -80,18 +82,18 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
             }
             if (chance <= 0.0) continue
             val ticks = Luna.settings().skills().woodcuttingSpeed().toDouble() / chance
-            val preliminary = ProfitGatheringDemand.quote(bot, tree.logId, ticks) ?: continue
+            val preliminary = ProfitGatheringDemand.quote(bot, tree.logId, ticks, marketOnly = marketOnly) ?: continue
             val cost = if (tree in setOf(TEAK, MAHOGANY)) HardwoodGrove.FEE *
                 ProfitGatheringDemand.inputPrice(bot, HardwoodGrove.STICKS) / minOf(28, preliminary.quantity) else 0.0
-            ProfitGatheringDemand.quote(bot, tree.logId, ticks, cost)?.let { options[tree] = it }
+            if (cost == 0.0) options[tree] = preliminary
+            else ProfitGatheringDemand.quote(bot, tree.logId, ticks, cost, marketOnly = marketOnly)
+                ?.let { options[tree] = it }
         }
-        val tree = ProfitGatheringDemand.select(bot, options) ?: return VoidBotScript(bot)
-        zones.clear()
-        zones.addAll(routes.getValue(tree).filter { it.entryBlocker(bot) == null &&
-            bot.recentEscape?.avoids(it) != true })
-        val duration = getDuration(bot, skillId)
-        return CutTreeBotScript(bot, setOf(tree), duration, zones).also {
-            it.profitGathering = ProfitGatheringGoal.create(bot, options.getValue(tree), duration)
+        val tree = ProfitGatheringDemand.select(bot, options) ?: return null
+        val locations = routes.getValue(tree).filter { it.entryBlocker(bot) == null &&
+            bot.recentEscape?.avoids(it) != true }
+        return GatheringOpportunity(options.getValue(tree), locations, bot, getDuration(bot, skillId)) { duration, zones ->
+            CutTreeBotScript(bot, setOf(tree), duration, zones)
         }
     }
 

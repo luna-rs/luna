@@ -27,8 +27,8 @@ import io.luna.game.model.item.shop.Currency
  * Coordinates merchanting activities for bots.
  *
  * Selects economy-related scripts based on the bot's wanted-item stock, merchanting preferences,
- * personality, and emotions. Merchants trade resale stock with players and keep their buying advertisements broad.
- * Ordinary bots buy deliberate supplies and upgrades, or sell their surplus.
+ * personality, and finances. Merchants and bots who enjoy merchanting can take funded production,
+ * gathering or shop work. Trading also serves personal supplies, upgrades and surplus.
  *
  * Trading and shop interactions are performed by the scripts pushed onto the bot's script stack.
  * This coordinator only determines which activity the bot should attempt.
@@ -72,11 +72,18 @@ object MerchantingCoordinator : BotCoordinator {
         val canMarketBuyNow = BotMarketCooldown.ready(bot, BotTradePurpose.BUY)
         if (bot.preferences.isMerchant) {
             val capital = BotMerchantCapital.snapshot(bot)
+            val selling = sellingPurpose(bot)
+            if ((selling == null || !capital.cashRecovery && !capital.stockHeavy) &&
+                !capital.busy) {
+                MerchantWork.script(bot, capital)?.let {
+                    bot.scriptStack.push(it)
+                    return
+                }
+            }
             if (!canMarketSell && !canMarketBuyNow) {
                 if (capital.cashRecovery) fundMerchant(bot)
                 return
             }
-            val selling = sellingPurpose(bot)
             val canBuy = canMarketBuyNow && !capital.busy &&
                 (capital.electiveCoins >= BotTradeManager.MINIMUM_OFFER_VALUE || capital.hasPersonalDemand() &&
                     capital.coins.toDouble() * BotTradeIntentions.budgetFraction(bot, BotTradePurpose.MERCHANT_BUY) >=
@@ -92,6 +99,10 @@ object MerchantingCoordinator : BotCoordinator {
                 if (!capital.cashRecovery && !capital.stockHeavy)
                     MerchantStoreBargains.poll(bot)?.let { bot.scriptStack.pushTail(BuyStoreBargainBotScript(bot, it)) }
             } else if (capital.cashRecovery) fundMerchant(bot)
+            return
+        }
+        MerchantWork.script(bot)?.let {
+            bot.scriptStack.push(it)
             return
         }
         val selling = sellingPurpose(bot)

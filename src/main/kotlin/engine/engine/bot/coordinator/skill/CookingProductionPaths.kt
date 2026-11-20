@@ -1,12 +1,13 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.ProductionRecipe
+import api.bot.script.ProductionStage
 import api.predef.SKILL_COOKING
 import game.player.item.consume.food.Food
 
 /**
  * Applies food-specific eligibility to the shared bounded native preparation traversal.
- * Cooking retains its deterministic zero-experience prefixes and exact edible output identities.
+ * Ordinary Cooking retains its deterministic zero-experience prefixes and exact edible output identities.
  *
  * @author lare96
  */
@@ -26,7 +27,8 @@ internal object CookingProductionPaths {
      * Returns native Cooking suffixes and zero-experience preparation for one actual edible output.
      */
     fun forOutput(output: Int,
-                  describe: (ProductionCatalogue.Entry) -> ProductionRecipe?): List<List<ProductionRecipe>> =
-        if (!isFood(output)) emptyList() else
-            ProductionRecipePaths.forOutput(output, SKILL_COOKING, describe) { it.experience == 0.0 }
+                  allowOtherSkills: Boolean = false,
+                  describe: (ProductionCatalogue.Entry) -> ProductionRecipe?): List<List<ProductionStage>> =
+        if (!isFood(output)) emptyList() else ProductionRecipePaths.forOutput(output, SKILL_COOKING,
+            describe, allowOtherSkills) { allowOtherSkills || it.experience == 0.0 }
 }

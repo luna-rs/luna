@@ -10,6 +10,7 @@ import api.predef.*
 import api.predef.ext.*
 import engine.bot.coordinator.skill.SmithingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import engine.bot.economy.BotProductionMetrics
 import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.FightCaveBotScript
 import game.bot.scripts.FightPitBotScript
@@ -106,6 +107,13 @@ cmd("shop", RIGHTS_DEV) {
         }
     }
     plr.overlays.open(ShopInterface(shopList.random()))
+}
+
+cmd("botproductionsales", RIGHTS_DEV) {
+    val sales = BotProductionMetrics.merchantSales()
+    val average = if (sales.units > 0) sales.totalFillMillis / sales.units else 0L
+    plr.sendMessage("Merchant work sold ${sales.units} units for ${sales.netCoins} GP")
+    plr.sendMessage("Estimated profit ${sales.netCoins - sales.estimatedCost} GP, mean ${average}ms to sale")
 }
 
 cmd("botscript", RIGHTS_DEV) {

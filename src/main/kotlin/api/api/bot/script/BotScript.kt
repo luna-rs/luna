@@ -299,13 +299,14 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     stop()
                 } finally {
                     val normalExit = isActive
+                    var productionSaleQueued = false
                     try {
                         finish()
                     } finally {
                         releaseProfitGathering()
-                        if (this@BotScript is InventoryBotScript) finishPlannedProduction()
+                        if (this@BotScript is InventoryBotScript) productionSaleQueued = finishPlannedProduction()
                     }
-                    if (normalExit) {
+                    if (normalExit && !productionSaleQueued) {
                         val gathering = profitGathering
                         if (gathering != null) gathering.completed(bot) else completed()
                     }

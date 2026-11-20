@@ -1,5 +1,8 @@
 package api.bot.script
 
+import api.bot.action.trading.NativeOutputDemand
+import game.bot.scripts.trading.NativeProductionSaleScript
+
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotSupplySources
 import api.bot.action.trading.BotTradeIntentions
@@ -566,7 +569,9 @@ abstract class InventoryBotScript(
                 val ceiling = if (item.id == 995 && plan.recipe.coinCost > 0L)
                     ProductionEconomics.saturatingMultiply(plan.recipe.coinCost, plan.remainingOperations.toLong())
                         .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-                else maximum[item.id] ?: item.amount
+                else plan.recipe.materials[item.id]?.let { perOperation ->
+                    (perOperation.toLong() * plan.remainingOperations).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                } ?: maximum[item.id] ?: item.amount
                 val amount = minOf(item.amount, ceiling)
                 if (amount > 0) Item(item.id, amount) else null
             }
@@ -621,7 +626,8 @@ abstract class InventoryBotScript(
         }
         val primary = plan.recipe.materials.entries.first()
         val operations = (consumed.getValue(primary.key) / primary.value).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        plan.recordProduction(operations)
+        val measuredOutput = (produced[plan.saleGuard?.itemId] ?: 0).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        plan.recordProduction(operations, measuredOutput)
         val product = plan.recipe.products.keys.firstOrNull()
         consumed.forEach { (id, amount) ->
             BotProductionMetrics.recordConversion(id, amount, if (id == primary.key) product else null,
@@ -654,14 +660,28 @@ abstract class InventoryBotScript(
     /**
      * Releases an ended owner's temporary shopping intent while a paused goal keeps its finite remaining allowance.
      */
-    internal fun finishPlannedProduction() {
+    internal fun finishPlannedProduction(): Boolean {
+        if (productionPlan?.saleGuard != null && !isPaused() && bot.scriptStack.current() === this)
+            bot.actions.interruptWeak()
         settlePlannedProduction()
         productionPlan?.let {
             if (!isPaused() && !productionHandedOff) {
                 recordProductionOutcome(plannedEndReason(it))
                 BotTradeIntentions.clearProductionPlan(bot, it, this)
+                it.saleGuard?.let { guard ->
+                    val sale = if (it.hasNextStage()) null else NativeProductionSaleScript.create(bot, guard,
+                        it.guardedOutputProduced, System.currentTimeMillis() + 180_000L)
+                    if (sale != null) {
+                        if (bot.scriptStack.current() === this) bot.scriptStack.softPushHead(sale)
+                        else bot.scriptStack.pushHead(sale)
+                        return true
+                    }
+                    NativeOutputDemand.release(guard.identity)
+                    return true
+                }
             }
         }
+        return false
     }
 
     private fun stopPlannedProduction(reason: Reason = Reason.NO_LONGER_USEFUL) {
@@ -718,7 +738,8 @@ abstract class InventoryBotScript(
                 Reason.ACQUISITION_EXHAUSTED else Reason.CANCELLED)
             return false
         }
-        if (plan.recipe.skill == SKILL_COOKING && !plan.shopAttempted && plan.remainingCoins > 0L &&
+        if ((plan.recipe.skill == SKILL_COOKING || plan.saleGuard != null) && !plan.shopAttempted &&
+            plan.remainingCoins > 0L &&
             plan.targets().any { (id, target) -> owned(id) < target &&
                 BotSupplySources.quote(bot, id, (target.toLong() - owned(id)).coerceAtMost(100L).toInt())?.let {
                     it.maximumUnitPrice <= (plan.maximumUnitPrices[id] ?: 0L) &&

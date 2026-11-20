@@ -39,7 +39,7 @@ internal object DeveloperInspection {
             .firstOrNull { !it.isTerminated() && !it.isFinished() && it.productionPlan != null }?.productionPlan
             ?: return@buildList
         add("Current recipe: ${plan.recipe.key.take(80)}")
-        add("Progress: ${plan.completedOperations}/${plan.operations}; stage ${plan.currentStageIndex + 1}/${plan.recipes.size}")
+        add("Progress: ${plan.completedOperations}/${plan.currentStageOperations}; stage ${plan.currentStageIndex + 1}/${plan.recipes.size}")
         add("Direct spending: ${plan.spentCoins}/${plan.maximumCoins} GP; work deadline: ${(plan.deadline - now).coerceAtLeast(0L) / 1_000}s")
         if (plan.supplyDeadline > 0L) add("Supply deadline: ${(plan.supplyDeadline - now).coerceAtLeast(0L) / 1_000}s; shop tried: ${plan.shopAttempted}")
     }

@@ -55,6 +55,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     fun canTradeWith(shop: Shop): Boolean = visits.canTradeWith(shop)
 
+    internal fun shopDistance(shop: Shop): Long? = visits.distance(shop)
+
     /**
      * Tracks the last supply script queued for each item by the owning activity.
      */

@@ -94,11 +94,13 @@ class TradeBotScript(bot: Bot,
                      private val reactiveSeller: Player? = null,
                      private val reactiveBuyer: Player? = null,
                      private val reactivePrevious: BotScript? = null,
-                     private val saleTarget: Int? = null) :
+                     private val saleTarget: Int? = null,
+                     private val fundedSale: NativeProductionSaleScript.SaleData? = null) :
     ZonedBotScript(bot, duration, zone), SocialBotScript {
 
     init {
         require(saleTarget == null || purpose == BotTradePurpose.SELL)
+        require(fundedSale == null || saleTarget == fundedSale.guard.itemId && purchaseDeadline == fundedSale.deadline)
     }
 
     companion object {
@@ -358,10 +360,18 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
+     * Exposes an actual currently funded commodity from this finite prepared buying visit.
+     */
+    internal fun nativeProfitBid(): BotTradeItem? {
+        val id = expected.firstOrNull()?.item?.id?.let(::unnotedId) ?: return null
+        return profitGatheringPurchase(id)
+    }
+
+    /**
      * Counts physical advertised competition without assuming an unprepared bank stack is for sale.
      */
     internal fun profitGatheringSupply(id: Int): BotTradeItem? {
-        if (buying || !prepared || forceBanking || bot.scriptStack.current() !== this ||
+        if (fundedSale != null || buying || !prepared || forceBanking || bot.scriptStack.current() !== this ||
             !marketplace.contains(bot.position)) return null
         val quote = offering.firstOrNull { unnotedId(it.item.id) == id && it.price > 0L } ?: return null
         val amount = carriedOffer.filterKeys { unnotedId(it) == id }.entries.sumOf { (heldId, amount) ->
@@ -384,7 +394,9 @@ class TradeBotScript(bot: Bot,
         duration.inWholeMilliseconds.coerceAtLeast(1L))
 
     private val ordinaryVisit: Boolean
-        get() = purchaseTarget == null && reactivePlayer == null
+        get() = purchaseTarget == null && reactivePlayer == null && fundedSale == null
+
+    internal fun profitMarketplace(): BotMarketplace = marketplace
 
     private val marketExperience = BotMarketExperience.Visit()
     private var completedExposure: BotMarketExperience.Failure? = null
@@ -957,7 +969,7 @@ class TradeBotScript(bot: Bot,
      * Offers shop selling only after an overflow visit has tried matching existing marketplace advertisers.
      */
     private fun storeOverflow(): SellToStoreBotScript? {
-        if (!marketOverflow || buying || bot.preferences.isMerchant) return null
+        if (!marketOverflow || buying || bot.preferences.isMerchant || fundedSale != null) return null
         return SellToStoreBotScript(bot, saleTarget).takeIf { it.saleCandidates().isNotEmpty() }
     }
 
@@ -969,7 +981,7 @@ class TradeBotScript(bot: Bot,
      * Tests idle scammer availability; social recruitment is exposed only during its own player-scam consideration.
      */
     internal fun canAttemptPlayerScam(): Boolean = bot.preferences.isScammer && reactivePlayer == null &&
-        purchaseTarget == null && !browsing && prepared && !forceBanking && !negotiating && pendingPartner == null &&
+        purchaseTarget == null && fundedSale == null && !browsing && prepared && !forceBanking && !negotiating && pendingPartner == null &&
         activeTrade == null && advertisementTrade == null && !reactiveSalePreparing &&
         marketplace.tradingSpot(this) == bot.position && bot.tradingWith == -1 && !bot.overlays.hasWindow() &&
         bot.walking.isEmpty && !bot.navigator.isActive && !bot.tradeRequests.hasRequest { true }
@@ -1288,6 +1300,16 @@ class TradeBotScript(bot: Bot,
         val strategy = resolveTradePrice()
         tradePrice = strategy
         val offers = when {
+            fundedSale != null -> {
+                val id = fundedSale.guard.itemId
+                val owned = BotTradeManager.transferableAmount(bot, id)
+                val amount = minOf(fundedSale.remaining, (owned - fundedSale.retained).coerceAtLeast(0),
+                    BotTradeManager.saleableAmount(bot, id))
+                val quoted = maxOf(fundedSale.guard.minimumPrice, fundedSale.quotedPrice)
+                if (amount > 0 && BotTradeManager.hasNativeSaleStock(bot, id, amount))
+                    listOf(BotTradeItem(Item(id, amount), quoted, purpose, bot))
+                else emptyList()
+            }
             saleTarget != null -> listOfNotNull(BotTradeManager.computeTargetedSaleItem(bot, strategy, saleTarget)
                 ?.takeIf { BotTradeManager.hasNativeSaleStock(bot, saleTarget, it.item.amount) })
             !buying -> BotTradeManager.computeOfferItems(bot, strategy, purpose, nativeTrade = true)
@@ -2432,6 +2454,7 @@ class TradeBotScript(bot: Bot,
         if (buying == other.buying) return null
         val buyer = if (buying) this else other
         val seller = if (buying) other else this
+        if (seller.fundedSale != null && buyer.purpose != BotTradePurpose.BUY) return null
         val asks = seller.prices(seller.offering)
         val saleStock = if (seller === this) ownStock else otherStock
         val payingStock = if (buyer === this) ownStock else otherStock
@@ -2453,12 +2476,13 @@ class TradeBotScript(bot: Bot,
         fun select(demand: List<BotTradeItem>): Pair<Map<Int, Int>, Map<Int, Int>>? {
             val current = demand.filter { it.item.id in stock }.mapNotNull { buyer.productionPurchaseQuote(it) }
             val hasProduction = current.any { BotTradeIntentions.productionLimit(buyer.bot, it.item.id) != null }
-            val funding = if (hasProduction) payment.filterKeys { it == COINS } else payment
+            val coinOnly = hasProduction || seller.fundedSale != null
+            val funding = if (coinOnly) payment.filterKeys { it == COINS } else payment
             val availablePayment = buyer.offering.mapNotNull { quote ->
                 val count = funding[quote.item.id] ?: return@mapNotNull null
                 BotTradeItem(Item(quote.item.id, count), quote.price, quote.purpose, buyer.bot)
             }
-            val affordable = if (hasProduction) BotTradeManager.affordablePurchases(current, availablePayment) else current
+            val affordable = if (coinOnly) BotTradeManager.affordablePurchases(current, availablePayment) else current
             val quantities = buyer.quantities(affordable.map { it.item }, true).toMutableMap()
             val bids = buyer.prices(affordable).toMutableMap()
             if (buyer.purpose == BotTradePurpose.MERCHANT_BUY) {
@@ -2823,7 +2847,7 @@ class TradeBotScript(bot: Bot,
         fun unchanged() = tradeDeadlineProblem() == null && sameBasket() &&
                 bot.inventory.hasSpaceForAll(theirs) && offer.other.inventory.hasSpaceForAll(mine) &&
                 BotTradeManager.outgoingAllowed(bot, mine) && supplyTradeBlocker(own, receiving) == null &&
-                BotMerchantCapital.allows(bot, mine, theirs) && validate()
+                BotMerchantCapital.allows(bot, mine, theirs) && meetsFundedSaleTerms(own, receiving) && validate()
         if (feedback != null) {
             return finishHumanTrade(original, feedback, ::sameBasket, {
                 humanTradeBlocker(offer.other, own, receiving, mine, theirs, coinPrice, validate)
@@ -2856,6 +2880,16 @@ class TradeBotScript(bot: Bot,
      */
     private data class TradeBlocker(val reason: String, val adjustment: String)
 
+    private fun meetsFundedSaleTerms(own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
+        val sale = fundedSale ?: return true
+        val selected = quantities(own.toItems(), true)
+        val id = sale.guard.itemId
+        val amount = selected[id] ?: return false
+        return selected.size == 1 && amount in 1..sale.remaining && receiving.size == 1 &&
+            (receiving[COINS] ?: 0).toLong() >= amount * sale.guard.minimumPrice &&
+            BotTradeManager.transferableAmount(bot, id) >= sale.retained
+    }
+
     private fun humanTradeBlocker(other: Player, own: Map<Int, Int>, receiving: Map<Int, Int>,
                                   mine: List<Item>, theirs: List<Item>, coinPrice: Long?,
                                   validate: () -> Boolean): TradeBlocker? {
@@ -2867,6 +2901,9 @@ class TradeBotScript(bot: Bot,
         if (!BotTradeManager.outgoingAllowed(bot, mine))
             return TradeBlocker("I need to keep some of the ${tradeItemName(own.keys.first())} I offered.",
                 "Please reduce your payment for a smaller trade.")
+        if (!meetsFundedSaleTerms(own, receiving))
+            return TradeBlocker("I can only sell this batch for coins at the agreed price.",
+                "Please offer coins for this sale.")
         val supply = supplyTradeBlocker(own, receiving)
         if (supply != null || !BotMerchantCapital.allows(bot, mine, theirs)) {
             val payment = coinPrice ?: TradeBasket.value(quantities(mine, true), prices(offering))
@@ -2948,6 +2985,10 @@ class TradeBotScript(bot: Bot,
      * Debits and learns from the real native transfer before window cleanup can cancel a waiting coroutine.
      */
     private fun settleNativeTrade(own: Map<Int, Int>, receiving: Map<Int, Int>) {
+        fundedSale?.let { sale ->
+            val amount = quantities(own.toItems(), true).getValue(sale.guard.itemId)
+            sale.settle(bot, amount, receiving.getValue(COINS).toLong())
+        }
         if (ordinaryVisit) {
             val useful = own.any { it.value > 0 } && receiving.any { it.value > 0 } &&
                 (if (buying) receiving else own).any { it.key != COINS && it.value > 0 }

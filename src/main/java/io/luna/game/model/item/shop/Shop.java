@@ -789,6 +789,13 @@ public final class Shop {
     }
 
     /**
+     * Returns the normal stock of an authored shop slot.
+     */
+    public int originalStock(int index) {
+        return isOriginallyStocked(index) ? amountMap[index].getAsInt() : 0;
+    }
+
+    /**
      * @return Restock behavior configuration for this shop. {@code null} signifies that this shop will not restock items.
      */
     public RestockPolicy getRestockPolicy() {
