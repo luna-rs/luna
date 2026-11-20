@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
@@ -57,7 +58,7 @@ class HerbGatheringScript(
          * Offers a bounded melee herb trip using owned equipment and currently accessible native camps.
          * The existing gathering script retains exact targets, loot, banking and identification continuation.
          */
-        internal fun profitCandidate(bot: Bot, duration: Duration): HerbGatheringScript? {
+        internal fun profitCandidate(bot: Bot, duration: Duration, camp: SubZone? = null): HerbGatheringScript? {
             if (!ActionSafety.NON_COMBAT.allows(bot) ||
                 !BotCombatActionHandler.mayGainExperience(bot, Skill.HITPOINTS) ||
                 bot.totalItemAmount(Herb.GUAM_LEAF.id) >= IdentifyHerbBotScript.herbTarget(bot)) return null
@@ -65,7 +66,8 @@ class HerbGatheringScript(
             if (outfit.gear[Equipment.WEAPON] == null) return null
             val readiness = CombatCoordinator.combatReadiness(bot, BotGearPurpose.MELEE)
             val zones = profitMinimums.filter { (zone, minimum) ->
-                readiness >= minimum && zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, zone)
+                (camp == null || camp == zone && bot.recentEscape?.avoids(zone) != true) &&
+                    readiness >= minimum && zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, zone)
             }.keys.shuffled().take(3).toMutableList()
             if (zones.isEmpty()) return null
             return HerbGatheringScript(bot, Herb.GUAM_LEAF, minOf(duration, 90.minutes), zones)

@@ -4,11 +4,13 @@ import api.bot.action.PkClanPolicy
 import api.bot.action.PkLoadoutPreparation
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
+import api.predef.rand
 import game.bot.scripts.combat.PkBotScript
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -60,7 +62,8 @@ object PkingCoordinator : BotCoordinator {
      * Restricted Magic accounts use shared wanted-item acquisition or earn its funding before starting an outing.
      * Other missing supplies enter the ordinary preparation stage.
      */
-    internal fun getScript(bot: Bot, coverage: Boolean = false): BotScript? {
+    internal fun getScript(bot: Bot, coverage: Boolean = false,
+                           purpose: Purpose? = bot.preferences.pk?.purpose()): BotScript? {
         if (bot.state != EntityState.ACTIVE || bot.preferences.isSkiller || bot.preferences.pk == null ||
             !bot.preferences.canChooseActivity(BotActivity.PKING) || !ActionSafety.NON_COMBAT.allows(bot) ||
             (!coverage && bot.scriptStack.size() > 0) ||
@@ -73,12 +76,13 @@ object PkingCoordinator : BotCoordinator {
             }
             return PkRuneRestocking.getScript(bot, preparation.magicSupplyRequirements().orEmpty())
         }
-        val solo = PkClanPolicy.chooseSolo(bot)
-        val clan = PkClanPolicy(bot)
+        val solo = !coverage && PkClanPolicy.chooseSolo(bot)
+        val clan = PkClanPolicy(bot, purpose)
         if (clan.clanOuting && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) {
             PkCoverage.live.recordFailure(bot, PkCoverage.Failure.CLAN)
             return null
         }
-        return PkBotScript(bot, sessionDuration(bot), solo)
+        val duration = if (coverage) rand(35, 55).minutes else sessionDuration(bot)
+        return PkBotScript(bot, duration, solo, purpose)
     }
 }

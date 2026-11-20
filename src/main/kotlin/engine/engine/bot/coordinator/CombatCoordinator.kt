@@ -4,6 +4,7 @@ import api.bot.boss.BossRecruitment
 import api.bot.boss.BossTarget
 import api.bot.boss.BossReadiness
 
+import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.totalItemAmount
@@ -242,7 +243,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
          * Dragon outings require an owned anti-dragon shield and a usable one-handed melee weapon.
          * Feather trips are reserved for early-game bots.
          */
-        internal fun profitDropGatheringScript(bot: Bot, duration: Duration): NpcDropGatheringScript? {
+        internal fun profitDropGatheringScript(bot: Bot, duration: Duration, zone: SubZone? = null): NpcDropGatheringScript? {
             val loadout = CombatLoadout.find(bot, BotGearPurpose.MELEE) ?: return null
             val readiness = combatReadiness(bot, BotGearPurpose.MELEE)
             val shieldReady = bot.itemTracker.contains(1540) &&
@@ -252,6 +253,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 val current = bot.totalItemAmount(goal.itemId)
                 if (current >= goal.stockCap || world.economy.getPrice(goal.itemId) <= 0) continue
                 val options = camps.filter { it.zone in goal.zones && it.minimum <= readiness &&
+                    (zone == null || zone == it.zone && bot.recentEscape?.avoids(zone) != true) &&
                     canUseCamp(it.zone, BotGearPurpose.MELEE, shieldReady) &&
                     it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }
                     .shuffled().take(3)

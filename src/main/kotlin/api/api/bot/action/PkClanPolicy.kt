@@ -1,11 +1,11 @@
 package api.bot.action
 
 import api.bot.isRealBot
-
 import game.bot.scripts.combat.PkBotScript
 import engine.controllers.MultiCombatAreaListener
 import engine.controllers.WildernessLocatableController.levelAt
 import io.luna.game.model.EntityState
+import io.luna.game.model.World
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -21,7 +21,7 @@ import java.util.concurrent.ThreadLocalRandom
  *
  * @author lare96
  */
-internal class PkClanPolicy(private val bot: Bot) {
+internal class PkClanPolicy(private val bot: Bot, private val purpose: Purpose? = bot.preferences.pk?.purpose()) {
     /**
      * Every permanent PK profile participates; an outing purpose does not determine membership.
      */
@@ -30,7 +30,7 @@ internal class PkClanPolicy(private val bot: Bot) {
     /**
      * Group departure and patrol rules belong only to CLAN-purpose outings.
      */
-    val clanOuting: Boolean get() = enabled && bot.preferences.pk?.purpose() == Purpose.CLAN
+    val clanOuting: Boolean get() = enabled && purpose == Purpose.CLAN
 
     /**
      * The assigned unnoted cape from the external registry, shared by every PK purpose.
@@ -89,12 +89,10 @@ internal class PkClanPolicy(private val bot: Bot) {
      */
     fun onlineMembers(activePkOnly: Boolean = true): List<Bot> {
         val id = cape ?: return emptyList()
-        return bot.world.players.stream().filter { it.isRealBot() && it !== bot }.map { it as Bot }.filter {
-            it.state == EntityState.ACTIVE && it.isAlive && !it.preferences.isSkiller &&
-                it.preferences.pk != null && bot.world.botManager.clanRegistry.capeFor(it.username) == id &&
-                (!activePkOnly || (it.preferences.pk?.purpose() == Purpose.CLAN &&
-                    it.scriptStack.containsActive(PkBotScript::class.java)))
-        }.toList()
+        return membersByCape(bot.world)[id].orEmpty().filter {
+            it !== bot && it.state == EntityState.ACTIVE && it.isAlive && !it.client.isPendingLogout &&
+                (!activePkOnly || it.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.isGroupOuting() == true)
+        }
     }
 
     /**
@@ -102,8 +100,8 @@ internal class PkClanPolicy(private val bot: Bot) {
      * Solo, expired and resupplying sessions cannot lead a group away from its hunting area.
      */
     fun patrolMembers(): List<Bot> = onlineMembers().filter {
-        apparentAlly(it) && it.position.z == 0 && levelAt(it.position) > 0 &&
-            it.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.isGroupOuting() == true
+        apparentAlly(it) &&
+            it.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.readyForClanPatrol() == true
     }
 
     /**
@@ -112,13 +110,16 @@ internal class PkClanPolicy(private val bot: Bot) {
     fun patrolLeader(members: List<Bot> = patrolMembers()): Bot = (members + bot).minBy { it.usernameHash }
 
     /**
-     * Online company alone is insufficient to initiate a fight: a group outing needs its leader nearby.
-     * The leader needs at least one nearby patrol member of its own clan.
+     * Group combat requires local support. Clanmates who are still travelling can join the existing party.
      */
-    fun inFormation(): Boolean {
-        val members = patrolMembers()
-        val leader = patrolLeader(members)
-        return if (leader === bot) members.any { near(it, GROUP_RADIUS) } else near(leader, GROUP_RADIUS)
+    fun inFormation(members: List<Bot> = patrolMembers()): Boolean =
+        members.any { near(it, GROUP_RADIUS) }
+
+    /**
+     * A scout can start a fight while another member is on the same clan outing, including the approach.
+     */
+    fun hasOutingSupport(): Boolean = onlineMembers(activePkOnly = false).any {
+        it.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.canSupportClanOuting() == true
     }
 
     /**
@@ -135,6 +136,27 @@ internal class PkClanPolicy(private val bot: Bot) {
     companion object {
         const val FOLLOW_RADIUS = 4
         const val GROUP_RADIUS = 10
+
+        private var indexedWorld: World? = null
+        private var indexedTick = Long.MIN_VALUE
+        private var indexedMembers = emptyMap<Int, List<Bot>>()
+
+        /**
+         * Shares one clan roster scan across all game-thread patrol and formation checks in a tick.
+         * State that can change during the tick is checked by the caller.
+         */
+        private fun membersByCape(world: World): Map<Int, List<Bot>> {
+            val tick = world.currentTick
+            if (world === indexedWorld && tick == indexedTick) return indexedMembers
+            val registry = world.botManager.clanRegistry
+            indexedMembers = world.players.asSequence().filterIsInstance<Bot>()
+                .filter { it.isRealBot() && it.preferences.pk != null && !it.preferences.isSkiller }
+                .mapNotNull { member -> registry.capeFor(member.username)?.let { it to member } }
+                .groupBy({ it.first }, { it.second })
+            indexedWorld = world
+            indexedTick = tick
+            return indexedMembers
+        }
 
         /**
          * Keeps a viable focus without a stronger reason to help elsewhere. Fresh defence takes priority, then

@@ -74,16 +74,18 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         profitCandidate(bot, level)?.start(zones) ?: VoidBotScript(bot)
 
     internal fun profitCandidate(bot: Bot, level: Int, marketOnly: Boolean = false,
-                                 items: Set<Int>? = null): GatheringOpportunity? {
+                                 items: Set<Int>? = null, mine: SubZone? = null): GatheringOpportunity? {
         val pickaxe = Pickaxe.entries.filter { it.level <= bot.mining.level &&
             ProfitGatheringGoal.physical(bot, it.id) > 0L }.minByOrNull { it.speed }
             ?: return null
+        fun reachable(zone: SubZone) = (mine == null || mine == zone) && zone.entryBlocker(bot) == null &&
+            bot.recentEscape?.avoids(zone) != true
         val available = activities(bot, minOf(level, bot.mining.level), false).filter {
-            it.zones.any { zone -> zone.entryBlocker(bot) == null && bot.recentEscape?.avoids(zone) != true }
+            it.zones.any(::reachable)
         }.let { all -> all.filterNot { method -> method.zones.all { bot.recentlyFull(it) } }.ifEmpty { all } }
         val quotes = linkedMapOf<Ore, ProfitGatheringDemand.Quote>()
         for (ore in available.flatMap { it.tokens }.distinct()) {
-            if (ore == GEM_ROCK || ore.sizes.isNotEmpty()) continue
+            if (ore == GEM_ROCK || ore.sizes.isNotEmpty() || mine != null && ore !in rocks[mine].orEmpty()) continue
             val output = if (ore == RUNE_ESSENCE && bot.mining.level >= PURE_ESSENCE.level) PURE_ESSENCE else ore
             if (items != null && output.item !in items) continue
             val gemChance = if (ore.rollsGems) (69.0 / 70.0) /
@@ -98,9 +100,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
             }
         }
         val ore = ProfitGatheringDemand.select(bot, quotes) ?: return null
-        val locations = available.filter { ore in it.tokens }.flatMap { it.zones }.distinct().filter {
-            it.entryBlocker(bot) == null && bot.recentEscape?.avoids(it) != true
-        }
+        val locations = available.filter { ore in it.tokens }.flatMap { it.zones }.distinct().filter(::reachable)
         val quote = quotes.getValue(ore)
         return GatheringOpportunity(quote, locations, bot, getDuration(bot, skillId),
             if (ore == RUNE_ESSENCE) setOf(RUNE_ESSENCE.item, PURE_ESSENCE.item) else
