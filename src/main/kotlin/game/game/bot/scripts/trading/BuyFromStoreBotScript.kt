@@ -131,12 +131,13 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         //
         // One wanted item is pushed toward its target before another one is selected. If an item cannot currently be
         // purchased because every accessible shop is empty, too expensive, or inaccessible, block it for this trip.
+        val shopPurchases = mutableListOf<BotShopResale.Batch>()
         val blockedWantedItems = HashSet<Int>()
 
         while (remainingBudget > 0) {
             val purchase = nextWantedItem(shops, blockedWantedItems, remainingBudget) ?: break
             val wanted = purchase.wanted
-            val spent = buyWantedItem(shops, wanted, remainingBudget, purchase.foodIdentity, purchase.foodCoins)
+            val spent = buyWantedItem(shops, wanted, remainingBudget, purchase.foodIdentity, purchase.foodCoins, shopPurchases)
 
             if (spent < 1) {
                 // Avoid selecting an impossible wanted item forever during this shopping trip.
@@ -155,10 +156,11 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
 
         // Only start random shopping once no currently-purchasable wanted item remains.
         if (remainingBudget > 0 && bot.preferences.isMerchant) {
-            spendSpeculatively(shops.filterNot { it.isGeneralStore }, remainingBudget)
+            spendSpeculatively(shops.filterNot { it.isGeneralStore }, remainingBudget, shopPurchases)
         }
 
         bot.preferences.rebalanceWantedItems()
+        ShopPurchaseOffers.queue(bot, shopPurchases)
         return true
     }
 
@@ -255,7 +257,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      * Attempts to complete one wanted-item target before moving to another wanted item.
      */
     private suspend fun buyWantedItem(shops: List<Shop>, wanted: WantedItemDefinition, budget: Int,
-                                      foodIdentity: String?, foodCoins: Int): Int {
+                                      foodIdentity: String?, foodCoins: Int,
+                                      purchases: MutableList<BotShopResale.Batch>): Int {
         val production = BotTradeIntentions.productionLimit(bot, wanted.id)
         val food = if (foodIdentity == null) null else {
             val previous = foodBudget
@@ -293,7 +296,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 maxAmount = amountNeeded,
                 budget = minOf(budget - spent, food?.remainingCoins ?: Int.MAX_VALUE),
                 expectedProduction = production,
-                expectedFoodIdentity = food?.identity
+                expectedFoodIdentity = food?.identity,
+                purchases = purchases
             )
 
             spent += amountSpent
@@ -316,7 +320,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      * - Average bots may buy one or several items.
      * - Intelligent bots deliberately spread their money across several different items.
      */
-    private suspend fun spendSpeculatively(shops: List<Shop>, budget: Int): Int {
+    private suspend fun spendSpeculatively(shops: List<Shop>, budget: Int,
+                                           purchases: MutableList<BotShopResale.Batch>): Int {
         if (!BotMerchantCapital.active(bot)) return 0
         val capital = BotMerchantCapital.snapshot(bot)
         if ((capital.cashRecovery || capital.electiveCoins < 1L) && capital.stockingCoins < 1L) return 0
@@ -392,6 +397,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 id = id,
                 maxAmount = Int.MAX_VALUE,
                 speculative = true,
+                purchases = purchases,
                 // Let an early expensive choice buy at least one before cheaper choices consume its budget.
                 budget = maxOf(itemBudget, shop.computeBuyValue(shop.stockIdFor(id), 1).orElse(0))
                     .coerceAtMost(remainingBudget)
@@ -414,7 +420,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         budget: Int,
         expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null,
         expectedFoodIdentity: String? = null,
-        speculative: Boolean = false
+        speculative: Boolean = false,
+        purchases: MutableList<BotShopResale.Batch>? = null
     ): Int {
         val production = expectedProduction ?: BotTradeIntentions.productionLimit(bot, id)
         var remainingAmount = maxAmount
@@ -447,6 +454,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 break
             }
 
+            if (bot.preferences.isMerchant && production == null && expectedFoodIdentity == null)
+                purchases?.add(BotShopResale.Batch(id, acquired, spent))
             totalSpent += spent
             remainingBudget -= spent
             remainingAmount -= acquired

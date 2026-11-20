@@ -27,6 +27,7 @@ internal class BotShopVisits(private val bot: Bot, private val handler: BotActio
 
     companion object {
         private const val SHOPKEEPER_WANDER_RADIUS = 5
+        private const val MAX_OPEN_ATTEMPTS = 3
     }
 
     /**
@@ -62,17 +63,19 @@ internal class BotShopVisits(private val bot: Bot, private val handler: BotActio
         bot.overlays.closeWindows()
         return withTimeoutOrNull(90.seconds) {
             for ((npc, seller) in candidates) {
-                if (!eligible()) break
-                if (!handler.interactions.approach(npc, timeout = 35.seconds, allowOutOfView = true,
-                        canContinue = ::eligible)) continue
-                if (!eligible()) break
-                val overlay = openAtNpc(shop, npc, seller, ::eligible) ?: continue
-                if (!eligible() || !near(npc)) {
-                    if (bot.overlays[ShopInterface::class] === overlay) bot.overlays.closeWindows()
-                    return@withTimeoutOrNull null
+                for (attempt in 0 until MAX_OPEN_ATTEMPTS) {
+                    if (!eligible()) return@withTimeoutOrNull null
+                    if (!seller.matches(npc) || !npc.isAlive || npc.state != EntityState.ACTIVE) break
+                    if (!handler.interactions.approach(npc, timeout = 25.seconds, allowOutOfView = true,
+                            canContinue = ::eligible)) break
+                    val overlay = openAtNpc(shop, npc, seller, ::eligible) ?: continue
+                    if (!eligible() || !near(npc)) {
+                        if (bot.overlays[ShopInterface::class] === overlay) bot.overlays.closeWindows()
+                        continue
+                    }
+                    visit = Visit(overlay, npc, bot.position, seller)
+                    return@withTimeoutOrNull overlay
                 }
-                visit = Visit(overlay, npc, bot.position, seller)
-                return@withTimeoutOrNull overlay
             }
             null
         }
@@ -121,8 +124,9 @@ internal class BotShopVisits(private val bot: Bot, private val handler: BotActio
             if (!handler.interactions.interact(seller.option(), npc) {
                     eligible() && seller.matches(npc)
                 }) return@own null
-            withTimeoutOrNull(10.seconds) {
-                while (near(npc)) {
+            val timeout = if (seller.dialogueOption() != null) 10.seconds else 4.seconds
+            withTimeoutOrNull(timeout) {
+                while (eligible() && near(npc) && seller.matches(npc)) {
                     val shopWindow = bot.overlays[ShopInterface::class]
                     if (shopWindow != null) {
                         if (shopWindow.shop === shop) return@withTimeoutOrNull shopWindow

@@ -153,8 +153,16 @@ class GeneralStoreShoppingScript private constructor(
         else NativeOutputDemand.track(bot, identity, quantity, deadline)
         if (!reserved) return
         val before = bot.inventory.computeNonDynamicAmountForId(quote.stockId)
+        val coinsBefore = bot.inventory.computeNonDynamicAmountForId(coins)
         handler.shop.buyQuoted(shop, quote.stockId, quote.amount, quote.cost)
         val acquired = bot.inventory.computeNonDynamicAmountForId(quote.stockId) - before
+        if (acquired > 0 && bot.preferences.isMerchant) {
+            NativeOutputDemand.release(identity)
+            val spent = coinsBefore - bot.inventory.computeNonDynamicAmountForId(coins)
+            if (spent <= 0 || !ShopPurchaseOffers.queue(bot, listOf(BotShopResale.Batch(quote.id, acquired, spent))))
+                handler.banking.travelToBankDepositAll()
+            return
+        }
         if (acquired > 0) {
             val sale = if (quote.funded) NativeProductionSaleScript.createForOutput(bot, identity, quote.id,
                 acquired, quote.floor, deadline) else null

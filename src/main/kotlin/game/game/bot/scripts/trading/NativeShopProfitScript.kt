@@ -1,5 +1,6 @@
 package game.bot.scripts.trading
 
+import api.bot.action.trading.BotShopResale
 import api.bot.action.trading.NativeOutputDemand
 import api.bot.action.trading.NativeShopOpportunities
 import api.bot.script.DynamicBotScript
@@ -43,6 +44,12 @@ internal class NativeShopProfitScript(bot: Bot, private val deal: NativeShopOppo
             val acquired = bot.inventory.computeNonDynamicAmountForId(quote.stockId) - before
             val spent = cashBefore - wallet()
             if (acquired < 1 || spent !in 1..quote.cost) return@withTimeoutOrNull
+            if (bot.preferences.isMerchant) {
+                NativeOutputDemand.release(quote.identity)
+                if (!ShopPurchaseOffers.queue(bot, listOf(BotShopResale.Batch(quote.id, acquired, spent))))
+                    handler.banking.travelToBankDepositAll()
+                return@withTimeoutOrNull
+            }
             if (!quote.funded) {
                 handler.banking.travelToBankDepositAll()
                 return@withTimeoutOrNull

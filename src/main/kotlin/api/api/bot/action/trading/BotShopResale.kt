@@ -38,6 +38,31 @@ internal object BotShopResale {
         }
     }
 
+    /**
+     * A paid batch measured at the shop counter, using the base commodity ID.
+     *
+     * @author lare96
+     */
+    data class Batch(val id: Int, val quantity: Int, val cost: Int)
+
+    /**
+     * Retains some of each useful purchase until the merchant has built a reserve.
+     * Saleable stock already accounts for personal and active production requirements.
+     */
+    fun saleQuantity(bot: Bot, batch: Batch): Int {
+        val saleable = minOf(batch.quantity, BotTradeManager.saleableAmount(bot, batch.id))
+        if (!bot.preferences.isMerchant || saleable < 1) return saleable
+        val target = target(batch.id)
+        val previouslyOwned = (BotTradeManager.transferableAmount(bot, batch.id) - batch.quantity).coerceAtLeast(0)
+        val retained = if (batch.quantity == 1 && previouslyOwned >= target / 2) 0 else
+            minOf((batch.quantity + 1) / 2, (target - previouslyOwned).coerceAtLeast(0))
+        return minOf(saleable, batch.quantity - retained, 100)
+    }
+
+    fun combinedBatches(purchases: List<Batch>): List<Batch> = purchases.groupBy { it.id }.map { (id, batches) ->
+        Batch(id, batches.sumOf { it.quantity }, batches.sumOf { it.cost })
+    }
+
     fun remainingStock(bot: Bot, id: Int): Int {
         val target = if (bot.preferences.isMerchant) target(id) else 0
         val owned = bot.totalItemAmount(id).toLong() + BotMerchantMarket.positions(bot)

@@ -1,5 +1,6 @@
 package game.bot.scripts.trading
 
+import api.bot.action.trading.BotShopResale
 import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
@@ -136,6 +137,10 @@ class BuyStoreBargainBotScript private constructor(
             remainingQuantity = (remainingQuantity - acquired.coerceAtLeast(0)).coerceAtLeast(0)
             remainingBudget = (remainingBudget - spent.coerceAtLeast(0)).coerceAtLeast(0)
             purchased = bought && acquired == amount && spent == cost
+            if (acquired > 0 && spent > 0) {
+                val base = Item(itemId).unnotedItemDef.id()
+                ShopPurchaseOffers.queue(bot, listOf(BotShopResale.Batch(base, acquired, spent)))
+            }
         }
         return true
     }
