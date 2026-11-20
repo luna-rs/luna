@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * Jiminua's Jungle Store on Karamja.
  */
 ShopHandler.create("Jiminua's Jungle Store.") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

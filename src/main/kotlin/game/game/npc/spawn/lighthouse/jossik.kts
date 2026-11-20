@@ -14,6 +14,7 @@ import io.luna.game.model.item.shop.RestockPolicy
 
 // Lost City inventory: lighthouseshop.
 ShopHandler.create("Lighthouse Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

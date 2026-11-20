@@ -11,6 +11,7 @@ import io.luna.game.model.item.shop.RestockPolicy
  * The Pollnivneach General Store, run by a market seller.
  */
 ShopHandler.create("Pollnivneach General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

@@ -31,6 +31,11 @@ class ShopReceiver(val name: String) {
     var currency = Currency.COINS
 
     /**
+     * Enables supplemental bot shopping at general stores.
+     */
+    var generalStore = false
+
+    /**
      * Optional pricing for original stock; null preserves the usual specialty-shop prices.
      */
     var stockPricing: Shop.StockPricing? = null
@@ -109,6 +114,7 @@ class ShopReceiver(val name: String) {
     fun register() {
         // The shop registry remains the single source of truth. Bot shopping discovers shops from ShopManager later.
         val shop = Shop(world, name, restock, buy, currency, stockPricing)
+        shop.setGeneralStore(generalStore)
         shop.init(items)
 
         // Normal players can still discover this shop through its configured NPC, object, or button listeners.

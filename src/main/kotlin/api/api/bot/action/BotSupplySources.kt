@@ -75,7 +75,10 @@ object BotSupplySources {
         for (shop in shops) {
             if (shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) continue
             val reference = WeakReference(shop)
-            for (id in shop.itemIds) byId.getOrPut(id) { ArrayList() }.add(reference)
+            val ids = shop.itemIds.mapTo(HashSet()) { id ->
+                io.luna.game.model.def.ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+            }.apply { addAll(shop.itemIds) }
+            for (id in ids) byId.getOrPut(id) { ArrayList() }.add(reference)
         }
         return Index(tick, shops.size, byId).also { indexes[world] = it }
     }
@@ -102,15 +105,16 @@ object BotSupplySources {
     }
 
     private fun nativeQuote(shop: Shop, id: Int, maxQuantity: Int): Quote? {
-        val slot = shop.items.computeIndexForId(id)
+        val stockId = shop.stockIdFor(id)
+        val slot = shop.items.computeIndexForId(stockId)
         if (slot < 0) return null
         val item = shop.items[slot] ?: return null
-        if (item.id != id || item.isDynamic || item.amount < 1) return null
+        if (item.id != stockId || item.isDynamic || item.amount < 1) return null
         val quantity = minOf(maxQuantity, item.amount)
         var previous = 0L
         var maximumUnitPrice = 0L
         for (amount in 1..quantity) {
-            val total = shop.computeBuyValue(id, amount).orElse(-1).toLong()
+            val total = shop.computeBuyValue(stockId, amount).orElse(-1).toLong()
             if (total < 1L || total < previous) return null
             // Two independently rounded native batch totals can differ from their exact marginal by one coin.
             val marginal = total - previous + if (amount > 1) 1L else 0L

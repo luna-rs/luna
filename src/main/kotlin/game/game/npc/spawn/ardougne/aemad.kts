@@ -22,6 +22,7 @@ val SHOP_NAME = "Aemad's Adventuring Supplies."
  * Registers Aemad's adventuring supplies shop in East Ardougne.
  */
 ShopHandler.create(SHOP_NAME) {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.FAST
     currency = Currency.COINS

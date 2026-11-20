@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * The general store in Canifis, run by Fidelio.
  */
 ShopHandler.create("General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

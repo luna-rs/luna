@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * The West Ardougne General Store, run by Chadwell.
  */
 ShopHandler.create("West Ardougne General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

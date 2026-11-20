@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * The general store in Port Khazard.
  */
 ShopHandler.create("Khazard General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

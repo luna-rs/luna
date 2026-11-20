@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * The Lletya General Store, run by Eudav.
  */
 ShopHandler.create("Lletya General Store") {
+    generalStore = true
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

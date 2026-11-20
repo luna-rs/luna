@@ -106,19 +106,20 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             if (expectedFoodIdentity == null) Long.MAX_VALUE else BotFoodDemand.allowance(bot).toLong()).toInt()
         if (maxAmount < 1 || wallet < 1) return false
         if (production != null && shop.currency != Currency.COINS) return false
-        val capacity = if (itemDef(id).isStackable) Int.MAX_VALUE else bot.inventory.computeRemainingSize()
-        var quantity = minOf(100, maxAmount, shop.items.computeAmountForId(id), capacity,
-            Int.MAX_VALUE - bot.inventory.computeAmountForId(id))
+        val stockId = shop.stockIdFor(id)
+        val capacity = if (itemDef(stockId).isStackable) Int.MAX_VALUE else bot.inventory.computeRemainingSize()
+        var quantity = minOf(100, maxAmount, shop.items.computeAmountForId(stockId), capacity,
+            Int.MAX_VALUE - bot.inventory.computeAmountForId(stockId))
         if (production != null) quantity = minOf(quantity,
             (production.target.toLong() - bot.totalItemAmount(id)).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
         if (expectedFoodIdentity != null) quantity = minOf(quantity, BotFoodDemand.deficit(bot))
         while (quantity > 0) {
-            val quote = shop.computeBuyValue(id, quantity).orElse(-1)
-            if (quote in 1..wallet && bot.inventory.hasSpaceFor(Item(id, quantity)) &&
+            val quote = shop.computeBuyValue(stockId, quantity).orElse(-1)
+            if (quote in 1..wallet && bot.inventory.hasSpaceFor(Item(stockId, quantity)) &&
                 (production == null || (quote.toLong() + quantity - 1L) / quantity <= production.maximumUnitPrice) &&
                 (expectedFoodIdentity == null || (quote.toLong() + quantity - 1L) / quantity <=
                     BotFoodDemand.priceCeiling(bot, id, quantity))) {
-                val bought = buyExact(shop, id, quantity, quote, expectedProduction ?: production, expectedFoodIdentity)
+                val bought = buyExact(shop, stockId, quantity, quote, expectedProduction ?: production, expectedFoodIdentity)
                 if (bought) delay(1.seconds)
                 return bought
             }
@@ -133,8 +134,9 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     private fun buyExact(shop: Shop, id: Int, amount: Int, maxTotalCost: Int,
                          expectedProduction: BotTradeIntentions.ProductionPurchaseLimit? = null,
                          expectedFoodIdentity: String? = null): Boolean {
-        if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, id) && BotGearDemand.forItem(bot, id) != null &&
-            (!BotGearDemand.usableNow(bot, id) || BotGearDemand.hasUsableOwned(bot, id))) return false
+        val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        if (!BotTradeIntentions.hasLiteralSupplyDemand(bot, base) && BotGearDemand.forItem(bot, base) != null &&
+            (!BotGearDemand.usableNow(bot, base) || BotGearDemand.hasUsableOwned(bot, base))) return false
         if (amount !in 1..100 || maxTotalCost < 1 || !ActionSafety.NON_COMBAT.allows(bot) ||
             bot.isConnectedPlayer && !bot.isAutomationActive ||
             bot.overlays[ShopInterface::class]?.shop !== shop) return false
@@ -148,21 +150,21 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         val currency = shop.currency.id
         val coins = bot.inventory.computeAmountForId(currency)
         if (quoted !in 1..maxTotalCost || coins < quoted) return false
-        val production = BotTradeIntentions.productionLimit(bot, id)
+        val production = BotTradeIntentions.productionLimit(bot, base)
         if (expectedProduction != null && (production == null ||
             production.identity !== expectedProduction.identity || production.expires != expectedProduction.expires)) return false
         if (production != null && (currency != Currency.COINS.id ||
-            bot.totalItemAmount(id).toLong() + amount > production.target || quoted.toLong() > production.maximumCoins ||
+            bot.totalItemAmount(base).toLong() + amount > production.target || quoted.toLong() > production.maximumCoins ||
             (quoted.toLong() + amount - 1L) / amount > production.maximumUnitPrice)) return false
         if (expectedFoodIdentity != null && (expectedFoodIdentity != BotFoodDemand.identity(bot) ||
-                !BotFoodDemand.handles(bot, id) || currency != Currency.COINS.id ||
+                !BotFoodDemand.handles(bot, base) || currency != Currency.COINS.id ||
                 amount > BotFoodDemand.deficit(bot) || quoted > BotFoodDemand.allowance(bot) ||
-                (quoted.toLong() + amount - 1L) / amount > BotFoodDemand.priceCeiling(bot, id, amount))) return false
+                (quoted.toLong() + amount - 1L) / amount > BotFoodDemand.priceCeiling(bot, base, amount))) return false
         val before = bot.inventory.computeAmountForId(id)
         val bought = shop.buy(bot, index, amount)
         val spent = (coins - bot.inventory.computeAmountForId(currency)).coerceAtLeast(0)
         if (spent > 0 && production != null)
-            BotTradeIntentions.recordProductionPurchase(bot, id, spent.toLong(), production.identity)
+            BotTradeIntentions.recordProductionPurchase(bot, base, spent.toLong(), production.identity)
         return bought && bot.inventory.computeAmountForId(id) == before + amount && spent == quoted
     }
 
@@ -499,47 +501,39 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
         if (carried() >= amount) return true
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
-        if (bot.bank.contains(id)) {
-            if (!handler.banking.travelToBankOpen()) return false
-            handler.banking.clickBankingMode(false)
-            val banked = minOf(bot.bank.computeAmountForId(id).toLong(), amount - carried()).toInt()
-            if (banked > 0) {
-                if (!bot.inventory.hasSpaceFor(Item(id, banked)) &&
-                    !handler.banking.depositInventory(basket)) return false
-                if (!handler.banking.withdraw(Item(id, banked))) return false
-            }
-        }
+        if (!withdrawWantedStock(id, amount, basket)) return false
         if (carried() >= amount) return true
         if (budget != null) return acquireQuotedItem(id, amount, basket, budget)
         if (id == BrassKeyDoor.KEY && amount == 1 && BotBrassKeys.obtain(bot, basket)) return true
         if (!ActionSafety.NON_COMBAT.allows(bot)) return false
-        val shops = world.shops.values().filter { it.npcSellers.isNotEmpty() && id in it.itemIds }
+        val shops = world.shops.values().filter { it.npcSellers.isNotEmpty() && it.items.computeAmountForId(it.stockIdFor(id)) > 0 }
             .sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
-                .thenBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) })
+                .thenBy { it.computeBuyValue(it.stockIdFor(id), 1).orElse(Int.MAX_VALUE) })
         if (shops.isEmpty()) return id == 1793 && acquireWoadLeaves(amount, basket)
         bot.actions.interruptWeak()
         bot.overlays.closeWindows()
         for (shop in shops) {
             while (carried() < amount) {
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
-                if (shop.items.computeAmountForId(id) < 1) break
-                val price = shop.computeBuyValue(id, 1).orElse(-1)
+                val stockId = shop.stockIdFor(id)
+                if (shop.items.computeAmountForId(stockId) < 1) break
+                val price = shop.computeBuyValue(stockId, 1).orElse(-1)
                 if (price < 0) break
                 val currency = shop.currency.id
                 val heldCoins = bot.inventory.computeAmountForId(currency)
                 if (heldCoins.toLong() + bot.bank.computeAmountForId(currency) < price) break
-                if (heldCoins < price || !bot.inventory.hasSpaceFor(Item(id))) {
+                if (heldCoins < price || !bot.inventory.hasSpaceFor(Item(stockId))) {
                     if (!handler.banking.travelToBankOpen()) break
                     handler.banking.clickBankingMode(false)
-                    if (!bot.inventory.hasSpaceForAll(listOf(Item(id), Item(currency, maxOf(1, price))))) {
+                    if (!bot.inventory.hasSpaceForAll(listOf(Item(stockId), Item(currency, maxOf(1, price))))) {
                         if (!handler.banking.depositInventory(basket + currency)) break
                     }
                     // Carry enough for this purchase target instead of returning to the bank for every rune.
                     if (carried() >= amount) return true
                     val needed = (amount - carried()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-                    val stocked = shop.items.computeAmountForId(id)
+                    val stocked = shop.items.computeAmountForId(stockId)
                     if (stocked < 1) break
-                    val quoted = shop.computeBuyValue(id, minOf(needed, stocked)).orElse(price)
+                    val quoted = shop.computeBuyValue(stockId, minOf(needed, stocked)).orElse(price)
                     val wallet = minOf(heldCoins.toLong() + bot.bank.computeAmountForId(currency),
                         maxOf(price.toLong(), quoted.toLong() + needed)).coerceAtMost(Int.MAX_VALUE.toLong())
                     val missing = (wallet - bot.inventory.computeAmountForId(currency)).coerceAtLeast(0).toInt()
@@ -552,12 +546,31 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                 if (remaining <= 0) return true
                 val bought = buyUpTo(shop, id, remaining.coerceAtMost(100L).toInt(),
                     bot.inventory.computeAmountForId(currency))
-                if (bot.overlays[ShopInterface::class]?.shop !== shop || !bought ||
-                    carried() <= before) break
+                if (bot.overlays[ShopInterface::class]?.shop !== shop || !bought) break
+                if (carried() == before && !withdrawWantedStock(id, amount, basket)) break
+                if (carried() <= before) break
             }
             if (carried() >= amount) return true
         }
         return id == 1793 && acquireWoadLeaves(amount, basket)
+    }
+
+    /**
+     * Deposits any notes and withdraws the working quantity through the native bank.
+     */
+    private suspend fun withdrawWantedStock(id: Int, amount: Int, basket: Set<Int>): Boolean {
+        val note = ItemDefinition.ALL.get(id).map { it.notedId.orElse(-1) }.orElse(-1)
+        val noted = if (note >= 0 && note != id) bot.inventory.computeAmountForId(note) else 0
+        if (noted == 0 && !bot.bank.contains(id)) return true
+        if (!handler.banking.travelToBankOpen()) return false
+        if (noted > 0 && !handler.banking.deposit(Item(note, noted))) return false
+        handler.banking.clickBankingMode(false)
+        val missing = amount.toLong() - bot.inventory.computeAmountForId(id) - bot.equipment.computeAmountForId(id)
+        val banked = minOf(bot.bank.computeAmountForId(id).toLong(), missing).toInt()
+        if (banked <= 0) return true
+        if (!bot.inventory.hasSpaceFor(Item(id, banked)) &&
+            !handler.banking.depositInventory(basket + Currency.COINS.id)) return false
+        return handler.banking.withdraw(Item(id, banked))
     }
 
     /**
@@ -570,22 +583,23 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         if (id == coins || budget.remainingCoins < 1) return false
         fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
         val shops = world.shops.values().filter {
-            it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds
-        }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
+            it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && it.items.computeAmountForId(it.stockIdFor(id)) > 0
+        }.sortedBy { it.computeBuyValue(it.stockIdFor(id), 1).orElse(Int.MAX_VALUE) }
         bot.actions.interruptWeak()
         bot.overlays.closeWindows()
         for (shop in shops) {
             while (carried() < amount && budget.remainingCoins > 0) {
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
-                if (shop.items.computeAmountForId(id) < 1) break
-                val price = shop.computeBuyValue(id, 1).orElse(-1)
+                val stockId = shop.stockIdFor(id)
+                if (shop.items.computeAmountForId(stockId) < 1) break
+                val price = shop.computeBuyValue(stockId, 1).orElse(-1)
                 if (price < 1 || price.toLong() > ceiling || price > budget.remainingCoins) break
                 val held = bot.inventory.computeAmountForId(coins)
                 if (held.toLong() + bot.bank.computeAmountForId(coins) < price) break
-                if (held < price || !bot.inventory.hasSpaceFor(Item(id))) {
+                if (held < price || !bot.inventory.hasSpaceFor(Item(stockId))) {
                     if (!handler.banking.travelToBankOpen() || !ActionSafety.NON_COMBAT.await(bot)) break
                     handler.banking.clickBankingMode(false)
-                    if (!bot.inventory.hasSpaceForAll(listOf(Item(id), Item(coins))) &&
+                    if (!bot.inventory.hasSpaceForAll(listOf(Item(stockId), Item(coins))) &&
                         !handler.banking.depositInventory(basket + coins)) break
                     if (!ActionSafety.NON_COMBAT.await(bot)) return false
                     if (carried() >= amount) return true
@@ -608,26 +622,28 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                 val foodDeficit = if (foodIdentity == null) Long.MAX_VALUE else BotFoodDemand.deficit(bot).toLong()
                 val unitCeiling = minOf(ceiling, production?.maximumUnitPrice ?: Long.MAX_VALUE)
                 val maximum = minOf((amount - before).coerceAtLeast(0L),
-                    shop.items.computeAmountForId(id).toLong(), 100L, deficit, foodDeficit).toInt()
+                    shop.items.computeAmountForId(stockId).toLong(), 100L, deficit, foodDeficit).toInt()
                 val wallet = minOf(budget.remainingCoins.toLong(), bot.inventory.computeAmountForId(coins).toLong(),
                     production?.maximumCoins ?: Long.MAX_VALUE,
                     if (foodIdentity == null) Long.MAX_VALUE else BotFoodDemand.allowance(bot).toLong()).toInt()
                 var quantity = maximum
                 var quote = -1
                 while (quantity > 0) {
-                    quote = shop.computeBuyValue(id, quantity).orElse(-1)
+                    quote = shop.computeBuyValue(stockId, quantity).orElse(-1)
                     if (quote in 1..wallet &&
                         quote.toLong() <= unitCeiling.coerceAtMost(Int.MAX_VALUE.toLong()) * quantity &&
-                        bot.inventory.hasSpaceFor(Item(id, quantity))) break
+                        bot.inventory.hasSpaceFor(Item(stockId, quantity))) break
                     quantity--
                 }
                 if (quantity < 1) break
                 val beforeCoins = bot.inventory.computeAmountForId(coins)
-                val bought = buyQuoted(shop, id, quantity, quote, captured ?: production)
+                val bought = buyQuoted(shop, stockId, quantity, quote, captured ?: production)
                 val spent = (beforeCoins - bot.inventory.computeAmountForId(coins)).coerceAtLeast(0)
                 budget.remainingCoins = (budget.remainingCoins - spent).coerceAtLeast(0)
                 if (spent > 0) budget.recordSpending(spent)
-                if (!bought || carried() <= before) break
+                if (!bought) break
+                if (stockId != id && !withdrawWantedStock(id, amount, basket)) break
+                if (carried() <= before) break
                 delay(1.seconds)
             }
             if (carried() >= amount) return true

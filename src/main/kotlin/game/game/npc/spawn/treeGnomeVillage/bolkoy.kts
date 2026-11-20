@@ -15,6 +15,7 @@ import io.luna.game.model.item.shop.Shop
 
 // Lost City inventory: gnomeshop.
 ShopHandler.create("Bolkoy's Village Shop") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

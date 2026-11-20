@@ -15,6 +15,7 @@ import io.luna.game.model.item.shop.Shop
 
 // Lost City inventory: death_generalshop.
 ShopHandler.create("Burthorpe Supplies") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

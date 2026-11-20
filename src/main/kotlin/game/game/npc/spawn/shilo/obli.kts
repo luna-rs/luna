@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * Obli's General Store in Shilo Village.
  */
 ShopHandler.create("Obli's General Store.") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

@@ -11,6 +11,7 @@ import io.luna.game.model.item.shop.RestockPolicy
  * The Legends Guild General Store on the first floor of the Legends' Guild.
  */
 ShopHandler.create("Legends Guild General Store.") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

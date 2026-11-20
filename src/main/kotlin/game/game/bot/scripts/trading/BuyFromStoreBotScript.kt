@@ -1,6 +1,7 @@
 package game.bot.scripts.trading
 
 import api.bot.Suspendable.delay
+import api.bot.action.stockIdFor
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotMerchantProceeds
 import api.bot.action.trading.BotMerchantCapital
@@ -98,7 +99,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         if (budget == 0) return true
         val shops = accessibleShops()
         if (!bot.preferences.isMerchant && BotTradeIntentions.purchases(bot).none { wanted ->
-                shops.any { shop -> shop.computeBuyValue(wanted.id, 1).let {
+                shops.any { shop -> shop.computeBuyValue(shop.stockIdFor(wanted.id), 1).let {
                     it.isPresent && it.asInt in 1..budget
                 } }
             }) return true
@@ -154,7 +155,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
 
         // Only start random shopping once no currently-purchasable wanted item remains.
         if (remainingBudget > 0 && bot.preferences.isMerchant) {
-            spendSpeculatively(shops, remainingBudget)
+            spendSpeculatively(shops.filterNot { it.isGeneralStore }, remainingBudget)
         }
 
         bot.preferences.rebalanceWantedItems()
@@ -245,8 +246,9 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      * Excludes unaffordable stock and items that cannot fit before rolling the purchase order.
      */
     private fun canBuyOne(shop: Shop, id: Int, budget: Int): Boolean {
-        val price = shop.computeBuyValue(id, 1)
-        return price.isPresent && price.asInt in 1..budget && bot.inventory.hasSpaceFor(Item(id))
+        val stockId = shop.stockIdFor(id)
+        val price = shop.computeBuyValue(stockId, 1)
+        return price.isPresent && price.asInt in 1..budget && bot.inventory.hasSpaceFor(Item(stockId))
     }
 
     /**
@@ -445,13 +447,13 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         var totalSpent = 0
 
         while (remainingAmount > 0 && remainingBudget > 0) {
-            val stock = shop.stockAmount(id)
+            val stock = shop.stockAmount(if (speculative) id else shop.stockIdFor(id))
             if (stock < 1) {
                 break
             }
 
             val coinsBefore = bot.inventory.computeAmountForId(COINS_ID)
-            val itemsBefore = bot.inventory.computeAmountForId(id)
+            val itemsBefore = bot.totalItemAmount(id)
 
             val bought = if (speculative) {
                 val quote = BotMerchantProceeds.shopPurchase(bot, shop, id, remainingAmount, remainingBudget) ?: break
@@ -459,7 +461,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             } else handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget, production, expectedFoodIdentity)
 
             val coinsAfter = bot.inventory.computeAmountForId(COINS_ID)
-            val itemsAfter = bot.inventory.computeAmountForId(id)
+            val itemsAfter = bot.totalItemAmount(id)
 
             val acquired = itemsAfter - itemsBefore
             val spent = coinsBefore - coinsAfter
@@ -490,7 +492,7 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
      * Returns the shops in [shops] that currently contain positive stock for [id].
      */
     private fun shopsFor(shops: List<Shop>, id: Int): List<Shop> {
-        return shops.filter { it.stockAmount(id) > 0 }
+        return shops.filter { it.stockAmount(it.stockIdFor(id)) > 0 }
     }
 
     /**

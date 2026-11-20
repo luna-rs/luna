@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * The general store in the Dwarven Mine, run by a dwarf.
  */
 ShopHandler.create("Dwarven shopping store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

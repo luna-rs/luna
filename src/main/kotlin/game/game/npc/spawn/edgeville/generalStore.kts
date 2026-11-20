@@ -11,6 +11,7 @@ import io.luna.game.model.item.shop.RestockPolicy
  * The general store in Edgeville, run by a shop keeper and an assistant.
  */
 ShopHandler.create("Edgeville General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

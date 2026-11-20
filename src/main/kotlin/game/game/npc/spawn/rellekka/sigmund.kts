@@ -17,6 +17,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * Sigmund The Merchant's general store in Rellekka.
  */
 ShopHandler.create("Sigmund The Merchant") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * Razmire Keelgan's general store in Mort'ton.
  */
 ShopHandler.create("Razmire General Store.") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

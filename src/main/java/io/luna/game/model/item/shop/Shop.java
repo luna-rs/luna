@@ -309,6 +309,22 @@ public final class Shop {
         }
     }
 
+    private boolean generalStore;
+
+    /**
+     * Whether this shop supports supplemental bot shopping.
+     */
+    public boolean isGeneralStore() {
+        return generalStore;
+    }
+
+    /**
+     * Marks a general store during shop registration.
+     */
+    public void setGeneralStore(boolean generalStore) {
+        this.generalStore = generalStore;
+    }
+
     /**
      * Attempts to buy an item from this shop.
      *
@@ -378,6 +394,9 @@ public final class Shop {
                 items.set(index, shopItem.addAmount(-buyAmount));
             }
             if (api.bot.BotTypes.isRealBot(player) && currency == Currency.COINS) {
+                if (generalStore) {
+                    game.bot.scripts.trading.GeneralStoreShoppingScript.queue((io.luna.game.model.mob.bot.Bot) player, this);
+                }
                 world.getEconomy().addShopPurchase(buyItem, currencyItem);
             }
             return true;

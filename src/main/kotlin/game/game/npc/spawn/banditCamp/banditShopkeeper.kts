@@ -11,6 +11,7 @@ import io.luna.game.model.item.shop.RestockPolicy
  * Bandit Bargains, the general store in the Bandit Camp in the Kharidian Desert.
  */
 ShopHandler.create("Bandit Bargains") {
+    generalStore = true
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

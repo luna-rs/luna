@@ -180,7 +180,7 @@ object MerchantStoreBargains {
         if (nextIndex < 0 || slotCursor !in 0 until refreshed[nextIndex].items.capacity()) slotCursor = 0
     }
 
-    private fun eligibleShop(shop: Shop): Boolean = shop.currency == Currency.COINS &&
+    private fun eligibleShop(shop: Shop): Boolean = !shop.isGeneralStore && shop.currency == Currency.COINS &&
         shop.buyPolicy == BuyPolicy.ALL && shop.npcSellers.isNotEmpty()
 
     private fun eligibleItem(id: Int): Boolean {

@@ -11,6 +11,7 @@ import io.luna.game.model.item.shop.RestockPolicy
  * The Nardah General Store, run by Kazemde.
  */
 ShopHandler.create("Nardah General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

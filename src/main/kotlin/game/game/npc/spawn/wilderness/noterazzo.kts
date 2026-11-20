@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * Bandit Duty Free, Noterazzo's general store in the Wilderness bandit camp.
  */
 ShopHandler.create("Bandit Duty Free") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

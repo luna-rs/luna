@@ -14,6 +14,7 @@ import io.luna.game.model.mob.Player
  * The Port Phasmatys General Store, run by a ghost.
  */
 ShopHandler.create("Port Phasmatys General Store") {
+    generalStore = true
     botAccess {
         npcSeller(2, 1699, area = SimpleBoxArea.of(3653, 3472, 3663, 3482))
     }

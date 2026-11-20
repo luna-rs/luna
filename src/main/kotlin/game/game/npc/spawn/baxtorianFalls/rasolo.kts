@@ -15,6 +15,7 @@ import io.luna.game.model.item.shop.Shop
 
 // Lost City inventory: rasoolshop1.
 ShopHandler.create("Rasolo the Wandering Merchant.") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

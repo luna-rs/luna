@@ -14,6 +14,7 @@ import io.luna.game.model.item.shop.RestockPolicy
 
 // Lost City inventory: burgh_general_store.
 ShopHandler.create("Aurel's Supplies") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

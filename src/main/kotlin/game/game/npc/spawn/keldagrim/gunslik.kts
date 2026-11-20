@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * Gunslik's Assorted Items, the general store in Keldagrim.
  */
 ShopHandler.create("Gunslik's Assorted Items") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

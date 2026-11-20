@@ -11,6 +11,7 @@ import io.luna.game.model.item.shop.RestockPolicy
  * The Void Knight General Store at the Void Knights' Outpost, run by a squire.
  */
 ShopHandler.create("Void Knight General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

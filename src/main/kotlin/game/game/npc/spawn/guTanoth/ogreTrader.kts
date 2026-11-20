@@ -12,6 +12,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * Dal's General Ogre Supplies, the general store in Gu'Tanoth.
  */
 ShopHandler.create("Dal's General Ogre Supplies") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS

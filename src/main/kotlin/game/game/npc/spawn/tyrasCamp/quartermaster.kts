@@ -14,6 +14,7 @@ import io.luna.game.model.mob.dialogue.Expression
  * The Quartermaster's Stores in Tyras Camp.
  */
 ShopHandler.create("Quartermaster's Stores") {
+    generalStore = true
     botAccess {
         npcSeller(1, 1208, area = SimpleBoxArea.of(2189, 3135, 2199, 3145),
                   dialogueOption = "Yes please. What are you selling?")

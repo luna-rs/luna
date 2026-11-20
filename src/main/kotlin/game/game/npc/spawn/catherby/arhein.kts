@@ -24,6 +24,7 @@ val SHOP_NAME = "Arhein Store"
  * Registers Arhein's general store in Catherby.
  */
 ShopHandler.create(SHOP_NAME) {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.FAST
     currency = Currency.COINS

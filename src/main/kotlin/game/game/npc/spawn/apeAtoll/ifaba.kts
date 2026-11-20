@@ -13,6 +13,7 @@ import io.luna.game.model.mob.dialogue.DialogueUtils
  * Ifaba's General Store on Ape Atoll.
  */
 ShopHandler.create("Ifaba's General Store") {
+    generalStore = true
     buy = BuyPolicy.ALL
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
