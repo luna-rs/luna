@@ -32,6 +32,7 @@ ShopHandler.create("Pollnivneach General Store") {
         "Bowl of water" x 7 every 10
         "Bucket of water" x 8 every 10
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

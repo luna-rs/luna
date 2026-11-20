@@ -37,6 +37,7 @@ ShopHandler.create("Quartermaster's Stores") {
         "Rune halberd" x 7 every 100
         "Dragon halberd" x 5 every 500
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 }
 

@@ -33,6 +33,7 @@ ShopHandler.create("Sigmund The Merchant") {
         "Chisel" x 10 every 500
         "Hammer" x 10 every 500
         "Vial" x 10 every 500
+        230 x 9_990 every 500 // Vial (noted)
         "Vial of water" x 10 every 200
         "Bucket" x 10 every 500
         "Bucket of water" x 10 every 200

@@ -31,6 +31,7 @@ ShopHandler.create("Burthorpe Supplies") {
         946 x 2 every 100 // Knife
         1980 x 20 every 50 // Empty cup
         1540 x 10 // Anti-dragon shield
+        230 x 10_000 // Vial (noted)
     }
 
     open {

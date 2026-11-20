@@ -27,6 +27,7 @@ ShopHandler.create("Nardah General Store") {
         "Hammer" x 5 every 100
         "Cooked meat" x 4 every 100
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

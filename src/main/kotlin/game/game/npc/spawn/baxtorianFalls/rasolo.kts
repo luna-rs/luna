@@ -47,6 +47,7 @@ ShopHandler.create("Rasolo the Wandering Merchant.") {
         3420 x 2 every 500 // Limestone brick
         5 x 1 every 500 // Instruction manual
         1540 x 10 // Anti-dragon shield
+        230 x 10_000 // Vial (noted)
     }
 
     open {

@@ -28,6 +28,7 @@ ShopHandler.create("General Store") {
         "Sample bottle" x 100
         "Knife" x 100
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

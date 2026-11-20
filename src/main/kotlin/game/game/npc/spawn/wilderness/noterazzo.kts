@@ -25,6 +25,7 @@ ShopHandler.create("Bandit Duty Free") {
         "Bronze pickaxe" x 5 every 100
         "Bronze axe" x 10 every 100
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

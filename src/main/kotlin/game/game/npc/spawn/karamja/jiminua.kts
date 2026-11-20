@@ -28,6 +28,7 @@ ShopHandler.create("Jiminua's Jungle Store.") {
         "Cooked meat" x 2 every 500
         "Bread" x 10 every 500
         "Vial" x 10 every 500
+        230 x 9_990 every 500 // Vial (noted)
         "Vial of water" x 50 every 200
         "Pestle and mortar" x 3 every 500
         "Antipoison(3)" x 10 every 150

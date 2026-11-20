@@ -28,6 +28,7 @@ ShopHandler.create("Void Knight General Store") {
         "Bronze axe" x 10 every 100
         "Field ration" x 25 every 10
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

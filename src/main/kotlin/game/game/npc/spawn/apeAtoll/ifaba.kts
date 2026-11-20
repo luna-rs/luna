@@ -21,6 +21,7 @@ ShopHandler.create("Ifaba's General Store") {
         "Pot" x 3 every 100
         "Jug" x 2 every 100
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

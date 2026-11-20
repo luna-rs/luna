@@ -21,6 +21,7 @@ ShopHandler.create("Legends Guild General Store.") {
         "Attack potion(3)" x 3 every 100
         "Steel arrow" x 500 every 100
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

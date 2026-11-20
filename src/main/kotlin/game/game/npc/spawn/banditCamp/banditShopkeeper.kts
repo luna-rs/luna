@@ -29,6 +29,7 @@ ShopHandler.create("Bandit Bargains") {
         "Desert robe" x 5 every 500
         "Knife" x 5 every 100
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

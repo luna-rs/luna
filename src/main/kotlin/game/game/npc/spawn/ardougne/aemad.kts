@@ -39,6 +39,7 @@ ShopHandler.create(SHOP_NAME) {
         "Knife" x 10
         "Jug" x 10
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {

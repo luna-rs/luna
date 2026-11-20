@@ -34,6 +34,7 @@ ShopHandler.create("Lighthouse Store") {
         1935 x 5 every 200 // Jug
         1937 x 5 every 500 // Jug of water
         229 x 100 every 500 // Vial
+        230 x 9_900 every 500 // Vial (noted)
         227 x 100 every 500 // Vial of water
         2019 x 5 every 500 // Gin
         2021 x 5 every 500 // Brandy

@@ -26,6 +26,7 @@ ShopHandler.create("Lletya General Store") {
         "Hammer" x 5 every 100
         "Spade" x 5 every 100
         "Knife" x 4 every 100
+        230 x 10_000 // Vial (noted)
     }
 
     open {

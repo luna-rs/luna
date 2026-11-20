@@ -32,6 +32,7 @@ ShopHandler.create("Bolkoy's Village Shop") {
         882 x 30 every 100 // Bronze arrow
         2142 x 2 every 100 // Cooked meat
         1540 x 10 // Anti-dragon shield
+        230 x 10_000 // Vial (noted)
     }
 
     open {

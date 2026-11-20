@@ -19,6 +19,7 @@ ShopHandler.create("Obli's General Store.") {
     sell {
         "Tinderbox" x 2 every 500
         "Vial" x 10 every 500
+        230 x 9_990 every 500 // Vial (noted)
         "Pestle and mortar" x 3 every 500
         "Pot" x 3 every 500
         "Bronze axe" x 3 every 500

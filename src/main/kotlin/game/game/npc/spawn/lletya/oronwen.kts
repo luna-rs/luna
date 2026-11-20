@@ -29,6 +29,7 @@ ShopHandler.create("Oronwen's General Store") {
         1771 x 10 every 100 // Green dye
         1773 x 10 every 100 // Purple dye
         1540 x 10 // Anti-dragon shield
+        230 x 10_000 // Vial (noted)
     }
 
     open {

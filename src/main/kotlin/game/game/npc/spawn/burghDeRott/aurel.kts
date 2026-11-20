@@ -24,6 +24,7 @@ ShopHandler.create("Aurel's Supplies") {
         3363 x 10 every 100 // Thin snail
         353 x 10 every 100 // Raw mackerel
         1540 x 10 // Anti-dragon shield
+        230 x 10_000 // Vial (noted)
     }
 
     open {

@@ -29,6 +29,7 @@ ShopHandler.create("Razmire General Store.") {
         "Pot of flour" x 100 every 10
         "Flamtaer hammer" x 3 every 10
         "Anti-dragon shield" x 10
+        230 x 10_000 // Vial (noted)
     }
 
     open {
