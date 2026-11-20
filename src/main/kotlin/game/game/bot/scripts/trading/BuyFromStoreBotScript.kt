@@ -324,8 +324,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         val candidates = shops
             .associateWith { candidate ->
                 candidate.items.filterNotNull()
-                    .filter { it.amount > 0 && it.id != COINS_ID && canBuyOne(candidate, it.id, budget) }
-                    .map { it.id }.distinct()
+                    .filter { it.amount > 0 && !it.isDynamic && it.id != COINS_ID }
+                    .map { it.unnotedItemDef.id() }.distinct().filter { canBuyOne(candidate, it, budget) }
             }
             .filterValues { it.isNotEmpty() }
         // Choose the desired affordable stock before its shop, retaining the supply category decision below.
@@ -391,7 +391,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
                 maxAmount = Int.MAX_VALUE,
                 speculative = true,
                 // Let an early expensive choice buy at least one before cheaper choices consume its budget.
-                budget = maxOf(itemBudget, shop.computeBuyValue(id, 1).orElse(0)).coerceAtMost(remainingBudget)
+                budget = maxOf(itemBudget, shop.computeBuyValue(shop.stockIdFor(id), 1).orElse(0))
+                    .coerceAtMost(remainingBudget)
             )
 
             totalSpent += spent
@@ -447,7 +448,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
         var totalSpent = 0
 
         while (remainingAmount > 0 && remainingBudget > 0) {
-            val stock = shop.stockAmount(if (speculative) id else shop.stockIdFor(id))
+            val stockId = shop.stockIdFor(id)
+            val stock = shop.stockAmount(stockId)
             if (stock < 1) {
                 break
             }
@@ -456,8 +458,8 @@ class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) :
             val itemsBefore = bot.totalItemAmount(id)
 
             val bought = if (speculative) {
-                val quote = BotMerchantProceeds.shopPurchase(bot, shop, id, remainingAmount, remainingBudget) ?: break
-                handler.shop.buyQuoted(shop, id, quote.quantity, quote.coins)
+                val quote = BotMerchantProceeds.shopPurchase(bot, shop, stockId, remainingAmount, remainingBudget) ?: break
+                handler.shop.buyQuoted(shop, stockId, quote.quantity, quote.coins)
             } else handler.shop.buyUpTo(shop, id, remainingAmount, remainingBudget, production, expectedFoodIdentity)
 
             val coinsAfter = bot.inventory.computeAmountForId(COINS_ID)

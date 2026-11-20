@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import api.bot.action.sourcesForStock
+import api.bot.action.stockForms
 import api.bot.action.trading.BotMarketCooldown
 import api.bot.action.trading.BotMarketExperience
 import api.bot.action.trading.BotMarketplace
@@ -89,13 +91,14 @@ class BucketSandProfitBotScript private constructor(
          *
          * @author lare96
          */
-        private data class Purchase(val shop: Shop, val amount: Int, val cost: Int)
+        private data class Purchase(val shop: Shop, val stockId: Int, val amount: Int, val cost: Int)
 
         private fun savedStage(value: String): Stage = Stage.entries.firstOrNull { it.name == value } ?: Stage.SELL
 
         private fun availableEmpties(bot: Bot): Int =
-            (bot.bank.computeAmountForId(EMPTY_BUCKET).toLong() + bot.inventory.computeAmountForId(EMPTY_BUCKET) -
-                BotTradeIntentions.retained(bot, EMPTY_BUCKET))
+            (stockForms(EMPTY_BUCKET).sumOf { id ->
+                bot.bank.computeNonDynamicAmountForId(id).toLong() + bot.inventory.computeNonDynamicAmountForId(id)
+            } - BotTradeIntentions.retained(bot, EMPTY_BUCKET))
                 .coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
 
         /**
@@ -135,15 +138,18 @@ class BucketSandProfitBotScript private constructor(
                                  only: Shop? = null): Purchase? {
             val saleUnit = saleUnit(bot, filledGuide)
             if (wallet < 1) return null
-            val shops = if (only == null) world.shops.values() else listOf(only)
+            val shops = if (only == null) bot.world.shops.sourcesForStock(EMPTY_BUCKET) else listOf(only)
+            val forms = stockForms(EMPTY_BUCKET)
             return shops.asSequence().filter { shop ->
-                shop.currency == Currency.COINS && shop.npcSellers.isNotEmpty() &&
-                    EMPTY_BUCKET in shop.itemIds
-            }.mapNotNull { shop ->
-                val stock = shop.items.computeAmountForId(EMPTY_BUCKET).coerceAtMost(MAX_BATCH)
-                (stock downTo minimum).firstNotNullOfOrNull { amount ->
-                    val cost = shop.computeBuyValue(EMPTY_BUCKET, amount).orElse(-1)
-                    if (cost in 1..wallet && cost.toLong() < saleUnit * amount) Purchase(shop, amount, cost) else null
+                shop.currency == Currency.COINS && shop.npcSellers.isNotEmpty()
+            }.flatMap { shop ->
+                forms.asSequence().mapNotNull { stockId ->
+                    val stock = shop.items.computeAmountForId(stockId).coerceAtMost(MAX_BATCH)
+                    (stock downTo minimum).firstNotNullOfOrNull { amount ->
+                        val cost = shop.computeBuyValue(stockId, amount).orElse(-1)
+                        if (cost in 1..wallet && cost.toLong() < saleUnit * amount)
+                            Purchase(shop, stockId, amount, cost) else null
+                    }
                 }
             }.maxByOrNull { saleUnit * it.amount - it.cost }
         }
@@ -179,6 +185,9 @@ class BucketSandProfitBotScript private constructor(
         if (stage == Stage.FILL) {
             val guide = world.economy.getPrice(SAND_BUCKET)
             if (guide <= 0 || saleUnit(bot, guide) <= world.economy.getPrice(EMPTY_BUCKET)) return true
+            val note = stockForms(EMPTY_BUCKET).getOrNull(1)
+            if (note != null && bot.inventory.computeNonDynamicAmountForId(note) > 0 &&
+                (!handler.banking.travelToBankOpen() || !handler.banking.depositInventory() || !active())) return true
             val amount = minOf(MAX_BATCH, availableEmpties(bot))
             val unnotedFilled = bot.bank.computeAmountForId(SAND_BUCKET).toLong() +
                 bot.inventory.computeAmountForId(SAND_BUCKET)
@@ -210,13 +219,13 @@ class BucketSandProfitBotScript private constructor(
         if (!active() || bot.inventory.computeAmountForId(Currency.COINS.id) < 1) return false
         val current = findPurchase(bot, world.economy.getPrice(SAND_BUCKET), minimum,
             bot.inventory.computeAmountForId(Currency.COINS.id), initial.shop) ?: return false
-        if (!bot.inventory.hasSpaceFor(Item(EMPTY_BUCKET, current.amount))) return false
-        val quote = current.shop.computeBuyValue(EMPTY_BUCKET, current.amount).orElse(-1)
+        if (!bot.inventory.hasSpaceFor(Item(current.stockId, current.amount))) return false
+        val quote = current.shop.computeBuyValue(current.stockId, current.amount).orElse(-1)
         val saleGuide = world.economy.getPrice(SAND_BUCKET)
         if (saleGuide <= 0 || saleUnit(bot, saleGuide) <= world.economy.getPrice(EMPTY_BUCKET) ||
             quote != current.cost ||
             quote.toLong() >= saleUnit(bot, saleGuide) * current.amount) return false
-        return handler.shop.buyQuoted(current.shop, EMPTY_BUCKET, current.amount, quote)
+        return handler.shop.buyQuoted(current.shop, current.stockId, current.amount, quote)
     }
 
     override suspend fun finish() {

@@ -2,6 +2,8 @@ package engine.bot.coordinator
 
 import api.bot.action.PkLoadoutSelection
 import api.bot.action.PkLoadoutPreparation
+import api.bot.action.sourcesForStock
+import api.bot.action.stockIdFor
 import api.bot.action.trading.BotMarketExperience
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotTradePrice
@@ -83,13 +85,14 @@ internal object PkRuneRestocking {
         var total = 0L
         for ((id, amount) in missing) {
             var remaining = amount
-            val shops = bot.world.shops.values().filter {
-                it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds
-            }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
-            for (shop in shops) {
-                val quantity = minOf(remaining, shop.items.computeAmountForId(id))
+            val shops = bot.world.shops.sourcesForStock(id).asSequence()
+                .filter { it.currency == Currency.COINS && it.npcSellers.isNotEmpty() }
+                .map { shop -> shop to shop.stockIdFor(id) }
+                .sortedBy { (shop, stockId) -> shop.computeBuyValue(stockId, 1).orElse(Int.MAX_VALUE) }
+            for ((shop, stockId) in shops) {
+                val quantity = minOf(remaining, shop.items.computeAmountForId(stockId))
                 if (quantity <= 0) continue
-                val quote = shop.computeBuyValue(id, quantity).orElse(-1)
+                val quote = shop.computeBuyValue(stockId, quantity).orElse(-1)
                 if (quote < 0) continue
                 total += quote
                 remaining -= quantity

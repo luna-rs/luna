@@ -1,5 +1,7 @@
 package game.bot.scripts.skills
 
+import api.bot.action.sourcesForStock
+import api.bot.action.stockIdFor
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.waitFor
 import api.bot.Suspendable.delay
@@ -99,8 +101,8 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         /**
          * Checks native shop visibility and stock without reserving it or creating essence.
          */
-        internal fun canPurchaseEssence(bot: Bot, id: Int): Boolean = bot.world.shops.values().any {
-            it.npcSellers.isNotEmpty() && id in it.itemIds && it.items.computeAmountForId(id) > 0
+        internal fun canPurchaseEssence(bot: Bot, id: Int): Boolean = bot.world.shops.sourcesForStock(id).any { shop ->
+            shop.npcSellers.isNotEmpty() && shop.items.computeAmountForId(shop.stockIdFor(id)) > 0
         }
 
         /**

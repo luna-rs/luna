@@ -1,5 +1,6 @@
 package api.bot.action.trading
 
+import api.bot.action.stockForms
 import api.bot.script.ProfitGatheringGoal
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
@@ -25,10 +26,16 @@ internal object NativeShopOpportunities {
      *
      * @author lare96
      */
-    data class Deal(val shop: Shop, val id: Int, val quantity: Int, val cost: Int, val floor: Long,
+    data class Deal(val shop: Shop, val id: Int, val stockId: Int, val quantity: Int, val cost: Int, val floor: Long,
                     val score: Double, val deadline: Long, val identity: String = "")
 
-    private data class Hint(val shop: Shop, val id: Int, val depth: List<NativeOutputDemand.Depth>, val score: Double)
+    /**
+     * One eligible shop stock form and the matching demand for the base commodity.
+     *
+     * @author lare96
+     */
+    private data class Hint(val shop: Shop, val id: Int, val stockId: Int,
+                            val depth: List<NativeOutputDemand.Depth>, val score: Double)
 
     fun preview(bot: Bot, ids: List<Int>, now: Long, capital: BotMerchantCapital.Balance? = null): Deal? {
         if (ids.isEmpty()) return null
@@ -39,22 +46,26 @@ internal object NativeShopOpportunities {
         val hints = ArrayList<Hint>()
         for (step in 0 until minOf(ids.size, MAX_ITEM_QUOTES)) {
             val id = ids[(start + step) % ids.size]
-            val shops = bot.world.shops.catalogueSources(id)
+            val forms = stockForms(id)
+            val shops = forms.asSequence().flatMap { bot.world.shops.catalogueSources(it) }
+                .distinct().take(MAX_SHOPS_PER_ITEM).toList()
             if (shops.isEmpty() || protected(bot, balance, id) || BotTradeManager.saleableAmount(bot, id) > 0) continue
             val depth = NativeOutputDemand.depth(bot, id, now)
             if (depth.isEmpty()) continue
-            for (shop in shops.asSequence().take(MAX_SHOPS_PER_ITEM)) {
-                val quantity = minOf(stock(shop, id), MAX_BATCH, depth.last().quantity)
-                if (quantity < 1) continue
-                val firstUnit = shop.computeBuyValue(id, 1).orElse(0)
-                if (firstUnit !in 1..budget || depth.first().unitPrice <= firstUnit) continue
-                hints += Hint(shop, id, depth, (depth.first().unitPrice - firstUnit).toDouble() * quantity)
+            for (shop in shops) {
+                for (stockId in forms) {
+                    val quantity = minOf(stock(shop, stockId), MAX_BATCH, depth.last().quantity)
+                    if (quantity < 1) continue
+                    val firstUnit = shop.computeBuyValue(stockId, 1).orElse(0)
+                    if (firstUnit !in 1..budget || depth.first().unitPrice <= firstUnit) continue
+                    hints += Hint(shop, id, stockId, depth, (depth.first().unitPrice - firstUnit).toDouble() * quantity)
+                }
             }
         }
         return hints.sortedByDescending { it.score }.asSequence().take(MAX_ADMISSION_QUOTES).mapNotNull { hint ->
             val distance = bot.actionHandler.shop.shopDistance(hint.shop) ?: return@mapNotNull null
             if (distance > MAX_TRAVEL) return@mapNotNull null
-            quote(bot, hint.shop, hint.id, MAX_BATCH, budget, balance, hint.depth, now + VISIT_MILLIS,
+            quote(bot, hint.shop, hint.id, hint.stockId, MAX_BATCH, budget, balance, hint.depth, now + VISIT_MILLIS,
                 32.0 + 2.0 * distance)
         }.maxByOrNull { it.score }
     }
@@ -69,8 +80,8 @@ internal object NativeShopOpportunities {
         val balance = BotMerchantCapital.snapshot(bot)
         if (protected(bot, balance, deal.id)) return null
         val depth = NativeOutputDemand.depth(bot, deal.id, now, excluding = deal.identity)
-        return quote(bot, deal.shop, deal.id, deal.quantity, minOf(deal.cost, cash, budget(balance)), balance,
-            depth, deal.deadline, 1.0, deal.identity)
+        return quote(bot, deal.shop, deal.id, deal.stockId, deal.quantity,
+            minOf(deal.cost, cash, budget(balance)), balance, depth, deal.deadline, 1.0, deal.identity)
     }
 
     fun reserve(bot: Bot, deal: Deal): Boolean =
@@ -93,23 +104,23 @@ internal object NativeShopOpportunities {
     internal fun purchasable(authored: Int, current: Int): Int =
         if (authored <= 0) 0 else (current - authored / 2 - authored % 2).coerceAtLeast(0)
 
-    private fun quote(bot: Bot, shop: Shop, id: Int, limit: Int, budget: Int, balance: BotMerchantCapital.Balance,
+    private fun quote(bot: Bot, shop: Shop, id: Int, stockId: Int, limit: Int, budget: Int, balance: BotMerchantCapital.Balance,
                       depth: List<NativeOutputDemand.Depth>, deadline: Long, ticks: Double,
                       identity: String = ""): Deal? {
-        val maximum = minOf(stock(shop, id), limit, depth.lastOrNull()?.quantity ?: 0)
+        val maximum = minOf(stock(shop, stockId), limit, depth.lastOrNull()?.quantity ?: 0)
         val minimumTrade = BotTradeManager.MINIMUM_OFFER_VALUE.toLong()
         var best: Deal? = null
         for (quantity in maximum downTo 1) {
             if (!BotTradeManager.hasNativeSaleStock(bot, id, quantity)) break
             val proceeds = depth.firstOrNull { it.quantity >= quantity }?.unitPrice ?: continue
-            val cost = shop.computeBuyValue(id, quantity).orElse(-1)
+            val cost = shop.computeBuyValue(stockId, quantity).orElse(-1)
             if (cost !in 1..budget || !balance.permits(id, quantity, cost.toLong(), personal = false)) continue
             val gross = proceeds * quantity
             val minimumProfit = maxOf(10L, (cost + 9L) / 10L)
             if (gross < minimumTrade || gross - cost < minimumProfit) continue
             val floor = (maxOf(cost + minimumProfit, minimumTrade) + quantity - 1L) / quantity
             val score = (gross - cost).toDouble() / ticks
-            if (score > (best?.score ?: 0.0)) best = Deal(shop, id, quantity, cost, floor, score, deadline, identity)
+            if (score > (best?.score ?: 0.0)) best = Deal(shop, id, stockId, quantity, cost, floor, score, deadline, identity)
         }
         return best
     }

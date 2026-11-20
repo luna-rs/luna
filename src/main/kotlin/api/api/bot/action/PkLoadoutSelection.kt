@@ -51,9 +51,12 @@ internal class PkLoadoutSelection(private val bot: Bot) {
     /**
      * A desired item can already be owned or currently stocked by an accessible GP shop.
      */
-    fun available(id: Int): Boolean = owned(id) > 0 || bot.world.shops.values().any {
-        it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds &&
-            it.items.computeAmountForId(id) > 0 && it.computeBuyValue(id, 1).isPresent
+    fun available(id: Int): Boolean = owned(id) > 0 || stocked(id)
+
+    private fun stocked(id: Int): Boolean = bot.world.shops.sourcesForStock(id).any { shop ->
+        if (shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) return@any false
+        val stockId = shop.stockIdFor(id)
+        shop.items.computeAmountForId(stockId) > 0 && shop.computeBuyValue(stockId, 1).isPresent
     }
 
     /**
@@ -74,9 +77,6 @@ internal class PkLoadoutSelection(private val bot: Bot) {
         val stock = (carried + if (carriedOnly) emptyList() else bot.bank.filterNotNull())
             .groupBy { if (carriedOnly) it.id else it.unnotedItemDef.id() }
             .mapValues { (_, items) -> items.sumOf { it.amount.toLong() } }
-        val shops = if (desired && !purchasePlanning) bot.world.shops.values().filter {
-            it.currency == Currency.COINS && it.npcSellers.isNotEmpty()
-        } else emptyList()
         val economy = bot.world.economy
         val prices = HashMap<Int, Long>()
         fun price(id: Int) = prices.getOrPut(id) { economy.getPrice(id).coerceAtLeast(0) }
@@ -91,7 +91,7 @@ internal class PkLoadoutSelection(private val bot: Bot) {
         fun accessible(id: Int): Boolean = when {
             (stock[id] ?: 0) > 0 -> true
             purchasePlanning -> purchasable(id)
-            desired -> shops.any { id in it.itemIds && it.items.computeAmountForId(id) > 0 && it.computeBuyValue(id, 1).isPresent }
+            desired -> stocked(id)
             else -> false
         }
         fun affordable(id: Int): Boolean = weaponAllowance == null || !ItemDefinition.ALL.retrieve(id).isTradeable ||

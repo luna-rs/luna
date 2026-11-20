@@ -35,12 +35,12 @@ internal class NativeShopProfitScript(bot: Bot, private val deal: NativeShopOppo
             opened = handler.shop.travelToShop(deal.shop, ::current) ?: return@withTimeoutOrNull
             if (!current()) return@withTimeoutOrNull
             val quote = NativeShopOpportunities.revalidate(bot, initial, wallet()) ?: return@withTimeoutOrNull
-            val item = Item(quote.id, quote.quantity)
+            val item = Item(quote.stockId, quote.quantity)
             if (!bot.inventory.hasSpaceFor(item) || !NativeShopOpportunities.reserve(bot, quote)) return@withTimeoutOrNull
-            val before = bot.inventory.computeNonDynamicAmountForId(quote.id)
+            val before = bot.inventory.computeNonDynamicAmountForId(quote.stockId)
             val cashBefore = wallet()
-            handler.shop.buyQuoted(quote.shop, quote.id, quote.quantity, quote.cost)
-            val acquired = bot.inventory.computeNonDynamicAmountForId(quote.id) - before
+            handler.shop.buyQuoted(quote.shop, quote.stockId, quote.quantity, quote.cost)
+            val acquired = bot.inventory.computeNonDynamicAmountForId(quote.stockId) - before
             val spent = cashBefore - wallet()
             if (acquired < 1 || spent !in 1..quote.cost) return@withTimeoutOrNull
             val floor = maxOf(quote.floor, (spent.toLong() + acquired - 1L) / acquired)
@@ -58,7 +58,7 @@ internal class NativeShopProfitScript(bot: Bot, private val deal: NativeShopOppo
 
     private suspend fun prepare(quote: NativeShopOpportunities.Deal): Boolean {
         val coins = Currency.COINS.id
-        val item = Item(quote.id, quote.quantity)
+        val item = Item(quote.stockId, quote.quantity)
         if (wallet() >= quote.cost && bot.inventory.hasSpaceFor(item)) return true
         if (!handler.banking.travelToBankOpen() || !current()) return false
         bankMode = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)

@@ -101,14 +101,15 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
         var total = 0L
         for ((id, amount) in required) {
             var missing = (amount - selection.owned(id)).coerceAtLeast(0)
-            val shops = bot.world.shops.values().filter {
-                it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && id in it.itemIds &&
-                    it.items.computeAmountForId(id) > 0
-            }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
-            for (shop in shops) {
+            val shops = bot.world.shops.sourcesForStock(id).asSequence()
+                .filter { it.currency == Currency.COINS && it.npcSellers.isNotEmpty() }
+                .map { shop -> shop to shop.stockIdFor(id) }
+                .sortedBy { (shop, stockId) -> shop.computeBuyValue(stockId, 1).orElse(Int.MAX_VALUE) }
+            for ((shop, stockId) in shops) {
                 if (missing == 0) break
-                val count = minOf(missing, shop.items.computeAmountForId(id))
-                val quote = shop.computeBuyValue(id, count).orElse(-1)
+                val count = minOf(missing, shop.items.computeAmountForId(stockId))
+                if (count < 1) continue
+                val quote = shop.computeBuyValue(stockId, count).orElse(-1)
                 if (quote < 0) continue
                 total += quote.toLong() + count // Bound per-click integer rounding in the one-item acquisition API.
                 missing -= count

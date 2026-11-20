@@ -216,7 +216,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         val shopInterface = bot.overlays[ShopInterface::class] ?: return SuspendableFutureFailed
 
         bot.log("Buying $amount of ${itemName(id)}.")
-        val shopIndex = shopInterface.shop.items.computeIndexForId(id)
+        val shopIndex = shopInterface.shop.items.computeIndexForId(shopInterface.shop.stockIdFor(id))
         if (shopIndex == -1) {
             // Shop doesn't have the item.
             bot.log("Shop doesn't have that item.")

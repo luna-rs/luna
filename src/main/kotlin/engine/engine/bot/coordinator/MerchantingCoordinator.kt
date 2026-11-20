@@ -1,5 +1,6 @@
 package engine.bot.coordinator
 
+import api.bot.action.stockIdFor
 import api.bot.action.trading.BotTradePurpose
 import api.bot.action.trading.BotTradeManager
 import api.bot.action.trading.BotTradePrice
@@ -118,7 +119,7 @@ object MerchantingCoordinator : BotCoordinator {
             .filter { it.currency == Currency.COINS && it.npcSellers.isNotEmpty() }
         val canShopBuy = needs.any { wanted ->
             shops.any { shop ->
-                val price = shop.computeBuyValue(wanted.id, 1)
+                val price = shop.computeBuyValue(shop.stockIdFor(wanted.id), 1)
                 price.isPresent && price.asInt in 1..shopBudget
             }
         }

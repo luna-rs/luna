@@ -5,6 +5,9 @@ import game.bot.scripts.trading.NativeProductionSaleScript
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotSupplySources
+import api.bot.action.sourcesForStock
+import api.bot.action.stockForms
+import api.bot.action.stockIdFor
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotReusableItems
 import api.bot.Suspendable.naturalDexterityDelay
@@ -314,20 +317,22 @@ abstract class InventoryBotScript(
             val target = bot.preferences.getWantedItem(item.id)?.target()?.coerceAtLeast(item.amount) ?: 1_000
             (target / item.amount).coerceAtLeast(1)
         } ?: 1
-        fun owned(id: Int) = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+        fun owned(id: Int) = stockForms(id).sumOf { stockId ->
+            bot.bank.computeNonDynamicAmountForId(stockId).toLong() + bot.inventory.computeNonDynamicAmountForId(stockId)
+        }
         fun affordable(operations: Int): Boolean {
             val costs = HashMap<Int, Long>()
             for (item in materials) {
                 var missing = (item.amount.toLong() * operations - owned(item.id)).coerceAtLeast(0)
                 if (missing == 0L) continue
-                val shops = bot.world.shops.values().filter {
-                    it.npcSellers.isNotEmpty() && item.id in it.itemIds &&
-                        it.items.computeAmountForId(item.id) > 0
-                }.sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
-                    .thenBy { it.computeBuyValue(item.id, 1).orElse(Int.MAX_VALUE) })
-                for (shop in shops) {
-                    val amount = minOf(missing, shop.items.computeAmountForId(item.id).toLong()).toInt()
-                    val quote = shop.computeBuyValue(item.id, amount).orElse(-1)
+                val shops = bot.world.shops.sourcesForStock(item.id).asSequence().filter { it.npcSellers.isNotEmpty() }
+                    .map { shop -> shop to shop.stockIdFor(item.id) }
+                    .filter { (shop, stockId) -> shop.items.computeAmountForId(stockId) > 0 }
+                    .sortedWith(compareBy({ it.first.currency.id != 995 },
+                        { (shop, stockId) -> shop.computeBuyValue(stockId, 1).orElse(Int.MAX_VALUE) }))
+                for ((shop, stockId) in shops) {
+                    val amount = minOf(missing, shop.items.computeAmountForId(stockId).toLong()).toInt()
+                    val quote = shop.computeBuyValue(stockId, amount).orElse(-1)
                     if (quote < 0) continue
                     val currency = shop.currency.id
                     val cost = (costs[currency] ?: 0L) + quote

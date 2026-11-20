@@ -185,7 +185,8 @@ object MerchantStoreBargains {
 
     private fun eligibleItem(id: Int): Boolean {
         val definition = ItemDefinition.ALL.get(id).orElse(null) ?: return false
-        return id != 995 && id != 0 && definition.isTradeable && !definition.isNoted
+        val base = definition.unnotedId.orElse(id)
+        return base != 995 && base != 0 && definition.isTradeable
     }
 
     private fun knownGuide(id: Int): Long = world.economy.prices[id]?.price?.toLong()
@@ -198,16 +199,17 @@ object MerchantStoreBargains {
         if (slot < 0 || shop.isOriginallyStocked(slot)) return null
         val stock = shop.items[slot] ?: return null
         if (stock.amount < 1 || stock.isDynamic) return null
-        val definition = stock.itemDef
-        val guide = knownGuide(id)
+        val definition = stock.unnotedItemDef
+        val base = definition.id()
+        val guide = knownGuide(base)
         if (guide <= 0) return null
         val resale = minOf(resaleCeiling, guide * 4 / 5)
         if (resale <= 0) return null
         val note = definition.notedId.orElse(-1)
-        val owned = bot.itemTracker.count(id).toLong() +
-            if (note >= 0 && note != id) bot.itemTracker.count(note).toLong() else 0L
-        val stashLimit = if (definition.isStackable) 200 else 26
-        val limit = minOf(requested.toLong(), stock.amount.toLong(), if (definition.isStackable) 100L else 26L,
+        val owned = bot.itemTracker.count(base).toLong() +
+            if (note >= 0 && note != base) bot.itemTracker.count(note).toLong() else 0L
+        val stashLimit = if (stock.itemDef.isStackable) 200 else 26
+        val limit = minOf(requested.toLong(), stock.amount.toLong(), if (stock.itemDef.isStackable) 100L else 26L,
             (stashLimit - owned).coerceAtLeast(0)).toInt()
         if (limit < 1) return null
         val purchase = BotMerchantProceeds.shopPurchase(bot, shop, id, limit, budget, resale) ?: return null
@@ -217,10 +219,10 @@ object MerchantStoreBargains {
         val minimumStackValue = Luna.settings().bots().merchantSaleMinimumStackValue()
         if (quantity * resale - cost < MIN_PROFIT || (owned + quantity) * resale <= minimumStackValue) return null
         // New usable gear can become a retained personal copy after purchase, even when it is not currently owned.
-        val personalCopy = EquipmentDefinition.ALL.get(id).orElse(null)?.let {
+        val personalCopy = EquipmentDefinition.ALL.get(base).orElse(null)?.let {
             if (it.meetsAllRequirements(bot)) 1 else 0
         } ?: 0
-        val retained = maxOf(reserves()[id] ?: 0, personalCopy).toLong()
+        val retained = maxOf(reserves()[base] ?: 0, personalCopy).toLong()
         val resaleStock = (owned + quantity - retained).coerceAtLeast(0)
         val acquiredForResale = minOf(quantity.toLong(), resaleStock)
         if (BotMerchantProceeds.net(acquiredForResale * resale, BotMerchantMarket.available(bot)) - cost < MIN_PROFIT ||

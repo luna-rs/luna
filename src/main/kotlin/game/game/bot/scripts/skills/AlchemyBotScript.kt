@@ -2,6 +2,8 @@ package game.bot.scripts.skills
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotBankSpace
+import api.bot.action.sourcesForStock
+import api.bot.action.stockIdFor
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotMarketplace
 import api.bot.action.trading.BotTradePrice
@@ -857,13 +859,14 @@ class AlchemyBotScript(
         for ((id, amount) in targets) {
             var missing = (amount - owned(id)).coerceAtLeast(0)
             if (missing == 0L) continue
-            val shops = world.shops.values().filter {
-                it.currency.id == 995 && it.npcSellers.isNotEmpty() && id in it.itemIds &&
-                    it.items.computeAmountForId(id) > 0
-            }.sortedBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) }
-            for (shop in shops) {
-                val quantity = minOf(missing, shop.items.computeAmountForId(id).toLong()).toInt()
-                val quote = shop.computeBuyValue(id, quantity).orElse(-1)
+            val shops = bot.world.shops.sourcesForStock(id).asSequence()
+                .filter { it.currency.id == 995 && it.npcSellers.isNotEmpty() }
+                .map { shop -> shop to shop.stockIdFor(id) }
+                .sortedBy { (shop, stockId) -> shop.computeBuyValue(stockId, 1).orElse(Int.MAX_VALUE) }
+            for ((shop, stockId) in shops) {
+                val quantity = minOf(missing, shop.items.computeAmountForId(stockId).toLong()).toInt()
+                if (quantity < 1) continue
+                val quote = shop.computeBuyValue(stockId, quantity).orElse(-1)
                 if (quote < 0) continue
                 val cost = quote.toLong()
                 val currency = shop.currency.id

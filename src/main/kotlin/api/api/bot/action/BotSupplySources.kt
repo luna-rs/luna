@@ -77,7 +77,7 @@ object BotSupplySources {
             val reference = WeakReference(shop)
             val ids = shop.itemIds.mapTo(HashSet()) { id ->
                 io.luna.game.model.def.ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
-            }.apply { addAll(shop.itemIds) }
+            }
             for (id in ids) byId.getOrPut(id) { ArrayList() }.add(reference)
         }
         return Index(tick, shops.size, byId).also { indexes[world] = it }
@@ -86,7 +86,8 @@ object BotSupplySources {
     private fun quoteStock(world: World, id: Int, maxQuantity: Int): Quote? {
         if (id < 0 || maxQuantity < 1) return null
         val limit = maxQuantity.coerceAtMost(MAX_QUANTITY)
-        val sources = index(world).shops[id].orEmpty().mapNotNull { reference ->
+        val base = io.luna.game.model.def.ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        val sources = index(world).shops[base].orEmpty().mapNotNull { reference ->
             val shop = reference.get() ?: return@mapNotNull null
             nativeQuote(shop, id, limit)?.let { Source(shop, it) }
         }.sortedWith(compareBy<Source> { it.quote.maximumUnitPrice }.thenBy { it.shop.name })
