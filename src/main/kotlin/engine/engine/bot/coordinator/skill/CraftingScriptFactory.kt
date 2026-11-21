@@ -34,6 +34,7 @@ import game.obj.resource.fillable.WaterResource
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Skill
 import io.luna.util.RandomUtils.roll
+import kotlin.time.Duration
 
 /**
  * Creates crafting scripts for bots.
@@ -136,17 +137,18 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * @return The script for an early combat account, or `null` once it has outgrown cow-hide collection.
      */
     internal fun getCollectHidesScript(
-        bot: Bot, zones: MutableList<SubZone>, pickUpHides: Boolean? = null
+        bot: Bot, zones: MutableList<SubZone>, pickUpHides: Boolean? = null,
+        stockTarget: Int? = null, duration: Duration = getDuration(bot, skillId)
     ): BotScript? {
         if (!bot.isEarlyGame()) return null
         zones += if (bot.personality.isIntelligent) NEAR_BANK_COW_FIELDS else ALL_COW_FIELDS
         if (listOf(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE, Skill.RANGED, Skill.MAGIC)
                 .none { BotCombatActionHandler.mayGainExperience(bot, it) }) {
             return CollectGroundItemBotScript(bot, CollectHidesBotScript.COWHIDE,
-                CollectHidesBotScript.hideTarget(bot), getDuration(bot, skillId), zones)
+                stockTarget ?: CollectHidesBotScript.hideTarget(bot), duration, zones)
         }
         val collect = pickUpHides ?: (!bot.personality.isDumb || !roll(1 of 3))
-        return CollectHidesBotScript(bot, getDuration(bot, skillId), zones, collect)
+        return CollectHidesBotScript(bot, duration, zones, collect, stockTarget)
     }
 
     /**

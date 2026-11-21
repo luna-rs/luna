@@ -61,12 +61,14 @@ internal class BotShopVisits(private val bot: Bot, private val handler: BotActio
         if (candidates.isEmpty()) return null
 
         bot.overlays.closeWindows()
-        return withTimeoutOrNull(90.seconds) {
+        return withTimeoutOrNull(120.seconds) {
             for ((npc, seller) in candidates) {
                 for (attempt in 0 until MAX_OPEN_ATTEMPTS) {
                     if (!eligible()) return@withTimeoutOrNull null
                     if (!seller.matches(npc) || !npc.isAlive || npc.state != EntityState.ACTIVE) break
-                    if (!handler.interactions.approach(npc, timeout = 25.seconds, allowOutOfView = true,
+                    val travelTime = (bot.position.computeLongestDistance(npc.position).toLong() + 15)
+                        .coerceIn(25L, 110L).seconds
+                    if (!handler.interactions.approach(npc, timeout = travelTime, allowOutOfView = true,
                             canContinue = ::eligible)) break
                     val overlay = openAtNpc(shop, npc, seller, ::eligible) ?: continue
                     if (!eligible() || !near(npc)) {

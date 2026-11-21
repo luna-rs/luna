@@ -734,6 +734,15 @@ abstract class InventoryBotScript(
     }
 
     private suspend fun preparePlannedSupplies(plan: ProductionPlan): Boolean {
+        if (!plan.allowAcquisition) {
+            if (!plannedGoalAvailable()) return false
+            if (!BotProductionPlanner.remainsUseful(bot, plan)) {
+                stopPlannedProduction(Reason.MATERIALS_UNAVAILABLE)
+                return false
+            }
+            BotTradeIntentions.recordProductionPlan(bot, plan, this)
+            return true
+        }
         if (plan.refillVials) return prepareVialRefillSupplies(plan)
         if (!plannedGoalAvailable() || !BotProductionPlanner.remainsUseful(bot, plan)) {
             stopPlannedProduction()

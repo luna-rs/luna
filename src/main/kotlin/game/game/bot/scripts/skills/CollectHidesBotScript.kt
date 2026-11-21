@@ -25,10 +25,14 @@ import kotlin.time.Duration.Companion.minutes
  * @param duration How long this script should run before completing normally.
  * @param zones The cow fields the bot may use.
  * @param pickUpHides If the bot picks up cowhides.
+ * @param stockTarget Optional smaller owned-stock goal for a production batch.
  * @author TheLining
  */
-class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone>, val pickUpHides: Boolean) :
+class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone>, val pickUpHides: Boolean,
+                            val stockTarget: Int? = null) :
     NpcCombatScript(bot, duration, zones, cows(zones)) {
+
+    override val ownedCombatSuppliesOnly = stockTarget != null
 
     companion object {
 
@@ -46,15 +50,18 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
              * If the bot picks up cowhides.
              */
             var pickUpHides = true
+            var stockTarget: Int? = null
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 pickUpHides = data.get("pickUpHides").asBoolean
+                stockTarget = data.get("stock_target")?.asInt?.takeIf { it > 0 }
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("pickUpHides", pickUpHides)
+                stockTarget?.let { data.addProperty("stock_target", it) }
             }
         }
 
@@ -86,14 +93,15 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
      * @param bot The bot running this script.
      * @param data The saved script data.
      */
-    constructor(bot: Bot, data: CollectHidesData) : this(bot, data.duration, data.zones, data.pickUpHides)
+    constructor(bot: Bot, data: CollectHidesData) :
+        this(bot, data.duration, data.zones, data.pickUpHides, data.stockTarget)
 
     // Picking up hides between fights counts towards this, and other bots can leave minutes' worth on the ground.
     override val targetSearchTimeout: Duration = 10.minutes
 
     override fun isLoot(item: GroundItem): Boolean {
         return when {
-            item.id == COWHIDE -> pickUpHides
+            item.id == COWHIDE -> pickUpHides && (stockTarget == null || !goalReached())
             // Raw beef and bones would only take inventory space from hides.
             item is DeathGroundItem && item.origin is Npc -> false
             else -> super.isLoot(item)
@@ -109,9 +117,21 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
         return super.onAssignFocus(newFocus)
     }
 
+    private fun goalReached() = bot.itemTracker.count(COWHIDE) >= (stockTarget ?: hideTarget(bot))
+
+    override suspend fun withdrawBoundedFood(): Boolean {
+        if (!handler.inventory.hasAnyFood()) handler.banking.withdrawAnyFood(minOf(stockTarget ?: 1, 5))
+        return !tactics.needsFood()
+    }
+
+    override suspend fun beforeZoneWork(): Boolean {
+        if (stockTarget != null && goalReached()) forceBanking = true
+        return super.beforeZoneWork()
+    }
+
     override suspend fun onBankOpen(initial: Boolean) {
-        if (pickUpHides && bot.itemTracker.count(COWHIDE) >= hideTarget(bot)) {
-            bot.log("Collected ${hideTarget(bot)} cowhides. Ending script.")
+        if (pickUpHides && goalReached()) {
+            bot.log("Collected ${stockTarget ?: hideTarget(bot)} cowhides. Ending script.")
             stop()
             return
         }
@@ -127,6 +147,7 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
         data.duration = duration
         data.zones = originalZones.toMutableList()
         data.pickUpHides = pickUpHides
+        data.stockTarget = stockTarget
         return data
     }
 }

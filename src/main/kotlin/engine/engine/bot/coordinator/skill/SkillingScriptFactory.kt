@@ -9,6 +9,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 
 import game.bot.scripts.BlastFurnaceBotScript
+import game.bot.scripts.skills.StarterLeatherBotScript
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -94,6 +95,8 @@ abstract class SkillingScriptFactory(val skillId: Int) {
             BlastFurnaceBotScript.select(bot, skillId, getDuration(bot, skillId).inWholeMilliseconds)?.let { return it }
         }
         if (skillId in setOf(SKILL_CRAFTING, SKILL_FLETCHING, SKILL_HERBLORE, SKILL_SMITHING, SKILL_COOKING)) {
+            if (skillId == SKILL_CRAFTING && training)
+                StarterLeatherBotScript.select(bot, level, getDuration(bot, skillId))?.let { return it }
             if (skillId == SKILL_COOKING && !training)
                 CookingScriptFactory.getOwnedMillingScript(bot)?.let { return it }
             return BotProductionPlanner.select(bot, skillId, level, training, getDuration(bot, skillId))

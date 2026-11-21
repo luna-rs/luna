@@ -584,7 +584,10 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
         val shops = world.shops.values().filter {
             it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && it.items.computeAmountForId(it.stockIdFor(id)) > 0
-        }.sortedBy { it.computeBuyValue(it.stockIdFor(id), 1).orElse(Int.MAX_VALUE) }
+        }.mapNotNull { shop -> shopDistance(shop)?.let { shop to it } }
+            .sortedWith(compareBy<Pair<Shop, Long>> { (shop) ->
+                shop.computeBuyValue(shop.stockIdFor(id), 1).orElse(Int.MAX_VALUE)
+            }.thenBy { it.second }).map { it.first }
         bot.actions.interruptWeak()
         bot.overlays.closeWindows()
         for (shop in shops) {

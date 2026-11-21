@@ -26,7 +26,8 @@ class ProductionPlan(
     val saleGuard: ProductionSaleGuard? = null,
     val singlePurchaseBatch: Boolean = false,
     val refillVials: Boolean = false,
-    val fixedTrainingBatch: Boolean = false
+    val fixedTrainingBatch: Boolean = false,
+    val allowAcquisition: Boolean = true
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
         materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
@@ -171,6 +172,7 @@ class ProductionPlan(
         if (singlePurchaseBatch) data.addProperty("single_purchase_batch", true)
         if (refillVials) data.addProperty("refill_vials", true)
         if (fixedTrainingBatch) data.addProperty("fixed_training_batch", true)
+        if (!allowAcquisition) data.addProperty("allow_acquisition", false)
         if (guardedOutputProduced > 0) data.addProperty("guarded_output", guardedOutputProduced)
         data.addProperty("completed", completedOperations)
         data.addProperty("maximum_coins", maximumCoins)
@@ -215,7 +217,8 @@ class ProductionPlan(
                 ratios, data.getAsJsonObject("sale_guard")?.let(ProductionSaleGuard::load),
                 data.get("single_purchase_batch")?.asBoolean ?: false,
                 data.get("refill_vials")?.asBoolean ?: false,
-                data.get("fixed_training_batch")?.asBoolean ?: false).also {
+                data.get("fixed_training_batch")?.asBoolean ?: false,
+                data.get("allow_acquisition")?.asBoolean ?: true).also {
                 it.supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 it.shopAttempted = data.get("shop_attempted")?.asBoolean ?: false
                 it.guardedOutputProduced = data.get("guarded_output")?.asInt ?: 0

@@ -169,6 +169,7 @@ import game.bot.scripts.skills.HerbGatheringScript.Companion.GatheringData
 import game.bot.scripts.skills.TelegrabBotScript
 import game.bot.scripts.skills.TelegrabBotScript.Companion.TelegrabData
 import game.bot.scripts.skills.TanHideBotScript
+import game.bot.scripts.skills.StarterLeatherBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
 /**
@@ -235,6 +236,9 @@ on(ServerLaunchEvent::class) {
     scriptManager.scriptMap["game.bot.scripts.skills.SpinFlaxBotScript"] =
         scriptManager.scriptMap.getValue(SpinTextileBotScript::class.qualifiedName!!)
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+    scriptManager.addScript<StarterLeatherBotScript.BatchData>(StarterLeatherBotScript::class) { bot, data ->
+        StarterLeatherBotScript(bot, data)
+    }
     scriptManager.addScript<PotteryData>(MakePotteryBotScript::class) { bot, data -> MakePotteryBotScript(bot, data) }
     scriptManager.addScript<CraftJewelleryData>(CraftJewelleryBotScript::class) { bot, data -> CraftJewelleryBotScript(bot, data) }
     scriptManager.addScript<MoltenGlassData>(MakeMoltenGlassBotScript::class) { bot, data -> MakeMoltenGlassBotScript(bot, data) }

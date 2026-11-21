@@ -479,6 +479,9 @@ object BotProductionPlanner {
             if (plan.fixedTrainingBatch) return true
         }
         val recipe = plan.economicRecipe() ?: return false
+        if (!plan.allowAcquisition) return plan.targets().all { (id, target) ->
+            bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id) >= target
+        } && recipe.coinCost <= minOf(plan.remainingCoins, owned(bot, 995))
         val guard = plan.saleGuard
         val fundedPrice = guard?.let {
             if (personalOutput(bot, it.itemId)) return false
