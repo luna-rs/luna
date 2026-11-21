@@ -28,6 +28,7 @@ object CrumbleUndead {
         502, 503, 504, 505, 506, 507, 508, 509, // Shilo Village undead.
         749, 750, 751, // Melzar's Maze.
         940, 1218, // Echned Zekin and ghoul.
+        1465, 1466, 1467, 1471, // Ape Atoll monkey zombies and skeleton, which the reference leaves without parameters.
         2724, 2725, 3291 // Additional skeletons.
     )
 
