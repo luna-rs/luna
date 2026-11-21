@@ -9,6 +9,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.item.teleport.SpadeDigSpot
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.TaverleyJailDoor
+import game.skill.agility.shortcut.AgilityShortcut
 import game.skill.agility.yanille.YanilleDungeon
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
@@ -498,6 +499,14 @@ enum class SubZone(
     BRIMHAVEN_DUNGEON_FIRE_GIANTS(
         inside = Position(2651, 9502),
         area = SimpleBoxArea.ofRadius(2632, 9473, 56, 35),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
+
+    /**
+     * The eight fire giants along the upper Brimhaven Dungeon passage.
+     */
+    BRIMHAVEN_UPPER_FIRE_GIANTS(
+        inside = Position(2637, 9555, 2),
+        area = SimpleBoxArea.of(2623, 9538, 2648, 9590, 2),
         parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     WHITE_KNIGHTS_CASTLE(
@@ -996,6 +1005,62 @@ enum class SubZone(
         entrance = EDGEVILLE_DUNGEON_MINE.entrance,
         area = SimpleBoxArea.of(3090, 9820, 3128, 9855),
         parent = { VARROCK }),
+
+    /**
+     * The six hill giants in the western Tree Gnome Stronghold clearing.
+     */
+    GNOME_STRONGHOLD_HILL_GIANTS(
+        inside = Position(2372, 3398),
+        area = SimpleBoxArea.of(2364, 3389, 2377, 3409),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * The six hill giants southwest of West Ardougne.
+     */
+    SOUTHWEST_ARDOUGNE_HILL_GIANTS(
+        inside = Position(2441, 3213),
+        area = SimpleBoxArea.of(2433, 3203, 2450, 3223),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Two hill giants on the east side of the Wilderness, north of the level-12 temple.
+     */
+    EAST_WILDERNESS_HILL_GIANTS(
+        inside = Position(3300, 3649),
+        area = SimpleBoxArea.of(3290, 3639, 3322, 3672),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
+
+    /**
+     * Three hill giants in the southern part of the Lava Maze.
+     */
+    LAVA_MAZE_HILL_GIANTS(
+        inside = Position(3110, 3855),
+        area = SimpleBoxArea.of(3088, 3840, 3122, 3860),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
+
+    /**
+     * Six hill giants below the staircase in the northwestern Wilderness.
+     */
+    DEEP_WILDERNESS_DUNGEON_HILL_GIANTS(
+        inside = Position(3045, 10318),
+        area = SimpleBoxArea.of(3037, 10301, 3051, 10325),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
+
+    /**
+     * The five fire giants inside the lava-ringed chamber of the deep Wilderness dungeon.
+     */
+    DEEP_WILDERNESS_DUNGEON_FIRE_GIANTS(
+        inside = Position(3048, 10339),
+        area = SimpleBoxArea.of(3041, 10332, 3058, 10352),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
+
+    /**
+     * Three moss giants on open ground east of the Lava Maze.
+     */
+    WILDERNESS_MOSS_GIANTS(
+        inside = Position(3140, 3818),
+        area = SimpleBoxArea.of(3134, 3800, 3146, 3831),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
 
     /**
      * Five limpwurt-dropping hobgoblins reached from the same brass-key dungeon descent as the mine.
@@ -2924,6 +2989,22 @@ enum class SubZone(
         parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
+     * Four fire giants on the western side of the Smoke Dungeon.
+     */
+    SMOKE_DUNGEON_FIRE_GIANTS_WEST(
+        inside = Position(3248, 9361),
+        area = SimpleBoxArea.of(3239, 9351, 3257, 9375),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
+    /**
+     * Two fire giants in the eastern Smoke Dungeon passage.
+     */
+    SMOKE_DUNGEON_FIRE_GIANTS_EAST(
+        inside = Position(3300, 9387),
+        area = SimpleBoxArea.of(3288, 9369, 3312, 9406),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
+    /**
      * The skeletal-wyvern cavern beneath the Asgarnian ice dungeon, containing eight skeletal wyverns. Trips
      * require an elemental shield and strong food.
      */
@@ -3079,6 +3160,22 @@ enum class SubZone(
     BRIMHAVEN_MOSS_GIANTS_NORTH(
         inside = Position(2656, 9587),
         area = SimpleBoxArea.of(2637, 9570, 2685, 9597),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
+
+    /**
+     * Four moss giants in the clearing northwest of Ardougne.
+     */
+    NORTHWEST_ARDOUGNE_MOSS_GIANTS(
+        inside = Position(2553, 3405),
+        area = SimpleBoxArea.of(2544, 3396, 2561, 3414),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Five moss giants on the island west of Brimhaven, reached by the native rope swing.
+     */
+    MOSS_GIANT_ISLAND(
+        inside = Position(2695, 3213),
+        area = SimpleBoxArea.of(2686, 3199, 2704, 3221),
         parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
@@ -3240,6 +3337,14 @@ enum class SubZone(
      * @return Why [bot] can't get in, or `null` if nothing stops it.
      */
     fun entryBlocker(bot: Bot): String? = when (this) {
+        EAST_WILDERNESS_HILL_GIANTS, LAVA_MAZE_HILL_GIANTS, DEEP_WILDERNESS_DUNGEON_HILL_GIANTS,
+        DEEP_WILDERNESS_DUNGEON_FIRE_GIANTS, WILDERNESS_MOSS_GIANTS ->
+            if (bot.personality.isConfident) null else "Wilderness giant camps need a confident personality"
+
+        MOSS_GIANT_ISLAND ->
+            if (this !in bot.subZones && bot.agility.level < AgilityShortcut.MOSS_GIANT_ROPE.level)
+                "Moss Giant Island needs level ${AgilityShortcut.MOSS_GIANT_ROPE.level} Agility" else null
+
         DEEP_WILDERNESS_GREATER_DEMONS ->
             if (bot.personality.isStupidlyConfident) null
             else "the deep-Wilderness greater demon camp needs a dumb, confident personality"

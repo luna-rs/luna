@@ -69,6 +69,21 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         internal data class Camp(val zone: SubZone, val minimum: Int, val names: Set<String>,
                                  val profit: Boolean = false, val tasks: Set<SlayerTaskType> = emptySet())
 
+        internal const val HILL_GIANT = "Hill giant"
+
+        /**
+         * Shared Hill Giant destinations for training, Slayer, and drop gathering.
+         */
+        internal val hillGiantCamps = mapOf(
+            SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS to 35,
+            SubZone.TAVERLY_HILL_GIANTS to 35,
+            SubZone.GNOME_STRONGHOLD_HILL_GIANTS to 35,
+            SubZone.SOUTHWEST_ARDOUGNE_HILL_GIANTS to 35,
+            SubZone.EAST_WILDERNESS_HILL_GIANTS to 45,
+            SubZone.LAVA_MAZE_HILL_GIANTS to 55,
+            SubZone.DEEP_WILDERNESS_DUNGEON_HILL_GIANTS to 55
+        )
+
         /**
          * Existing subzones and exact names verified against the configured spawn list.
          * Varrock's imprisoned monk is excluded because its cage has no walking access for melee or loot.
@@ -99,8 +114,6 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.AL_KHARID_MINE, 25, setOf("Scorpion")),
             Camp(SubZone.DWARVEN_MINE, 35, setOf("Scorpion")),
             Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Cow", "Cow calf", "Hobgoblin")),
-            Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
-            Camp(SubZone.TAVERLY_HILL_GIANTS, 35, setOf("Hill giant"), true),
             Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
             Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
@@ -125,7 +138,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.GIANT_MOLE_LAIR, 75, setOf("Giant Mole"), true),
             Camp(SubZone.CHAOS_ELEMENTAL_WILDERNESS, 95, setOf("Chaos Elemental"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
-        )
+        ) + hillGiantCamps.map { (zone, minimum) -> Camp(zone, minimum, setOf(HILL_GIANT), true) }
 
         /**
          * A verified drop and bounded owned-stock goal for an ordinary profit combat outing.
@@ -135,11 +148,25 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         private data class DropGoal(val itemId: Int, val stockCap: Int, val batch: Int,
                                     val zones: Set<SubZone>)
 
+        /**
+         * Additional destinations for big-bone gathering with the usual melee readiness checks.
+         */
+        private val additionalBigBoneCamps = listOf(
+            Camp(SubZone.BRIMHAVEN_UPPER_FIRE_GIANTS, 65, setOf("Fire giant")),
+            Camp(SubZone.SMOKE_DUNGEON_FIRE_GIANTS_WEST, 65, setOf("Fire giant")),
+            Camp(SubZone.SMOKE_DUNGEON_FIRE_GIANTS_EAST, 65, setOf("Fire giant")),
+            Camp(SubZone.DEEP_WILDERNESS_DUNGEON_FIRE_GIANTS, 75, setOf("Fire giant")),
+            Camp(SubZone.NORTHWEST_ARDOUGNE_MOSS_GIANTS, 50, setOf("Moss giant")),
+            Camp(SubZone.MOSS_GIANT_ISLAND, 50, setOf("Moss giant")),
+            Camp(SubZone.WILDERNESS_MOSS_GIANTS, 65, setOf("Moss giant"))
+        )
+        internal val additionalBigBoneZones = additionalBigBoneCamps.map { it.zone }.toSet()
+        private val dropCamps = camps + additionalBigBoneCamps
+
         private val dropGoals = listOf(
             DropGoal(FEATHERS, 1_000, 200, setOf(SubZone.LUMBRIDGE_CHICKEN_COOP,
                 SubZone.SOUTH_FALADOR_FARM_WEST_CHICKENS, SubZone.SOUTH_FALADOR_FARM_EAST_CHICKENS)),
-            DropGoal(BIG_BONES, 112, 28, setOf(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS,
-                SubZone.TAVERLY_HILL_GIANTS, SubZone.VARROCK_SEWERS,
+            DropGoal(BIG_BONES, 112, 28, hillGiantCamps.keys + additionalBigBoneZones + setOf(SubZone.VARROCK_SEWERS,
                 SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, SubZone.WATERFALL_FIRE_GIANTS_WEST,
                 SubZone.WATERFALL_FIRE_GIANTS_EAST, SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH,
                 SubZone.BRIMHAVEN_MOSS_GIANTS_WEST, SubZone.BRIMHAVEN_MOSS_GIANTS_CENTRAL,
@@ -252,11 +279,11 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 if (goal.itemId == FEATHERS && !bot.isEarlyGame()) continue
                 val current = bot.totalItemAmount(goal.itemId)
                 if (current >= goal.stockCap || world.economy.getPrice(goal.itemId) <= 0) continue
-                val options = camps.filter { it.zone in goal.zones && it.minimum <= readiness &&
+                val available = dropCamps.filter { it.zone in goal.zones && it.minimum <= readiness &&
                     (zone == null || zone == it.zone && bot.recentEscape?.avoids(zone) != true) &&
                     canUseCamp(it.zone, BotGearPurpose.MELEE, shieldReady) &&
                     it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }
-                    .shuffled().take(3)
+                val options = campGroups(available).shuffled().take(3).flatten()
                 if (options.isEmpty()) continue
                 val names = HashMultimap.create<SubZone, String>()
                 options.forEach { names.putAll(it.zone, it.names) }
@@ -272,6 +299,14 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
          */
         internal fun herbGatheringScript(bot: Bot, training: Boolean, duration: Duration): HerbGatheringScript? =
             if (training) null else HerbGatheringScript.profitCandidate(bot, duration)
+
+        /**
+         * Treats Hill Giants as one roll, then keeps every eligible Hill Giant camp available for that outing.
+         */
+        private fun campGroups(candidates: List<Camp>): Collection<List<Camp>> =
+            candidates.groupBy {
+                if (it.zone in hillGiantCamps) SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS else it.zone
+            }.values
 
         /**
          * Gives ready combat trainees optional native minigame outings before ordinary camp selection.
@@ -302,16 +337,19 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                     camp.zone.entryBlocker(bot) == null &&
                         (if (boss != null) BossReadiness.ready(bot, boss, false, purpose)
                         else NpcCombatScript.campSuppliesOwned(bot, camp.zone))
-                }.shuffled()
-            if (candidates.firstOrNull()?.zone in RockCrabBotScript.CAMPS) {
+                }
+            val groups = campGroups(candidates).shuffled()
+            val first = groups.firstOrNull()?.first()?.zone
+            if (first in RockCrabBotScript.CAMPS) {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
-                    zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList(),
+                    zones = groups.flatten().filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList(),
                     magicOnly = magicOnly).also { if (training) it.trainingGoal = if (magicOnly) SKILL_MAGIC else -1 }
             }
             val dedicated = setOf(SubZone.KBD_LAIR, SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
-            val selected = if (candidates.firstOrNull()?.zone in dedicated) candidates.take(1)
-                else candidates.filter { it.zone !in dedicated && it.zone !in RockCrabBotScript.CAMPS }.take(4)
+            val selected = if (first in dedicated) groups.first()
+                else groups.filter { it.first().zone !in dedicated && it.first().zone !in RockCrabBotScript.CAMPS }
+                    .take(4).flatten()
             if (selected.isEmpty()) return null
             val names = HashMultimap.create<SubZone, String>()
             selected.forEach { names.putAll(it.zone, it.names) }

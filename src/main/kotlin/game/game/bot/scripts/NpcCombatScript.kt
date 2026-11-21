@@ -11,6 +11,7 @@ import api.bot.boss.BossOutingTravel
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotCombatMagic
+import api.bot.action.BotPyramidTravel
 import api.bot.action.MagicOnlyCombat
 import api.bot.action.MagicSupplyPreparation
 import api.bot.action.PvmTactics
@@ -27,10 +28,12 @@ import api.predef.*
 import com.google.common.collect.ImmutableSetMultimap
 import com.google.common.collect.SetMultimap
 import com.google.gson.JsonObject
+import engine.bot.coordinator.CombatCoordinator
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import engine.controllers.WildernessLocatableController
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import game.skill.slayer.Slayer.activeSlayerTask
@@ -59,6 +62,7 @@ import game.skill.magic.Staff
 import game.skill.mining.Ore
 import game.skill.mining.Pickaxe
 import game.obj.entrances.IceQueenRockSlide
+import game.obj.entrances.BrimhavenDungeonAccess
 import game.skill.prayer.Bone
 import game.skill.smithing.BarType
 import game.skill.smithing.smithBar.SmithingTable
@@ -294,6 +298,9 @@ open class NpcCombatScript(bot: Bot,
                 (bot.mining.level < IceQueenRockSlide.LEVEL ||
                     Pickaxe.entries.none { bot.itemTracker.contains(it.id) })) return false
             if (zone in WATERFALL_ZONES && !bot.itemTracker.contains(295)) return false
+            if (zone == SubZone.BRIMHAVEN_UPPER_FIRE_GIANTS && zone !in bot.subZones &&
+                (bot.woodcutting.level < BrimhavenDungeonAccess.Vine.FIRST.level ||
+                    Axe.entries.none { bot.woodcutting.level >= it.level && bot.itemTracker.contains(it.id) })) return false
             if (zone == SubZone.TROLLHEIM_MOUNTAIN_TROLLS && !bot.itemTracker.contains(3105)) return false
             if (zone == SubZone.BRIMHAVEN_METAL && !bot.status.isAntiFire() &&
                 Potion.ANTI_FIRE_POTION.doses.none { bot.itemTracker.contains(it) }) return false
@@ -306,7 +313,8 @@ open class NpcCombatScript(bot: Bot,
          */
         private val WATERFALL_ZONES = setOf(SubZone.WATERFALL_FIRE_GIANTS_WEST, SubZone.WATERFALL_FIRE_GIANTS_EAST)
 
-        private val BRIMHAVEN_ZONES = setOf(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, SubZone.BRIMHAVEN_RED,
+        private val BRIMHAVEN_ZONES = setOf(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS,
+            SubZone.BRIMHAVEN_UPPER_FIRE_GIANTS, SubZone.BRIMHAVEN_RED,
             SubZone.BRIMHAVEN_GREATER_DEMONS_NORTH, SubZone.BRIMHAVEN_GREATER_DEMONS_SOUTH,
             SubZone.BRIMHAVEN_METAL, SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH, SubZone.BRIMHAVEN_MOSS_GIANTS_WEST,
             SubZone.BRIMHAVEN_MOSS_GIANTS_CENTRAL, SubZone.BRIMHAVEN_MOSS_GIANTS_PASSAGE,
@@ -712,6 +720,20 @@ open class NpcCombatScript(bot: Bot,
 
     override fun shouldLeaveTargetZone(): Boolean = socialCamp && campBehavior.shouldLeave()
 
+    override fun selectWorkZone(): SubZone? {
+        val preferred = super.selectWorkZone() ?: return null
+        if (preferred !in CombatCoordinator.hillGiantCamps) return preferred
+        // The session's shuffled order spreads arrivals even when several camps are empty.
+        val camps = zones.filter { it in CombatCoordinator.hillGiantCamps && it.entryBlocker(bot) == null }
+        if (camps.size < 2) return camps.firstOrNull() ?: preferred
+        return camps.minByOrNull { camp ->
+            val area = camp.area
+            bot.world.locator.findPlayers(area.centerPosition, area.tileRadius) {
+                it !== bot && it.isAlive && it.position in area
+            }.size
+        }
+    }
+
     // Combat uses actual competition and progress, rather than the shared twenty-player fallback.
     override fun shouldLeaveCrowdedZone(visiblePlayers: Int): Boolean = false
 
@@ -1115,6 +1137,15 @@ open class NpcCombatScript(bot: Bot,
             if (token != null && !bossCompanyEstablished && bossArrivalUntil == 0L) return false
             if (groupBoss && !BossReadiness.levelsReady(bot, boss, false, purpose) &&
                 !BossAttendance.enough(bot, boss)) return false
+        }
+        if (zone == SubZone.SMOKE_DUNGEON_FIRE_GIANTS_WEST || zone == SubZone.SMOKE_DUNGEON_FIRE_GIANTS_EAST) {
+            return BotPyramidTravel.travel(bot, handler, zone.inside, bank) {
+                isActionSafe() && !isPaused() && !isTerminated()
+            }
+        }
+        if (zone in CombatCoordinator.additionalBigBoneZones ||
+            zone in CombatCoordinator.hillGiantCamps && WildernessLocatableController.levelAt(zone.inside) > 0) {
+            return handler.webWalkTo(zone, attempts = 2, bank = bank, fallback = false)
         }
         return super.travelToWorkZone(zone, bank)
     }

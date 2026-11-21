@@ -40,8 +40,6 @@ object HerbloreSecondaryGathering {
      * Common limpwurt roots and guaranteed horns receive more selection weight than rare warrior drops.
      */
     private val camps = listOf(
-        Camp(225, 20, SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, "Hill giant", 35, 3),
-        Camp(225, 20, SubZone.TAVERLY_HILL_GIANTS, "Hill giant", 35, 3),
         Camp(225, 20, SubZone.EDGEVILLE_DUNGEON_HOBGOBLINS, "Hobgoblin", 45, 2),
         Camp(237, 20, SubZone.EAST_VARROCK_UNICORNS, "Unicorn", 30, 4),
         Camp(237, 20, SubZone.RELLEKKA_BLACK_UNICORNS, "Black unicorn", 45, 3),
@@ -70,7 +68,9 @@ object HerbloreSecondaryGathering {
             SlayerTaskType.KURASK),
         Camp(5974, 20, SubZone.FREMENNIK_SLAYER_DUNGEON, "Kurask", 100, 1,
             SlayerTaskType.KURASK)
-    )
+    ) + CombatCoordinator.hillGiantCamps.map { (zone, minimum) ->
+        Camp(225, 20, zone, CombatCoordinator.HILL_GIANT, minimum)
+    }
 
     /**
      * Maximum unsold stock for each gathered secondary before another profit outing is suppressed.
@@ -104,13 +104,20 @@ object HerbloreSecondaryGathering {
                 bot.slayer.level >= task.level) &&
                 NpcCombatScript.slayerLoadout(bot, BotGearPurpose.MELEE, task) != null
         }
-        val selected = ready.flatMap { camp -> List(camp.weight) { camp } }.randomOrNull() ?: return null
+        val (hillGiants, otherCamps) = ready.partition { it.npcName == CombatCoordinator.HILL_GIANT }
+        val weighted = otherCamps.flatMapTo(mutableListOf()) { camp -> List(camp.weight) { camp } }
+        // Keep the original combined limpwurt weight from Edgeville and Taverley.
+        hillGiants.firstOrNull()?.let { camp -> repeat(6) { weighted.add(camp) } }
+        val selected = weighted.randomOrNull() ?: return null
         val owned = bot.totalItemAmount(selected.itemId)
         val target = minOf(stockCaps.getValue(selected.itemId), owned + selected.batch)
         if (target <= owned) return null
         val task = selected.slayerTask
+        val destinations = if (selected.npcName == CombatCoordinator.HILL_GIANT) hillGiants else listOf(selected)
+        val names = ImmutableSetMultimap.builder<SubZone, String>()
+        destinations.forEach { names.put(it.zone, it.npcName) }
         return NpcDropGatheringScript(bot, selected.itemId, target, duration,
-            mutableListOf(selected.zone), ImmutableSetMultimap.of(selected.zone, selected.npcName),
+            destinations.map { it.zone }.toMutableList(), names.build(),
             slayerTask = task, slayerMaster = if (task == null) null else assignment?.assignee)
     }
 }
