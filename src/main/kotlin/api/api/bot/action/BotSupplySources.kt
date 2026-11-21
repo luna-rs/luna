@@ -119,6 +119,27 @@ object BotSupplySources {
         return if (quantity > 0) Quote(quantity, maximumUnitPrice, totalCoins) else null
     }
 
+    /**
+     * Current GP shop stock with a live seller and its distance from the buyer.
+     *
+     * @author lare96
+     */
+    internal data class VisitQuote(val quantity: Int, val unitPrice: Long, val distance: Long)
+
+    /**
+     * Quotes sources separately so a production plan can price the trips it actually needs.
+     */
+    internal fun visits(bot: Bot, id: Int, maximumQuantity: Int): List<VisitQuote> {
+        if (maximumQuantity < 1) return emptyList()
+        val base = io.luna.game.model.def.ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
+        return index(bot.world).shops[base].orEmpty().mapNotNull { it.get() }.mapNotNull { shop ->
+            if (shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) return@mapNotNull null
+            val quote = nativeQuote(shop, id, minOf(maximumQuantity, MAX_QUANTITY)) ?: return@mapNotNull null
+            val distance = bot.actionHandler.shop.shopDistance(shop) ?: return@mapNotNull null
+            VisitQuote(quote.quantity, quote.maximumUnitPrice, distance)
+        }
+    }
+
     private fun nativeQuote(shop: Shop, id: Int, maxQuantity: Int): Quote? {
         val stockId = shop.stockIdFor(id)
         val slot = shop.items.computeIndexForId(stockId)

@@ -141,7 +141,7 @@ class StringBowBotScript(
         return false
     }
 
-    override suspend fun beforeInventoryInit(): Boolean = prepareStrings()
+    override suspend fun beforeInventoryInit(): Boolean = productionPlan != null || prepareStrings()
 
     override fun withdraw(): List<Item> = productionWithdraw(materials,
         levelEligible = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel)
@@ -149,7 +149,7 @@ class StringBowBotScript(
     override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
 
     override suspend fun onInventoryBankRequested(): Boolean {
-        if (FletchingProduction.owned(bot, Bow.BOW_STRING) == 0L &&
+        if (productionPlan == null && FletchingProduction.owned(bot, Bow.BOW_STRING) == 0L &&
             FletchingProduction.owned(bot, bow.unstrung) > 0 && !prepareStrings()) {
             if (!isPaused()) stop()
             return false

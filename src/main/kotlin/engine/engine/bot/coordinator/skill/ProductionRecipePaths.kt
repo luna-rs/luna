@@ -23,9 +23,11 @@ internal object ProductionRecipePaths {
     fun forRecipe(recipe: ProductionRecipe,
                   describe: (ProductionCatalogue.Entry) -> ProductionRecipe?,
                   allowOtherSkills: Boolean = false,
+                  trainingPrerequisites: Boolean = false,
                   preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionStage>> =
-        expand(listOf(recipe), { id -> nativeRecipes(id, recipe.skill.takeUnless { allowOtherSkills }, describe) },
-            allowOtherSkills, preparation)
+        expand(listOf(recipe), { id ->
+            nativeRecipes(id, recipe.skill.takeUnless { allowOtherSkills || trainingPrerequisites }, describe)
+        }, allowOtherSkills, preparation, trainingPrerequisites)
 
     /**
      * Shares one traversal allowance across alternative native recipes for the exact requested output.
@@ -48,7 +50,8 @@ internal object ProductionRecipePaths {
      */
     internal fun expand(recipes: List<ProductionRecipe>, nativeRecipes: (Int) -> List<ProductionRecipe>,
                         allowOtherSkills: Boolean = false,
-                        preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionStage>> {
+                        preparation: (ProductionRecipe) -> Boolean = { true },
+                        trainingPrerequisites: Boolean = false): List<List<ProductionStage>> {
         val result = ArrayList<List<ProductionStage>>()
         val queue = ArrayDeque<List<ProductionStage>>()
         val seen = HashSet<List<Pair<String, Int>>>()
@@ -64,18 +67,34 @@ internal object ProductionRecipePaths {
             if (path.size >= ProductionChainEconomics.MAX_STAGES || seen.size >= MAX_VISITS) continue
             for ((input, amount) in aggregate.materials) {
                 for (prefix in producers.getOrPut(input) { nativeRecipes(input).take(16) }) {
-                    if ((!allowOtherSkills && prefix.skill != path.last().recipe.skill) || !preparation(prefix) ||
+                    val consumers = path.filter { input in it.recipe.materials }
+                    val explicit = trainingPrerequisites && consumers.all {
+                        ProductionTrainingPrerequisites.permits(it.recipe, input, prefix)
+                    }
+                    val sameSkill = if (trainingPrerequisites) consumers.all { it.recipe.skill == prefix.skill }
+                        else prefix.skill == path.last().recipe.skill
+                    if ((!allowOtherSkills && !sameSkill && !explicit) || !preparation(prefix) ||
                         prefix.productProbability != 1.0 || input in prefix.materials ||
                         path.any { it.recipe.key == prefix.key } ||
                         prefix.materials.keys.any { id -> path.any { id in it.recipe.products } }) continue
                     val yield = prefix.products.entries.singleOrNull()?.takeIf { it.key == input }?.value ?: continue
-                    if (amount % yield != 0 || amount / yield > ProductionEconomics.MAX_OPERATIONS) continue
-                    enqueue(listOf(ProductionStage(prefix, amount / yield)) + path)
+                    val scale = when {
+                        amount % yield == 0 -> 1
+                        explicit -> yield / gcd(amount, yield)
+                        else -> continue
+                    }
+                    val nativeOperations = amount.toLong() * scale / yield
+                    val maximum = ProductionEconomics.MAX_OPERATIONS.toLong()
+                    if (nativeOperations > maximum || path.any { it.operations.toLong() * scale > maximum }) continue
+                    enqueue(listOf(ProductionStage(prefix, nativeOperations.toInt())) +
+                        path.map { it.copy(operations = it.operations * scale) })
                 }
             }
         }
         return result
     }
+
+    private tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 
     /**
      * Captures preparation costs in internal ceilings before the complete external basket is quoted.
@@ -120,12 +139,11 @@ internal object ProductionRecipePaths {
     fun trainingOperationLimit(path: List<ProductionStage>, requested: Int,
                                remainingExperience: Double): Int {
         if (path.isEmpty() || requested < 1 || !remainingExperience.isFinite() || remainingExperience <= 0.0) return 0
-        val prefix = path.dropLast(1).sumOf { it.recipe.experience * it.operations }
-        var operations = requested.coerceAtMost(ProductionEconomics.MAX_OPERATIONS)
-        if (prefix == 0.0) return operations
-        val final = path.last().recipe.experience
-        while (operations > 0 && prefix * operations + final * (operations - 1) >= remainingExperience) operations--
-        return operations
+        val maximum = requested.coerceAtMost(ProductionEconomics.MAX_OPERATIONS)
+        if (path.size == 1 && path.single().operations == 1) return maximum
+        val final = path.last().recipe
+        val perBatch = trainingExperience(path)
+        return (1..maximum).lastOrNull { perBatch * it - final.experience < remainingExperience } ?: 0
     }
 
     /**
@@ -133,10 +151,16 @@ internal object ProductionRecipePaths {
      */
     fun trainingReachable(stages: List<ProductionStage>, remainingExperience: Double): Boolean {
         if (stages.isEmpty() || !remainingExperience.isFinite() || remainingExperience <= 0.0) return false
-        val prefix = stages.dropLast(1).sumOf { it.recipe.experience * it.operations }
-        if (prefix == 0.0) return true
-        val final = stages.last()
-        return prefix + final.recipe.experience * (final.operations - 1) < remainingExperience
+        if (stages.size == 1) return true
+        return trainingExperience(stages) - stages.last().recipe.experience < remainingExperience
+    }
+
+    /**
+     * Only experience in the final goal's skill contributes to training value and its experience boundary.
+     */
+    fun trainingExperience(stages: List<ProductionStage>): Double {
+        val skill = stages.last().recipe.skill
+        return stages.filter { it.recipe.skill == skill }.sumOf { it.recipe.experience * it.operations }
     }
 
     /**

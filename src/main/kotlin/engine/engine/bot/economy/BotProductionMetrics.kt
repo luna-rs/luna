@@ -133,7 +133,7 @@ object BotProductionMetrics {
                        skill: Int = -1, itemId: Int = -1, plan: ProductionPlan? = null) {
         val native = plan?.recipe
         val key = (recipeKey ?: native?.key)?.take(128)?.replace('\n', ' ')?.replace('\r', ' ')
-        bot.attributes()[latestDecision.attr] = Decision(source, reason, key, native?.skill ?: skill, itemId,
+        bot.attributes()[latestDecision.attr] = Decision(source, reason, key, plan?.goalSkill ?: skill, itemId,
             plan?.completedOperations ?: 0, plan?.remainingOperations ?: 0,
             plan?.let { it.currentStageIndex + 1 } ?: 0, plan?.recipes?.size ?: 0,
             plan?.maximumCoins ?: 0L, plan?.spentCoins ?: 0L, plan?.deadline ?: 0L,

@@ -188,10 +188,15 @@ abstract class InventoryBotScript(
     private fun plannedEndReason(plan: ProductionPlan): Reason = when {
         plan.remainingOperations == 0 -> Reason.COMPLETED
         plan.deadline <= System.currentTimeMillis() -> Reason.EXPIRED
-        bot.skill(plan.recipe.skill).level < plan.recipe.level -> Reason.LEVEL
+        !hasPlannedLevel(plan) -> Reason.LEVEL
         !BotCombatActionHandler.mayGainExperience(bot, plan.recipe.skill) -> Reason.ACCOUNT_RESTRICTION
-        plan.training && !BotCombatActionHandler.wantsToTrain(bot, plan.recipe.skill) -> Reason.NO_EXPERIENCE
+        plan.training && !BotCombatActionHandler.wantsToTrain(bot, plan.goalSkill) -> Reason.NO_EXPERIENCE
         else -> Reason.CANCELLED
+    }
+
+    private fun hasPlannedLevel(plan: ProductionPlan): Boolean {
+        val skill = bot.skill(plan.recipe.skill)
+        return skill.staticLevel >= plan.recipe.level && skill.level >= plan.recipe.level
     }
 
     override fun allowsLoot(item: GroundItem): Boolean = productionPlan == null && super.allowsLoot(item)
@@ -202,6 +207,7 @@ abstract class InventoryBotScript(
     fun planProduction(plan: ProductionPlan): InventoryBotScript {
         check(productionPlan == null)
         productionPlan = plan
+        trainingGoal = plan.goalSkill.takeIf { plan.training }
         return this
     }
 
@@ -236,7 +242,7 @@ abstract class InventoryBotScript(
         failedProductionZone = data.failedZone
         failedProductionZones.addAll(data.failedZones)
         data.failedZone?.let { failedProductionZones.add(it) }
-        productionPlan = data.productionPlan
+        data.productionPlan?.let(::planProduction)
         plannedBatch = data.productionBatch
         startupSupplyDeadline = data.startupSupplyDeadline
     }
@@ -462,6 +468,8 @@ abstract class InventoryBotScript(
     override fun selectWorkZone(): SubZone? {
         // Zoned travel recovery can rebuild original candidates; exhausted work sites stay retired.
         zones.removeAll(failedProductionZones)
+        if (productionPlan?.fixedTrainingBatch == true)
+            return zones.minByOrNull { it.inside.computeLongestDistance(bot.position) }
         return super.selectWorkZone()
     }
 
@@ -706,9 +714,9 @@ abstract class InventoryBotScript(
             return false
         }
         if (plan.remainingOperations > 0 && plan.deadline > System.currentTimeMillis() &&
-            bot.skill(plan.recipe.skill).level >= plan.recipe.level &&
+            hasPlannedLevel(plan) &&
             BotCombatActionHandler.mayGainExperience(bot, plan.recipe.skill) &&
-            (!plan.training || BotCombatActionHandler.wantsToTrain(bot, plan.recipe.skill))) return true
+            (!plan.training || BotCombatActionHandler.wantsToTrain(bot, plan.goalSkill))) return true
         stopPlannedProduction(plannedEndReason(plan))
         return false
     }
@@ -744,7 +752,7 @@ abstract class InventoryBotScript(
             if (!normalized || !awaitActionSafety()) { stopPlannedProduction(); return false }
         }
         fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
-        fun supplied() = if (plan.recipes.size > 1) plan.targets().all { (id, amount) -> owned(id) >= amount }
+        fun supplied() = if (plan.recipes.size > 1 || plan.fixedTrainingBatch) plan.targets().all { (id, amount) -> owned(id) >= amount }
             else plan.recipe.materials.all { (id, amount) -> owned(id) >= amount } &&
                 plan.recipe.tools.all { owned(it) > 0L }
         if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
@@ -756,19 +764,20 @@ abstract class InventoryBotScript(
                 Reason.ACQUISITION_EXHAUSTED else Reason.CANCELLED)
             return false
         }
-        if ((plan.recipe.skill == SKILL_COOKING || plan.saleGuard != null) && !plan.shopAttempted &&
+        if ((plan.recipe.skill == SKILL_COOKING || plan.saleGuard != null || plan.fixedTrainingBatch) && !plan.shopAttempted &&
             plan.remainingCoins > 0L &&
             plan.targets().any { (id, target) -> owned(id) < target &&
                 BotSupplySources.quote(bot, id, (target.toLong() - owned(id)).coerceAtMost(100L).toInt())?.let {
                     it.maximumUnitPrice <= (plan.maximumUnitPrices[id] ?: 0L) &&
                         it.maximumUnitPrice <= plan.remainingCoins
                 } == true }) {
-            plan.shopAttempted = true
+            if (!plan.fixedTrainingBatch) plan.shopAttempted = true
             withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
                 if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
                     handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
                         .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
             }
+            plan.shopAttempted = true
             if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
         }
         for ((id, target) in plan.targets()) {
@@ -777,12 +786,13 @@ abstract class InventoryBotScript(
             if (handler.shop.obtainWantedItem(plan, id, target, duration)) return false
         }
         if (!plan.shopAttempted && System.currentTimeMillis() < plan.supplyDeadline) {
-            plan.shopAttempted = true
+            if (!plan.fixedTrainingBatch) plan.shopAttempted = true
             withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
                 if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
                     handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
                         .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
             }
+            plan.shopAttempted = true
             if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
         }
         if (queueMissingPlannedPreparation(plan)) return false

@@ -25,11 +25,13 @@ class ProductionPlan(
     stageRatios: List<Int>? = null,
     val saleGuard: ProductionSaleGuard? = null,
     val singlePurchaseBatch: Boolean = false,
-    val refillVials: Boolean = false
+    val refillVials: Boolean = false,
+    val fixedTrainingBatch: Boolean = false
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
         materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
         zeroValueByproducts = native.zeroValueByproducts.toSet()) }
+    val goalSkill: Int get() = recipes.last().skill
     private val ratios = stageRatios?.toList() ?: List(recipes.size) { 1 }
     val maximumUnitPrices = maximumUnitPrices.toMap()
     val personalUsePrices = personalUsePrices.toMap()
@@ -63,12 +65,13 @@ class ProductionPlan(
         require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
         require(!refillVials || training && recipes.size == 2 && ratios.all { it == 1 } &&
             recipes.first().key.startsWith("unfinished:") && recipes.last().key.startsWith("potion:"))
+        require(!fixedTrainingBatch || training && !refillVials)
         require(!singlePurchaseBatch || operations == 1 && !training && recipes.size == 1 && saleGuard != null)
         require(maximumCoins >= 0L && spentCoins >= 0L)
         require(deadline > 0L && maximumUnitPrices.size <= 64)
         require(maximumUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
         require(recipes.size <= ProductionChainEconomics.MAX_STAGES && currentStageIndex in recipes.indices)
-        require(ratios.size == recipes.size && ratios.last() == 1)
+        require(ratios.size == recipes.size && (ratios.last() == 1 || fixedTrainingBatch))
         require(ratios.all { it in 1..ProductionEconomics.MAX_OPERATIONS / operations })
         stages = recipes.mapIndexed { index, native -> ProductionStage(native, ratios[index] * operations) }
         require(completedOperations in 0..currentStageOperations)
@@ -167,6 +170,7 @@ class ProductionPlan(
         saleGuard?.let { data.add("sale_guard", it.save()) }
         if (singlePurchaseBatch) data.addProperty("single_purchase_batch", true)
         if (refillVials) data.addProperty("refill_vials", true)
+        if (fixedTrainingBatch) data.addProperty("fixed_training_batch", true)
         if (guardedOutputProduced > 0) data.addProperty("guarded_output", guardedOutputProduced)
         data.addProperty("completed", completedOperations)
         data.addProperty("maximum_coins", maximumCoins)
@@ -210,7 +214,8 @@ class ProductionPlan(
                 data.get("stage")?.asInt ?: 0, personal.entrySet().associate { it.key.toInt() to it.value.asLong },
                 ratios, data.getAsJsonObject("sale_guard")?.let(ProductionSaleGuard::load),
                 data.get("single_purchase_batch")?.asBoolean ?: false,
-                data.get("refill_vials")?.asBoolean ?: false).also {
+                data.get("refill_vials")?.asBoolean ?: false,
+                data.get("fixed_training_batch")?.asBoolean ?: false).also {
                 it.supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 it.shopAttempted = data.get("shop_attempted")?.asBoolean ?: false
                 it.guardedOutputProduced = data.get("guarded_output")?.asInt ?: 0

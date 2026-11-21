@@ -304,7 +304,7 @@ class SpinTextileBotScript(
 
     override suspend fun beforeInventoryInit(): Boolean {
         if (supplyTime() <= Duration.ZERO) return false
-        if (textile != Textile.BOWSTRING) return true
+        if (productionPlan != null || textile != Textile.BOWSTRING) return true
         if (supplyTarget > 0 && ownedStrings() >= supplyTarget) return false
         if (bot.crafting.staticLevel < requiredLevel) {
             if (supplyDeadline == 0L) supplyDeadline = System.currentTimeMillis() + duration.inWholeMilliseconds
@@ -323,7 +323,7 @@ class SpinTextileBotScript(
             stop()
             return false
         }
-        if (textile == Textile.BOWSTRING && ownedRaw() == 0L && !prepareFlax()) {
+        if (productionPlan == null && textile == Textile.BOWSTRING && ownedRaw() == 0L && !prepareFlax()) {
             if (!isPaused()) stop()
             return false
         }
@@ -404,7 +404,7 @@ class SpinTextileBotScript(
 
     override suspend fun completed() {
         // Chance to queue a fletching script.
-        if (supplyTarget == 0 && textile == Textile.BOWSTRING && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
+        if (productionPlan == null && supplyTarget == 0 && textile == Textile.BOWSTRING && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             val script =
                 FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
             bot.scriptStack.pushTail(script, 2)

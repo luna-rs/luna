@@ -94,7 +94,7 @@ object BotProductionPlanner {
 
     /**
      * Chooses a bounded, affordable native batch or a fully funded short native production chain.
-     * Native preparation may use a later same-skill recipe's real XP only when the complete chain's
+     * Native preparation may support a later training recipe only when the complete chain's
      * external materials and tools fit its shared budget. Experience remains with each native action.
      */
     fun select(bot: Bot, skill: Int, level: Int, training: Boolean, duration: Duration,
@@ -135,7 +135,7 @@ object BotProductionPlanner {
             val recipe = native?.takeIf { (!entry.profitOnly || !training) && bot.skill(it.skill).staticLevel >= it.level &&
                 bot.skill(it.skill).level >= it.level && (it.skill != skill || it.level <= level) &&
                 BotCombatActionHandler.mayGainExperience(bot, it.skill) &&
-                (!training || it.experience == 0.0 || BotCombatActionHandler.wantsToTrain(bot, it.skill)) }
+                (!training || it.skill != skill || it.experience == 0.0 || BotCombatActionHandler.wantsToTrain(bot, skill)) }
             if (native != null && recipe == null && (keyPrefix == null || native.key.startsWith(keyPrefix)))
                 lastRejection = if (bot.skill(native.skill).staticLevel < native.level ||
                     bot.skill(native.skill).level < native.level || native.skill == skill && native.level > level)
@@ -171,7 +171,8 @@ object BotProductionPlanner {
         val pipelines = buildList {
             if (finalFood == null) for ((entry, recipe) in candidates) {
                 val paths = if (directOnly || singlePurchaseBatch) listOf(listOf(ProductionStage(recipe, 1)))
-                else ProductionRecipePaths.forRecipe(recipe, ::describe, allowOtherSkills) {
+                else ProductionRecipePaths.forRecipe(recipe, ::describe, allowOtherSkills,
+                    trainingPrerequisites = training && ProductionTrainingPrerequisites.input(recipe) != null) {
                     allowOtherSkills || skill != SKILL_COOKING || it.experience == 0.0
                 }
                 for (path in paths) {
@@ -184,7 +185,9 @@ object BotProductionPlanner {
                     val firstEntry = if (first.key == recipe.key) entry else nativeEntry(bot, first) ?: continue
                     val aggregate = if (path.size == 1) recipe else
                         ProductionChainEconomics.aggregate(path) ?: continue
-                    add(Pipeline(firstEntry, path, aggregate))
+                    val economy = if (training && ProductionTrainingPrerequisites.input(recipe) != null)
+                        aggregate.copy(experience = recipe.experience * path.last().operations) else aggregate
+                    add(Pipeline(firstEntry, path, economy))
                 }
             }
             val foods = if (finalFood != null) listOf(finalFood) else if (!directOnly && !singlePurchaseBatch && skill == SKILL_COOKING)
@@ -243,13 +246,15 @@ object BotProductionPlanner {
         data class Candidate(val path: Pipeline, val quote: ProductionEconomics.Quote,
                              val caps: Map<Int, Long>, val usePrices: Map<Int, Long>,
                              val useful: Boolean, val stocked: Boolean, val score: Double,
-                             val saleGuard: ProductionSaleGuard?, val refillVials: Boolean)
+                             val saleGuard: ProductionSaleGuard?, val refillVials: Boolean, val fixedTrainingBatch: Boolean)
         val water = UnfPotion.VIAL_OF_WATER
         val emptyVial = HerbloreVialRefill.EMPTY_VIAL
         val vialShops by lazy { BotSupplySources.generalStores(bot, emptyVial, bot.inventory.capacity()) }
+        val trainingSupplies = ProductionTrainingSupplies(bot)
         val scored = pipelines.mapNotNull { path ->
             val native = path.stages.first().recipe
             val recipe = path.economy
+            val fixedTrainingBatch = training && ProductionTrainingPrerequisites.input(path.stages.last().recipe) != null
             val stockLimit = goals.operations[native.key]?.div(path.stages.first().operations)
             if (!training && stockLimit == null && recipe.products.any { (id, amount) ->
                     count(id) >= amount.toLong() * 56 }) return@mapNotNull null
@@ -260,7 +265,7 @@ object BotProductionPlanner {
                 if (missing !in 1L..amount.toLong()) return@mapNotNull null
                 val price = singlePurchasePrice(bot, id, missing.toInt()) ?: return@mapNotNull null
                 mutableMapOf(id to price)
-            } else ids.associateWith(::ceiling).toMutableMap()
+            } else ids.associateWith { id -> if (fixedTrainingBatch) 1L else ceiling(id) }.toMutableMap()
             val inventorySize = bot.inventory.capacity()
             val capacity = if (path.stages.size == 1) {
                 batchCapacity(recipe, inventorySize)
@@ -286,9 +291,16 @@ object BotProductionPlanner {
                     return@mapNotNull null
                 }
             }
-            val stock = ids.associateWith(::count).toMutableMap()
+            val stock = ids.associateWith { if (fixedTrainingBatch) owned(bot, it) else count(it) }.toMutableMap()
             var refillVials = false
-            if (training && skill == SKILL_HERBLORE && path.stages.size == 2 &&
+            if (fixedTrainingBatch) {
+                requested = trainingSupplies.limit(recipe, stock, requested)
+                if (requested == 0) {
+                    lastRejection = Reason.MATERIALS_UNAVAILABLE
+                    return@mapNotNull null
+                }
+                inputPrices.putAll(trainingSupplies.prices(recipe, stock, requested))
+            } else if (training && skill == SKILL_HERBLORE && path.stages.size == 2 &&
                 path.stages.all { it.operations == 1 } && native.key.startsWith("unfinished:") &&
                 path.stages.last().recipe.key.startsWith("potion:") && recipe.materials[water] == 1) {
                 val filled = HerbloreVialRefill.owned(bot, water)
@@ -309,7 +321,8 @@ object BotProductionPlanner {
                     }
                 }
             }
-            ProductionRecipePaths.pricePreparations(path.stages.map { it.recipe }, inputPrices)
+            if (!fixedTrainingBatch)
+                ProductionRecipePaths.pricePreparations(path.stages.map { it.recipe }, inputPrices)
             val merchantAmount = if (merchantOutput != null) {
                 if (recipe.valuedProducts.keys != setOf(merchantOutput)) return@mapNotNull null
                 recipe.valuedProducts.getValue(merchantOutput)
@@ -382,7 +395,13 @@ object BotProductionPlanner {
             }
             val ticks = path.stages.sumOf { processingTicks(it.recipe) * it.operations }
             val netCost = (quote.inputValue - quote.outputValue).coerceAtLeast(0L).toDouble()
-            val score = if (training) recipe.experience / ticks /
+            val score = if (fixedTrainingBatch) {
+                val travel = path.stages.sumOf {
+                    ProductionTrainingPrerequisites.stationTicks(bot, it.recipe) ?: return@mapNotNull null
+                } + trainingSupplies.travelTicks(recipe, stock, quote.operations)
+                val xp = recipe.experience * quote.operations
+                xp / (ticks * quote.operations + 25.0 + travel) / (1.0 + quote.maximumCoins / xp)
+            } else if (training) recipe.experience / ticks /
                 (1.0 + netCost / recipe.experience.coerceAtLeast(1.0))
             else if (guard != null) (quote.outputValue.toDouble() * quote.operations - guard.batchCost) /
                 (ticks * quote.operations + NativeProductionOpportunities.overhead(bot, recipe))
@@ -390,17 +409,19 @@ object BotProductionPlanner {
             val stocked = recipe.materials.all { (id, amount) -> (stock[id] ?: 0L) >= amount } &&
                 recipe.tools.all { (stock[it] ?: 0L) > 0L }
             Candidate(path, quote, inputPrices, usePrices, stockLimit != null, stocked, score, guard,
-                refillVials && quote.operations > HerbloreVialRefill.owned(bot, water))
+                refillVials && quote.operations > HerbloreVialRefill.owned(bot, water), fixedTrainingBatch)
         }
-        val preferred = if (merchantOutput != null) scored else {
-            val suppliedPaths = scored.filter { it.stocked }.groupBy { it.path.stages.last().recipe.key }
-            val executable = if (scored.any { it.refillVials }) scored.filter { it.stocked || it.refillVials }
-                else scored
+        val compared = scored.filterNot { it.fixedTrainingBatch } + scored.filter { it.fixedTrainingBatch }
+            .groupBy { it.path.stages.last().recipe.key }.values.map { choices -> choices.maxBy { it.score } }
+        val preferred = if (merchantOutput != null) compared else {
+            val suppliedPaths = compared.filter { it.stocked }.groupBy { it.path.stages.last().recipe.key }
+            val executable = if (compared.any { it.refillVials })
+                compared.filter { it.stocked || it.refillVials } else compared
             executable.filterNot { candidate ->
-                ProductionRecipePaths.hasSuppliedSuffix(candidate.path.stages,
+                !candidate.fixedTrainingBatch && ProductionRecipePaths.hasSuppliedSuffix(candidate.path.stages,
                     suppliedPaths[candidate.path.stages.last().recipe.key].orEmpty().map { it.path.stages })
             }.sortedWith(compareByDescending<Candidate> { it.useful }.thenByDescending { it.stocked }.thenByDescending { it.score }
-                .thenByDescending { it.path.stages.first().recipe.level })
+                .thenByDescending { it.path.stages.last().recipe.level })
         }
         val chosen = when {
             preferred.isEmpty() -> return rejected(lastRejection)
@@ -414,7 +435,8 @@ object BotProductionPlanner {
             chosen.quote.maximumCoins, chosen.caps, deadline,
             continuationRecipes = chosen.path.stages.drop(1).map { it.recipe }, personalUsePrices = chosen.usePrices,
             stageRatios = chosen.path.stages.map { it.operations }, saleGuard = chosen.saleGuard,
-            singlePurchaseBatch = singlePurchaseBatch, refillVials = chosen.refillVials)
+            singlePurchaseBatch = singlePurchaseBatch, refillVials = chosen.refillVials,
+            fixedTrainingBatch = chosen.fixedTrainingBatch)
         chosen.saleGuard?.let { guard ->
             val quantity = chosen.path.economy.valuedProducts.getValue(guard.itemId).toLong() * plan.operations
             if (!NativeOutputDemand.reserve(bot, guard.identity, mapOf(guard.itemId to quantity), deadline,
@@ -443,17 +465,18 @@ object BotProductionPlanner {
         if (plan.deadline <= System.currentTimeMillis() || plan.remainingOperations < 1 ||
             bot.skill(native.skill).level < native.level ||
             !BotCombatActionHandler.mayGainExperience(bot, native.skill) ||
-            plan.training && !BotCombatActionHandler.wantsToTrain(bot, native.skill)) return false
+            plan.training && !BotCombatActionHandler.wantsToTrain(bot, plan.goalSkill)) return false
         for (remaining in plan.recipes.drop(plan.currentStageIndex)) {
             if (bot.skill(remaining.skill).staticLevel < remaining.level || bot.skill(remaining.skill).level < remaining.level ||
                 !BotCombatActionHandler.mayGainExperience(bot, remaining.skill) ||
                 plan.training && remaining.experience > 0.0 &&
-                    !BotCombatActionHandler.wantsToTrain(bot, remaining.skill) ||
+                    remaining.skill == plan.goalSkill && !BotCombatActionHandler.wantsToTrain(bot, remaining.skill) ||
                 nativeEntry(bot, remaining) == null) return false
         }
         if (plan.training) {
             if (!ProductionRecipePaths.trainingReachable(plan.remainingStages(),
-                    trainingExperienceRemaining(bot, native.skill))) return false
+                    trainingExperienceRemaining(bot, plan.goalSkill))) return false
+            if (plan.fixedTrainingBatch) return true
         }
         val recipe = plan.economicRecipe() ?: return false
         val guard = plan.saleGuard
