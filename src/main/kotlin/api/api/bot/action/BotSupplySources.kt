@@ -83,6 +83,20 @@ object BotSupplySources {
         return Index(tick, shops.size, byId).also { indexes[world] = it }
     }
 
+    /**
+     * Returns live general-store quotes in seller-distance order. A native visit still verifies access.
+     */
+    internal fun generalStores(bot: Bot, id: Int, maxQuantity: Int): List<Pair<Shop, Quote>> {
+        if (maxQuantity < 1) return emptyList()
+        return index(bot.world).shops[id].orEmpty().mapNotNull { it.get() }.asSequence()
+            .filter { it.isGeneralStore && it.currency == Currency.COINS }
+            .mapNotNull { shop ->
+                val distance = bot.actionHandler.shop.shopDistance(shop) ?: return@mapNotNull null
+                val quote = nativeQuote(shop, id, maxQuantity.coerceAtMost(MAX_QUANTITY)) ?: return@mapNotNull null
+                Triple(shop, quote, distance)
+            }.sortedBy { it.third }.map { (shop, quote) -> shop to quote }.toList()
+    }
+
     private fun quoteStock(world: World, id: Int, maxQuantity: Int): Quote? {
         if (id < 0 || maxQuantity < 1) return null
         val limit = maxQuantity.coerceAtMost(MAX_QUANTITY)

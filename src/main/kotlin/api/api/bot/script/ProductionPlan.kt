@@ -12,7 +12,7 @@ import com.google.gson.JsonObject
 class ProductionPlan(
     recipe: ProductionRecipe,
     val training: Boolean,
-    val operations: Int,
+    operations: Int,
     val maximumCoins: Long,
     maximumUnitPrices: Map<Int, Long>,
     val deadline: Long,
@@ -24,7 +24,8 @@ class ProductionPlan(
     personalUsePrices: Map<Int, Long> = emptyMap(),
     stageRatios: List<Int>? = null,
     val saleGuard: ProductionSaleGuard? = null,
-    val singlePurchaseBatch: Boolean = false
+    val singlePurchaseBatch: Boolean = false,
+    val refillVials: Boolean = false
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
         materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
@@ -52,11 +53,16 @@ class ProductionPlan(
     /**
      * The native operation count of every stage in the committed batch.
      */
-    val stages: List<ProductionStage>
+    var stages: List<ProductionStage>
+        private set
+    var operations = operations
+        private set
     val remainingCoins: Long get() = (maximumCoins - spentCoins).coerceAtLeast(0L)
 
     init {
         require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
+        require(!refillVials || training && recipes.size == 2 && ratios.all { it == 1 } &&
+            recipes.first().key.startsWith("unfinished:") && recipes.last().key.startsWith("potion:"))
         require(!singlePurchaseBatch || operations == 1 && !training && recipes.size == 1 && saleGuard != null)
         require(maximumCoins >= 0L && spentCoins >= 0L)
         require(deadline > 0L && maximumUnitPrices.size <= 64)
@@ -94,6 +100,18 @@ class ProductionPlan(
      */
     fun remainingStages(): List<ProductionStage> = stages.drop(currentStageIndex).mapIndexedNotNull { index, stage ->
         if (index > 0) stage else remainingOperations.takeIf { it > 0 }?.let { stage.copy(operations = it) }
+    }
+
+    /**
+     * Reduces an unstarted vial-refill batch to the usable supplies. Both potion stages retain their original
+     * spending limit and deadline.
+     */
+    internal fun limitVialRefillBatch(usable: Int) {
+        require(refillVials && currentStageIndex == 0 && completedOperations == 0 && usable in 1..operations)
+        if (usable == operations) return
+        operations = usable
+        stages = stages.map { it.copy(operations = usable) }
+        targetCache = null
     }
 
     fun hasNextStage(): Boolean = currentStageIndex < recipes.lastIndex
@@ -148,6 +166,7 @@ class ProductionPlan(
         })
         saleGuard?.let { data.add("sale_guard", it.save()) }
         if (singlePurchaseBatch) data.addProperty("single_purchase_batch", true)
+        if (refillVials) data.addProperty("refill_vials", true)
         if (guardedOutputProduced > 0) data.addProperty("guarded_output", guardedOutputProduced)
         data.addProperty("completed", completedOperations)
         data.addProperty("maximum_coins", maximumCoins)
@@ -190,7 +209,8 @@ class ProductionPlan(
                 attempted.map { it.asInt }.toSet(), continuations.map { loadRecipe(it.asJsonObject) },
                 data.get("stage")?.asInt ?: 0, personal.entrySet().associate { it.key.toInt() to it.value.asLong },
                 ratios, data.getAsJsonObject("sale_guard")?.let(ProductionSaleGuard::load),
-                data.get("single_purchase_batch")?.asBoolean ?: false).also {
+                data.get("single_purchase_batch")?.asBoolean ?: false,
+                data.get("refill_vials")?.asBoolean ?: false).also {
                 it.supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 it.shopAttempted = data.get("shop_attempted")?.asBoolean ?: false
                 it.guardedOutputProduced = data.get("guarded_output")?.asInt ?: 0

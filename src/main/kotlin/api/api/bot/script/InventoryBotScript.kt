@@ -713,7 +713,20 @@ abstract class InventoryBotScript(
         return false
     }
 
+    private suspend fun prepareVialRefillSupplies(plan: ProductionPlan): Boolean {
+        if (!plannedGoalAvailable()) return false
+        BotTradeIntentions.recordProductionPlan(bot, plan, this)
+        if (!preparePlannedInputs(plan)) return false
+        if (plan.targets().all { (id, amount) ->
+                bot.inventory.computeNonDynamicAmountForId(id).toLong() +
+                    bot.bank.computeNonDynamicAmountForId(id) >= amount
+            } && BotProductionPlanner.remainsUseful(bot, plan)) return true
+        stopPlannedProduction(Reason.MATERIALS_UNAVAILABLE)
+        return false
+    }
+
     private suspend fun preparePlannedSupplies(plan: ProductionPlan): Boolean {
+        if (plan.refillVials) return prepareVialRefillSupplies(plan)
         if (!plannedGoalAvailable() || !BotProductionPlanner.remainsUseful(bot, plan)) {
             stopPlannedProduction()
             return false
@@ -788,6 +801,11 @@ abstract class InventoryBotScript(
      * Returning true means the caller queued a child; the current finite guard and absolute deadline stay owned.
      */
     protected open fun prepareMissingPlannedSupplies(plan: ProductionPlan): Boolean = false
+
+    /**
+     * Runs the quoted native prerequisite before ordinary acquisition can pursue its processed input.
+     */
+    protected open suspend fun preparePlannedInputs(plan: ProductionPlan): Boolean = true
 
     /**
      * Returns the items this script should withdraw from the bank.

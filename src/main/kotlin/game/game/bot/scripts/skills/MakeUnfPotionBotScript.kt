@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
+import api.bot.script.ProductionPlan
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
@@ -63,12 +64,14 @@ class MakeUnfPotionBotScript(
             var recipe = ""
             var produced = false
             var continued = false
+            var refillAttempted = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
                 produced = data.get("produced")?.asBoolean ?: false
                 continued = data.get("continued")?.asBoolean ?: false
+                refillAttempted = data.get("refill_attempted")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
@@ -76,6 +79,7 @@ class MakeUnfPotionBotScript(
                 data.addProperty("recipe", recipe)
                 data.addProperty("produced", produced)
                 data.addProperty("continued", continued)
+                if (refillAttempted) data.addProperty("refill_attempted", true)
             }
         }
     }
@@ -86,6 +90,7 @@ class MakeUnfPotionBotScript(
     private val materials = listOf(potion.herbItem, Item(UnfPotion.VIAL_OF_WATER))
     private var produced = false
     private var continued = false
+    private var refillAttempted = false
 
     /**
      * Restores the recipe, session configuration, and retry budgets from saved state.
@@ -99,6 +104,7 @@ class MakeUnfPotionBotScript(
         restoreInventoryState(data)
         produced = data.produced
         continued = data.continued
+        refillAttempted = data.refillAttempted
     }
 
     /**
@@ -106,6 +112,34 @@ class MakeUnfPotionBotScript(
      */
     fun isEligible(): Boolean = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel &&
             bot.ownsProductionSupplies(listOf(potion.herbItem))
+
+    override suspend fun preparePlannedInputs(plan: ProductionPlan): Boolean {
+        if (!awaitActionSafety()) { stop(); return false }
+        val water = UnfPotion.VIAL_OF_WATER
+        val useful = HerbloreVialRefill.usableOperations(bot, plan, includeWater = false)
+        if (useful == 0) { stop(); return false }
+        if (useful < plan.operations && plan.completedOperations == 0) plan.limitVialRefillBatch(useful)
+        if (!refillAttempted && HerbloreVialRefill.owned(bot, water) < plan.target(water)) {
+            HerbloreVialRefill.buyMissing(bot, plan)
+        }
+        if (!HerbloreVialRefill.bankNotes(bot, plan)) { stop(); return false }
+        if (!refillAttempted) {
+            refillAttempted = true
+            if (prepareMissingPlannedSupplies(plan)) return false
+        }
+        val usable = HerbloreVialRefill.usableOperations(bot, plan, includeWater = true)
+        if (usable == 0) { stop(); return false }
+        if (usable < plan.operations && plan.completedOperations == 0) plan.limitVialRefillBatch(usable)
+        return true
+    }
+
+    override fun prepareMissingPlannedSupplies(plan: ProductionPlan): Boolean {
+        if (!plan.refillVials || !isActionSafe()) return false
+        val fill = plannedFilling(bot, plan, HerbloreVialRefill.EMPTY_VIAL, UnfPotion.VIAL_OF_WATER,
+            plan.remainingOperations.toLong(), remainingDuration()) ?: return false
+        bot.scriptStack.pushHead(fill)
+        return true
+    }
 
     override suspend fun beforeInventoryInit(): Boolean {
         if (produced && HerbloreProduction.owned(bot, potion.herb) < 1) {
@@ -174,6 +208,7 @@ class MakeUnfPotionBotScript(
         it.recipe = potion.name
         it.produced = produced
         it.continued = continued
+        it.refillAttempted = refillAttempted
         saveInventoryState(it)
     }
 }

@@ -12,6 +12,8 @@ import api.bot.action.trading.NativeOutputDemand
 import api.bot.script.*
 import api.predef.*
 import api.predef.ext.totalItemAmount
+import game.bot.scripts.skills.HerbloreVialRefill
+import game.skill.herblore.makeUnfPotion.UnfPotion
 import engine.bot.economy.BotProductionUses
 import engine.bot.economy.BotProductionMetrics
 import engine.bot.economy.BotProductionMetrics.Reason
@@ -241,7 +243,10 @@ object BotProductionPlanner {
         data class Candidate(val path: Pipeline, val quote: ProductionEconomics.Quote,
                              val caps: Map<Int, Long>, val usePrices: Map<Int, Long>,
                              val useful: Boolean, val stocked: Boolean, val score: Double,
-                             val saleGuard: ProductionSaleGuard?)
+                             val saleGuard: ProductionSaleGuard?, val refillVials: Boolean)
+        val water = UnfPotion.VIAL_OF_WATER
+        val emptyVial = HerbloreVialRefill.EMPTY_VIAL
+        val vialShops by lazy { BotSupplySources.generalStores(bot, emptyVial, bot.inventory.capacity()) }
         val scored = pipelines.mapNotNull { path ->
             val native = path.stages.first().recipe
             val recipe = path.economy
@@ -256,7 +261,6 @@ object BotProductionPlanner {
                 val price = singlePurchasePrice(bot, id, missing.toInt()) ?: return@mapNotNull null
                 mutableMapOf(id to price)
             } else ids.associateWith(::ceiling).toMutableMap()
-            ProductionRecipePaths.pricePreparations(path.stages.map { it.recipe }, inputPrices)
             val inventorySize = bot.inventory.capacity()
             val capacity = if (path.stages.size == 1) {
                 batchCapacity(recipe, inventorySize)
@@ -282,7 +286,30 @@ object BotProductionPlanner {
                     return@mapNotNull null
                 }
             }
-            val stock = ids.associateWith(::count)
+            val stock = ids.associateWith(::count).toMutableMap()
+            var refillVials = false
+            if (training && skill == SKILL_HERBLORE && path.stages.size == 2 &&
+                path.stages.all { it.operations == 1 } && native.key.startsWith("unfinished:") &&
+                path.stages.last().recipe.key.startsWith("potion:") && recipe.materials[water] == 1) {
+                val filled = HerbloreVialRefill.owned(bot, water)
+                val empties = HerbloreVialRefill.owned(bot, emptyVial)
+                val useful = recipe.materials.filterKeys { it != water }.entries.fold(requested) { limit, (id, amount) ->
+                    minOf(limit.toLong(), HerbloreVialRefill.owned(bot, id) / amount).toInt()
+                }
+                if (useful > filled && recipe.tools.all { HerbloreVialRefill.owned(bot, it) > 0L }) {
+                    val missing = useful - filled - empties
+                    val shop = if (missing > 0 && budget > 0L) vialShops.firstOrNull { (_, quote) ->
+                        quote.maximumUnitPrice <= budget
+                    }?.second else null
+                    if (empties > 0L || shop != null) {
+                        refillVials = true
+                        requested = minOf(useful.toLong(), filled + empties + (shop?.quantity ?: 0)).toInt()
+                        stock[water] = filled + empties
+                        inputPrices[water] = shop?.maximumUnitPrice ?: bot.world.economy.getPrice(emptyVial).coerceAtLeast(1L)
+                    }
+                }
+            }
+            ProductionRecipePaths.pricePreparations(path.stages.map { it.recipe }, inputPrices)
             val merchantAmount = if (merchantOutput != null) {
                 if (recipe.valuedProducts.keys != setOf(merchantOutput)) return@mapNotNull null
                 recipe.valuedProducts.getValue(merchantOutput)
@@ -362,11 +389,14 @@ object BotProductionPlanner {
             else (quote.outputValue - quote.inputValue).toDouble() / ticks
             val stocked = recipe.materials.all { (id, amount) -> (stock[id] ?: 0L) >= amount } &&
                 recipe.tools.all { (stock[it] ?: 0L) > 0L }
-            Candidate(path, quote, inputPrices, usePrices, stockLimit != null, stocked, score, guard)
+            Candidate(path, quote, inputPrices, usePrices, stockLimit != null, stocked, score, guard,
+                refillVials && quote.operations > HerbloreVialRefill.owned(bot, water))
         }
         val preferred = if (merchantOutput != null) scored else {
             val suppliedPaths = scored.filter { it.stocked }.groupBy { it.path.stages.last().recipe.key }
-            scored.filterNot { candidate ->
+            val executable = if (scored.any { it.refillVials }) scored.filter { it.stocked || it.refillVials }
+                else scored
+            executable.filterNot { candidate ->
                 ProductionRecipePaths.hasSuppliedSuffix(candidate.path.stages,
                     suppliedPaths[candidate.path.stages.last().recipe.key].orEmpty().map { it.path.stages })
             }.sortedWith(compareByDescending<Candidate> { it.useful }.thenByDescending { it.stocked }.thenByDescending { it.score }
@@ -384,7 +414,7 @@ object BotProductionPlanner {
             chosen.quote.maximumCoins, chosen.caps, deadline,
             continuationRecipes = chosen.path.stages.drop(1).map { it.recipe }, personalUsePrices = chosen.usePrices,
             stageRatios = chosen.path.stages.map { it.operations }, saleGuard = chosen.saleGuard,
-            singlePurchaseBatch = singlePurchaseBatch)
+            singlePurchaseBatch = singlePurchaseBatch, refillVials = chosen.refillVials)
         chosen.saleGuard?.let { guard ->
             val quantity = chosen.path.economy.valuedProducts.getValue(guard.itemId).toLong() * plan.operations
             if (!NativeOutputDemand.reserve(bot, guard.identity, mapOf(guard.itemId to quantity), deadline,
@@ -446,6 +476,7 @@ object BotProductionPlanner {
         }.associateWith { recipe.materials.getValue(it) }
         val disposal = BotProductionUses.recoverableValues(bot, prepared, operations = 1)
         val inputPrices = plan.maximumUnitPrices.mapValues { (id, ceiling) ->
+            if (plan.refillVials) return@mapValues ceiling
             val basis = carried[id]?.takeIf { id in prepared }
             if (basis != null) maxOf(basis, disposal[id] ?: 0L)
             else if (plan.singlePurchaseBatch) {
