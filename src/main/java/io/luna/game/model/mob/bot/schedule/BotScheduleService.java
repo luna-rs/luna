@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
  * <ul>
  *     <li>Scheduling logged-in bots to eventually log out.</li>
  *     <li>Scheduling logged-out bots to eventually return.</li>
- *     <li>Creating fresh bots when saved bots and pending login requests are not enough.</li>
+ *     <li>Creating fresh bots for remaining openings or when a pass gives a new account priority.</li>
  * </ul>
  * <p>
  * Login requests are persisted to disk so bots that logged out before shutdown can still be brought back after a
@@ -352,14 +352,22 @@ public final class BotScheduleService extends AbstractScheduledService {
     }
 
     /**
-     * Fills openings from the longest-waiting eligible saved bots, then creates bots if there are still openings.
+     * Fills openings from the longest-waiting eligible saved bots, with a chance to log in one new bot first.
      */
     private void handleLoginRequests() {
         int loginGoal = getLoginGoal();
         if (loginGoal < 1) {
             return;
         }
-        for (var request : getEligibleLogins(Instant.now())) {
+        var eligibleLogins = getEligibleLogins(Instant.now());
+        double newAccountLoginChance = settings.newAccountLoginChance();
+        if (!eligibleLogins.isEmpty() && newAccountLoginChance > 0.0 &&
+                RandomUtils.roll(newAccountLoginChance) && createNewBot()) {
+            if (--loginGoal == 0) {
+                return;
+            }
+        }
+        for (var request : eligibleLogins) {
             String username = request.getKey();
             // A concurrent logout can replace the offline timer after the snapshot was taken.
             if (!canAttemptLogin(username) ||
@@ -384,36 +392,45 @@ public final class BotScheduleService extends AbstractScheduledService {
     private void createNewBots(int loginGoal) {
         loginGoal = loginGoal > NEW_LOGIN_COUNT_RANGE.upperEndpoint() ? RandomUtils.random(NEW_LOGIN_COUNT_RANGE) : loginGoal;
         while (loginGoal-- > 0) {
-            BotPersonality.Builder personalityBuilder = new BotPersonality.Builder(
-                    world.getBotManager().getPersonalityManager()).randomizeSmart();
-
-            // Small chance of either an unusually low or high intelligence.
-            double intelligence = personalityBuilder.getIntelligence();
-            if (RandomUtils.roll(settings.highIntelligenceChance()) && intelligence < 0.85) {
-                personalityBuilder.setIntelligence(ThreadLocalRandom.current().nextDouble(0.85, 1.0));
-            } else if (RandomUtils.roll(settings.lowIntelligenceChance()) && intelligence > 0.15) {
-                personalityBuilder.setIntelligence(ThreadLocalRandom.current().nextDouble(0.0, 0.15));
-            }
-
-            // Generate a username and attempt to log the bot in.
-            Optional<String> generatedUsername = usernameGenerator.generate(this::isUsernameFree);
-            if (generatedUsername.isEmpty()) {
-                continue;
-            }
-            String username = generatedUsername.get();
-
-            BotPersonality personality = personalityBuilder.build();
-            BotPreference.Builder preferences = new BotPreference.Builder(
-                    world.getBotManager().getPersonalityManager(), personality).randomizeSmart();
-            for (var entry : USERNAME_TAGS.entrySet()) {
-                String tag = entry.getKey();
-                if (username.contains(tag)) {
-                    entry.getValue().accept(preferences);
-                }
-            }
-
-            login(username, personality, preferences.build());
+            createNewBot();
         }
+    }
+
+    /**
+     * Generates a new bot and attempts to log it in.
+     *
+     * @return Whether the new bot successfully logged in.
+     */
+    private boolean createNewBot() {
+        BotPersonality.Builder personalityBuilder = new BotPersonality.Builder(
+                world.getBotManager().getPersonalityManager()).randomizeSmart();
+
+        // Small chance of either an unusually low or high intelligence.
+        double intelligence = personalityBuilder.getIntelligence();
+        if (RandomUtils.roll(settings.highIntelligenceChance()) && intelligence < 0.85) {
+            personalityBuilder.setIntelligence(ThreadLocalRandom.current().nextDouble(0.85, 1.0));
+        } else if (RandomUtils.roll(settings.lowIntelligenceChance()) && intelligence > 0.15) {
+            personalityBuilder.setIntelligence(ThreadLocalRandom.current().nextDouble(0.0, 0.15));
+        }
+
+        // Generate a username and attempt to log the bot in.
+        Optional<String> generatedUsername = usernameGenerator.generate(this::isUsernameFree);
+        if (generatedUsername.isEmpty()) {
+            return false;
+        }
+        String username = generatedUsername.get();
+
+        BotPersonality personality = personalityBuilder.build();
+        BotPreference.Builder preferences = new BotPreference.Builder(
+                world.getBotManager().getPersonalityManager(), personality).randomizeSmart();
+        for (var entry : USERNAME_TAGS.entrySet()) {
+            String tag = entry.getKey();
+            if (username.contains(tag)) {
+                entry.getValue().accept(preferences);
+            }
+        }
+
+        return login(username, personality, preferences.build());
     }
 
     /**
@@ -501,8 +518,8 @@ public final class BotScheduleService extends AbstractScheduledService {
         double goalPercent = 1.0 - Math.min(1.0, onlineCount / goalCount);
         int goal = (int) Math.min((int) Math.floor(RandomUtils.random(BASE_LOGIN_COUNT) * goalPercent), goalCount);
 
-        // Ensure login goal does not exceed max player count.
-        int remaining = world.getPlayers().capacity() - world.getPlayerMap().size(); // Thread-safe version.
+        // Player list capacity includes the reserved index zero. Count online players from the thread-safe map.
+        int remaining = world.getPlayers().capacity() - 1 - world.getPlayerMap().size();
         if (remaining < 1) {
             return 0;
         }

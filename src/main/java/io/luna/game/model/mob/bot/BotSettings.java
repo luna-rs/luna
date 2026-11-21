@@ -16,6 +16,11 @@ public final class BotSettings {
     private final int baseOnlineCount;
 
     /**
+     * The chance per eligible scheduler pass to give a login slot to a new bot before returning saved bots.
+     */
+    private final double newAccountLoginChance;
+
+    /**
      * The baseline number of hours bots should remain logged in.
      */
     private final int baseLoginHours;
@@ -110,6 +115,13 @@ public final class BotSettings {
     }
 
     /**
+     * Returns the chance to try one new bot first. Zero disables this priority.
+     */
+    public double newAccountLoginChance() {
+        return newAccountLoginChance;
+    }
+
+    /**
      * Returns the baseline number of hours bots should remain logged in.
      */
     public int baseLoginHours() {
@@ -195,10 +207,12 @@ public final class BotSettings {
     }
 
     // Never called.
-    private BotSettings(int baseOnlineCount, int baseLoginHours, int baseLogoutHours, int minimumLoginHours,
-                        int maximumLoginHours, int minimumLogoutHours, int maximumLogoutHours, double highIntelligenceChance,
-                        double lowIntelligenceChance, double merchantingChance, int baseLootValue) {
+    private BotSettings(int baseOnlineCount, double newAccountLoginChance, int baseLoginHours,
+                        int baseLogoutHours, int minimumLoginHours, int maximumLoginHours, int minimumLogoutHours,
+                        int maximumLogoutHours, double highIntelligenceChance, double lowIntelligenceChance,
+                        double merchantingChance, int baseLootValue) {
         this.baseOnlineCount = baseOnlineCount;
+        this.newAccountLoginChance = newAccountLoginChance;
         this.baseLoginHours = baseLoginHours;
         this.baseLogoutHours = baseLogoutHours;
         this.minimumLoginHours = minimumLoginHours;

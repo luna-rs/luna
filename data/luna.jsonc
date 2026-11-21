@@ -141,6 +141,9 @@
   "bots": {
     // The baseline number of bots the world should try to keep online.
     "base_online_count": 500,
+    // Chance per scheduler pass with an open login slot and an eligible saved bot to create one new bot first.
+    // Use a ratio from 0.0 (disabled) to 1.0 (every eligible pass). Omit to disable.
+    "new_account_login_chance": 0.10,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
     // The typical break length in hours; uncommon and rare breaks use longer ranges.
