@@ -526,7 +526,7 @@ object WebWalkLiveGenerator {
             } else {
                 GeneratedObstacle(EdgeType.CROSSING, ropeId, obj.position, from, to,
                     handler = RopeEntranceCrossing.ID, cost = cost + 2,
-                    requirements = RopeEntranceCrossing.requirements(ropeId), bidirectional = false)
+                    requirements = RopeEntranceCrossing.requirements, bidirectional = false)
             }
         }
     }

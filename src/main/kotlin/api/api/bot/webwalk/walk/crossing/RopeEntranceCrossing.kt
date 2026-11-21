@@ -20,11 +20,9 @@ object RopeEntranceCrossing : CrossingHandler {
     val entrances = mapOf(3827 to 3828, 3830 to 3831)
 
     /**
-     * Reserves both descents at the surface because item requirements are carried, not cumulative costs.
-     * The upper lair only needs the remaining rope. Tied ropes can expire before a planned trip arrives.
+     * Each descent can consume one rope. Queen trips reserve both ropes before departure.
      */
-    fun requirements(untied: Int): Requirements =
-        Requirements(items = listOf(ItemRequirement(ROPE, if (untied == 3827) 2 else 1)))
+    val requirements = Requirements(items = listOf(ItemRequirement(ROPE)))
 
     override suspend fun cross(context: LegContext, leg: PlanLeg): String? {
         val action = leg.action ?: return "the rope crossing has no object"

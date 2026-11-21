@@ -1956,9 +1956,32 @@ enum class SubZone(
         parent = { WILDERNESS }),
 
     /**
+     * The northern gallery on the lair's upper level. Follow the passage east from the surface rope to
+     * reach the workers, clear of the soldiers' southern passages and the Queen's descent.
+     */
+    KALPHITE_WORKERS(
+        inside = Position(3502, 9523, 2),
+        area = SimpleBoxArea.of(3480, 9508, 3514, 9532, 2),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
+    /**
+     * The upper level's southwestern room of poisonous soldiers.
+     */
+    KALPHITE_SOLDIERS(
+        inside = Position(3466, 9482, 2),
+        area = SimpleBoxArea.of(3457, 9471, 3473, 9491, 2),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
+    /**
+     * The upper level's guardian room beside the descent to the Queen.
+     */
+    KALPHITE_GUARDIANS(
+        inside = Position(3508, 9497, 2),
+        area = SimpleBoxArea.of(3500, 9487, 3517, 9504, 2),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
+    /**
      * Queen chamber reached through both rope entrances. Existing ropes are reused without consuming stock.
-     * Temporary transitions until the webwalker covers rope attachment and both lair descents.
-     * Remove the overrides and outside anchor after https://github.com/luna-rs/luna/issues/707 has full route coverage.
      */
     KALPHITE_QUEEN(
         inside = Position(3485, 9498),
@@ -2954,6 +2977,22 @@ enum class SubZone(
         parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
+     * The west wing on Draynor Manor's first upper floor, reached from the main staircase.
+     */
+    DRAYNOR_MANOR_GHOSTS(
+        inside = Position(3101, 3360, 1),
+        area = SimpleBoxArea.of(3090, 3353, 3105, 3363, 1),
+        parent = { DRAYNOR }),
+
+    /**
+     * The jackal pack south of Uzer, away from the northern ruins and Al Kharid's border.
+     */
+    UZER_JACKALS(
+        inside = Position(3407, 3013),
+        area = SimpleBoxArea.of(3401, 3008, 3415, 3021),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
+    /**
      * Mort'ton's surface shade habitat, containing 25 dormant Loar shadows that awaken through their native
      * encounter before Shade kills count.
      */
@@ -3377,6 +3416,8 @@ enum class SubZone(
             TAVERLEY_DUNGEON_ZAMORAK_MONKS, TAVERLY_BLACK_DEMONS, TAVERLY_HELLHOUND,
             TAVERLY_DUNGEON_BLUE_DRAGONS -> TaverleyJailDoor.DUSTY_KEY_GATE.key
             WATERFALL_FIRE_GIANTS_WEST, WATERFALL_FIRE_GIANTS_EAST -> 295
+            KALPHITE_WORKERS, KALPHITE_SOLDIERS, KALPHITE_GUARDIANS ->
+                api.bot.webwalk.walk.crossing.RopeEntranceCrossing.ROPE
             EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS,
             EDGEVILLE_DUNGEON_HOBGOBLINS -> BrassKeyDoor.KEY
             else -> null

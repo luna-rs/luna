@@ -99,8 +99,13 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Hobgoblin")),
         Camp(SubZone.ROCK_CRABS, 45, setOf("Hobgoblin")),
         Camp(SubZone.EDGEVILLE_DUNGEON, 45, setOf("Hobgoblin")),
+        Camp(SubZone.DRAYNOR_MANOR_GHOSTS, 13, setOf("Ghost"), tasks = setOf(SlayerTaskType.GHOST)),
         Camp(SubZone.VARROCK_SEWERS, 50, setOf("Ghost")),
+        Camp(SubZone.UZER_JACKALS, 15, setOf("Jackal"), tasks = setOf(SlayerTaskType.DOG)),
         Camp(SubZone.ARDOUGNE_SQUARE_THIEVING, 50, setOf("Guard dog")),
+        Camp(SubZone.KALPHITE_WORKERS, 15, setOf("Kalphite Worker"), tasks = setOf(SlayerTaskType.KALPHITE)),
+        Camp(SubZone.KALPHITE_SOLDIERS, 75, setOf("Kalphite Soldier"), tasks = setOf(SlayerTaskType.KALPHITE)),
+        Camp(SubZone.KALPHITE_GUARDIANS, 100, setOf("Kalphite Guardian"), tasks = setOf(SlayerTaskType.KALPHITE)),
         Camp(SubZone.ZANARIS_MAIN, 65, setOf("Otherworldly being")),
         Camp(SubZone.ZANARIS_MAIN, 85, setOf("Zygomite")),
         Camp(SubZone.NORTH_SEERS_VILLAGE_MAPLES, 75, setOf("Wolf")),
@@ -122,7 +127,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         taskCamp(SubZone.BRIMHAVEN_GREATER_DEMONS_SOUTH, 75, SlayerTaskType.GREATER_DEMON),
         taskCamp(SubZone.BRIMHAVEN_METAL, 110, SlayerTaskType.IRON_DRAGON),
         taskCamp(SubZone.BRIMHAVEN_METAL, 120, SlayerTaskType.STEEL_DRAGON),
-        taskCamp(SubZone.MORTTON_SURFACE, 65, SlayerTaskType.SHADE),
+        taskCamp(SubZone.MORTTON_SURFACE, 30, SlayerTaskType.SHADE),
         taskCamp(SubZone.KILLERWATT_REALM, 85, SlayerTaskType.KILLERWATT),
         taskCamp(SubZone.BRAINDEATH_FEVER, 80, SlayerTaskType.FEVER_SPIDER),
         taskCamp(SubZone.SMOKE_DUNGEON, 100, SlayerTaskType.DUST_DEVIL),
@@ -133,8 +138,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         taskCamp(SubZone.LUMBRIDGE_SWAMP_CAVES, 45, SlayerTaskType.CAVE_SLIME),
         taskCamp(SubZone.LUMBRIDGE_SWAMP_CAVES, 65, SlayerTaskType.WALL_BEAST),
         taskCamp(SubZone.LIGHTHOUSE_DAGANNOTHS, 100, SlayerTaskType.DAGANNOTH),
-        taskCamp(SubZone.CANIFIS_NORTH_GHOULS, 50, SlayerTaskType.GHOUL),
-        taskCamp(SubZone.CANIFIS_SOUTH_GHOULS, 50, SlayerTaskType.GHOUL)
+        taskCamp(SubZone.CANIFIS_NORTH_GHOULS, 30, SlayerTaskType.GHOUL),
+        taskCamp(SubZone.CANIFIS_SOUTH_GHOULS, 30, SlayerTaskType.GHOUL)
     ) }
 
     /**

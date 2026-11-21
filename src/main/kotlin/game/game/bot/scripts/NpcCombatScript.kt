@@ -54,6 +54,7 @@ import game.combat.npcHooks.mogre.Mogres
 import game.skill.firemaking.Firemaking
 import game.skill.firemaking.lightSource.LightSource
 import api.bot.webwalk.plan.BankAccess
+import api.bot.webwalk.walk.crossing.RopeEntranceCrossing
 import game.combat.npcHooks.giantMole.GiantMole.burrowing
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.EntityState
@@ -73,6 +74,7 @@ import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.Axe
 import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
 import io.luna.game.model.Position
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.def.AmmoDefinition
@@ -292,6 +294,10 @@ open class NpcCombatScript(bot: Bot,
          */
         private val POISONOUS_TASKS = setOf(SlayerTaskType.CAVE_CRAWLER, SlayerTaskType.CAVE_SLIME)
 
+        private val POISONOUS_CAMPS = setOf(SubZone.KALPHITE_SOLDIERS, SubZone.KALPHITE_GUARDIANS)
+        private val KALPHITE_LAIR_CAMPS = POISONOUS_CAMPS + SubZone.KALPHITE_WORKERS
+        private val KALPHITE_UPPER_LAIR = SimpleBoxArea.of(3456, 9472, 3519, 9535, 2)
+
         /**
          * Source-native entry and high-damage supplies are checked without inspecting camp occupancy.
          */
@@ -307,6 +313,8 @@ open class NpcCombatScript(bot: Bot,
             if (zone == SubZone.TROLLHEIM_MOUNTAIN_TROLLS && !bot.itemTracker.contains(3105)) return false
             if (zone == SubZone.BRIMHAVEN_METAL && !bot.status.isAntiFire() &&
                 Potion.ANTI_FIRE_POTION.doses.none { bot.itemTracker.contains(it) }) return false
+            if (zone in POISONOUS_CAMPS && !bot.status.isAntiPoison() &&
+                SLAYER_ANTIPOISONS.none { bot.itemTracker.contains(it) }) return false
             return zone !in STRONG_FOOD_ZONES || Food.ID_TO_FOOD.filterValues { it.heal >= 16 }
                 .keys.sumOf { bot.itemTracker.count(it).toLong() } >= 20
         }
@@ -350,7 +358,7 @@ open class NpcCombatScript(bot: Bot,
          * These stronger ordinary assignments retain the existing boss-food withdrawal policy.
          */
         private val STRONG_FOOD_ZONES = setOf(SubZone.BRIMHAVEN_METAL, SubZone.ASGARNIAN_WYVERNS,
-            SubZone.DARK_BEAST_CAVE)
+            SubZone.DARK_BEAST_CAVE, SubZone.KALPHITE_GUARDIANS)
 
         /**
          * Deliberate discovery belongs to the configured spawn footprint, even after a target wanders locally.
@@ -673,6 +681,9 @@ open class NpcCombatScript(bot: Bot,
      */
     private val requiredSlayerItems get() = monsterInventory(encounterTask, monsterRequirement != null)
 
+    private val needsAntipoison: Boolean
+        get() = slayerTask in POISONOUS_TASKS || originalZones.any { it in POISONOUS_CAMPS }
+
     /**
      * Access equipment is retained through initial gearing, bank deposits and saved-session restoration.
      */
@@ -938,7 +949,7 @@ open class NpcCombatScript(bot: Bot,
                 return
             }
         }
-        if (slayerTask in POISONOUS_TASKS && !bot.status.isAntiPoison() &&
+        if (needsAntipoison && !bot.status.isAntiPoison() &&
             SLAYER_ANTIPOISONS.none { bot.inventory.contains(it) }) {
             val cure = SLAYER_ANTIPOISONS.firstOrNull { bot.bank.contains(it) }
             if (cure == null || !handler.banking.withdraw(Item(cure)) || !bot.inventory.contains(cure)) {
@@ -1072,7 +1083,7 @@ open class NpcCombatScript(bot: Bot,
             (duration.inWholeMilliseconds / 600L).coerceIn(0L, 1000L).toInt())
         val budget = (BotPotionTrip.coins(bot) / 20L).coerceAtMost(2_000L)
         val forecast = target?.let { tactics.expectedPrayers(it, melee = purpose == BotGearPurpose.MELEE) }.orEmpty()
-        val poison = slayerTask in POISONOUS_TASKS || BotPotionActionHandler.inflictsPoison(target)
+        val poison = needsAntipoison || BotPotionActionHandler.inflictsPoison(target)
         val fire = BotPotionActionHandler.breathesFire(target) || camp in DRAGON_ZONES
         val supports = BotPotionSupport.combatNeeds(bot, ticks, poison, fire, forecast, budget,
             brews = bossTarget != null || camp in STRONG_FOOD_ZONES)
@@ -1174,7 +1185,10 @@ open class NpcCombatScript(bot: Bot,
             if (groupBoss && !BossReadiness.levelsReady(bot, boss, false, purpose) &&
                 !BossAttendance.enough(bot, boss)) return false
         }
-        if (zone == SubZone.SMOKE_DUNGEON_FIRE_GIANTS_WEST || zone == SubZone.SMOKE_DUNGEON_FIRE_GIANTS_EAST) {
+        if (zone in KALPHITE_LAIR_CAMPS && bot.position !in KALPHITE_UPPER_LAIR &&
+            !handler.shop.obtainWantedItem(RopeEntranceCrossing.ROPE)) return false
+        if (zone == SubZone.SMOKE_DUNGEON_FIRE_GIANTS_WEST || zone == SubZone.SMOKE_DUNGEON_FIRE_GIANTS_EAST ||
+            zone in KALPHITE_LAIR_CAMPS || zone == SubZone.UZER_JACKALS) {
             return BotPyramidTravel.travel(bot, handler, zone.inside, bank) {
                 isActionSafe() && !isPaused() && !isTerminated()
             }
@@ -1570,7 +1584,7 @@ open class NpcCombatScript(bot: Bot,
             val engaging = target != null && target.isAlive && target.position.computeLongestDistance(bot.position) <= 8
             val dragonfire = engaging && BotPotionActionHandler.breathesFire(target) ||
                 bot.combat.inCombat() && BotPotionActionHandler.breathesFire(bot.combat.lastCombatWith)
-            val poison = engaging && (slayerTask in POISONOUS_TASKS || BotPotionActionHandler.inflictsPoison(target))
+            val poison = engaging && (needsAntipoison || BotPotionActionHandler.inflictsPoison(target))
             val prayers = tactics.intendedPrayers + bot.combat.prayers.active
             handler.potions.drink(fighting = bot.combat.inCombat() || engaging, dragons = dragonfire,
                 prayerBelow = BotPotionSupport.prayerFloor(bot, prayers), planned = BotPotionTrip.planned(bot),
@@ -1787,7 +1801,7 @@ open class NpcCombatScript(bot: Bot,
                 Potion.ANTI_FIRE_POTION.doses.none { bot.inventory.contains(it) }) ||
             requiredSlayerItems.any { (id, amount) -> bot.inventory.computeAmountForId(id) < amount } ||
             (slayerTask == SlayerTaskType.ZYGOMITE && Zygomites.carriedSpray(bot) == null) ||
-            (slayerTask in POISONOUS_TASKS && !bot.status.isAntiPoison() &&
+            (needsAntipoison && !bot.status.isAntiPoison() &&
                 SLAYER_ANTIPOISONS.none { bot.inventory.contains(it) })) {
             combatConfigured = false
             bot.combat.target = null
