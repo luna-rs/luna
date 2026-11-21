@@ -55316,6 +55316,7 @@
       "y": 9109,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55328,6 +55329,7 @@
       "y": 9112,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55340,6 +55342,7 @@
       "y": 9103,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55352,6 +55355,7 @@
       "y": 9135,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55364,6 +55368,7 @@
       "y": 9109,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55376,6 +55381,7 @@
       "y": 9130,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55427,6 +55433,7 @@
       "y": 9135,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55439,6 +55446,7 @@
       "y": 9132,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55539,6 +55547,7 @@
       "y": 9119,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55551,6 +55560,7 @@
       "y": 9121,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55563,6 +55573,7 @@
       "y": 9124,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55575,6 +55586,7 @@
       "y": 9120,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55601,6 +55613,7 @@
       "y": 9103,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55627,6 +55640,7 @@
       "y": 9124,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55653,6 +55667,7 @@
       "y": 9105,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55679,6 +55694,7 @@
       "y": 9100,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -55691,6 +55707,7 @@
       "y": 9102,
       "z": 0
     },
+    "respawn_ticks": 100,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -62738,6 +62755,7 @@
       "y": 9203,
       "z": 0
     },
+    "respawn_ticks": 12,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -62777,6 +62795,7 @@
       "y": 9202,
       "z": 0
     },
+    "respawn_ticks": 12,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -62840,6 +62859,7 @@
       "y": 9202,
       "z": 0
     },
+    "respawn_ticks": 12,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -63226,6 +63246,7 @@
       "y": 9191,
       "z": 0
     },
+    "respawn_ticks": 12,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -63238,6 +63259,7 @@
       "y": 9210,
       "z": 0
     },
+    "respawn_ticks": 12,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -63250,6 +63272,7 @@
       "y": 9193,
       "z": 0
     },
+    "respawn_ticks": 12,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -63262,6 +63285,7 @@
       "y": 9208,
       "z": 0
     },
+    "respawn_ticks": 12,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
