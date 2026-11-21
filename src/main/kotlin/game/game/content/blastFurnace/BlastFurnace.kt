@@ -28,6 +28,10 @@ import java.util.WeakHashMap
  * are explicit reconstruction parameters. There are no later workers, coffer or basement bank chest.
  * The later OSRS Wiki manual-operation section corroborates level 30 Strength, Agility, Crafting and Firemaking,
  * and unboosted level 60 Smithing for free access; these checks are not established by cache assets alone.
+ * Jagex's 2006 manual ties the fee to putting ore on the belt and using the bar dispenser, so the sink, coke,
+ * stove, pump, pedals and repairs are free. The same manual gives workers Smithing experience and says pedalling
+ * slowly drains run energy; the helper XP follows the later wiki, while the helping window and the drain rate
+ * are reconstruction parameters.
  * All mutations, inventory transactions and machine steps belong to the game thread.
  *
  * @author lare96
@@ -35,6 +39,24 @@ import java.util.WeakHashMap
 object BlastFurnace {
     const val FEE = 2500
     const val ACCESS_MILLIS = 600_000L
+
+    /**
+     * Smithing XP each helper gains per bar made for another player, from the later wiki's manual-operation rate.
+     */
+    const val HELPER_XP = 1.0
+
+    /**
+     * Machine ticks after a pump, pedal, stove or repair action during which a player still counts as helping.
+     * A reconstruction parameter: pedals only move ore before it smelts and the pump is worked in short bursts.
+     */
+    const val HELP_TICKS = 100
+
+    /**
+     * Run energy percent drained per pedalling tick that moves ore. A reconstruction parameter: Jagex 2006 says
+     * only that energy slowly drains to nothing. It exceeds standing regeneration at every Agility level, so the
+     * net loss is about 0.27 per tick at level 30 and 0.16 at level 99. Pedalling continues at zero energy.
+     */
+    const val PEDAL_DRAIN = 0.4
     const val SPADE = 952
     const val COKE_SPADE = 6448
     const val HAMMER = 2347
@@ -103,6 +125,7 @@ object BlastFurnace {
         var pump: Player? = null
         var pedals: Player? = null
         val players = linkedSetOf<Player>()
+        val helped = linkedMapOf<Player, Int>()
         var started = false
         var stove = 9085
     }
@@ -136,7 +159,7 @@ object BlastFurnace {
     fun operator(player: Player, role: BlastFurnaceWorkAction.Role): Player? {
         val machine = machine(player.world)
         val operator = if (role == BlastFurnaceWorkAction.Role.PUMP) machine.pump else machine.pedals
-        return operator?.takeIf { present(it) && hasAccess(it) && operatorLevel(it, role) &&
+        return operator?.takeIf { present(it) && operatorLevel(it, role) &&
             it.position.isWithinDistance(role.position, 4) &&
             it.actions.first(BlastFurnaceWorkAction::class.java)?.role == role }
     }
@@ -160,9 +183,12 @@ object BlastFurnace {
         return true
     }
 
-    private fun allowed(player: Player, position: Position): Boolean {
+    /**
+     * Checks presence and reach. Only the belt and the bar dispenser, marked by [fee], need paid or free access.
+     */
+    private fun allowed(player: Player, position: Position, fee: Boolean = false): Boolean {
         if (!present(player) || !player.position.isWithinDistance(position, 4)) return false
-        if (!hasAccess(player)) {
+        if (fee && !hasAccess(player)) {
             player.sendMessage("Speak to the Blast Furnace Foreman before using the furnace.")
             return false
         }
@@ -186,7 +212,7 @@ object BlastFurnace {
     }
 
     fun deposit(player: Player): Int {
-        if (!allowed(player, BELT)) return 0
+        if (!allowed(player, BELT, fee = true)) return 0
         player.actions.interruptWeak()
         val stock = stock(player)
         var deposited = 0
@@ -231,6 +257,7 @@ object BlastFurnace {
             return false
         }
         machine.fuel = minOf(200, machine.fuel + 60)
+        machine.helped[player] = machine.ticks
         updateStove(player.world)
         player.firemaking.addExperience(5.0)
         publishAll(machine)
@@ -242,7 +269,7 @@ object BlastFurnace {
     }
 
     fun cool(player: Player): Boolean {
-        if (!allowed(player, DISPENSER) || !hot(player)) return false
+        if (!allowed(player, DISPENSER, fee = true) || !hot(player)) return false
         player.actions.interruptWeak()
         if (!player.inventory.replace(WATER, BUCKET)) {
             player.sendMessage("You need a bucket of water to cool the bars.")
@@ -270,6 +297,7 @@ object BlastFurnace {
         player.lock(3)
         replace(player.world, damage, false)
         machine.damage = null
+        machine.helped[player] = machine.ticks
         player.crafting.addExperience(50.0)
         publishAll(machine)
         return true
@@ -296,7 +324,7 @@ object BlastFurnace {
     }
 
     /**
-     * Starts one exclusive native operator action. Walking, logout, another interaction or loss of access stops it.
+     * Starts one exclusive native operator action. Walking, logout or another interaction stops it.
      */
     fun operate(player: Player, role: BlastFurnaceWorkAction.Role): Boolean {
         if (!allowed(player, role.position)) return false
@@ -346,7 +374,9 @@ object BlastFurnace {
             }
             if (transferred == 0) return false
             player.agility.addExperience(1.0)
+            player.increaseRunEnergy(-PEDAL_DRAIN)
         }
+        machine.helped[player] = machine.ticks
         if (++machine.wear % 120 == 0 && machine.damage == null) {
             val damage = Damage.entries[machine.nextDamage++ % Damage.entries.size]
             machine.damage = damage
@@ -369,6 +399,7 @@ object BlastFurnace {
     fun step(world: World) {
         val machine = machine(world)
         machine.players.removeIf { !present(it) }
+        machine.helped.keys.removeIf { !present(it) }
         machine.ticks++
         if (machine.ticks % 5 == 0 && machine.temperature > 0) machine.temperature--
         if (machine.ticks % 2 == 0 && machine.fuel > 0 && machine.temperature in 60..90 && machine.damage?.pipe != true) {
@@ -397,14 +428,26 @@ object BlastFurnace {
             stock.hot = true
             val goldsmith = bar == BarType.GOLD && player.equipment.computeIdForIndex(Equipment.HANDS) == 776
             player.smithing.addExperience(bar.smeltXp * if (goldsmith) 2.5 else 1.0)
+            rewardHelpers(player)
             publish(player)
             return true
         }
         return false
     }
 
+    /**
+     * Gives [HELPER_XP] Smithing to every other present player who worked a station within [HELP_TICKS].
+     */
+    private fun rewardHelpers(owner: Player) {
+        val machine = machine(owner.world)
+        for ((helper, tick) in machine.helped) {
+            if (helper !== owner && present(helper) && machine.ticks - tick <= HELP_TICKS)
+                helper.smithing.addExperience(HELPER_XP)
+        }
+    }
+
     fun openStock(player: Player) {
-        if (!allowed(player, DISPENSER)) return
+        if (!allowed(player, DISPENSER, fee = true)) return
         if (hot(player) && player.equipment.computeIdForIndex(Equipment.HANDS) != ICE_GLOVES) {
             player.sendMessage("The bars are too hot. Cool them with water or wear ice gloves.")
             return
@@ -417,7 +460,7 @@ object BlastFurnace {
      * Transfers only the bars that actually fit. Full inventories retain every unclaimed bar for another trip.
      */
     fun take(player: Player, bar: BarType, amount: Int): Int {
-        if (amount <= 0 || !allowed(player, DISPENSER) ||
+        if (amount <= 0 || !allowed(player, DISPENSER, fee = true) ||
             hot(player) && player.equipment.computeIdForIndex(Equipment.HANDS) != ICE_GLOVES) return 0
         val stock = stock(player)
         val count = minOf(amount, stock.bars[bar.ordinal], player.inventory.computeRemainingSize())

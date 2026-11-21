@@ -23,8 +23,7 @@ class BlastFurnaceWorkAction(player: Player, val role: Role) : Action<Player>(pl
     }
     private val origin = player.position
     override fun run(): Boolean {
-        if (mob.position != origin || !BlastFurnace.present(mob) || !BlastFurnace.hasAccess(mob) ||
-            !BlastFurnace.operatorLevel(mob, role) ||
+        if (mob.position != origin || !BlastFurnace.present(mob) || !BlastFurnace.operatorLevel(mob, role) ||
             !mob.position.isWithinDistance(role.position, 4)) return true
         mob.animation(Animation(role.animation))
         return !BlastFurnace.work(mob, role)

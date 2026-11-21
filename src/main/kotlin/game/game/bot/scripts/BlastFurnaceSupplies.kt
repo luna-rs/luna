@@ -11,6 +11,7 @@ import api.predef.itemDef
 import game.content.blastFurnace.BlastFurnace
 import game.skill.smithing.BarType
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -22,6 +23,22 @@ import io.luna.game.model.mob.bot.Bot
  */
 object BlastFurnaceSupplies {
     private const val MAXIMUM_COINS = 5_000L
+
+    /**
+     * Ordan's shop in the furnace room.
+     */
+    private const val ORE_SELLER = "Ore Seller"
+
+    /**
+     * Smallest load, in bars, worth buying from the ore seller; a nearly empty shop is left to restock.
+     * A chosen value.
+     */
+    const val MINIMUM_LOAD_BARS = 5
+
+    /**
+     * One inventory of ore priced at the furnace room's ore seller.
+     */
+    data class SellerLoad(val ore: Map<Int, Int>, val coins: Long, val bars: Int)
 
     private fun owned(bot: Bot, id: Int): Long {
         val note = itemDef(id).notedId.orElse(-1)
@@ -73,6 +90,39 @@ object BlastFurnaceSupplies {
             val quote = ProductionEconomics.quote(recipe, true, 1, Double.MAX_VALUE, stock, budget,
                 prices, emptyMap()) ?: continue
             return ProductionPlan(recipe, true, 1, quote.maximumCoins, prices, deadline)
+        }
+        return null
+    }
+
+    /**
+     * Returns the furnace room's ore seller when he stocks every ore of [bar].
+     */
+    fun seller(bot: Bot, bar: BarType): Shop? = bot.world.shops.lookup(ORE_SELLER).orElse(null)
+        ?.takeIf { shop -> BlastFurnace.ingredients(bar).all { it.id in shop.itemIds } }
+
+    /**
+     * Prices the largest complete load the seller can supply now within [slots] and [coins], held to the
+     * training GP-per-XP ceiling used for other purchases. Ore already in the furnace counts toward the load.
+     * Loads below [MINIMUM_LOAD_BARS] are not offered.
+     */
+    fun sellerLoad(bot: Bot, bar: BarType, shop: Shop, slots: Int, coins: Long): SellerLoad? {
+        if (slots < 1 || coins < 1L) return null
+        val recipe = BlastFurnace.ingredients(bar)
+        for (batches in recipe.minOf { 255 / it.amount } downTo MINIMUM_LOAD_BARS) {
+            val materials = recipe.mapNotNull { ore ->
+                val amount = ore.amount * batches - BlastFurnace.oreCount(bot, ore.id)
+                if (amount > 0) ore.id to amount else null
+            }.toMap()
+            if (materials.isEmpty() || materials.values.sum() > slots ||
+                materials.any { (id, amount) -> shop.items.computeAmountForId(id) < amount }) continue
+            val totals = materials.mapValues { (id, amount) -> shop.computeBuyValue(id, amount).orElse(-1).toLong() }
+            if (totals.values.any { it < 1L } || totals.values.sum() > coins) continue
+            val prices = totals.mapValues { (id, total) -> (total + materials.getValue(id) - 1) / materials.getValue(id) }
+            val production = ProductionRecipe("blast_furnace:${bar.name.lowercase()}", SKILL_SMITHING, bar.level,
+                materials, emptySet(), mapOf(bar.id to batches), bar.smeltXp * batches)
+            if (ProductionEconomics.quote(production, true, 1, Double.MAX_VALUE, emptyMap(), coins, prices,
+                    emptyMap()) == null) continue
+            return SellerLoad(materials, totals.values.sum(), batches)
         }
         return null
     }
