@@ -34,8 +34,19 @@ import io.luna.game.model.mob.dialogue.PlayerDialogue
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import java.util.WeakHashMap
+
+/**
+ * Allows a supply outing to include a bank visit, travel and the native purchase.
+ */
+internal val SUPPLY_TRIP_TIMEOUT = 5.minutes
+
+/**
+ * Leaves time to walk to a seller and use the normal trade interface.
+ */
+internal val TRADE_TRIP_TIMEOUT = 4.minutes
 
 /**
  * A [BotActionHandler] implementation for shop related actions.
@@ -321,7 +332,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Queues a direct purchase using the production owner's recorded deadline and spending limits.
      */
     internal fun obtainWantedItem(plan: ProductionPlan, id: Int, target: Int, duration: Duration): Boolean {
-        val visit = minOf(duration, 30.seconds, (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
+        val visit = minOf(duration, TRADE_TRIP_TIMEOUT,
+            (plan.supplyDeadline - System.currentTimeMillis()).milliseconds)
         if (visit <= Duration.ZERO) return false
         val trade = TradeBotScript.buySpecific(bot, id, target, plan.supplyDeadline,
             quotedUnitPrice = plan.maximumUnitPrices[id]) ?: return false
@@ -432,7 +444,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             return targets.keys
         }
         val needsBrassKey = budget == null && deadlineMillis == 0L && targets[BrassKeyDoor.KEY] == 1 && BrassKeyDoor.KEY !in acquired()
-        val timeout = if (needsBrassKey) 180.seconds else 120.seconds
+        val timeout = if (needsBrassKey) SUPPLY_TRIP_TIMEOUT + 1.minutes else SUPPLY_TRIP_TIMEOUT
         val production = deadlineMillis > 0L
         val shopBudget = if (production) {
             val prices = targets.mapNotNull { (id, amount) ->
@@ -463,12 +475,12 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         ItemDefinition.ALL.get(id).map { it.isTradeable }.orElse(false)
                     if (attempted != null && id !in attempted && banked < amount && mayTrade &&
                         (production || key || utilitySource == null)) {
-                        val deadline = if (production) minOf(deadlineMillis, System.currentTimeMillis() + 45_000L)
-                            else System.currentTimeMillis() + 45_000L
+                        val tripDeadline = System.currentTimeMillis() + TRADE_TRIP_TIMEOUT.inWholeMilliseconds
+                        val deadline = if (production) minOf(deadlineMillis, tripDeadline) else tripDeadline
                         val trade = TradeBotScript.buySpecific(bot, id, amount, deadline)
                         if (trade != null) {
                             attempted[id] = SupplyAttempt.TRADE
-                            trade.duration = 45.seconds
+                            trade.duration = TRADE_TRIP_TIMEOUT
                             bot.scriptStack.pushHead(trade)
                             return@withTimeoutOrNull
                         }

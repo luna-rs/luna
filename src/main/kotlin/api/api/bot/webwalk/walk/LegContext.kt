@@ -41,13 +41,13 @@ class LegContext(val bot: Bot, val handler: BotActionHandler) {
         /**
          * The longest a walk of a single leg may take. Legs are short, so this only catches a bot that is stuck.
          */
-        val WALK_TIMEOUT: Duration = 60.seconds
+        val WALK_TIMEOUT: Duration = 2.minutes
 
         /**
          * The longest a walk of a single leg in [WebWalkPlanner.TAVERLEY_DUNGEON] may take, where one leg can wind for over a
          * hundred steps.
          */
-        val TAVERLEY_WALK_TIMEOUT: Duration = 2.minutes
+        val TAVERLEY_WALK_TIMEOUT: Duration = 4.minutes
 
         /**
          * How long to wait for a door to open, a ladder to be climbed, or a dialogue to show.

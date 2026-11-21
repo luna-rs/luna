@@ -1,5 +1,6 @@
 package api.bot.script
 
+import api.bot.action.SUPPLY_TRIP_TIMEOUT
 import api.bot.action.trading.NativeOutputDemand
 import game.bot.scripts.trading.NativeProductionSaleScript
 
@@ -374,7 +375,7 @@ abstract class InventoryBotScript(
         fun stocked(required: Map<Int, Int>) = required.all { (id, amount) ->
             bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id) >= amount
         }
-        if (startupSupplyDeadline == 0L) startupSupplyDeadline = System.currentTimeMillis() + 120_000L
+        if (startupSupplyDeadline == 0L) startupSupplyDeadline = System.currentTimeMillis() + SUPPLY_TRIP_TIMEOUT.inWholeMilliseconds
         if (!stocked(minimums) && awaitActionSafety()) {
             handler.shop.obtainWantedItems(minimums, startupSupplyDeadline)
         }
@@ -755,12 +756,12 @@ abstract class InventoryBotScript(
         }
         BotTradeIntentions.recordProductionPlan(bot, plan, this)
         val now = System.currentTimeMillis()
-        if (plan.supplyDeadline == 0L) plan.supplyDeadline = minOf(plan.deadline, now + 120_000L)
+        if (plan.supplyDeadline == 0L) plan.supplyDeadline = minOf(plan.deadline, now + SUPPLY_TRIP_TIMEOUT.inWholeMilliseconds)
         if (plan.targets().keys.any { id ->
                 val note = itemDef(id).notedId.orElse(-1)
                 note >= 0 && bot.inventory.contains(note)
             }) {
-            val normalized = withTimeoutOrNull((minOf(plan.deadline, now + 120_000L) - now).coerceAtLeast(1L)) {
+            val normalized = withTimeoutOrNull((minOf(plan.deadline, now + SUPPLY_TRIP_TIMEOUT.inWholeMilliseconds) - now).coerceAtLeast(1L)) {
                 handler.banking.travelToBankDepositAll()
             } == true
             if (!normalized || !awaitActionSafety()) { stopPlannedProduction(); return false }

@@ -31,6 +31,7 @@ import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -137,9 +138,9 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             merchant.world === bot.world && bot.world.npcs[merchant.index] === merchant &&
             canVisit(merchant.position) && bot.recentEscape?.avoids(merchant.position) != true
         val beforeSpace = bot.inventory.computeRemainingSize()
-        return withTimeoutOrNull(45.seconds) {
+        return withTimeoutOrNull(3.minutes) {
             bot.combat.target = null
-            if (!handler.interactions.approach(merchant, timeout = 30.seconds, allowOutOfView = true,
+            if (!handler.interactions.approach(merchant, timeout = 2.minutes, allowOutOfView = true,
                     canContinue = ::merchantAvailable)) return@withTimeoutOrNull false
             for (id in usefulIds()) {
                 if (!merchantAvailable()) return@withTimeoutOrNull false

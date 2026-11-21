@@ -1,5 +1,6 @@
 package api.bot.script
 
+import api.bot.action.SUPPLY_TRIP_TIMEOUT
 import api.attr.Attr
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
@@ -791,7 +792,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (bank != null && !bot.bank.isOpen) {
             val targetPosition = bank.position
             // The cached bank can be a long walk from the far end of a dungeon or the Wilderness.
-            val reachable = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
+            val reachable = handler.interactions.approach(bank, timeout = SUPPLY_TRIP_TIMEOUT, allowOutOfView = true) {
                 isActionSafe()
             }
             if (!awaitActionSafety()) return
@@ -826,7 +827,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                     if (!awaitActionSafety()) return
                     // Combat activities must be able to leave their attacker before the bank-click guard applies.
                     if (banksElsewhere || !isActionSafe(ActionSafety.NON_COMBAT)) {
-                        val reached = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
+                        val reached = handler.interactions.approach(bank, timeout = SUPPLY_TRIP_TIMEOUT, allowOutOfView = true) {
                             isActionSafe()
                         }
                         if (!awaitActionSafety()) return
@@ -853,7 +854,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 { it.def().actions.contains("Bank") }.firstOrNull()
                 if (npc != null) {
                     if (!isActionSafe(ActionSafety.NON_COMBAT)) {
-                        handler.interactions.approach(npc, timeout = 3.minutes, allowOutOfView = true) {
+                        handler.interactions.approach(npc, timeout = SUPPLY_TRIP_TIMEOUT, allowOutOfView = true) {
                             isActionSafe()
                         }
                     }

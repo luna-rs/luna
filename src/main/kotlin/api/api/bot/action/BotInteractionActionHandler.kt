@@ -102,7 +102,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * Approaches cannot acquire bank supplies or disable those caller checks.
      */
     suspend fun approach(target: Entity, policy: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
-                         timeout: Duration = 30.seconds, allowOutOfView: Boolean = false,
+                         timeout: Duration = 90.seconds, allowOutOfView: Boolean = false,
                          canContinue: () -> Boolean = { true }): Boolean = withTimeoutOrNull(timeout) {
         fun eligible(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive && !bot.isLocked &&
                 (!bot.walking.isLocked || bot.walking.isEmpty && world.collisionManager.reached(bot, target, policy)) &&
