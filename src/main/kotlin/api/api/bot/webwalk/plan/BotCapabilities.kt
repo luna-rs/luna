@@ -66,6 +66,8 @@ object BotCapabilities {
                 add(items, id, banked.amount(id))
             }
         }
+        if (bot.scriptStack.scripts.any { !it.allowsPaidTravel && !it.isFinished() && !it.isTerminated() })
+            items.remove(CapabilitySnapshot.COINS)
         val met = BotConditions.met(bot).let {
             val bankKnife = fromBank != null && fromBank.amount(Web.KNIFE) > 0
             if (bankKnife && BotConditions.SLASH_WEB !in it) it + BotConditions.SLASH_WEB else it

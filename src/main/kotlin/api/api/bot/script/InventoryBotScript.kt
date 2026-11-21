@@ -169,6 +169,8 @@ abstract class InventoryBotScript(
      */
     var productionPlan: ProductionPlan? = null
         private set
+
+    override val allowsPaidTravel: Boolean get() = productionPlan?.allowAcquisition != false
     private var plannedBatch: Map<Int, Int> = emptyMap()
     private var productionHandedOff = false
     private var productionOutcomeRecorded = false

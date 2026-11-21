@@ -29,6 +29,7 @@ import kotlin.time.Duration.Companion.minutes
  * @author lare96
  */
 class StarterLeatherBotScript(bot: Bot, private val data: BatchData) : BotScript(bot) {
+    override val allowsPaidTravel = false
 
     /**
      * Retains the original allowance and verified spending across pauses and relogs.

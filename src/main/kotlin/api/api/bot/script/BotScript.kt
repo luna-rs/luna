@@ -58,6 +58,11 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
     var profitGathering: ProfitGatheringGoal? = null
 
     /**
+     * Whether the web walker may spend coins while this script owns part of the stack.
+     */
+    open val allowsPaidTravel: Boolean = true
+
+    /**
      * Allows an existing native action to settle before a failed economic review ends the session.
      */
     open fun profitGatheringReady(): Boolean = profitGathering?.canContinue(bot) != false
