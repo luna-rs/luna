@@ -80,7 +80,8 @@ class StarterLeatherBotScript(bot: Bot, private val data: BatchData) : BotScript
             if (batches(bot, allowance, shopping = true).isEmpty() &&
                 (!bot.isEarlyGame() || quote(bot, leather.hide, allowance, shopping = true, collect = true) == null))
                 return null
-            val deadline = System.currentTimeMillis() + minOf(duration, 10.minutes).inWholeMilliseconds
+            // The free route from the cow field can take most of a short visit, including two bank stops.
+            val deadline = System.currentTimeMillis() + duration.coerceIn(15.minutes, 20.minutes).inWholeMilliseconds
             return StarterLeatherBotScript(bot, BatchData().also {
                 it.allowance = allowance
                 it.deadline = deadline
