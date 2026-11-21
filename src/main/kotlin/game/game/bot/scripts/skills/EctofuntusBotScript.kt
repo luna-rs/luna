@@ -42,10 +42,13 @@ class EctofuntusBotScript(
     val bone: EctofuntusBone,
     private val deadline: Long,
     private var prepared: Boolean = false,
-    private var failures: Int = 0
+    private var failures: Int = 0,
+    private var maxWorships: Int = PrayerOuting.MAX_WORSHIPS,
+    private var recoverLoad: Boolean = true
 ) : BotScript(bot) {
     companion object {
         private var Bot.ectoRetryAt by Attr.long().persist("bot_ectofuntus_retry_at")
+        private val poolLanding = Position(3683, 9887, 0)
 
         private fun owned(bot: Bot, id: Int): Long =
             bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
@@ -60,77 +63,27 @@ class EctofuntusBotScript(
             (!Ectofuntus.requiresGhostspeak || wearsAmulet(bot) || amulet(bot) != null)
 
         /**
-         * Matches reusable empty containers to at most eight owned worship inputs, using an unfinished load first.
-         * Existing bonemeal needs no empty pot and existing slime needs no empty bucket.
-         */
-        internal fun containerTargets(bot: Bot, bone: EctofuntusBone, limit: Int = 8): Map<Int, Int> {
-            val loaded = Ectofuntus.loadedBone(bot)
-            if (loaded != null && loaded != bone) return emptyMap()
-            val loadedCount = if (loaded == bone) 1L else 0L
-            val meals = owned(bot, bone.bonemealId)
-            val batches = minOf(limit.coerceIn(1, 8).toLong(), loadedCount + meals + owned(bot, bone.boneId))
-            val loadedUsed = minOf(batches, loadedCount)
-            val mealUsed = minOf(batches - loadedUsed, meals)
-            return buildMap {
-                val pots = batches - mealUsed
-                val buckets = (batches - owned(bot, Ectofuntus.SLIME)).coerceAtLeast(0)
-                if (pots > 0) put(Ectofuntus.POT, pots.toInt())
-                if (buckets > 0) put(Ectofuntus.BUCKET, buckets.toInt())
-            }
-        }
-
-        /**
-         * Plans at most eight worships from real unnoted stock, reserving room for tokens and an exchanged amulet.
-         * A loaded bone has first claim on a pot; filled bonemeal and slime are used before fresh ingredients.
-         */
-        internal fun supplies(bot: Bot, bone: EctofuntusBone): List<Item>? {
-            val loaded = Ectofuntus.loadedBone(bot)
-            if (loaded != null && loaded != bone) return null
-            val pots = owned(bot, Ectofuntus.POT)
-            if (loaded != null && pots == 0L) return null
-            val loadedCount = if (loaded == bone && pots > 0) 1L else 0L
-            val meals = owned(bot, bone.bonemealId)
-            val raw = minOf(owned(bot, bone.boneId), pots - loadedCount)
-            val slime = owned(bot, Ectofuntus.SLIME)
-            val batches = minOf(8L, meals + raw + loadedCount, slime + owned(bot, Ectofuntus.BUCKET))
-            if (batches == 0L && (loaded != null || Ectofuntus.pendingTokens(bot) == 0)) return null
-            val loadedUsed = minOf(batches, loadedCount)
-            val mealsUsed = minOf(batches - loadedUsed, meals)
-            val rawUsed = batches - loadedUsed - mealsUsed
-            val slimeUsed = minOf(batches, slime)
-            val plan = mutableListOf<Item>()
-            fun add(id: Int, amount: Long) {
-                if (amount > 0) plan += Item(id, amount.toInt())
-            }
-            add(bone.boneId, rawUsed)
-            add(bone.bonemealId, mealsUsed)
-            add(Ectofuntus.POT, rawUsed + loadedUsed)
-            add(Ectofuntus.SLIME, slimeUsed)
-            add(Ectofuntus.BUCKET, batches - slimeUsed)
-            if (Ectofuntus.requiresGhostspeak && !wearsAmulet(bot)) {
-                plan += Item(amulet(bot) ?: return null)
-            }
-            return plan
-        }
-
-        /**
-         * Prefers the strongest owned bone or bonemeal recipe, retaining an unfinished load for recovery.
-         * Missing empty containers are prepared during startup. A failed trip leaves ordinary burial available
-         * during the retry cooldown, and pending earned tokens can be collected without buying supplies.
+         * Selects an economic real batch or recovers already committed native work.
          */
         fun select(bot: Bot, duration: Duration): EctofuntusBotScript? {
-            if (!permitted(bot) || bot.ectoRetryAt > System.currentTimeMillis()) return null
-            val loaded = Ectofuntus.loadedBone(bot)
-            val selected = if (loaded != null) loaded
-            else {
-                val recipes = EctofuntusBone.entries.sortedByDescending { it.baseXp }
-                recipes.firstOrNull { owned(bot, it.boneId) > 0 || owned(bot, it.bonemealId) > 0 }
-                    ?: recipes.firstOrNull { Ectofuntus.pendingTokens(bot) > 0 }
-            }
-            return selected?.let {
-                EctofuntusBotScript(bot, it,
-                    System.currentTimeMillis() + duration.inWholeMilliseconds.coerceIn(300_000L, 1_200_000L))
-            }
+            val now = System.currentTimeMillis()
+            if (!permitted(bot) || bot.ectoRetryAt > now) return null
+            val budget = duration.inWholeMilliseconds.coerceIn(300_000L, 1_200_000L)
+            val batch = PrayerOuting.select(bot, budget / 600) ?: return null
+            return EctofuntusBotScript(bot, batch.recipe, now + budget, maxWorships = batch.worships,
+                recoverLoad = batch.loaded > 0)
+        }
+
+        /**
+         * Returns the minimum carried raw stock needed by the next worthwhile batch. Combat may occur before
+         * that batch can safely depart, so only the current non-combat safety check is deferred.
+         */
+        fun reservedBones(bot: Bot): Item? {
+            if (bot.ectoRetryAt > System.currentTimeMillis() || bot.inWilderness() ||
+                !bot.inventory.any { it != null && EctofuntusBone.forBone(it.id) != null }) return null
+            val batch = PrayerOuting.select(bot, 500, shop = false, recover = false) ?: return null
+            val needed = batch.raw - bot.bank.computeAmountForId(batch.recipe.boneId)
+            return if (needed > 0) Item(batch.recipe.boneId, needed) else null
         }
     }
 
@@ -144,12 +97,17 @@ class EctofuntusBotScript(
         var deadline = 0L
         var prepared = false
         var failures = 0
+        var maxWorships = PrayerOuting.MAX_WORSHIPS
+        var recoverLoad = true
 
         override fun load(data: JsonObject) {
             recipe = data.get("recipe").asString
             deadline = data.get("deadline").asLong
             prepared = data.get("prepared")?.asBoolean ?: false
             failures = data.get("failures")?.asInt ?: 0
+            maxWorships = data.get("max_worships")?.asInt?.coerceIn(0, PrayerOuting.MAX_WORSHIPS)
+                ?: PrayerOuting.MAX_WORSHIPS
+            recoverLoad = data.get("recover_load")?.asBoolean ?: true
         }
 
         override fun save(data: JsonObject) {
@@ -157,11 +115,14 @@ class EctofuntusBotScript(
             data.addProperty("deadline", deadline)
             data.addProperty("prepared", prepared)
             data.addProperty("failures", failures)
+            data.addProperty("max_worships", maxWorships)
+            data.addProperty("recover_load", recoverLoad)
         }
     }
 
     constructor(bot: Bot, data: EctofuntusData) :
-        this(bot, EctofuntusBone.valueOf(data.recipe), data.deadline, data.prepared, data.failures)
+        this(bot, EctofuntusBone.valueOf(data.recipe), data.deadline, data.prepared, data.failures,
+            data.maxWorships, data.recoverLoad)
 
     private var lastProgress = System.currentTimeMillis()
     private var previous: List<Any?>? = null
@@ -172,38 +133,31 @@ class EctofuntusBotScript(
 
     private fun count(id: Int): Int = bot.inventory.computeAmountForId(id)
 
-    private fun workRemaining(): Boolean = Ectofuntus.loadedBone(bot) != null ||
-        count(bone.boneId) > 0 && count(Ectofuntus.POT) > 0 ||
-        count(bone.bonemealId) > 0 && (count(Ectofuntus.SLIME) > 0 || count(Ectofuntus.BUCKET) > 0)
+    private fun workRemaining(): Boolean {
+        if (recoverLoad && Ectofuntus.loadedBone(bot) == bone && count(Ectofuntus.POT) > 0) return true
+        if (maxWorships == 0) return false
+        val meals = count(bone.bonemealId)
+        val slime = count(Ectofuntus.SLIME) + count(Ectofuntus.BUCKET)
+        return slime > 0 && (meals > 0 || count(bone.boneId) > 0 && count(Ectofuntus.POT) > 0)
+    }
 
     /**
-     * Secures one usable worship before optional batch preparation, so a small wallet cannot buy only pots.
-     * Both phases share the native shop deadline and the visit's saved deadline. Actual partial stock is replanned
-     * afterwards; empty containers are never confused with replacement bones or fabricated bonemeal and slime.
+     * Requotes empty containers before buying and rechecks the useful batch against the supplies actually secured.
+     * Existing grinder work and earned token credit can still be recovered when a supplier runs out.
      */
-    internal suspend fun prepareSupplies(): Boolean {
-        if (!valid()) return false
-        fun readyBatch(): Boolean {
-            val plan = supplies(bot, bone) ?: return false
-            return Ectofuntus.loadedBone(bot) == bone || plan.any {
-                it.id == bone.boneId || it.id == bone.bonemealId
-            }
-        }
-        if (readyBatch() || containerTargets(bot, bone).isEmpty()) return supplies(bot, bone) != null
+    private suspend fun prepareSupplies(): PrayerOuting.Batch? {
+        fun plan(shop: Boolean) = PrayerOuting.select(bot, (deadline - System.currentTimeMillis()) / 600,
+            maxWorships = maxWorships, shop = shop, onlyRecipe = bone)
+        val batch = plan(true) ?: return null
+        if (batch.purchases.isEmpty()) return batch
+        val targets = batch.supplies.filter { it.id in batch.purchases }.associate { it.id to it.amount }
         val budget = minOf(120_000L, deadline - System.currentTimeMillis())
-        if (budget <= 0) return false
+        if (budget <= 0) return null
         withTimeoutOrNull(budget) {
-            for (limit in listOf(1, 8)) {
-                if (!valid()) return@withTimeoutOrNull
-                val targets = containerTargets(bot, bone, limit).filter { (id, amount) -> owned(bot, id) < amount }
-                if (targets.isNotEmpty()) {
-                    targets.forEach { (id, amount) -> bot.preferences.raiseWantedItemTarget(id, amount) }
-                    handler.shop.obtainWantedItems(targets)
-                }
-                if (limit == 1 && !readyBatch()) return@withTimeoutOrNull
-            }
+            handler.shop.obtainWantedItems(targets, batch.purchaseCoins.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                batch.purchaseCeilings)
         }
-        return valid() && supplies(bot, bone) != null
+        return if (valid()) plan(false) else null
     }
 
     override suspend fun awaitActionSafety(safety: ActionSafety): Boolean {
@@ -216,10 +170,12 @@ class EctofuntusBotScript(
         val stopped = withTimeoutOrNull(180_000) {
             if (!valid() || failures >= 4) return@withTimeoutOrNull true
             if (!prepared) {
-                if (!prepareSupplies()) return@withTimeoutOrNull true
-                val plan = supplies(bot, bone) ?: return@withTimeoutOrNull true
-                if ((!bot.inventory.containsAll(plan) || bot.inventory.isFull) && !bank(plan))
-                    return@withTimeoutOrNull true
+                val batch = prepareSupplies() ?: return@withTimeoutOrNull true
+                val bankNeeded = PrayerOuting.needsBank(bot, bone, batch.supplies, batch.raw, batch.meals,
+                    batch.worships > 0)
+                if (bankNeeded && !bank(batch.supplies)) return@withTimeoutOrNull true
+                maxWorships = batch.worships
+                recoverLoad = batch.loaded > 0 || maxWorships > 0
                 prepared = true
             }
             if (Ectofuntus.requiresGhostspeak && !wearsAmulet(bot)) {
@@ -273,8 +229,8 @@ class EctofuntusBotScript(
         if (pending > 0 && (pending + Ectofuntus.TOKEN_REWARD > Ectofuntus.TOKEN_CAP || !workRemaining()))
             return claim()
         val loaded = Ectofuntus.loadedBone(bot)
-        if (loaded != null) {
-            if (loaded != bone || count(Ectofuntus.POT) == 0) return false
+        if (loaded != null && recoverLoad && count(Ectofuntus.POT) > 0) {
+            if (loaded != bone) return false
             return if (!Ectofuntus.isGround(bot)) {
                 click(Ectofuntus.GRINDER_POSITION, Ectofuntus.GRINDER) &&
                     waitFor(8.seconds) { Ectofuntus.isGround(bot) }
@@ -301,9 +257,11 @@ class EctofuntusBotScript(
 
     /**
      * Selects actual cache pool objects and lets native collision reach choose a usable standing tile.
-     * The shared pool centre is a search anchor, never an assumed walkable destination.
+     * The bottom stair lands on a known tile, where distance becomes meaningful for pool selection.
      */
     private suspend fun fillBucket(): Boolean {
+        if (!bot.position.isWithinDistance(poolLanding, 12) &&
+            (!handler.webWalkToAny(listOf(poolLanding)) || !valid())) return false
         val pools = world.locator.findObjects(Ectofuntus.POOL, 12) { it.id in Ectofuntus.POOL_IDS }
             .sortedBy { it.position.computeLongestDistance(bot.position) }
         if (pools.isEmpty()) return false
@@ -358,5 +316,7 @@ class EctofuntusBotScript(
         it.deadline = deadline
         it.prepared = prepared
         it.failures = failures
+        it.maxWorships = maxWorships
+        it.recoverLoad = recoverLoad
     }
 }

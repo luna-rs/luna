@@ -44,6 +44,7 @@ import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
 import game.bot.scripts.combat.WineTheftLesson
+import game.bot.scripts.skills.EctofuntusBotScript
 import game.combat.npcHooks.giantMole.GiantMole
 import game.combat.npcHooks.chaosElemental.ChaosElementalAttack
 import game.combat.spells.IbanStaff
@@ -1553,12 +1554,15 @@ open class NpcCombatScript(bot: Bot,
             if (queenTrip && forceBanking) return
             bot.naturalDelay()
         }
+        if (!buryLootedBones() || activeZone == SubZone.KBD_LAIR ||
+            !BotCombatActionHandler.wantsToTrain(bot, SKILL_PRAYER)) return
+        val reserve = EctofuntusBotScript.reservedBones(bot)
         for ((index, item) in bot.inventory.withIndex()) {
-            if (buryLootedBones() && activeZone != SubZone.KBD_LAIR && item != null &&
-                BotCombatActionHandler.wantsToTrain(bot, SKILL_PRAYER) && Bone.ID_TO_BONE.containsKey(item.id)) {
-                handler.inventory.clickItem(1, item.id, index)
-                break
-            }
+            if (item == null || item.id !in Bone.ID_TO_BONE) continue
+            if (reserve != null && item.id == reserve.id &&
+                bot.inventory.computeAmountForId(item.id) <= reserve.amount) continue
+            handler.inventory.clickItem(1, item.id, index)
+            break
         }
     }
 

@@ -446,7 +446,12 @@ object WebWalkLiveGenerator {
      * Makes the obstacles of a staircase.
      */
     private fun stairs(obj: GameObject, climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
-        climb(EdgeType.STAIR, obj, StairDestination.directions(obj), climbs, report) { from, up ->
+        val tiles = climbingTiles(obj)
+        // The other side of these stairs is cut off from the cavern circuit. Use the accessible return landing.
+        val poolStairs = Position(3686, 9886, 1)
+        val approaches = if (obj.id == 5263 && obj.position == Position(3684, 9887, 1) && poolStairs in tiles)
+            listOf(poolStairs) else tiles
+        climb(EdgeType.STAIR, obj, StairDestination.directions(obj), climbs, report, approaches) { from, up ->
             StairDestination.destination(obj, from, up)
         }
     }

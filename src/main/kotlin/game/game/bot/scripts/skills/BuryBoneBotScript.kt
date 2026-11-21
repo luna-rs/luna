@@ -34,6 +34,7 @@ import kotlin.time.Duration
  * @param duration Session duration managed by the inherited zone lifecycle.
  * @param zones Existing safe banked processing zones.
  * @property bankRelief Whether only expendable owned bones may be consumed.
+ * @property ownedOuting Whether to bury only the bone stock available now.
  * @author lare96
  */
 class BuryBoneBotScript(
@@ -41,11 +42,12 @@ class BuryBoneBotScript(
     val bone: Bone,
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_PRAYER),
-    val bankRelief: Boolean = false
+    val bankRelief: Boolean = false,
+    private val ownedOuting: Boolean = false
 ) : InventoryBotScript(bot, duration, zones) {
     override val trainingSkill = SKILL_PRAYER
     override val verifiedProductionWithdrawals = true
-    override val ownedSuppliesOnly get() = bankRelief
+    override val ownedSuppliesOnly get() = bankRelief || ownedOuting
     override fun allowsLoot(item: io.luna.game.model.item.GroundItem): Boolean = !bankRelief && super.allowsLoot(item)
 
     companion object {
@@ -61,15 +63,18 @@ class BuryBoneBotScript(
              * Whether only expendable owned bones may be used without recording replacement demand.
              */
             var bankRelief = false
+            var ownedOuting = false
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: Bone.BONES.name
                 bankRelief = data.get("bank_relief")?.asBoolean ?: false
+                ownedOuting = data.get("owned_outing")?.asBoolean ?: false
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
                 if (bankRelief) data.addProperty("bank_relief", true) else data.remove("bank_relief")
+                if (ownedOuting) data.addProperty("owned_outing", true) else data.remove("owned_outing")
             }
         }
     }
@@ -79,7 +84,7 @@ class BuryBoneBotScript(
 
     /** Restores the recipe, session configuration, and persistent retry budgets. */
     constructor(bot: Bot, data: BoneData) :
-        this(bot, Bone.valueOf(data.recipe), data.duration, data.zones, data.bankRelief) {
+        this(bot, Bone.valueOf(data.recipe), data.duration, data.zones, data.bankRelief, data.ownedOuting) {
         restoreInventoryState(data)
     }
 
@@ -94,7 +99,7 @@ class BuryBoneBotScript(
             stop()
             return emptyList()
         }
-        return productionWithdraw(materials, requestMissing = !bankRelief)
+        return productionWithdraw(materials, requestMissing = !ownedSuppliesOnly)
     }
     override fun bankWithdraw(): List<Item> {
         if (bankRelief && !BankResourceCoordinator.canProcess(bot, SKILL_PRAYER, materials)) {
@@ -119,6 +124,7 @@ class BuryBoneBotScript(
     override fun snapshot(): BoneData = BoneData().also {
         it.recipe = bone.name
         it.bankRelief = bankRelief
+        it.ownedOuting = ownedOuting
         saveInventoryState(it)
     }
 }
