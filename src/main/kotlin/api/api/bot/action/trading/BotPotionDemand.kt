@@ -1,5 +1,7 @@
 package api.bot.action.trading
 
+import api.bot.action.BotPotionTrip
+
 import api.attr.Attr
 import api.predef.ext.canUseWantedItem
 import api.predef.ext.totalItemAmount
@@ -206,8 +208,9 @@ object BotPotionDemand {
      * Allocates the shared dose reserve to actual bottles, retaining useful partials after an id-changing sip.
      */
     fun retainedStock(bot: Bot): Map<Int, Int> = buildMap {
-        for (family in requestedPotionFamilies(bot)) {
-            var remaining = reserveDoses(bot, family)
+        val trip = BotPotionTrip.protectedDoses(bot)
+        for (family in requestedPotionFamilies(bot) + trip.keys) {
+            var remaining = maxOf(reserveDoses(bot, family), trip[family] ?: 0)
             for (id in family.ids.sortedByDescending { family.doses(it) }) {
                 if (remaining <= 0) break
                 val doses = family.doses(id)

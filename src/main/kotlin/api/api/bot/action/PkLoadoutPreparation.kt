@@ -6,7 +6,9 @@ import api.combat.death.PlayerDeathItems
 import engine.bot.coordinator.EquipmentDropSources
 import engine.bot.gear.BotGearPurpose
 import engine.controllers.Controllers.inWilderness
+import game.item.degradable.jewellery.TeleportJewellery
 import game.player.item.consume.food.Food
+import game.player.item.consume.potion.Potion
 import game.skill.magic.Rune
 import io.luna.Luna
 import io.luna.game.model.EntityState
@@ -18,6 +20,7 @@ import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.item.ItemContainer.StackPolicy
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
+import java.math.BigInteger
 
 /**
  * Packs compact, owned PK switches through ordinary banking and equipment actions.
@@ -30,12 +33,24 @@ import io.luna.game.model.mob.bot.Bot
 internal class PkLoadoutPreparation(private val bot: Bot, private val handler: BotActionHandler) {
     private val clan = PkClanPolicy(bot)
     private val selection = PkLoadoutSelection(bot)
+
+    companion object {
+        private val boosts by lazy {
+            listOf(listOf(Potion.SUPER_STRENGTH, Potion.STRENGTH_POTION),
+                listOf(Potion.SUPER_ATTACK, Potion.ATTACK_POTION), listOf(Potion.SUPER_DEFENCE, Potion.DEFENCE_POTION))
+        }
+        private val optionalPotionIds by lazy {
+            (boosts.flatten() + PkPotionUse.supportPotions).flatMapTo(HashSet()) { it.doses }
+        }
+    }
+
     /**
      * A concrete departure outfit and inventory, checked against physical ownership and prospective death loss.
      *
      * @author lare96
      */
-    data class Plan(val equipment: List<Item>, val inventory: List<Item>)
+    data class Plan(val equipment: List<Item>, val inventory: List<Item>, val potionSlots: Int,
+                    val melee: Boolean = false, val prayerBonus: Int = 0)
 
     /**
      * Tests for any permanently assigned discipline with a carried weapon and its actual ammunition or spell cast.
@@ -176,7 +191,8 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * block a usable outing, and all selected switches must fit both space and the account's risk policy.
      * Initiating PKers budget for losing every carried item.
      */
-    fun plan(allowMissingClanCape: Boolean = false, spellbook: Spellbook = bot.spellbook): Plan? {
+    fun plan(allowMissingClanCape: Boolean = false, spellbook: Spellbook = bot.spellbook,
+             escapeDepth: Int? = null): Plan? {
         val purposes = departurePurposes(spellbook).takeIf { it.isNotEmpty() } ?: return null
         val stock = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
             .groupBy { it.unnotedItemDef.id() }.mapValues { (_, items) -> items.sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }
@@ -187,6 +203,11 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
         if (foods.isEmpty()) return null
         val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
         val assess = PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)
+        val escapeItems = if (escapeDepth == null) emptyList() else TeleportJewellery.entries
+            .filter { escapeDepth in 1..it.maxWildernessLevel }
+            .flatMap { it.items }
+            .filter { it in stock }
+            .sortedBy { bot.world.economy.getPrice(it) }
         val available = purposes.mapNotNull { purpose ->
             selection.select(purpose, spellbook = spellbook)?.let { purpose to it }
         }.toMap()
@@ -236,10 +257,11 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                     val item = Item(id, amount)
                     if (!inventory.hasSpaceFor(item) || !inventory.add(item)) return null
                 }
-                if (inventory.computeRemainingSize() < 2) return null
+                val spare = inventory.computeRemainingSize() - 2
+                if (spare < 0) return null
                 val carried = inventory.filterNotNull()
                 if (!assess(carried, worn, true).withinBudget) return null
-                return Plan(worn, carried)
+                return Plan(worn, carried, spare)
             }
             fun fits(): Boolean = quantities.all { (id, amount) -> amount <= (stock[id] ?: 0) } &&
                 purposes.all { snapshot(layout(it)) != null }
@@ -255,6 +277,8 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             if (firstFood == null) return null
             var foodCount = 1
             for (id in foods) while (foodCount < 16 && (quantities[id] ?: 0) < stock.getValue(id) && add(id)) foodCount++
+
+            escapeItems.firstOrNull { it in quantities || add(it) }
 
             // Shared slots use the primary outfit, with neutral magic-compatible alternatives where possible.
             for (slot in starting.indices.filter { it !in setOf(Equipment.WEAPON, Equipment.AMMUNITION) &&
@@ -305,7 +329,12 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                 }
             }
             magic?.let { extend(it.runes, 500) }
-            return snapshot(layout(purposes.first()))
+            val layouts = purposes.map { snapshot(layout(it)) ?: return null }
+            val prayerBonus = layouts.minOf { outfit -> outfit.equipment.sumOf {
+                EquipmentDefinition.ALL.retrieve(it.id).getBonus(Equipment.EquipmentBonus.PRAYER.index)
+            } }
+            return layouts.first().copy(potionSlots = layouts.minOf { it.potionSlots },
+                melee = BotGearPurpose.MELEE in purposes, prayerBonus = prayerBonus)
         }
         // There are at most three assigned disciplines. Try supplied switches together, then smaller usable kits.
         val choices = available.entries.toList()
@@ -358,9 +387,12 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * Every suspension is followed by safety checks. Partial withdrawals and changed prices cannot authorize
      * Wilderness entry; a failed preparation finishes at the bank rather than retrying an impossible kit forever.
      */
-    suspend fun prepare(): Boolean {
+    suspend fun prepare(optionalPotions: Boolean = false, escapeDepth: Int? = null,
+                        potionShopUntil: Long = Long.MAX_VALUE, allowed: () -> Boolean = { true }): Boolean {
+        fun safe() = allowed() && bot.state == EntityState.ACTIVE && !bot.client.isPendingLogout &&
+            ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness()
         for (spellbook in preparationSpellbooks()) {
-            if (bot.state != EntityState.ACTIVE || !ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness()) return false
+            if (!safe()) return false
             if (plan(allowMissingClanCape = true, spellbook = spellbook) == null) {
                 val required = supplyRequirements(spellbook)
                 if (required == null) {
@@ -373,7 +405,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                 if (!PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)(minimum, emptyList(), true).withinBudget) continue
             }
             if (!handler.combat.switchSpellbook(spellbook)) continue
-            if (prepareCurrentSpellbook()) return true
+            if (prepareCurrentSpellbook(optionalPotions, escapeDepth, potionShopUntil, ::safe)) return true
         }
         return false
     }
@@ -381,8 +413,8 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     /**
      * Rechecks stock and risk after selecting the spellbook, including after an unsuccessful preferred-book attempt.
      */
-    private suspend fun prepareCurrentSpellbook(): Boolean {
-        fun safe(): Boolean = bot.state == EntityState.ACTIVE && ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness()
+    private suspend fun prepareCurrentSpellbook(optionalPotions: Boolean, escapeDepth: Int?,
+                                                potionShopUntil: Long, safe: () -> Boolean): Boolean {
         if (!safe()) return false
         try {
             if (!handler.banking.travelToBankOpen() || !safe()) return false
@@ -401,9 +433,15 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                 if (!safe() ||
                     !handler.banking.travelToBankOpen() || !safe() || !handler.banking.depositInventory() || !safe()) return false
             }
-            val plan = plan() ?: run {
+            val plan = plan(escapeDepth = escapeDepth) ?: run {
                 requestMissingFood()
                 return false
+            }
+            if (optionalPotions) {
+                // Reserve the planned essentials, then shop before withdrawing anything travel could consume.
+                if (!preparePotions(plan, potionShopUntil, safe) || !safe() ||
+                    !handler.banking.travelToBankOpen() || !safe() ||
+                    !handler.banking.depositInventory(optionalPotionIds) || !safe()) return false
             }
             for ((id, items) in (plan.inventory + plan.equipment).groupBy { it.id }) {
                 val amount = items.sumOf { it.amount }
@@ -444,11 +482,53 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                     return false
                 }
             }
+            if (optionalPotions && !fitPotionRisk(plan, safe)) return false
             fun counts(items: List<Item>) = items.groupBy { it.id }.mapValues { (_, stacks) -> stacks.sumOf { it.amount.toLong() } }
+            val carried = bot.inventory.filterNotNull()
+            val supplies = if (optionalPotions) carried.filterNot { it.id in optionalPotionIds } else carried
             return safe() && ready() && bot.equipment.filterNotNull() == plan.equipment &&
-                counts(bot.inventory.filterNotNull()) == counts(plan.inventory) && handler.combat.pkRiskBudget().withinBudget
+                counts(supplies) == counts(plan.inventory) && handler.combat.pkRiskBudget().withinBudget
         } finally {
             bot.overlays.closeWindows()
         }
+    }
+
+    /**
+     * Fills spare slots after the essential loadout has been planned. Purchases spend only a small share of cash and
+     * must leave the whole pack within the same conservative risk allowance used for planning equipment switches.
+     */
+    private suspend fun preparePotions(plan: Plan, shopUntil: Long, safe: () -> Boolean): Boolean {
+        val before = potionRisk(plan, emptyList())
+        val coins = bot.bank.computeAmountForId(995).toLong() + bot.inventory.computeAmountForId(995)
+        val allowance = (before.maximumLoss - before.deathLoss).min(BigInteger.valueOf(coins / 10))
+            .coerceAtLeast(BigInteger.ZERO).toLong()
+        val needs = buildList {
+            if (plan.potionSlots > 0) {
+                addAll(PkPotionUse.needs(bot, plan.prayerBonus, allowance))
+                if (plan.melee) boosts.forEach {
+                    add(BotPotionTrip.Need(it, doses = 4, maxCoinsPerDose = (allowance + 3) / 4))
+                }
+            }
+        }
+        return BotPotionTrip.prepare(bot, needs, allowance, minOf(plan.potionSlots, needs.size), safe, shopUntil) {
+            potionRisk(plan, it).withinBudget
+        } && fitPotionRisk(plan, safe)
+    }
+
+    private fun potionRisk(plan: Plan, potions: List<Item>): PkRiskBudget {
+        val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
+        return PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)(
+            plan.inventory + potions, plan.equipment, true)
+    }
+
+    private suspend fun fitPotionRisk(plan: Plan, safe: () -> Boolean): Boolean {
+        val potions = bot.inventory.filterNotNull().filter { it.id in optionalPotionIds }
+        if (potions.sumOf { it.amount } <= plan.potionSlots && potionRisk(plan, potions).withinBudget) return safe()
+
+        if (!safe() || !handler.banking.travelToBankOpen() || !safe()) return false
+        for ((id, items) in potions.groupBy { it.id }) {
+            if (!handler.banking.deposit(Item(id, items.sumOf { it.amount })) || !safe()) return false
+        }
+        return potionRisk(plan, emptyList()).withinBudget
     }
 }

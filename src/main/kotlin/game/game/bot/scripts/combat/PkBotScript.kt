@@ -1042,7 +1042,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 return false
             }
             if (!ActionSafety.NON_COMBAT.allows(bot)) return false
-            if (!preparation.prepare()) {
+            fun preparing() = bot.scriptStack.current() === this && !isPaused() && !isTerminated() &&
+                System.currentTimeMillis() <= expireAt
+            val escapeDepth = outingPatrolGroups().asSequence().flatten().map { levelAt(it) }
+                .filter { it > 0 }.minOrNull()
+            if (!preparation.prepare(optionalPotions = true, escapeDepth = escapeDepth, potionShopUntil = expireAt,
+                    allowed = ::preparing)) {
+                if (!preparing() || !ActionSafety.NON_COMBAT.allows(bot)) return false
                 val needsRunes = preparation.magicRestockRequired()
                 PkCoverage.live.recordFailure(bot, if (needsRunes) PkCoverage.Failure.RUNES else PkCoverage.Failure.KIT)
                 preparationState = PreparationState.LEAVING

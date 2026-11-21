@@ -83,6 +83,8 @@ class PvmPrayer(private val bot: Bot) {
      */
     private var habit: PrayerHabit? = null
 
+    private val forecastHabit by lazy { newHabit() }
+
     /**
      * The monster the current fight is against.
      */
@@ -139,6 +141,24 @@ class PvmPrayer(private val bot: Bot) {
     private val blockedUntil = EnumMap<CombatPrayer, Long>(CombatPrayer::class.java)
 
     /**
+     * The most recent fight's useful prayers, even when too few points remain to activate them.
+     */
+    var intendedPrayers: Set<CombatPrayer> = emptySet()
+        private set
+
+    /**
+     * Estimates which prayers the bot would use against a planned opponent, without changing the current fight.
+     */
+    fun expectedPrayers(target: Npc, melee: Boolean): Set<CombatPrayer> {
+        val habit = currentHabit()
+        val danger = bot.monsterMemory.expectedMaxHit(target, habit.knowledge)
+        val protection = if (protectionPaysOff(target.isBoss, danger, habit)) {
+            PROTECTION[MonsterStyles.usualStyle(target)]?.takeIf { it.level <= bot.prayer.staticLevel }
+        } else null
+        return neededPrayers(setOf(target), habit, protection, melee)
+    }
+
+    /**
      * Looks after the bot's prayers once: switches on what the fight calls for, and off what it no longer needs or can
      * no longer afford.
      *
@@ -150,6 +170,7 @@ class PvmPrayer(private val bot: Bot) {
         }
         val now = bot.world.currentTick
         if (fight == null) {
+            intendedPrayers = emptySet()
             betweenFights(now)
         } else {
             duringFight(fight, now)
@@ -162,6 +183,7 @@ class PvmPrayer(private val bot: Bot) {
      * script is finishing: each click switches off a different prayer that is on.
      */
     fun leaveFight() {
+        intendedPrayers = emptySet()
         actAt = -1L
         lullDecided = false
         val underAttack = bot.combat.inCombat()
@@ -184,32 +206,22 @@ class PvmPrayer(private val bot: Bot) {
         val prayerLevel = bot.prayer.staticLevel
         val points = bot.prayer.level
         val hp = bot.health
-        val maximumHp = bot.totalHealth
         val danger = fight.opponents.sumOf { bot.monsterMemory.expectedMaxHit(it, habit.knowledge) }
         val boss = fight.opponents.any { it.isBoss }
-        val paysOff = boss || danger >= habit.threatShare * maximumHp
+        val paysOff = protectionPaysOff(boss, danger, habit)
         val inDanger = paysOff && hp <= 2 * danger
         val reserve = habit.reserve(prayerLevel)
 
         // What the fight calls for, before thinking about the budget.
-        val needed = EnumSet.noneOf(CombatPrayer::class.java)
         val protection = if (paysOff) protectionFor(fight, habit, prayerLevel) else null
-        if (protection != null) {
-            needed += protection
-            if (inDanger && points in 1..reserve && !usingReserve) {
-                usingReserve = true
-                bot.log("Close to dying at $hp/$maximumHp hitpoints, using my last $points prayer points.")
-            }
+        if (protection != null && inDanger && points in 1..reserve && !usingReserve) {
+            usingReserve = true
+            bot.log("Close to dying at $hp/${bot.totalHealth} hitpoints, using my last $points prayer points.")
         }
-        val tough = boss || fight.opponents.any { it.combatLevel >= habit.toughShare * bot.combatLevel }
-        if (tough && !bot.combat.weapon.isRanged && !bot.combat.magic.isAutocasting) {
-            best(CombatPrayer.ATTACK_PRAYERS, prayerLevel)?.let { needed += it }
-            best(CombatPrayer.STRENGTH_PRAYERS, prayerLevel)?.let { needed += it }
-            if (habit.wasteful) {
-                best(CombatPrayer.DEFENCE_PRAYERS, prayerLevel)?.let { needed += it }
-            }
-        }
+        val melee = !bot.combat.weapon.isRanged && !bot.combat.magic.isAutocasting
+        val needed = neededPrayers(fight.opponents, habit, protection, melee)
 
+        intendedPrayers = needed
         // What the bot can afford. Switching protection over to another style isn't switching it on.
         val protectionFloor = if (usingReserve) 0 else reserve
         val boostFloor = habit.boostFloor(prayerLevel)
@@ -235,7 +247,7 @@ class PvmPrayer(private val bot: Bot) {
         actAt = -1L
         if (turnOn.isNotEmpty()) {
             bot.log("Praying ${turnOn.joinToString { nameOf(it) }} against ${fight.primary.def().name} " +
-                        "($points/$prayerLevel prayer points, expects hits up to $danger of $maximumHp hitpoints).")
+                        "($points/$prayerLevel prayer points, expects hits up to $danger of ${bot.totalHealth} hitpoints).")
             turnOn.forEach { click(it, true) }
         }
         // Switching protection over turns the old one off by itself.
@@ -246,6 +258,23 @@ class PvmPrayer(private val bot: Bot) {
             bot.log("Switching off ${stillOn.joinToString { nameOf(it) }}, $why.")
             stillOn.forEach { click(it, false) }
         }
+    }
+
+    private fun protectionPaysOff(boss: Boolean, danger: Int, habit: PrayerHabit): Boolean =
+        boss || danger >= habit.threatShare * bot.totalHealth
+
+    private fun neededPrayers(opponents: Set<Npc>, habit: PrayerHabit, protection: CombatPrayer?,
+                              melee: Boolean): Set<CombatPrayer> {
+        val needed = EnumSet.noneOf(CombatPrayer::class.java)
+        if (protection != null) needed += protection
+        val tough = opponents.any { it.isBoss || it.combatLevel >= habit.toughShare * bot.combatLevel }
+        if (tough && melee) {
+            val prayerLevel = bot.prayer.staticLevel
+            best(CombatPrayer.ATTACK_PRAYERS, prayerLevel)?.let { needed += it }
+            best(CombatPrayer.STRENGTH_PRAYERS, prayerLevel)?.let { needed += it }
+            if (habit.wasteful) best(CombatPrayer.DEFENCE_PRAYERS, prayerLevel)?.let { needed += it }
+        }
+        return needed
     }
 
     /**
@@ -288,7 +317,7 @@ class PvmPrayer(private val bot: Bot) {
         readHit = null
         usingReserve = false
         actAt = -1L
-        return rollHabit()
+        return (if (current == null) forecastHabit else newHabit()).also { habit = it }
     }
 
     /**
@@ -299,8 +328,8 @@ class PvmPrayer(private val bot: Bot) {
      * may come out wrong ([PrayerHabit.wrongProtectionChance]), and stays wrong until the next one.
      */
     private fun protectionFor(fight: PvmFight, habit: PrayerHabit, prayerLevel: Int): CombatPrayer? {
-        if (bot.prayer.level <= 0 || StatusEffectType.DRAGON_SCIMITAR in bot.status) {
-            // Out of prayer points, or the game said protection prayers are disabled for now.
+        if (StatusEffectType.DRAGON_SCIMITAR in bot.status) {
+            // The game temporarily disabled protection prayers.
             return null
         }
         if (habit.knowsStyles && knownStyle == null) {
@@ -340,16 +369,16 @@ class PvmPrayer(private val bot: Bot) {
         if (on) points > floor else points >= floor + RESUME_POINTS
 
     /**
-     * Returns the habit for the current or most recent fight, rolling one if the bot hasn't fought yet.
+     * Returns the current fight's habit or the stable forecast for a first fight.
      */
-    private fun currentHabit(): PrayerHabit = habit ?: rollHabit()
+    private fun currentHabit(): PrayerHabit = habit ?: forecastHabit
 
     /**
-     * Rolls a habit from the bot's personality and keeps it.
+     * Rolls a habit from the bot's personality.
      */
-    private fun rollHabit(): PrayerHabit =
+    private fun newHabit(): PrayerHabit =
         PrayerHabit.roll(bot.personality.intelligence, bot.personality.confidence, bot.personality.dexterity,
-                         bot.emotions.isFeeling(EmotionType.SCARED)).also { habit = it }
+                         bot.emotions.isFeeling(EmotionType.SCARED))
 
     /**
      * Returns the prayers this class looks after that are on.

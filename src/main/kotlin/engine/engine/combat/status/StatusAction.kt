@@ -128,6 +128,12 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
     }
 
     /**
+     * Returns the remaining ticks on an active timed effect.
+     */
+    fun remainingTicks(type: StatusEffectType): Int = effects[type]?.takeUnless { it.hasExpired() }
+        ?.countdown?.coerceAtLeast(0) ?: 0
+
+    /**
      * Removes an active status effect from this mob.
      *
      * This removes the effect from the active effect map and calls [StatusEffect.complete].

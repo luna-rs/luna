@@ -97,7 +97,9 @@ object BotProductionPlanner {
      */
     fun select(bot: Bot, skill: Int, level: Int, training: Boolean, duration: Duration,
                keyPrefix: String? = null, finalFood: Int? = null, merchantOutput: Int? = null,
-               maximumCoinsLimit: Long = Long.MAX_VALUE, directOnly: Boolean = false): InventoryBotScript? {
+               maximumCoinsLimit: Long = Long.MAX_VALUE,
+               directOnly: Boolean = false,
+               singlePurchaseBatch: Boolean = false): InventoryBotScript? {
         fun rejected(reason: Reason): InventoryBotScript? {
             val previous = BotProductionMetrics.latestDecision(bot)
             if (reason == Reason.COOLDOWN && previous?.source == Source.PLANNER &&
@@ -108,8 +110,10 @@ object BotProductionPlanner {
         var lastRejection = Reason.NO_ELIGIBLE_RECIPE
         if (finalFood != null && (directOnly || skill != SKILL_COOKING || !CookingProductionPaths.isFood(finalFood)))
             return rejected(Reason.INVALID_REQUEST)
+        if (singlePurchaseBatch && (training || keyPrefix == null || finalFood != null || merchantOutput == null))
+            return rejected(Reason.INVALID_REQUEST)
         val now = System.currentTimeMillis()
-        val key = "$skill:${keyPrefix.orEmpty()}:$training:${finalFood ?: -1}:${merchantOutput ?: -1}:$directOnly"
+        val key = "$skill:${keyPrefix.orEmpty()}:$training:${finalFood ?: -1}:${merchantOutput ?: -1}:$directOnly:$singlePurchaseBatch"
         val history = bot.attributes()[retries.attr]
         val retry = history[key]
         if (retry != null && retry.revision == bot.itemOwnershipRevision && retry.level == level && retry.after > now)
@@ -164,7 +168,7 @@ object BotProductionPlanner {
         val allowOtherSkills = merchantOutput != null && !training
         val pipelines = buildList {
             if (finalFood == null) for ((entry, recipe) in candidates) {
-                val paths = if (directOnly) listOf(listOf(ProductionStage(recipe, 1)))
+                val paths = if (directOnly || singlePurchaseBatch) listOf(listOf(ProductionStage(recipe, 1)))
                 else ProductionRecipePaths.forRecipe(recipe, ::describe, allowOtherSkills) {
                     allowOtherSkills || skill != SKILL_COOKING || it.experience == 0.0
                 }
@@ -181,7 +185,7 @@ object BotProductionPlanner {
                     add(Pipeline(firstEntry, path, aggregate))
                 }
             }
-            val foods = if (finalFood != null) listOf(finalFood) else if (!directOnly && skill == SKILL_COOKING)
+            val foods = if (finalFood != null) listOf(finalFood) else if (!directOnly && !singlePurchaseBatch && skill == SKILL_COOKING)
                 goals.prices.keys.filter(CookingProductionPaths::isFood).take(8) else emptyList()
             val entries = candidates.associate { it.second.key to it.first }
             for (food in foods) for (path in CookingProductionPaths.forOutput(food, allowOtherSkills, ::describe)) {
@@ -245,7 +249,13 @@ object BotProductionPlanner {
             if (!training && stockLimit == null && recipe.products.any { (id, amount) ->
                     count(id) >= amount.toLong() * 56 }) return@mapNotNull null
             val ids = path.stages.flatMapTo(hashSetOf()) { it.recipe.materials.keys + it.recipe.tools }
-            val inputPrices = ids.associateWith(::ceiling).toMutableMap()
+            val inputPrices = if (singlePurchaseBatch) {
+                val (id, amount) = recipe.materials.entries.singleOrNull() ?: return@mapNotNull null
+                val missing = amount - count(id)
+                if (missing !in 1L..amount.toLong()) return@mapNotNull null
+                val price = singlePurchasePrice(bot, id, missing.toInt()) ?: return@mapNotNull null
+                mutableMapOf(id to price)
+            } else ids.associateWith(::ceiling).toMutableMap()
             ProductionRecipePaths.pricePreparations(path.stages.map { it.recipe }, inputPrices)
             val inventorySize = bot.inventory.capacity()
             val capacity = if (path.stages.size == 1) {
@@ -263,6 +273,7 @@ object BotProductionPlanner {
                 goals.quantities.getValue(id) / recipe.products.getValue(id)
             } ?: ProductionEconomics.MAX_OPERATIONS
             var requested = minOf(capacity, stockLimit ?: ProductionEconomics.MAX_OPERATIONS, useLimit)
+            if (singlePurchaseBatch) requested = minOf(requested, 1)
             if (training && requested > 0) {
                 requested = ProductionRecipePaths.trainingOperationLimit(path.stages, requested,
                     trainingExperienceRemaining(bot, skill))
@@ -281,6 +292,7 @@ object BotProductionPlanner {
                 for ((id, amount) in recipe.materials) {
                     val limit = inputPrices.getValue(id)
                     val reserved = retained[id] ?: 0
+                    if (singlePurchaseBatch && reserved <= 0) continue
                     val onHand = ((stock[id] ?: 0L) - reserved).coerceAtLeast(0)
                     val shop = source(id)?.takeIf { it.maximumUnitPrice <= limit }?.quantity ?: 0
                     val available = if (reserved > 0) onHand else onHand + shop +
@@ -331,9 +343,14 @@ object BotProductionPlanner {
                 val batchCost = ProductionEconomics.saturatingAdd(toolCost,
                     ProductionEconomics.saturatingMultiply(quote.inputValue, quote.operations.toLong()))
                 val units = (merchantAmount * quote.operations * recipe.productProbability).toLong()
-                val floor = ProductionSaleGuard.minimumGross(batchCost, units, taxed = false)
+                val profitFloor = ProductionSaleGuard.minimumGross(batchCost, units, taxed = false)
+                val floor = if (singlePurchaseBatch)
+                    maxOf(profitFloor, (BotTradeManager.MINIMUM_OFFER_VALUE + units - 1L) / units)
+                else profitFloor
                 if (floor > minOf(merchantPrice, Int.MAX_VALUE.toLong()) ||
-                    !BotTradeManager.hasNativeSaleStock(bot, id, units.toInt())) return@mapNotNull null
+                    (!singlePurchaseBatch && !BotTradeManager.hasNativeSaleStock(bot, id, units.toInt())))
+                    return@mapNotNull null
+                if (singlePurchaseBatch && !hasSingleBatchBuyer(bot, id, units.toInt(), floor)) return@mapNotNull null
                 ProductionSaleGuard(id, floor, batchCost, now)
             }
             val ticks = path.stages.sumOf { processingTicks(it.recipe) * it.operations }
@@ -366,7 +383,8 @@ object BotProductionPlanner {
         val plan = ProductionPlan(chosen.path.stages.first().recipe, training, chosen.quote.operations,
             chosen.quote.maximumCoins, chosen.caps, deadline,
             continuationRecipes = chosen.path.stages.drop(1).map { it.recipe }, personalUsePrices = chosen.usePrices,
-            stageRatios = chosen.path.stages.map { it.operations }, saleGuard = chosen.saleGuard)
+            stageRatios = chosen.path.stages.map { it.operations }, saleGuard = chosen.saleGuard,
+            singlePurchaseBatch = singlePurchaseBatch)
         chosen.saleGuard?.let { guard ->
             val quantity = chosen.path.economy.valuedProducts.getValue(guard.itemId).toLong() * plan.operations
             if (!NativeOutputDemand.reserve(bot, guard.identity, mapOf(guard.itemId to quantity), deadline,
@@ -413,6 +431,7 @@ object BotProductionPlanner {
             if (personalOutput(bot, it.itemId)) return false
             val amount = recipe.products[it.itemId] ?: return false
             val desired = amount.toLong() + plan.guardedOutputProduced
+            if (plan.singlePurchaseBatch && !hasSingleBatchBuyer(bot, it.itemId, amount, it.minimumPrice)) return false
             if (!NativeOutputDemand.reserve(bot, it.identity, mapOf(it.itemId to desired), plan.deadline,
                     mapOf(it.itemId to it.minimumPrice))) return false
             NativeOutputDemand.depth(bot, it.itemId, excluding = it.identity)
@@ -428,7 +447,14 @@ object BotProductionPlanner {
         val disposal = BotProductionUses.recoverableValues(bot, prepared, operations = 1)
         val inputPrices = plan.maximumUnitPrices.mapValues { (id, ceiling) ->
             val basis = carried[id]?.takeIf { id in prepared }
-            if (basis != null) maxOf(basis, disposal[id] ?: 0L) else {
+            if (basis != null) maxOf(basis, disposal[id] ?: 0L)
+            else if (plan.singlePurchaseBatch) {
+                val missing = ((recipe.materials[id] ?: 0) - owned(bot, id)).coerceAtLeast(0L).toInt()
+                if (missing == 0) return@mapValues ceiling
+                val price = singlePurchasePrice(bot, id, missing) ?: return false
+                if (price > ceiling) return false
+                ceiling
+            } else {
                 val replacement = if (native.skill == SKILL_COOKING || guard != null) {
                     BotSupplySources.quote(bot, id, 100)?.maximumUnitPrice
                         ?: ceiling.takeIf { owned(bot, id) >= (recipe.materials[id] ?: 1) }
@@ -451,6 +477,20 @@ object BotProductionPlanner {
             inputPrices.keys.associateWith { owned(bot, it) }, minOf(plan.remainingCoins, owned(bot, 995)),
             inputPrices, exits, usePrices) != null
     }
+
+    private fun singlePurchasePrice(bot: Bot, id: Int, amount: Int): Long? {
+        val shop = BotSupplySources.quote(bot, id, amount)?.takeIf { it.quantity >= amount }?.maximumUnitPrice
+        val direct = NativeOutputDemand.traders(bot).mapNotNull { it.profitGatheringSupply(id) }
+            .filter { it.item.amount >= amount && it.price in 1L..Int.MAX_VALUE.toLong() &&
+                it.price * amount >= BotTradeManager.MINIMUM_OFFER_VALUE }
+            .minOfOrNull { it.price }
+        return listOfNotNull(shop, direct).filter { it > 0L }.minOrNull()
+    }
+
+    private fun hasSingleBatchBuyer(bot: Bot, id: Int, amount: Int, minimumPrice: Long): Boolean =
+        NativeOutputDemand.traders(bot).any { trader ->
+            trader.profitGatheringPurchase(id)?.let { it.item.amount >= amount && it.price >= minimumPrice } == true
+        }
 
     private fun personalFoodOutput(bot: Bot, id: Int): Boolean = CookingProductionPaths.isFood(id) &&
         (BotFoodDemand.wouldRetain(bot, id) || BotTradeIntentions.hasUnmetPersonalSupplyDemand(bot, id))

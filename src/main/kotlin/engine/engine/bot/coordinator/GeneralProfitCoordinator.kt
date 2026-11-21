@@ -1,6 +1,7 @@
 package engine.bot.coordinator
 
 import api.bot.action.trading.BotMarketplace
+import api.bot.action.trading.BotMerchantCapital
 import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript
 import api.bot.script.ProfitGatheringGoal
@@ -9,7 +10,9 @@ import api.bot.script.BotScript.ActionSafety
 import api.bot.zone.ProductionZones
 import api.bot.zone.SubZone
 import api.predef.rand
+import api.predef.SKILL_HERBLORE
 import api.predef.world
+import engine.bot.coordinator.skill.BotProductionPlanner
 import engine.bot.coordinator.skill.NativeProductionOpportunities
 import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.HarvestBotScript
@@ -24,13 +27,17 @@ import game.bot.scripts.SearchNestBotScript
 import game.bot.scripts.TradeMolePartsBotScript
 import game.bot.scripts.VialWaterProfitBotScript
 import game.bot.scripts.WildernessScavengeBotScript
+import game.bot.scripts.skills.DecantPotionBotScript
 import game.bot.scripts.trading.BuyStoreBargainBotScript
 import game.bot.scripts.trading.SellToStoreBotScript
+import game.player.item.consume.potion.Potion
+import game.player.item.consume.potion.PotionFamily
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivityWeights
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration
 
 /**
  * Selects money-making tasks that do not train a skill or initiate combat.
@@ -44,6 +51,10 @@ import kotlin.time.Duration.Companion.minutes
  * @author lare96
  */
 object GeneralProfitCoordinator : BotCoordinator {
+    private val starterMeleePotionFamilies by lazy {
+        listOf(Potion.ATTACK_POTION, Potion.STRENGTH_POTION, Potion.DEFENCE_POTION)
+            .map { PotionFamily.forPotion(it) }.toSet()
+    }
     private const val FLAX = 1779
     private const val EGG = 1944
     private const val MAX_RAW_FLAX_STOCK = 112
@@ -86,7 +97,7 @@ object GeneralProfitCoordinator : BotCoordinator {
         )
         if (bot.isEarlyGame()) {
             candidates += listOf(
-                { NativeProductionOpportunities.starterDecanting(bot, duration) },
+                { decantStarterPotions(bot, duration) },
                 { starterVials(bot) },
                 { if (BucketSandProfitBotScript.eligible(bot)) BucketSandProfitBotScript(bot) else null },
                 { fillOwnedContainers(bot) },
@@ -120,6 +131,19 @@ object GeneralProfitCoordinator : BotCoordinator {
             candidate()?.let { return it }
         }
         return null
+    }
+
+    private fun decantStarterPotions(bot: Bot, duration: Duration): BotScript? {
+        if (bot.preferences.isMerchant) return NativeProductionOpportunities.starterDecanting(bot, duration)
+        val capital = BotMerchantCapital.snapshot(bot)
+        if (capital.cashRecovery || capital.electiveCoins <= 0L) return null
+        val plan = starterMeleePotionFamilies.shuffled().firstNotNullOfOrNull { family ->
+            BotProductionPlanner.select(bot, SKILL_HERBLORE, bot.skill(SKILL_HERBLORE).staticLevel,
+                training = false, duration = minOf(duration, 10.minutes), keyPrefix = DecantPotionBotScript.recipe(family).key,
+                merchantOutput = family.fourDose, maximumCoinsLimit = capital.electiveCoins,
+                singlePurchaseBatch = true)
+        }
+        return plan ?: NativeProductionOpportunities.starterDecanting(bot, duration, starterMeleePotionFamilies)
     }
 
     private fun rawFlax(bot: Bot): BotScript? {

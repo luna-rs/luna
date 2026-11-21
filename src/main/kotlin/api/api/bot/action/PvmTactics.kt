@@ -2,6 +2,8 @@ package api.bot.action
 
 import api.bot.action.eating.PvmEating
 import api.bot.action.prayer.PvmPrayer
+import engine.combat.prayer.CombatPrayer
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.delay
 import kotlin.random.Random
@@ -26,6 +28,17 @@ class PvmTactics(private val bot: Bot) {
      * Prays for the bot.
      */
     private val prayer = PvmPrayer(bot)
+
+    /**
+     * Prayers the current target warrants, including ones temporarily out of points.
+     */
+    val intendedPrayers: Set<CombatPrayer> get() = prayer.intendedPrayers
+
+    /**
+     * Predicts prayers for a camp before supplies are packed.
+     */
+    fun expectedPrayers(target: Npc, melee: Boolean = !bot.combat.weapon.isRanged && !bot.combat.magic.isAutocasting):
+        Set<CombatPrayer> = prayer.expectedPrayers(target, melee)
 
     /**
      * Looks after the bot once. Eating comes first, since it keeps the bot alive.

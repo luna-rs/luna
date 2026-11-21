@@ -78,10 +78,11 @@ internal object NativeProductionOpportunities {
     /**
      * Tries a bounded shortlist of four-dose buyers using the bot's elective purse and the exact decanting recipe.
      */
-    fun starterDecanting(bot: Bot, duration: Duration): InventoryBotScript? {
+    fun starterDecanting(bot: Bot, duration: Duration, excluded: Set<PotionFamily> = emptySet()): InventoryBotScript? {
         val world = bot.world
         val candidates = NativeOutputDemand.candidateIds(world).asSequence()
             .mapNotNull { id -> PotionFamily.forId(id)?.takeIf { it.fourDose == id } }
+            .filterNot { it in excluded }
             .sortedByDescending { family ->
                 3.0 * NativeOutputDemand.peakPrice(world, family.fourDose) -
                     4.0 * world.economy.getPrice(family.threeDose)

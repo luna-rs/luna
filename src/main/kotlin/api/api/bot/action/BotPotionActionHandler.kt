@@ -43,10 +43,9 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
     companion object {
 
         /**
-         * Fire-breathing NPCs, from the dragon combat hooks: King Black Dragon and the green, blue, red and black
-         * dragons.
+         * Fire-breathing NPCs from the chromatic, metal and King Black Dragon combat hooks.
          */
-        val FIRE_BREATHERS = setOf(50, 53, 54, 55, 941)
+        val FIRE_BREATHERS = setOf(50, 53, 54, 55, 941, 1590, 1591, 1592)
 
         /**
          * Every antipoison dose, strongest potion first.
@@ -103,6 +102,11 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
          * Whether [mob] breathes dragonfire.
          */
         fun breathesFire(mob: Mob?) = mob is Npc && mob.id in FIRE_BREATHERS
+
+        /**
+         * Whether a mob has verified native poison on ordinary strikes or King Black Dragon's custom attack.
+         */
+        fun inflictsPoison(mob: Mob?) = mob is Npc && (mob.id == 50 || mob.combatDef().poisonSeverity > 0)
     }
 
     /**
@@ -120,6 +124,8 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
      */
     private var refreshShare: Double? = null
 
+    private var recoveringFromBrew = false
+
     /**
      * Drinks at most one dose for the most pressing need.
      *
@@ -128,37 +134,58 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
      * @param prayerBelow Prayer points under which the bot wants a prayer potion, or `null` if it isn't praying.
      * @return `true` if a dose was drunk.
      */
-    fun drink(fighting: Boolean, dragons: Boolean, prayerBelow: Int? = null): Boolean {
+    fun drink(fighting: Boolean, dragons: Boolean, prayerBelow: Int? = null, planned: Set<Potion>? = null,
+              preemptPoison: Boolean = false, respectStyle: Boolean = planned != null): Boolean {
         if (!canDrink()) return false
-        if (bot.status.isPoisoned() && !bot.status.isAntiPoison() && drinkFor(Need.ANTIPOISON, ANTIPOISONS)) {
+        val cures = if (planned == null) ANTIPOISONS else ANTIPOISONS.sortedBy { it !in planned }
+        if ((bot.status.isPoisoned() || preemptPoison) && !bot.status.isAntiPoison() &&
+            drinkFor(Need.ANTIPOISON, cures)) {
             return true
         }
         if (dragons && !bot.status.isAntiFire() && drinkFor(Need.ANTIFIRE, listOf(Potion.ANTI_FIRE_POTION))) {
             return true
         }
+        val restorePotions = if (respectStyle) listOf(Potion.RESTORE_POTION, Potion.SUPER_RESTORE)
+            else listOf(Potion.SUPER_RESTORE)
+        val sapped = recoveringFromBrew && BotPotionSupport.drainedCombatStats(bot)
+        recoveringFromBrew = sapped
+        val emergency = bot.health <= bot.hitpoints.staticLevel / 3
+        if (fighting && sapped && !emergency && drinkFor(Need.RESTORE, restorePotions)) {
+            recoveringFromBrew = false
+            return true
+        }
         val heal = 2 + bot.hitpoints.staticLevel * 15 / 100
         if (fighting && bot.hitpoints.staticLevel - bot.health >= heal &&
-            (carries(Potion.SUPER_RESTORE) || bot.health <= bot.hitpoints.staticLevel / 3) &&
-            drinkFor(Need.HEAL, listOf(Potion.SARADOMIN_BREW))) return true
-        if (fighting && BOOSTS.keys.any { bot.skill(it).level < bot.skill(it).staticLevel } &&
-            drinkFor(Need.RESTORE, listOf(Potion.SUPER_RESTORE))) return true
+            (emergency || !sapped && (planned == null || Potion.SARADOMIN_BREW in planned) &&
+                restorePotions.any(::carries)) && drinkFor(Need.HEAL, listOf(Potion.SARADOMIN_BREW))) {
+            recoveringFromBrew = true
+            return true
+        }
+        val usefulSkills = if (respectStyle) currentCombatSkills() else BOOSTS.keys
+        val minimumDrain = if (respectStyle) 2 else 1
+        if (fighting && usefulSkills.any { id -> bot.skill(id).let { it.staticLevel - it.level >= minimumDrain } } &&
+            drinkFor(Need.RESTORE, restorePotions)) return true
         val prayer = bot.prayer
-        if (prayerBelow != null && prayer.level < prayerBelow && prayerDoseFits(prayer.level, prayer.staticLevel) &&
+        val nearlyEmpty = respectStyle && prayer.level <= 1 && prayer.level < prayer.staticLevel
+        if (prayerBelow != null && prayer.level < prayerBelow &&
+            (prayerDoseFits(prayer.level, prayer.staticLevel) || nearlyEmpty) &&
             drinkFor(Need.PRAYER, listOf(Potion.PRAYER_POTION))) {
             return true
         }
         if (prayerBelow != null && prayer.level < prayerBelow &&
-            prayer.staticLevel - prayer.level >= 8 + prayer.staticLevel / 4 &&
+            (prayer.staticLevel - prayer.level >= 8 + prayer.staticLevel / 4 || nearlyEmpty) &&
             drinkFor(Need.PRAYER, listOf(Potion.SUPER_RESTORE))) return true
         if (fighting) {
             val share = refreshShare ?: boostRefreshShare(bot.personality.intelligence,
                                                          bot.emotions.isFeeling(EmotionType.GREEDY))
             refreshShare = share
             for ((skillId, potions) in BOOSTS) {
+                if (skillId !in usefulSkills) continue
                 val skill = bot.skill(skillId)
-                val worn = potions.filter { (_, superPotion) ->
-                    boostWornDown(skill.level, skill.staticLevel, Potion.combatBoost(skill.staticLevel, superPotion),
-                                  share)
+                val worn = potions.filter { (potion, superPotion) ->
+                    (planned == null || potion in planned) &&
+                        boostWornDown(skill.level, skill.staticLevel, Potion.combatBoost(skill.staticLevel, superPotion),
+                            share)
                 }
                 if (worn.isNotEmpty() && drinkFor(Need.BOOST, worn.map { it.first })) {
                     refreshShare = null
@@ -169,10 +196,14 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
             val melee = bot.combat.weapon.typeDef.type != Weapon.STAFF &&
                 bot.combat.weapon.styleDef.exp.any { it == SKILL_ATTACK || it == SKILL_STRENGTH } &&
                 !bot.combat.magic.isAutocasting && bot.combat.magic.selectedSpell == CombatSpellDefinition.NONE
-            if (melee && bot.health >= bot.hitpoints.staticLevel * 0.8 &&
-                bot.defence.level >= bot.defence.staticLevel && carries(Potion.SUPER_RESTORE) &&
+            if (melee && !sapped && (planned == null || Potion.ZAMORAK_BREW in planned) &&
+                bot.health >= bot.hitpoints.staticLevel * 0.8 &&
+                bot.defence.level >= bot.defence.staticLevel && restorePotions.any(::carries) &&
                 bot.attack.level <= bot.attack.staticLevel && bot.strength.level <= bot.strength.staticLevel &&
-                drinkFor(Need.BOOST, listOf(Potion.ZAMORAK_BREW))) return true
+                drinkFor(Need.BOOST, listOf(Potion.ZAMORAK_BREW))) {
+                recoveringFromBrew = true
+                return true
+            }
         }
         return false
     }
@@ -193,12 +224,17 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
                     boostRefreshShare(bot.personality.intelligence, bot.emotions.isFeeling(EmotionType.GREEDY))) &&
                 drinkFor(Need.BOOST, listOf(potion))) return true
         }
-        val energyThreshold = 10 + bot.personality.intelligence * 30
-        if (bot.walking.isRunning && !bot.walking.isEmpty && bot.runEnergy <= energyThreshold) {
-            return drinkFor(Need.ENERGY, listOf(Potion.SUPER_ENERGY, Potion.ENERGY_POTION))
-        }
-        return false
+        return bot.walking.isRunning && !bot.walking.isEmpty && energyDose()
     }
+
+    /**
+     * Restores energy just before a known running leg, without interrupting combat or required actions.
+     */
+    fun drinkTravelEnergy(distance: Int): Boolean = distance >= 32 && ActionSafety.NON_COMBAT.allows(bot) &&
+        bot.actions.size() == 0 && canDrink() && energyDose()
+
+    private fun energyDose(): Boolean = bot.runEnergy <= 10 + bot.personality.intelligence * 30 &&
+        drinkFor(Need.ENERGY, listOf(Potion.SUPER_ENERGY, Potion.ENERGY_POTION))
 
     /**
      * Respects death, strong actions, interface ownership and the native shared three-tick drink throttle.
@@ -222,6 +258,13 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
      * Whether the bot has a dose of [potion] in its inventory.
      */
     private fun carries(potion: Potion) = potion.doses.any { bot.inventory.contains(it) }
+
+    private fun currentCombatSkills(): Set<Int> = when {
+        bot.combat.magic.isAutocasting -> setOf(SKILL_MAGIC, SKILL_DEFENCE)
+        bot.combat.weapon.isRanged -> setOf(SKILL_RANGED, SKILL_DEFENCE)
+        bot.combat.magic.selectedSpell != CombatSpellDefinition.NONE -> setOf(SKILL_MAGIC, SKILL_DEFENCE)
+        else -> setOf(SKILL_ATTACK, SKILL_STRENGTH, SKILL_DEFENCE)
+    }
 
     /**
      * Drinks a carried dose of [potions] for [need], unless the bot forgets about it.

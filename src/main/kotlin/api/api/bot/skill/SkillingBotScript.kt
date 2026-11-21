@@ -2,7 +2,6 @@
 package api.bot.skill
 
 import api.attr.Attr
-import api.bot.action.BotPotionMaintenance
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotGearDemand
 import io.luna.game.model.mob.bot.Bot
@@ -12,7 +11,6 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.skill.mining.Pickaxe
 import game.skill.woodcutting.cutTree.Axe
-import game.player.item.consume.potion.Potion
 import io.luna.game.model.Entity
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.EquipmentDefinition
@@ -53,7 +51,7 @@ abstract class SkillingBotScript<E : Entity>(
     val skill: Skill
 ) : TargetingZonedBotScript<E>(bot, duration, zones) {
 
-    override val potionSkillId: Int get() = skill.id
+    override val potionSkillId: Int? get() = skill.id.takeUnless { it == SKILL_FISHING }
 
     companion object {
 
@@ -130,13 +128,16 @@ abstract class SkillingBotScript<E : Entity>(
             }
 
             // Bank if the selected tool is missing from both inventory and equipment.
-            val shouldBank = !hasCarriedItem(toolId)
-            if (shouldBank) {
+            val needsTool = !hasCarriedItem(toolId)
+            val optional = prepareOptionalSuppliesAtStart()
+            if (needsTool) {
                 bot.log("Requesting initial bank because I need to collect ${itemName(toolId)}.")
+            } else if (optional) {
+                bot.log("Requesting initial bank to collect owned skilling supplies.")
             } else {
                 bot.log("Skipping initial bank because I am already carrying ${itemName(toolId)}.")
             }
-            return shouldBank
+            return needsTool || optional
         }
         if (!forceBanking && bot.inventory.isFull && handleFullInventory()) {
             return false
@@ -150,12 +151,10 @@ abstract class SkillingBotScript<E : Entity>(
      */
     protected open suspend fun handleFullInventory(): Boolean = false
 
+    protected open fun prepareOptionalSuppliesAtStart(): Boolean = false
+
     final override suspend fun onBankOpen(initial: Boolean) {
         reviewToolUpgrade()
-        if (skill.id == SKILL_FISHING) BotTradeIntentions.requestSupportPotion(bot, Potion.FISHING_POTION)
-        if (!BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
-                !isPaused() && !isTerminated()
-            }) { stop(); return }
         if (skill.level < levelRequired() || tools().isNotEmpty() && tool == null ||
             tool?.let { skill.level < it.skillLevel } == true) {
             stop()

@@ -16,6 +16,9 @@ import api.bot.action.MagicOnlyCombat
 import api.bot.action.MagicSupplyPreparation
 import api.bot.action.PvmTactics
 import api.bot.action.BotPotionActionHandler
+import api.bot.action.BotPotionSupport
+import api.bot.action.BotPotionTrip
+import api.bot.action.NpcPotionPolicy
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
@@ -904,13 +907,6 @@ open class NpcCombatScript(bot: Bot,
         }
         BotTradeIntentions.recordSupplies(bot,
             selected.runes.map { (id, amount) -> Item(id, amount * 28) }, stockTarget = 1_000)
-        if (!ownedCombatSuppliesOnly) BotTradeIntentions.requestCombatPotions(bot, purpose,
-            poison = slayerTask in POISONOUS_TASKS || bossTarget == BossTarget.KBD, dragons = dragonTrip,
-            dangerous = queenTrip || chaosTrip || moleTrip || originalZones.any { it in STRONG_FOOD_ZONES },
-            prayer = bot.prayer.staticLevel >= 30)
-        if (!ownedCombatSuppliesOnly && !api.bot.action.BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
-                !isPaused() && !isTerminated()
-            }) { stop(); return }
         if (slayerTask == SlayerTaskType.ZYGOMITE && !collectFungicide()) {
             stop()
             return
@@ -1047,7 +1043,47 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
-        if (queenTrip && !KalphiteQueenTrip.equipped(bot)) stop()
+        if (queenTrip && !KalphiteQueenTrip.equipped(bot)) {
+            stop()
+            return
+        }
+        if (!queenTrip && !ownedCombatSuppliesOnly) prepareTripPotions()
+    }
+
+    /**
+     * Uses the next camp and real equipped outfit to forecast one outing after its essential kit is packed.
+     */
+    private suspend fun prepareTripPotions() {
+        val camp = activeZone ?: originalZones.firstOrNull()
+        val target = camp?.let { zone ->
+            world.locator.findNpcs(zone.inside, zone.area.tileRadius, true) { npc ->
+                campSpawn(zone, npc) && npc.isAlive && (names[zone].let { it.isEmpty() || npc.def().name in it }) &&
+                    (exclusiveNpcIds?.contains(npc.id) != false)
+            }.firstOrNull()
+        }
+        val carriedFood = bot.inventory.filterNotNull().mapNotNull { item ->
+            val food = Food.ID_TO_FOOD[item.id] ?: return@mapNotNull null
+            if (food.heal > 0) item to food.heal else null
+        }
+        val healing = carriedFood.sumOf { (item, heal) -> heal * item.amount }
+        val healingValue = carriedFood.sumOf { (item, _) -> world.economy.getPrice(item.id).coerceAtLeast(0L).toDouble() * item.amount } /
+            healing.coerceAtLeast(1)
+        val ticks = NpcPotionPolicy.expectedTicks(bot, target, healing,
+            (duration.inWholeMilliseconds / 600L).coerceIn(0L, 1000L).toInt())
+        val budget = (BotPotionTrip.coins(bot) / 20L).coerceAtMost(2_000L)
+        val forecast = target?.let { tactics.expectedPrayers(it, melee = purpose == BotGearPurpose.MELEE) }.orEmpty()
+        val poison = slayerTask in POISONOUS_TASKS || BotPotionActionHandler.inflictsPoison(target)
+        val fire = BotPotionActionHandler.breathesFire(target) || camp in DRAGON_ZONES
+        val supports = BotPotionSupport.combatNeeds(bot, ticks, poison, fire, forecast, budget,
+            brews = bossTarget != null || camp in STRONG_FOOD_ZONES)
+        val boosts = NpcPotionPolicy.boosts(bot, purpose, target, ticks, trainingGoal != null, healingValue, budget) { id ->
+            if (this is NpcDropGatheringScript) id == itemId else id in ALL_LOOT_ITEMS.value
+        }
+        val slots = (bot.inventory.computeRemainingSize() - 2).coerceIn(0, 4)
+        if ((supports.isNotEmpty() || boosts.isNotEmpty()) && slots > 0 && !bot.bank.isOpen &&
+            !handler.banking.travelToBankOpen()) return
+        BotPotionTrip.prepare(bot, supports + boosts, budget, slots,
+            allowed = { !isPaused() && !isTerminated() })
     }
 
     /**
@@ -1529,8 +1565,17 @@ open class NpcCombatScript(bot: Bot,
         if (!tactics.check()) {
             forceBanking = true
         }
-        if (!ownedCombatSuppliesOnly) handler.potions.drink(fighting = bot.combat.inCombat(), dragons = activeZone in DRAGON_ZONES ||
-            BotPotionActionHandler.breathesFire(bot.combat.lastCombatWith))
+        if (!ownedCombatSuppliesOnly && !forceBanking) {
+            val target = focus ?: bot.combat.target as? Npc
+            val engaging = target != null && target.isAlive && target.position.computeLongestDistance(bot.position) <= 8
+            val dragonfire = engaging && BotPotionActionHandler.breathesFire(target) ||
+                bot.combat.inCombat() && BotPotionActionHandler.breathesFire(bot.combat.lastCombatWith)
+            val poison = engaging && (slayerTask in POISONOUS_TASKS || BotPotionActionHandler.inflictsPoison(target))
+            val prayers = tactics.intendedPrayers + bot.combat.prayers.active
+            handler.potions.drink(fighting = bot.combat.inCombat() || engaging, dragons = dragonfire,
+                prayerBelow = BotPotionSupport.prayerFloor(bot, prayers), planned = BotPotionTrip.planned(bot),
+                preemptPoison = poison, respectStyle = true)
+        }
     }
 
     override suspend fun beforeZoneWork(): Boolean {

@@ -1,5 +1,6 @@
 package api.bot.action.trading
 
+import api.bot.action.BotPotionTrip
 import api.attr.Attr
 import api.predef.ext.canUseWantedItem
 import api.predef.ext.totalItemAmount
@@ -87,6 +88,7 @@ object BotTradeBuyingPolicy {
             !BotTradeIntentions.hasExactSupplyDemand(bot, base)) {
             return BotPotionDemand.demand(bot, base)
         }
+        if (potion != null && BotPotionTrip.manages(bot, potion)) return null
         if (BotReusableItems.isReusable(base) && active == null &&
             BotTradeIntentions.explicitWantedTarget(bot, base) < 1) return null
         val wanted = bot.preferences.getWantedItem(base)?.takeIf { it.target > 0 && eligible(bot, it) }

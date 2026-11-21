@@ -1,8 +1,9 @@
 package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
-import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.ZonedBotScript
+import api.bot.action.BotPotionSupport
+import api.bot.action.BotPotionTrip
 import api.bot.webwalk.plan.BankAccess
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
@@ -63,7 +64,6 @@ import kotlin.time.Duration.Companion.seconds
 class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duration) :
     ZonedBotScript(bot, duration, mutableListOf(course.zone)) {
 
-    override val potionSkillId: Int get() = SKILL_AGILITY
     override val actionSafety: ActionSafety get() = if (course.isYanille) ActionSafety.COMBAT else ActionSafety.NON_COMBAT
     override val allowsCombatResponse: Boolean get() = !course.isYanille
 
@@ -232,9 +232,11 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
 
     override suspend fun equipment() = null
 
-    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =
-        handler.webWalkTo(zone = zone, attempts = if (course.isYanille) 4 else 1,
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
+        handler.potions.drinkTravelEnergy(bot.position.computeLongestDistance(zone.inside))
+        return handler.webWalkTo(zone = zone, attempts = if (course.isYanille) 4 else 1,
             bank = bank, fallback = !course.isYanille)
+    }
 
     override suspend fun onBankRequested(initial: Boolean): Boolean {
         if (course.isYanille) {
@@ -259,16 +261,6 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     }
 
     override suspend fun onBankOpen(initial: Boolean) {
-        BotTradeIntentions.requestSupportPotion(bot, Potion.AGILITY_POTION)
-        BotTradeIntentions.requestSupportPotion(bot, if (bot.combatLevel >= 70)
-            Potion.SUPER_ENERGY else Potion.ENERGY_POTION)
-        if (course.isYanille) {
-            val owned = YANILLE_ANTIPOISONS.firstOrNull { bot.inventory.contains(it) || bot.bank.contains(it) }
-            BotTradeIntentions.requestSupportPotion(bot, owned?.let { Potion.DOSE_TO_POTION[it] } ?: Potion.SUPER_ANTIPOISON)
-        }
-        if (!api.bot.action.BotPotionMaintenance.prepareOwned(bot, BotTradeIntentions.requestedPotionFamilies(bot)) {
-                !isPaused() && !isTerminated()
-            }) { stop(); return }
         if (course.isYanille && YANILLE_ANTIPOISONS.none { bot.inventory.contains(it) }) {
             val cure = YANILLE_ANTIPOISONS.firstOrNull { bot.bank.contains(it) }
             if (cure == null || !handler.banking.withdraw(Item(cure)) || !bot.inventory.contains(cure)) {
@@ -289,15 +281,28 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             return
         }
         summerPies.withdraw()
-        if (course == AgilityBotCourse.GNOME_STRONGHOLD) return
-        val remainingFood = 8 - bot.inventory.count { it != null && it.id in Food.ID_TO_FOOD }
-        if (remainingFood > 0 && !handler.banking.withdrawAnyFood(remainingFood) && !handler.inventory.hasAnyFood()) {
-            bot.preferences.allSuitableFood().forEach {
-                if (!course.isYanille || bot.preferences.getWantedItem(it.id) == null)
-                    bot.preferences.addWantedItem(it.id, 24)
+        if (course != AgilityBotCourse.GNOME_STRONGHOLD) {
+            val remainingFood = 8 - bot.inventory.count { it != null && it.id in Food.ID_TO_FOOD }
+            if (remainingFood > 0 && !handler.banking.withdrawAnyFood(remainingFood) && !handler.inventory.hasAnyFood()) {
+                bot.preferences.allSuitableFood().forEach {
+                    if (!course.isYanille || bot.preferences.getWantedItem(it.id) == null)
+                        bot.preferences.addWantedItem(it.id, 24)
+                }
+                stop()
+                return
             }
-            stop()
         }
+        if (bot.inventory.computeRemainingSize() < 4) return
+        val budget = BotPotionSupport.skillingBudget(bot)
+        val needs = buildList {
+            if (course.steps.any { it.obstacle?.failure != null } && bot.skill(SKILL_AGILITY).staticLevel < 99) {
+                add(BotPotionSupport.skillingNeed(Potion.AGILITY_POTION, 1, budget))
+            }
+            if (bot.runEnergy < 40 && bot.position.computeLongestDistance(course.zone.inside) >= 64) {
+                add(BotPotionTrip.Need(listOf(Potion.ENERGY_POTION, Potion.SUPER_ENERGY), 1, budget))
+            }
+        }
+        if (needs.isNotEmpty()) BotPotionTrip.prepare(bot, needs, budget, 2, allowed = { !isPaused() && !isTerminated() })
     }
 
     override suspend fun beforeZoneWork(): Boolean {
@@ -353,7 +358,6 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         if (landing != null) return reconcileLanding()
         if (bot.overlays.hasWindow() && !handler.widgets.clickCloseInterface()) return failedAttempt()
         if (summerPies.eatIfUseful()) return true
-        if (bot.skill(SKILL_AGILITY).level < course.minimumLevel) return false
         val next = course.steps[step]
         val maximumHit = when {
             course == AgilityBotCourse.WEREWOLF && next.obstacle == WEREWOLF_ZIP_LINE -> 45
@@ -398,9 +402,12 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         if (entry != null && !walkTo(entry)) return reconcileDisplacement()
         // Walking can suspend; never interrupt a native action which began while approaching.
         if (!isSettled()) return true
-        if (bot.skill(SKILL_AGILITY).level < course.minimumLevel) return false
         if (obj.state != EntityState.ACTIVE || bot.position.z != next.plane ||
             (entry != null && bot.position != entry)) return failedAttempt()
+        val agility = bot.skill(SKILL_AGILITY)
+        if ((next.obstacle?.failure != null && agility.level < 99 || agility.level < course.minimumLevel) &&
+            handler.potions.drinkSupport(SKILL_AGILITY)) return true
+        if (agility.level < course.minimumLevel) return false
         landing = next.destination(obj, bot.position) ?: return failedAttempt()
         val dispatchedAt = world.currentTick
         val dispatched = if (next.policy == null) handler.interactions.interact(1, obj)

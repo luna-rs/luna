@@ -23,7 +23,8 @@ class ProductionPlan(
     currentStageIndex: Int = 0,
     personalUsePrices: Map<Int, Long> = emptyMap(),
     stageRatios: List<Int>? = null,
-    val saleGuard: ProductionSaleGuard? = null
+    val saleGuard: ProductionSaleGuard? = null,
+    val singlePurchaseBatch: Boolean = false
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
         materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
@@ -56,6 +57,7 @@ class ProductionPlan(
 
     init {
         require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
+        require(!singlePurchaseBatch || operations == 1 && !training && recipes.size == 1 && saleGuard != null)
         require(maximumCoins >= 0L && spentCoins >= 0L)
         require(deadline > 0L && maximumUnitPrices.size <= 64)
         require(maximumUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
@@ -145,6 +147,7 @@ class ProductionPlan(
             ratios.forEach { array.add(it) }
         })
         saleGuard?.let { data.add("sale_guard", it.save()) }
+        if (singlePurchaseBatch) data.addProperty("single_purchase_batch", true)
         if (guardedOutputProduced > 0) data.addProperty("guarded_output", guardedOutputProduced)
         data.addProperty("completed", completedOperations)
         data.addProperty("maximum_coins", maximumCoins)
@@ -186,7 +189,8 @@ class ProductionPlan(
                 data.get("completed").asInt, data.get("spent_coins").asLong,
                 attempted.map { it.asInt }.toSet(), continuations.map { loadRecipe(it.asJsonObject) },
                 data.get("stage")?.asInt ?: 0, personal.entrySet().associate { it.key.toInt() to it.value.asLong },
-                ratios, data.getAsJsonObject("sale_guard")?.let(ProductionSaleGuard::load)).also {
+                ratios, data.getAsJsonObject("sale_guard")?.let(ProductionSaleGuard::load),
+                data.get("single_purchase_batch")?.asBoolean ?: false).also {
                 it.supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 it.shopAttempted = data.get("shop_attempted")?.asBoolean ?: false
                 it.guardedOutputProduced = data.get("guarded_output")?.asInt ?: 0

@@ -90,6 +90,7 @@ class TradeBotScript(bot: Bot,
                      private val purchaseTarget: Item? = null,
                      private val purchasePrice: Long = 0,
                      private val purchaseDeadline: Long = 0L,
+                     private val tripPurchase: (() -> Boolean)? = null,
                      private val retryAt: Long = 0L,
                      private val reactiveSeller: Player? = null,
                      private val reactiveBuyer: Player? = null,
@@ -243,13 +244,15 @@ class TradeBotScript(bot: Bot,
          * An optional absolute deadline also bounds suspending negotiations for a temporary supply visit.
          */
         fun buySpecific(bot: Bot, id: Int, target: Int, deadlineMillis: Long = 0L,
-                        quotedUnitPrice: Long? = null): TradeBotScript? {
+                        quotedUnitPrice: Long? = null, tripPurchase: (() -> Boolean)? = null): TradeBotScript? {
             require(target > 0 && id != COINS)
             if (deadlineMillis > 0L && System.currentTimeMillis() >= deadlineMillis) return null
             if (BotReusableItems.isReusable(id))
                 BotTradeIntentions.recordSupplies(bot, listOf(Item(id, target)), stockTarget = target)
             val limit = BotTradeIntentions.productionLimit(bot, id)
-            val quoted = quotedUnitPrice?.takeIf { limit != null && it in 1L..limit.maximumUnitPrice }
+            if (tripPurchase != null && (deadlineMillis <= 0L || !tripPurchase() ||
+                    quotedUnitPrice == null || quotedUnitPrice < 1L || limit != null)) return null
+            val quoted = quotedUnitPrice?.takeIf { tripPurchase != null || limit != null && it in 1L..limit.maximumUnitPrice }
             val price = quoted ?: run {
                 val guide = world.economy.getPrice(id)
                 if (guide <= 0) return null
@@ -258,7 +261,8 @@ class TradeBotScript(bot: Bot,
             }
             for (market in BotMarketplace.entries) {
                 val script = TradeBotScript(bot, BotTradePurpose.BUY, market, 10.minutes,
-                    purchaseTarget = Item(id, target), purchasePrice = price, purchaseDeadline = deadlineMillis)
+                    purchaseTarget = Item(id, target), purchasePrice = price, purchaseDeadline = deadlineMillis,
+                    tripPurchase = tripPurchase)
                 if (script.specificDemand().isEmpty()) return null
                 val payment = BotTradeManager.computeBudgetedOfferItems(bot, script.resolveTradePrice(), BotTradePurpose.BUY)
                     .filter { it.item.id == COINS }
@@ -1160,8 +1164,8 @@ class TradeBotScript(bot: Bot,
         }
     }
 
-    private fun purchaseExpired(): Boolean = purchaseDeadline > 0L &&
-        System.currentTimeMillis() >= purchaseDeadline
+    private fun purchaseExpired(): Boolean = tripPurchase?.invoke() == false ||
+        purchaseDeadline > 0L && System.currentTimeMillis() >= purchaseDeadline
 
     /**
      * Gives direct human requests first choice, followed by the selected heard player advertisement.
@@ -1269,6 +1273,7 @@ class TradeBotScript(bot: Bot,
      * Counts both noted and unnoted purchases so a banked or carried delivery cannot be bought twice.
      */
     private fun specificDemand(): List<BotTradeItem> {
+        if (purchaseExpired()) return emptyList()
         val target = purchaseTarget ?: return emptyList()
         val note = itemDef(target.id).notedId.orElse(-1)
         val owned = bot.itemTracker.count(target.id).toLong() +
@@ -1306,7 +1311,7 @@ class TradeBotScript(bot: Bot,
                 val amount = minOf(fundedSale.remaining, (owned - fundedSale.retained).coerceAtLeast(0),
                     BotTradeManager.saleableAmount(bot, id))
                 val quoted = maxOf(fundedSale.guard.minimumPrice, fundedSale.quotedPrice)
-                if (amount > 0 && BotTradeManager.hasNativeSaleStock(bot, id, amount))
+                if (hasExchangeStock(id, amount))
                     listOf(BotTradeItem(Item(id, amount), quoted, purpose, bot))
                 else emptyList()
             }
@@ -2459,7 +2464,7 @@ class TradeBotScript(bot: Bot,
         val saleStock = if (seller === this) ownStock else otherStock
         val payingStock = if (buyer === this) ownStock else otherStock
         val stock = seller.quantities(saleStock.toItems(), true)
-            .filter { (id, amount) -> BotTradeManager.hasNativeSaleStock(seller.bot, id, amount) }
+            .filter { (id, amount) -> seller.hasExchangeStock(id, amount) }
         if (stock.isEmpty()) return null
         val payment = buyer.quantities(payingStock.toItems(), true).toMutableMap()
         val paymentPrices = buyer.prices(buyer.offering).toMutableMap()
@@ -2727,10 +2732,16 @@ class TradeBotScript(bot: Bot,
      * Tests each commodity once while preserving the physical ids used to place trade offers.
      */
     private fun nativeSaleStock(stock: Map<Int, Int>): Map<Int, Int> {
-        val eligible = quantities(stock.toItems(), true).filter { (id, amount) ->
-            BotTradeManager.hasNativeSaleStock(bot, id, amount)
-        }
+        val eligible = quantities(stock.toItems(), true).filter { (id, amount) -> hasExchangeStock(id, amount) }
         return stock.filterKeys { unnotedId(it) in eligible }
+    }
+
+    private fun hasExchangeStock(id: Int, amount: Int): Boolean {
+        val sale = fundedSale
+        if (sale == null || sale.advertiseStock || sale.guard.itemId != id)
+            return BotTradeManager.hasNativeSaleStock(bot, id, amount)
+        val price = maxOf(sale.guard.minimumPrice, sale.quotedPrice)
+        return amount > 0 && price * amount >= BotTradeManager.MINIMUM_OFFER_VALUE
     }
 
     /**

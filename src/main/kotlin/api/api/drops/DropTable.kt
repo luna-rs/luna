@@ -17,7 +17,7 @@ import io.luna.game.model.mob.Mob
  *
  * @author lare96
  */
-abstract class DropTable(private val chance: Double = ALWAYS) : Iterable<DropTableItem> {
+abstract class DropTable(internal val chance: Double = ALWAYS) : Iterable<DropTableItem> {
 
     /**
      * Rolls on the drop table based on the provided context [mob] (killer) and [source] (victim).

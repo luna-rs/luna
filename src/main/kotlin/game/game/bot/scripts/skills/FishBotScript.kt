@@ -1,6 +1,8 @@
 package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
+import api.bot.action.BotPotionSupport
+import api.bot.action.BotPotionTrip
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScriptData
 import api.bot.social.SocialBotScript
@@ -24,6 +26,7 @@ import game.skill.fishing.fishingSpot.FishingSpotHandler
 import game.content.sailing.Entrana
 import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
 import game.bot.scripts.RandomEventReflexScript
+import game.player.item.consume.potion.Potion
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -32,6 +35,7 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import java.util.*
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -234,6 +238,12 @@ class FishBotScript(
             (selectedTool != Tool.LAVA_EEL_FISHING_ROD || bot.itemTracker.contains(toolId))
     }
 
+    private fun usefulFishingPotion(): Boolean = !gatherKarambwanBait && bot.fishing.staticLevel < 99 &&
+        duration >= 2.minutes && selectedTool.fish.any { it.level <= bot.fishing.staticLevel + 3 }
+
+    override fun prepareOptionalSuppliesAtStart(): Boolean = usefulFishingPotion() &&
+        Potion.FISHING_POTION.doses.none { bot.inventory.contains(it) } && BotPotionSupport.owns(bot, Potion.FISHING_POTION)
+
     override suspend fun onBankOpenSkilling(initial: Boolean) {
         if (caveFishing) {
             if (!GiantMoleTrip.collectLight(bot) || !bot.swampCavesRoped &&
@@ -242,9 +252,8 @@ class FishBotScript(
                 return
             }
         }
-        val baitId = baitId ?: return
-
-        if (baitId !in bot.itemTracker) {
+        val baitId = baitId
+        if (baitId != null && baitId !in bot.itemTracker) {
             bot.log("We do not have the required bait to use this tool.")
             stop()
             if (profitGathering != null) return
@@ -258,8 +267,16 @@ class FishBotScript(
             return
         }
 
-        if (!handler.banking.withdraw(Item(baitId, minOf(250, bot.bank.computeAmountForId(baitId)))) ||
-            baitId !in bot.inventory) stop()
+        if (baitId != null && (!handler.banking.withdraw(Item(baitId, minOf(250, bot.bank.computeAmountForId(baitId)))) ||
+            baitId !in bot.inventory)) {
+            stop()
+            return
+        }
+        if (usefulFishingPotion() && bot.inventory.computeRemainingSize() >= 8) {
+            val budget = BotPotionSupport.skillingBudget(bot)
+            val needs = listOf(BotPotionSupport.skillingNeed(Potion.FISHING_POTION, 1, budget))
+            BotPotionTrip.prepare(bot, needs, budget, 1, allowed = { !isPaused() && !isTerminated() })
+        }
     }
 
     override suspend fun beforeZoneWork(): Boolean {
@@ -345,8 +362,11 @@ class FishBotScript(
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean = canFishSpot(newFocus)
 
-    override suspend fun interactWithTarget(option: Int, target: Npc): Boolean =
-        handler.interactions.interact(option, target) { canFishSpot(target) && profitGatheringReady() }
+    override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
+        if (profitGatheringReady() && canFishSpot(target) && usefulFishingPotion() &&
+            bot.position.isWithinDistance(target.position, 4)) handler.potions.drinkSupport(SKILL_FISHING)
+        return handler.interactions.interact(option, target) { canFishSpot(target) && profitGatheringReady() }
+    }
 
     override fun snapshot(): BotScriptData {
         val data = FishData()

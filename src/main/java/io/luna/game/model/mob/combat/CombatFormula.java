@@ -285,7 +285,21 @@ public final class CombatFormula {
      * @return The ordinary physical maximum hit.
      */
     public static int calculatePhysicalMaxHit(Player player, PhysicalType type, CombatStance stance, int strengthBonus) {
-        double effectiveStrength = calculateEffectivePhysicalStrength(player, type, stance);
+        int skill = type == PhysicalType.RANGED ? Skill.RANGED : Skill.STRENGTH;
+        return calculatePhysicalMaxHit(player, type, stance, strengthBonus, player.getSkills().getSkill(skill).getLevel());
+    }
+
+    /**
+     * Estimates a physical maximum at a prospective level using the player's current outfit and stance.
+     */
+    public static int calculatePhysicalMaxHit(Player player, PhysicalType type, int level) {
+        return calculatePhysicalMaxHit(player, type, player.getCombat().getStyleDef().getStance(),
+                getPhysicalDamageBonus(player, type), level);
+    }
+
+    private static int calculatePhysicalMaxHit(Player player, PhysicalType type, CombatStance stance,
+                                               int strengthBonus, int level) {
+        double effectiveStrength = calculateEffectivePhysicalStrength(player, type, stance, level);
         int maxHit = (int) Math.floor(0.5 + effectiveStrength * (strengthBonus + 64.0) / 640.0);
         if (maxHit < 1) {
             maxHit = 1;
@@ -390,15 +404,16 @@ public final class CombatFormula {
      * @param player The attacking player.
      * @param type The physical combat family being used.
      * @param stance The selected combat stance.
+     * @param level The visible or prospective skill level.
      * @return The effective physical strength level.
      */
-    private static double calculateEffectivePhysicalStrength(Player player, PhysicalType type, CombatStance stance) {
-        int skill = type == PhysicalType.RANGED ? Skill.RANGED : Skill.STRENGTH;
+    private static double calculateEffectivePhysicalStrength(Player player, PhysicalType type, CombatStance stance,
+                                                            int level) {
         double prayerMultiplier = getPhysicalStrengthPrayerMultiplier(player, type == PhysicalType.RANGED ?
                 CombatDamageType.RANGED : CombatDamageType.MELEE);
         int stanceBonus = getPhysicalStrengthStanceBonus(stance, type);
 
-        return Math.floor(player.getSkills().getSkill(skill).getLevel() * prayerMultiplier) + stanceBonus + 8;
+        return Math.floor(level * prayerMultiplier) + stanceBonus + 8;
     }
 
     /**

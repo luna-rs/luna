@@ -1,5 +1,7 @@
 package api.bot.action.trading
 
+import api.bot.action.BotPotionTrip
+
 import api.attr.Attr
 import game.bot.scripts.skills.AlchemyBotScript
 import api.bot.action.CombatLoadout
@@ -241,7 +243,8 @@ object BotTradeIntentions {
 
     fun requestedPotionFamilies(bot: Bot): Set<PotionFamily> = BotPotionDemand.requestedPotionFamilies(bot)
 
-    fun reserveDoses(bot: Bot, family: PotionFamily): Int = BotPotionDemand.reserveDoses(bot, family)
+    fun reserveDoses(bot: Bot, family: PotionFamily): Int =
+        maxOf(BotPotionDemand.reserveDoses(bot, family), BotPotionTrip.protectedDoses(bot)[family] ?: 0)
 
     /**
      * Prevents finite resale conversion from consuming personal family reserves or literal personal wishes.

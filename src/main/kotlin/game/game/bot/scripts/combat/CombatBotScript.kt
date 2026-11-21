@@ -6,6 +6,8 @@ import api.bot.zone.SubZone
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotPotionActionHandler
+import api.bot.action.BotPotionSupport
+import api.bot.action.PkPotionUse
 import api.bot.action.eating.CarriedFood
 import api.bot.action.PkCombatSwitcher
 import api.bot.action.PkFinisher
@@ -832,8 +834,25 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * Drinks one useful potion for the bot's current combat state, then turns back to the fight.
      */
     private suspend fun drinkPotion() {
+        if (pkSession != null && focus is Player) PkPotionUse.observe(bot)
+        val relevant = when (focus) {
+            is Npc -> monsterPrayer.intendedPrayers
+            is Player -> bot.combat.prayers.active.ifEmpty {
+                buildSet {
+                    add(CombatPrayer.STEEL_SKIN)
+                    add(CombatPrayer.PROTECT_ITEM)
+                    when (bot.combat.lastDamageReceived?.type) {
+                        CombatDamageType.MELEE -> add(CombatPrayer.PROTECT_FROM_MELEE)
+                        CombatDamageType.RANGED -> add(CombatPrayer.PROTECT_FROM_MISSILES)
+                        CombatDamageType.MAGIC -> add(CombatPrayer.PROTECT_FROM_MAGIC)
+                        else -> Unit
+                    }
+                }
+            }
+            else -> emptySet()
+        }
         if (handler.potions.drink(fighting = true, dragons = BotPotionActionHandler.breathesFire(focus),
-                                  prayerBelow = 30)) {
+            prayerBelow = BotPotionSupport.prayerFloor(bot, relevant), respectStyle = true)) {
             targetEnemy()
         }
     }
