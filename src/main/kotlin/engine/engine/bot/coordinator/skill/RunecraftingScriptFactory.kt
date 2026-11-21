@@ -1,29 +1,43 @@
 package engine.bot.coordinator.skill
 
-import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
+import api.bot.script.ProductionPlan
 import api.bot.script.VoidBotScript
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
-import game.bot.scripts.skills.CraftRuneBotScript
-import game.skill.runecrafting.craftRune.CraftableRune
-import game.player.item.consume.food.Food
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.skills.CraftRuneBotScript
+import game.bot.scripts.skills.CraftRuneBotScript.Companion.PURE_ESSENCE
+import game.bot.scripts.skills.CraftRuneBotScript.Companion.RUNE_ESSENCE
+import game.obj.entrances.Zanaris
+import game.player.item.consume.food.Food
+import game.skill.runecrafting.craftRune.CraftableRune
+import game.skill.runecrafting.enterAltar.Altar
+import io.luna.game.model.mob.bot.Bot
+import kotlin.time.Duration
 
 /**
- * Creates Runecrafting scripts for skilling bots.
- *
- * Ordinary training ranks supplied, level-eligible runes by native XP per essence. Profit ranks their guide-price return
- * after the compatible essence cost, including the native multiple-rune output at the bot's current level.
- * Intelligence and dexterity apply the same best/worst/random choice used by other skilling factories.
- * These are per-essence comparisons, not fabricated hourly rates or a guarantee that every guide-price sale fills.
- * Healthy bots with owned healing supplies may choose the existing Abyss shortcut, weighted by confidence; its
- * script validates the packed death-loss budget before departure. Other trips retain ordinary talisman entry.
+ * Chooses a Runecrafting trip using owned materials or executable supply and a viable altar entrance.
  *
  * @author lare96
  */
 object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
+
+    private const val MAX_PLANS = 4
+
+    /**
+     * One compatible essence and altar combination.
+     *
+     * @author lare96
+     */
+    private data class Candidate(val rune: CraftableRune, val essence: Int, val owned: Boolean,
+                                 val access: Boolean, val score: Double) {
+        val key get() = recipeKey(rune, essence)
+    }
+
+    internal fun recipeKey(rune: CraftableRune, essence: Int): String =
+        if (rune.level <= 20 && essence == PURE_ESSENCE) "runecraft:pure:${rune.name}" else "runecraft:${rune.name}"
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
         createScript(bot, level, zones, training = true)
@@ -31,35 +45,68 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
         createScript(bot, level, zones, training = false)
 
-    /**
-     * Ranks actual rune rewards using a single price snapshot per decision. Owned essence, including stored pouch
-     * contents, takes priority; otherwise stocked accessible shops precede a bounded missing-essence request.
-     * Profit sessions skip non-positive margins and recheck the actual input after acquisition.
-     */
-    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
+    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript =
+        choose(bot, level, training, getDuration(bot, skillId))?.also {
+            zones.clear()
+            zones.add(it.altar.zone)
+        } ?: VoidBotScript(bot)
+
+    internal fun alternative(bot: Bot, plan: ProductionPlan, duration: Duration,
+                             altarUnavailable: Boolean): CraftRuneBotScript? =
+        choose(bot, bot.runecrafting.staticLevel, plan.training, duration, plan, altarUnavailable)
+
+    private fun choose(bot: Bot, level: Int, training: Boolean, duration: Duration,
+                       previous: ProductionPlan? = null, altarUnavailable: Boolean = false): CraftRuneBotScript? {
         val currentLevel = minOf(level, bot.runecrafting.level)
-        val prices = HashMap<Int, Long>()
-        fun price(id: Int): Long = prices.getOrPut(id) { bot.world.economy.getPrice(id).coerceAtLeast(0) }
-        val candidates = CraftableRune.entries.filter { it.level <= currentLevel }.mapNotNull { rune ->
-            val essence = CraftRuneBotScript.essenceForPurchase(bot, rune)
-            val score = if (training) rune.exp else
-                price(rune.id).toDouble() * rune.outputMultiplier(bot.runecrafting.level) - price(essence)
-            if (!training && score <= 0.0) null else Triple(rune, score, essence)
+        val supply = HashMap<Int, BotProductionPlanner.RuneSupply?>()
+        fun source(id: Int): BotProductionPlanner.RuneSupply? {
+            if (!supply.containsKey(id)) supply[id] = BotProductionPlanner.runeSupply(bot, id)
+            return supply[id]
         }
-        val supplied = candidates.filter { CraftRuneBotScript.compatibleEssence(bot, it.first) != null }
-        val obtainable = candidates.filter { CraftRuneBotScript.canPurchaseEssence(bot, it.third) }
-        val scores = supplied.ifEmpty { obtainable.ifEmpty { candidates } }
-            .sortedWith(compareByDescending<Triple<CraftableRune, Double, Int>> { it.second }
-                .thenByDescending { it.first.level })
-        val rune = selectRankedActivity(bot, scores.map { it.first }) ?: return VoidBotScript(bot)
-        zones.clear()
-        zones.add(rune.altar.zone)
-        val abyss = bot.recentEscape?.avoids(SubZone.ABYSS_ENTRY_MAGE) != true &&
-            bot.health >= 30 && Food.values().any { it.heal >= 8 && bot.itemTracker.count(it.id) >= 4 } &&
-            rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5)
-        val duration = getDuration(bot, skillId)
-        val plan = BotProductionPlanner.select(bot, SKILL_RUNECRAFTING, currentLevel, training, duration,
-            "runecraft:${rune.name}")?.productionPlan ?: return VoidBotScript(bot)
-        return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss = abyss, profit = !training).planProduction(plan)
+        fun owned(id: Int): Boolean =
+            bot.itemTracker.contains(id) || itemDef(id).notedId.orElse(-1).let { it >= 0 && bot.itemTracker.contains(it) }
+        val canUseAbyss = previous == null && bot.recentEscape?.avoids(SubZone.ABYSS_ENTRY_MAGE) != true &&
+            bot.health >= 30 && Food.values().any { it.heal >= 8 && bot.itemTracker.count(it.id) >= 4 }
+        val candidates = buildList {
+            for (rune in CraftableRune.entries) {
+                if (rune.level > currentLevel || bot.recentEscape?.avoids(rune.altar.zone) == true) continue
+                val talisman = rune.altar.talisman
+                val hasAccess = owned(talisman)
+                if (!hasAccess && source(talisman) == null) continue
+                val needsAbyss = rune.altar == Altar.DEATH ||
+                    rune.altar == Altar.COSMIC && !owned(Zanaris.STAFF)
+                if (needsAbyss && !canUseAbyss) continue
+                for (essence in listOf(RUNE_ESSENCE, PURE_ESSENCE)) {
+                    if (essence == RUNE_ESSENCE && rune.level > 20) continue
+                    if (rune.id in previous?.recipe?.products.orEmpty() &&
+                        (altarUnavailable || essence in previous?.recipe?.materials.orEmpty())) continue
+                    val onHand = owned(essence)
+                    val offered = if (onHand) null else source(essence) ?: continue
+                    val score = if (training) rune.exp else
+                        bot.world.economy.getPrice(rune.id).toDouble() * rune.outputMultiplier(currentLevel) -
+                            (offered?.unitPrice ?: bot.world.economy.getPrice(essence))
+                    if (score > 0.0) add(Candidate(rune, essence, onHand, hasAccess, score))
+                }
+            }
+        }.sortedWith(compareByDescending<Candidate> { it.owned }.thenByDescending { it.access }
+            .thenByDescending { it.score }.thenByDescending { it.rune.level })
+        val preferred = selectRankedActivity(bot, candidates.takeWhile {
+            it.owned == candidates.first().owned && it.access == candidates.first().access
+        }) ?: return null
+        for (candidate in (listOf(preferred) + candidates.filter { it != preferred }).take(MAX_PLANS)) {
+            val rune = candidate.rune
+            val plan = BotProductionPlanner.select(bot, skillId, currentLevel, training, duration, candidate.key,
+                maximumCoinsLimit = previous?.remainingCoins ?: Long.MAX_VALUE,
+                deadlineLimit = previous?.deadline ?: Long.MAX_VALUE)?.productionPlan
+                ?: continue
+            val viaAbyss = canUseAbyss && (rune.altar == Altar.DEATH ||
+                rune.altar == Altar.COSMIC && !owned(Zanaris.STAFF) ||
+                rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5))
+            return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss, profit = !training).also {
+                it.trainingGoal = if (training) skillId else null
+                it.planProduction(plan)
+            }
+        }
+        return null
     }
 }

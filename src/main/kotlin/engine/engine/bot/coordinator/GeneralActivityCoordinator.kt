@@ -87,7 +87,6 @@ object GeneralActivityCoordinator : BotCoordinator {
             bot.preferences.pk?.styles()?.uses(SKILL_MAGIC) == true && rand(0.25)) {
             EquipmentDropJobs.ancientStaffCandidate(bot)?.let { return it }
         }
-        RuneRunningCoordinator.profitScript(bot)?.let { return it }
         bot.actionHandler.prayerRestoration.preparation()?.let { return it }
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {

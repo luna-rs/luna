@@ -101,7 +101,8 @@ object BotProductionPlanner {
                keyPrefix: String? = null, finalFood: Int? = null, merchantOutput: Int? = null,
                maximumCoinsLimit: Long = Long.MAX_VALUE,
                directOnly: Boolean = false,
-               singlePurchaseBatch: Boolean = false): InventoryBotScript? {
+               singlePurchaseBatch: Boolean = false,
+               deadlineLimit: Long = Long.MAX_VALUE): InventoryBotScript? {
         fun rejected(reason: Reason): InventoryBotScript? {
             val previous = BotProductionMetrics.latestDecision(bot)
             if (reason == Reason.COOLDOWN && previous?.source == Source.PLANNER &&
@@ -121,6 +122,7 @@ object BotProductionPlanner {
         if (retry != null && retry.revision == bot.itemOwnershipRevision && retry.level == level && retry.after > now)
             return rejected(Reason.COOLDOWN)
         if (duration <= Duration.ZERO) return rejected(Reason.INVALID_REQUEST)
+        if (deadlineLimit <= now) return rejected(Reason.EXPIRED)
         if (!BotCombatActionHandler.mayGainExperience(bot, skill) ||
             training && !BotCombatActionHandler.wantsToTrain(bot, skill)) return rejected(Reason.ACCOUNT_RESTRICTION)
         history[key] = Retry(bot.itemOwnershipRevision, level, now + 30_000L)
@@ -207,6 +209,12 @@ object BotProductionPlanner {
             recoverable.putAll(BotProductionUses.recoverableValues(bot, chunk.associate { it.key to it.value }))
         }
         val prices = HashMap<Int, Long>()
+        val runecrafting = skill == SKILL_RUNECRAFTING
+        val runeSources = HashMap<Int, RuneSupply?>()
+        fun runeSource(id: Int): RuneSupply? {
+            if (!runeSources.containsKey(id)) runeSources[id] = runeSupply(bot, id)
+            return runeSources[id]
+        }
         val cookingSources = HashMap<Int, BotSupplySources.Quote?>()
         fun source(id: Int): BotSupplySources.Quote? {
             if (!cookingSources.containsKey(id)) cookingSources[id] = BotSupplySources.quote(bot, id, 100)
@@ -222,6 +230,7 @@ object BotProductionPlanner {
                 .map { it.price to it.item.amount }.toList()
         }
         fun ceiling(id: Int): Long = prices.getOrPut(id) {
+            if (runecrafting) runeSource(id)?.let { return@getOrPut it.unitPrice }
             if (merchantOutput != null) {
                 val possible = listOfNotNull(source(id)?.maximumUnitPrice, direct(id).minOfOrNull { it.first })
                 return@getOrPut possible.minOrNull() ?: bot.world.economy.getPrice(id).coerceAtLeast(1L)
@@ -323,6 +332,20 @@ object BotProductionPlanner {
             }
             if (!fixedTrainingBatch)
                 ProductionRecipePaths.pricePreparations(path.stages.map { it.recipe }, inputPrices)
+            if (runecrafting) {
+                for ((id, amount) in recipe.materials) {
+                    val available = (stock[id] ?: 0L) + (runeSource(id)?.quantity ?: 0L)
+                    requested = minOf(requested, (available / amount).coerceAtMost(100L).toInt())
+                }
+                if (requested < 1) {
+                    lastRejection = Reason.MATERIALS_UNAVAILABLE
+                    return@mapNotNull null
+                }
+                if (recipe.tools.any { (stock[it] ?: 0L) < 1L && runeSource(it) == null }) {
+                    lastRejection = Reason.TOOL_UNAVAILABLE
+                    return@mapNotNull null
+                }
+            }
             val merchantAmount = if (merchantOutput != null) {
                 if (recipe.valuedProducts.keys != setOf(merchantOutput)) return@mapNotNull null
                 recipe.valuedProducts.getValue(merchantOutput)
@@ -430,7 +453,7 @@ object BotProductionPlanner {
             bot.personality.isDumb && randBoolean() -> preferred.last()
             else -> preferred.take(8).random()
         }
-        val deadline = now + minOf(duration.inWholeMilliseconds, 10 * 60_000L)
+        val deadline = minOf(deadlineLimit, now + minOf(duration.inWholeMilliseconds, 10 * 60_000L))
         val plan = ProductionPlan(chosen.path.stages.first().recipe, training, chosen.quote.operations,
             chosen.quote.maximumCoins, chosen.caps, deadline,
             continuationRecipes = chosen.path.stages.drop(1).map { it.recipe }, personalUsePrices = chosen.usePrices,
@@ -512,6 +535,7 @@ object BotProductionPlanner {
                 if (price > ceiling) return false
                 ceiling
             } else {
+                if (native.skill == SKILL_RUNECRAFTING) return@mapValues ceiling
                 val replacement = if (native.skill == SKILL_COOKING || guard != null) {
                     BotSupplySources.quote(bot, id, 100)?.maximumUnitPrice
                         ?: ceiling.takeIf { owned(bot, id) >= (recipe.materials[id] ?: 1) }
@@ -533,6 +557,27 @@ object BotProductionPlanner {
         return ProductionEconomics.quote(recipe, plan.training, 1, Double.MAX_VALUE,
             inputPrices.keys.associateWith { owned(bot, it) }, minOf(plan.remainingCoins, owned(bot, 995)),
             inputPrices, exits, usePrices) != null
+    }
+
+    /**
+     * Native executable supply covered by a single unit ceiling.
+     *
+     * @author lare96
+     */
+    internal data class RuneSupply(val quantity: Long, val unitPrice: Long)
+
+    internal fun runeSupply(bot: Bot, id: Int): RuneSupply? {
+        val shops = BotSupplySources.visits(bot, id, BotSupplySources.MAX_QUANTITY)
+        val trades = NativeOutputDemand.traders(bot).mapNotNull { it.profitGatheringSupply(id) }
+            .filter { it.price in 1L..Int.MAX_VALUE.toLong() &&
+                it.price * it.item.amount >= BotTradeManager.MINIMUM_OFFER_VALUE }
+            .map { it.price to it.item.amount }.toList()
+        val prices = buildList {
+            for (shop in shops) add(shop.unitPrice to shop.quantity)
+            addAll(trades)
+        }
+        val price = prices.minOfOrNull { it.first } ?: return null
+        return RuneSupply(prices.filter { it.first <= price }.sumOf { it.second.toLong() }, price)
     }
 
     private fun singlePurchasePrice(bot: Bot, id: Int, amount: Int): Long? {
@@ -566,7 +611,9 @@ object BotProductionPlanner {
             ?: ProductionCatalogue.bySkill[recipe.skill].orEmpty()
         return candidates.firstOrNull { candidate ->
             candidate.skill == recipe.skill && candidate.describe(bot)?.let {
-                it.key == recipe.key && it.level == recipe.level && it.materials == recipe.materials &&
+                (it.key == recipe.key || recipe.skill == SKILL_RUNECRAFTING &&
+                    it.key.replace("runecraft:pure:", "runecraft:") == recipe.key) &&
+                    it.level == recipe.level && it.materials == recipe.materials &&
                     it.tools == recipe.tools && it.products == recipe.products &&
                     it.zeroValueByproducts == recipe.zeroValueByproducts &&
                     it.experience >= recipe.experience && it.productProbability >= recipe.productProbability &&

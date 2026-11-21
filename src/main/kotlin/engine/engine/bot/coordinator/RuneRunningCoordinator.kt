@@ -206,8 +206,7 @@ object RuneRunningCoordinator : BotCoordinator {
         val now = System.currentTimeMillis()
         if (requests.containsKey(bot) || partnerships.containsKey(bot) || hosts.containsKey(bot) ||
             owner.introductory && !bot.preferences.runeRunning.isIntroductory ||
-            !bot.preferences.runeRunning.trySession(now, if (owner.introductory) 3.minutes.inWholeMilliseconds
-                else 45.minutes.inWholeMilliseconds)) return false
+            !bot.preferences.runeRunning.trySession(now, 45.minutes.inWholeMilliseconds)) return false
 
         val candidates = ArrayList<Triple<Route, Int, Double>>()
         for (route in routes) {

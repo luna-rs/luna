@@ -116,6 +116,12 @@ cmd("botproductionsales", RIGHTS_DEV) {
     plr.sendMessage("Estimated profit ${sales.netCoins - sales.estimatedCost} GP, mean ${average}ms to sale")
 }
 
+cmd("botrunecrafting", RIGHTS_DEV) {
+    for ((stage, count) in BotProductionMetrics.runecraftingCounts()) {
+        plr.sendMessage("${stage.name.lowercase().replace('_', ' ')} = $count")
+    }
+}
+
 cmd("botscript", RIGHTS_DEV) {
     val name = getInputFrom(0)
     for (nextPlr in world.players) {

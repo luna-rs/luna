@@ -15,6 +15,7 @@ import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.itemDef
+import api.predef.SKILL_RUNECRAFTING
 import api.predef.SKILL_COOKING
 import api.bot.social.SocialBotScript
 import api.predef.ext.*
@@ -733,6 +734,8 @@ abstract class InventoryBotScript(
         return false
     }
 
+    protected open fun onPlannedAcquisition(plan: ProductionPlan) {}
+
     private suspend fun preparePlannedSupplies(plan: ProductionPlan): Boolean {
         if (!plan.allowAcquisition) {
             if (!plannedGoalAvailable()) return false
@@ -765,6 +768,7 @@ abstract class InventoryBotScript(
             else plan.recipe.materials.all { (id, amount) -> owned(id) >= amount } &&
                 plan.recipe.tools.all { owned(it) > 0L }
         if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
+        onPlannedAcquisition(plan)
         if (!awaitActionSafety() || System.currentTimeMillis() >= plan.supplyDeadline) {
             if (queueMissingPlannedPreparation(plan)) return false
             if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
@@ -773,7 +777,8 @@ abstract class InventoryBotScript(
                 Reason.ACQUISITION_EXHAUSTED else Reason.CANCELLED)
             return false
         }
-        if ((plan.recipe.skill == SKILL_COOKING || plan.saleGuard != null || plan.fixedTrainingBatch) && !plan.shopAttempted &&
+        if ((plan.recipe.skill == SKILL_COOKING || plan.recipe.skill == SKILL_RUNECRAFTING ||
+                plan.saleGuard != null || plan.fixedTrainingBatch) && !plan.shopAttempted &&
             plan.remainingCoins > 0L &&
             plan.targets().any { (id, target) -> owned(id) < target &&
                 BotSupplySources.quote(bot, id, (target.toLong() - owned(id)).coerceAtMost(100L).toInt())?.let {

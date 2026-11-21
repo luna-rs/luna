@@ -1,5 +1,7 @@
 package engine.bot.coordinator.skill
 
+import engine.bot.economy.BotProductionMetrics
+import engine.bot.economy.BotProductionMetrics.RunecraftingStage
 import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
 import api.bot.script.BotScript
@@ -7,6 +9,7 @@ import api.bot.script.VoidBotScript
 import api.bot.zone.SubZone
 import api.predef.SKILL_MAGIC
 import api.predef.SKILL_PRAYER
+import api.predef.SKILL_RUNECRAFTING
 import api.predef.SKILL_THIEVING
 import game.player.item.consume.food.Food
 import io.luna.game.model.mob.bot.Bot
@@ -181,10 +184,18 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         val remaining = skillWeights(bot).toMutableMap()
         while (remaining.isNotEmpty()) {
             val selectedSkill = RandomUtils.weightedRoll(remaining) ?: return null
+            BotProductionMetrics.recordRunecrafting(RunecraftingStage.SKILL_ROLL)
+            if (selectedSkill == SKILL_RUNECRAFTING)
+                BotProductionMetrics.recordRunecrafting(RunecraftingStage.SELECTED)
             remaining.remove(selectedSkill)
             val factory = factories[selectedSkill] ?: continue
             bot.profitMode = !training
             val script = factory.getScript(bot, bot.skill(selectedSkill).staticLevel, ArrayList(), training)
+            if (selectedSkill == SKILL_RUNECRAFTING) {
+                BotProductionMetrics.recordRunecrafting(
+                    if (script is VoidBotScript) RunecraftingStage.NO_PLAN else RunecraftingStage.PLAN)
+                if (script is VoidBotScript) continue
+            }
             if (training || script !is VoidBotScript) return script
         }
         return null

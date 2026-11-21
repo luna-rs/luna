@@ -84,7 +84,6 @@ object GeneralProfitCoordinator : BotCoordinator {
         }
         val duration = rand(30, 90).minutes
         val candidates = mutableListOf<() -> BotScript?>(
-            { RuneRunningCoordinator.profitScript(bot) },
             { MerchantStoreBargains.poll(bot)?.let { BuyStoreBargainBotScript(bot, it) } },
             { MerchantingCoordinator.getSellingScript(bot) },
             {
@@ -97,6 +96,7 @@ object GeneralProfitCoordinator : BotCoordinator {
         )
         if (bot.isEarlyGame()) {
             candidates += listOf(
+                { RuneRunningCoordinator.profitScript(bot) },
                 { decantStarterPotions(bot, duration) },
                 { starterVials(bot) },
                 { if (BucketSandProfitBotScript.eligible(bot)) BucketSandProfitBotScript(bot) else null },

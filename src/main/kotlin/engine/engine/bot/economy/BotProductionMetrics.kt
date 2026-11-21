@@ -102,6 +102,24 @@ object BotProductionMetrics {
         fun snapshot(id: Int): ItemFlow? = items[id]
     }
 
+    /**
+     * Cumulative decision and first-trip milestones for ordinary Runecrafting.
+     *
+     * @author lare96
+     */
+    enum class RunecraftingStage {
+        SKILL_ROLL, SELECTED, PLAN, NO_PLAN, ACQUISITION, PURCHASE, ALTAR, CRAFTED, ALTERNATIVE
+    }
+
+    private val runecrafting = LongArray(RunecraftingStage.entries.size)
+
+    fun recordRunecrafting(stage: RunecraftingStage) {
+        runecrafting[stage.ordinal]++
+    }
+
+    fun runecraftingCounts(): Map<RunecraftingStage, Long> =
+        RunecraftingStage.entries.associateWith { runecrafting[it.ordinal] }
+
     private val ledger = Ledger()
     private val decisions = DecisionCounts()
     private val latestDecision = Attr.nullableObj(Decision::class)

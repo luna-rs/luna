@@ -303,14 +303,18 @@ internal object ProductionCatalogue {
                     bar.oreList.mapTo(hashSetOf()) { it.id }))
             }
             CraftableRune.entries.forEach { rune ->
-                add(Entry(SKILL_RUNECRAFTING, { bot ->
-                    val essence = CraftRuneBotScript.compatibleEssence(bot, rune)
-                        ?: if (rune.level > 20) CraftRuneBotScript.PURE_ESSENCE else CraftRuneBotScript.RUNE_ESSENCE
-                    recipe("runecraft:${rune.name}", SKILL_RUNECRAFTING, rune.level,
-                        listOf(Item(essence)), rune.id, rune.exp, setOf(rune.altar.talisman),
-                        rune.outputMultiplier(bot.runecrafting.level))
-                }, { bot, duration -> CraftRuneBotScript(bot, rune.altar, duration) }, setOf(rune.id),
-                    setOf(CraftRuneBotScript.PURE_ESSENCE, CraftRuneBotScript.RUNE_ESSENCE)))
+                val essenceIds = if (rune.level <= 20)
+                    listOf(CraftRuneBotScript.RUNE_ESSENCE, CraftRuneBotScript.PURE_ESSENCE)
+                else listOf(CraftRuneBotScript.PURE_ESSENCE)
+                for (essence in essenceIds) {
+                    val key = RunecraftingScriptFactory.recipeKey(rune, essence)
+                    add(Entry(SKILL_RUNECRAFTING, { bot ->
+                        recipe(key, SKILL_RUNECRAFTING, rune.level,
+                            listOf(Item(essence)), rune.id, rune.exp, setOf(rune.altar.talisman),
+                            rune.outputMultiplier(bot.runecrafting.level))
+                    }, { bot, duration -> CraftRuneBotScript(bot, rune.altar, duration) }, setOf(rune.id),
+                        setOf(essence)))
+                }
             }
 
             game.skill.firemaking.Log.entries.forEach { log ->

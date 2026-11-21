@@ -20,6 +20,9 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.RuneRunningCoordinator
+import engine.bot.coordinator.skill.RunecraftingScriptFactory
+import engine.bot.economy.BotProductionMetrics
+import engine.bot.economy.BotProductionMetrics.RunecraftingStage
 import engine.bot.coordinator.RuneRunningCoordinator.Route
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.gear.BotGearLocator
@@ -27,6 +30,8 @@ import engine.controllers.Controllers.inWilderness
 import game.content.abyss.*
 import game.content.sailing.Entrana
 import game.player.item.consume.food.Food
+import game.obj.entrances.Zanaris
+import api.bot.script.ProductionPlan
 import game.skill.mining.Pickaxe
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.runecrafting.craftRune.CraftableRune
@@ -144,11 +149,17 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
              */
             var profit = false
 
+            /**
+             * Carries the one-alternative limit across logout and restoration.
+             */
+            var usedAlternative = false
+
             override fun load(data: JsonObject) {
                 super.load(data)
                 altar = Altar.valueOf(data.get("altar").asString)
                 viaAbyss = data.get("viaAbyss")?.asBoolean ?: false
                 profit = data.get("profit")?.asBoolean ?: false
+                usedAlternative = data.get("usedAlternative")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
@@ -156,6 +167,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
                 data.addProperty("altar", altar.name)
                 data.addProperty("viaAbyss", viaAbyss)
                 data.addProperty("profit", profit)
+                data.addProperty("usedAlternative", usedAlternative)
             }
         }
     }
@@ -168,6 +180,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
      */
     constructor(bot: Bot, data: CraftRuneData) : this(bot, data.altar, data.duration, data.viaAbyss, data.profit) {
         restoreInventoryState(data)
+        usedAlternative = data.usedAlternative
     }
 
     override val trainingSkill = SKILL_RUNECRAFTING
@@ -201,7 +214,49 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             bot.combat.target = null
             if ((inAbyss() || bot.inWilderness() || bot.combat.inCombat()) && !retreat()) return false
         }
+        recordPurchase()
         return prepareEssence()
+    }
+
+    private var essenceBeforeAcquisition: Long? = null
+    private var purchaseRecorded = false
+    private var altarRecorded = false
+    private var craftRecorded = false
+    private var usedAlternative = false
+
+    private fun carriedAndBankedEssence(id: Int): Long =
+        bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
+
+    override fun onPlannedAcquisition(plan: ProductionPlan) {
+        if (essenceBeforeAcquisition != null) return
+        essenceBeforeAcquisition = carriedAndBankedEssence(plan.recipe.materials.keys.single())
+        BotProductionMetrics.recordRunecrafting(RunecraftingStage.ACQUISITION)
+    }
+
+    private fun recordPurchase() {
+        val plan = productionPlan ?: return
+        val before = essenceBeforeAcquisition ?: return
+        val id = plan.recipe.materials.keys.single()
+        if (!purchaseRecorded && (plan.spentCoins > 0L) &&
+            carriedAndBankedEssence(id) > before) {
+            purchaseRecorded = true
+            BotProductionMetrics.recordRunecrafting(RunecraftingStage.PURCHASE)
+        }
+    }
+
+    override fun prepareMissingPlannedSupplies(plan: ProductionPlan): Boolean = tryAlternative(plan)
+
+    private fun tryAlternative(plan: ProductionPlan, altarUnavailable: Boolean = false): Boolean {
+        if (plan.saleGuard != null || plan.completedOperations > 0 || !plan.recipe.key.startsWith("runecraft:") ||
+            usedAlternative || bot.inWilderness() || inAbyss() || !isActionSafe() || isPaused() || isTerminated() ||
+            plan.deadline <= System.currentTimeMillis()) return false
+        val alternative = RunecraftingScriptFactory.alternative(bot, plan, remainingDuration(), altarUnavailable) ?: return false
+        usedAlternative = true
+        alternative.usedAlternative = true
+        BotProductionMetrics.recordRunecrafting(RunecraftingStage.ALTERNATIVE)
+        bot.scriptStack.softPushHead(alternative)
+        stop()
+        return true
     }
 
     /**
@@ -304,7 +359,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             return listOf()
         }
 
-        essence = compatibleEssence(bot, craftingRune)
+        essence = productionPlan?.recipe?.materials?.keys?.singleOrNull() ?: compatibleEssence(bot, craftingRune)
 
         if (essence == null) {
             bot.log("No valid essence available for $craftingRune.")
@@ -312,7 +367,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             return listOf()
         }
 
-        if (profit && !profitable(bot, craftingRune, essence!!)) {
+        if (productionPlan == null && profit && !profitable(bot, craftingRune, essence!!)) {
             bot.log("Runecrafting guide-price margin is no longer positive.")
             stop()
             return emptyList()
@@ -323,13 +378,20 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
                     (bot.attributes()[pouch.essence] == 0 || bot.attributes()[pouch.essenceId] == essence) &&
                     (viaAbyss || pouch.capacity(bot.attributes()[pouch.wear]) > 0)
         }
-        val tools = (if (viaAbyss) abyssSupplies() else listOf(Item(altar.talisman))) + pouches.map { pouch ->
+        val access = buildList {
+            if (bot.equipment[Equipment.HEAD]?.id != altar.tiara || productionPlan?.recipe?.tools?.contains(altar.talisman) == true)
+                add(Item(altar.talisman))
+            if (altar == Altar.COSMIC && bot.equipment[Equipment.WEAPON]?.id != Zanaris.STAFF)
+                add(Item(Zanaris.STAFF))
+        }
+        val tools = (if (viaAbyss) abyssSupplies() else access) + pouches.map { pouch ->
             Item(pouch.ids.first { bot.itemTracker.contains(it) })
         }
         // The shared inventory initialization obtains this real one-copy talisman through normal acquisition.
         // Finite goals and owned-stock sessions must already own their planned supplies.
         if (isTerminated()) return emptyList()
-        val amount = minOf(bot.itemTracker.count(essence!!), bot.inventory.capacity() - tools.sumOf { it.amount })
+        val amount = minOf(bot.itemTracker.count(essence!!), bot.inventory.capacity() - tools.sumOf { it.amount },
+            productionPlan?.remainingOperations ?: Int.MAX_VALUE)
         return tools + if (amount > 0) listOf(Item(essence!!, amount)) else emptyList()
     }
 
@@ -392,6 +454,10 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
 
     override suspend fun onExecuteInZone(): Boolean {
         val zone = activeZone!!
+        if (productionPlan != null && !altarRecorded && altar.zone.area.contains(bot.position)) {
+            altarRecorded = true
+            BotProductionMetrics.recordRunecrafting(RunecraftingStage.ALTAR)
+        }
         val craftingRune = rune
         if (craftingRune == null) {
             bot.log("Invalid rune.")
@@ -429,6 +495,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         val altarObj = altarObject
         if (altarObj == null) {
             bot.log("No Runecrafting altar object found in zone area.")
+            productionPlan?.let { tryAlternative(it, altarUnavailable = true) }
             stop()
             return true
         }
@@ -444,6 +511,10 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         }
         attemptProduction(input, dexterityDelay = false) {
             handler.interactions.interactLocally(1, altarObj) { isActionSafe() }
+        }
+        if (plan != null && !craftRecorded && bot.inventory.computeAmountForId(input) < before) {
+            craftRecorded = true
+            BotProductionMetrics.recordRunecrafting(RunecraftingStage.CRAFTED)
         }
         if (offer != null && !hasEssence() && bot.inventory.computeAmountForId(input) < before) {
             settlePlannedProduction()
@@ -466,6 +537,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         data.altar = altar
         data.viaAbyss = viaAbyss
         data.profit = profit
+        data.usedAlternative = usedAlternative
         return data
     }
 
@@ -550,7 +622,11 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     }
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
-        if (!viaAbyss) return super.travelToWorkZone(zone, bank)
+        if (!viaAbyss) {
+            val arrived = super.travelToWorkZone(zone, bank)
+            if (!arrived) productionPlan?.let { tryAlternative(it, altarUnavailable = true) }
+            return arrived
+        }
         if (zone.area.contains(bot.position)) return true
         if (!inAbyss() && bot.recentEscape?.avoids(SubZone.ABYSS_ENTRY_MAGE) == true) return false
         val arrived = withTimeoutOrNull(180.seconds) {
@@ -575,7 +651,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             } && zone.area.contains(bot.position)
         } == true
         if (!arrived) {
-            retreat()
+            if (retreat()) productionPlan?.let { tryAlternative(it, altarUnavailable = true) }
             stop()
         }
         return arrived
@@ -658,6 +734,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     override suspend fun finish() {
         withdrawRunnerOffer()
         if (isPaused()) return
+        recordPurchase()
         try {
             if (viaAbyss && bot.state == EntityState.ACTIVE && bot.isAlive) {
                 withContext(NonCancellable) { retreat() }
