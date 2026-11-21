@@ -10,6 +10,7 @@ import api.bot.zone.ProductionZones
 import api.bot.zone.SubZone
 import api.predef.rand
 import api.predef.world
+import engine.bot.coordinator.skill.NativeProductionOpportunities
 import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.BucketSandProfitBotScript
@@ -85,6 +86,7 @@ object GeneralProfitCoordinator : BotCoordinator {
         )
         if (bot.isEarlyGame()) {
             candidates += listOf(
+                { NativeProductionOpportunities.starterDecanting(bot, duration) },
                 { starterVials(bot) },
                 { if (BucketSandProfitBotScript.eligible(bot)) BucketSandProfitBotScript(bot) else null },
                 { fillOwnedContainers(bot) },

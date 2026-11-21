@@ -2,13 +2,16 @@ package engine.bot.coordinator.skill
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.trading.BotMerchantCapital
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.NativeOutputDemand
 import api.bot.script.InventoryBotScript
 import api.bot.script.ProductionRecipe
 import api.bot.zone.ProductionZones
 import api.predef.SKILL_COOKING
+import api.predef.SKILL_HERBLORE
 import api.predef.SKILL_SMITHING
 import engine.bot.economy.BotProductionMetrics
+import game.player.item.consume.potion.PotionFamily
 import io.luna.game.model.World
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.RandomUtils
@@ -70,6 +73,29 @@ internal object NativeProductionOpportunities {
         return BotProductionPlanner.select(bot, skill, bot.skill(skill).staticLevel, false, duration,
             finalFood = selected.output.takeIf { skill == SKILL_COOKING && CookingProductionPaths.isFood(it) },
             merchantOutput = selected.output, maximumCoinsLimit = capital.electiveCoins)
+    }
+
+    /**
+     * Tries a bounded shortlist of four-dose buyers using the bot's elective purse and the exact decanting recipe.
+     */
+    fun starterDecanting(bot: Bot, duration: Duration): InventoryBotScript? {
+        val world = bot.world
+        val candidates = NativeOutputDemand.candidateIds(world).asSequence()
+            .mapNotNull { id -> PotionFamily.forId(id)?.takeIf { it.fourDose == id } }
+            .sortedByDescending { family ->
+                3.0 * NativeOutputDemand.peakPrice(world, family.fourDose) -
+                    4.0 * world.economy.getPrice(family.threeDose)
+            }
+            .filterNot { BotTradeIntentions.hasPersonalPotionReserve(bot, it) }
+            .take(4).toList()
+        if (candidates.isEmpty()) return null
+        val capital = BotMerchantCapital.snapshot(bot)
+        if (capital.busy || capital.cashRecovery || capital.stockHeavy) return null
+        return candidates.firstNotNullOfOrNull { family ->
+            BotProductionPlanner.select(bot, SKILL_HERBLORE, bot.skill(SKILL_HERBLORE).staticLevel, false, duration,
+                keyPrefix = "decant:${family.fourDose}", merchantOutput = family.fourDose,
+                maximumCoinsLimit = capital.electiveCoins, directOnly = true)
+        }
     }
 
     /**

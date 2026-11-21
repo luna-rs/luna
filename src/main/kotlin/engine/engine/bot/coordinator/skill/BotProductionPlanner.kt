@@ -97,7 +97,7 @@ object BotProductionPlanner {
      */
     fun select(bot: Bot, skill: Int, level: Int, training: Boolean, duration: Duration,
                keyPrefix: String? = null, finalFood: Int? = null, merchantOutput: Int? = null,
-               maximumCoinsLimit: Long = Long.MAX_VALUE): InventoryBotScript? {
+               maximumCoinsLimit: Long = Long.MAX_VALUE, directOnly: Boolean = false): InventoryBotScript? {
         fun rejected(reason: Reason): InventoryBotScript? {
             val previous = BotProductionMetrics.latestDecision(bot)
             if (reason == Reason.COOLDOWN && previous?.source == Source.PLANNER &&
@@ -106,10 +106,10 @@ object BotProductionPlanner {
             return null
         }
         var lastRejection = Reason.NO_ELIGIBLE_RECIPE
-        if (finalFood != null && (skill != SKILL_COOKING || !CookingProductionPaths.isFood(finalFood)))
+        if (finalFood != null && (directOnly || skill != SKILL_COOKING || !CookingProductionPaths.isFood(finalFood)))
             return rejected(Reason.INVALID_REQUEST)
         val now = System.currentTimeMillis()
-        val key = "$skill:${keyPrefix.orEmpty()}:$training:${finalFood ?: -1}:${merchantOutput ?: -1}"
+        val key = "$skill:${keyPrefix.orEmpty()}:$training:${finalFood ?: -1}:${merchantOutput ?: -1}:$directOnly"
         val history = bot.attributes()[retries.attr]
         val retry = history[key]
         if (retry != null && retry.revision == bot.itemOwnershipRevision && retry.level == level && retry.after > now)
@@ -164,7 +164,8 @@ object BotProductionPlanner {
         val allowOtherSkills = merchantOutput != null && !training
         val pipelines = buildList {
             if (finalFood == null) for ((entry, recipe) in candidates) {
-                val paths = ProductionRecipePaths.forRecipe(recipe, ::describe, allowOtherSkills) {
+                val paths = if (directOnly) listOf(listOf(ProductionStage(recipe, 1)))
+                else ProductionRecipePaths.forRecipe(recipe, ::describe, allowOtherSkills) {
                     allowOtherSkills || skill != SKILL_COOKING || it.experience == 0.0
                 }
                 for (path in paths) {
@@ -180,7 +181,7 @@ object BotProductionPlanner {
                     add(Pipeline(firstEntry, path, aggregate))
                 }
             }
-            val foods = if (finalFood != null) listOf(finalFood) else if (skill == SKILL_COOKING)
+            val foods = if (finalFood != null) listOf(finalFood) else if (!directOnly && skill == SKILL_COOKING)
                 goals.prices.keys.filter(CookingProductionPaths::isFood).take(8) else emptyList()
             val entries = candidates.associate { it.second.key to it.first }
             for (food in foods) for (path in CookingProductionPaths.forOutput(food, allowOtherSkills, ::describe)) {
