@@ -1,0 +1,57 @@
+{
+  "game": {
+    "runtime_mode": "DEVELOPMENT",
+    "starting_position": {
+      "x": 3182,
+      "y": 3440
+    },
+    "experience_multiplier": 1.0,
+    "serializer": "JsonGameSerializer",
+    "port": 43596,
+    "connection_limit": 2,
+    "password_strength": "DEFAULT",
+    "merge_stackable_ground_items": false,
+    "autosave_minutes": 10,
+    "bind_address": "127.0.0.1"
+  },
+  "economy": {
+    "price_movement_resistance": 0.6,
+    "minimum_price": 25,
+    "minimum_stackable_price": 5,
+    "price_update_frequency_minutes": 10,
+    "maximum_price_movement": 0.25,
+    "maximum_overpay_ratio": 1.0,
+    "maximum_underpay_ratio": 0.65
+  },
+  "skills": {
+    "woodcutting_speed": 4,
+    "slayer_equipment_needed": true,
+    "max_firemaking_light_ticks": 10,
+    "tele_other_throttle_seconds": 30
+  },
+  "bots": {
+    "base_online_count": 0,
+    "base_login_hours": 8,
+    "base_logout_hours": 48,
+    "minimum_login_hours": 1,
+    "maximum_login_hours": 48,
+    "minimum_logout_hours": 1,
+    "maximum_logout_hours": 336,
+    "low_intelligence_chance": 0.15,
+    "high_intelligence_chance": 0.05,
+    "high_merchanting_chance": 0.1,
+    "base_loot_value": 15000
+  },
+  "database": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "username": "unused_benchmark",
+    "password": "[redacted; unused by JSON persistence]"
+  },
+  "logging": {
+    "root_level": "WARN",
+    "format_type": "VERBOSE",
+    "output_type": "MIXED",
+    "active_file_logs": []
+  }
+}

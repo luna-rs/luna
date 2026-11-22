@@ -1,0 +1,2 @@
+Preparing worktree (detached HEAD bb69251d)
+HEAD is now at bb69251d Fix bot spawn positions

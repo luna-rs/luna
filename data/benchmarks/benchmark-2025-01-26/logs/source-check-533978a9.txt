@@ -1,0 +1,38 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+To honour the JVM settings for this build a new JVM will be forked. Please consider using the daemon: https://docs.gradle.org/5.6.4/userguide/gradle_daemon.html.
+Daemon will be stopped at the end of the build stopping after processing
+Configuration on demand is an incubating feature.
+> Task :compileKotlin
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/MagicRequirement.kt: (3, 11): Redeclaration: SpellRequirement
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/MagicRequirement.kt: (4, 7): Redeclaration: ItemRequirement
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/MagicRequirement.kt: (5, 7): Redeclaration: RuneRequirement
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/RuneRequirement.kt: (7, 11): Redeclaration: SpellRequirement
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/RuneRequirement.kt: (11, 7): Redeclaration: ItemRequirement
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/RuneRequirement.kt: (12, 5): 'canCast' overrides nothing
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/RuneRequirement.kt: (22, 7): Redeclaration: RuneRequirement
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/RuneRequirement.kt: (23, 5): 'canCast' overrides nothing
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/lowHighAlch/AlchemyAction.kt: (45, 55): Unresolved reference: LOW_ALCHEMY
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/lowHighAlch/AlchemyAction.kt: (45, 83): Unresolved reference: HIGH_ALCHEMY
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/lowHighAlch/AlchemyAction.kt: (47, 51): Unresolved reference: LOW_ALCHEMY
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/lowHighAlch/AlchemyAction.kt: (47, 75): Unresolved reference: HIGH_ALCHEMY
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/teleOther/TeleOtherAction.kt: (25, 45): Unresolved reference: CAST_TELEPORT_OTHER
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/teleOther/TeleOtherAction.kt: (30, 45): Unresolved reference: RECEIVE_TELEPORT_OTHER
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/telekineticGrab/TelekineticGrabAction.kt: (40, 80): Too many arguments for public open fun raycast(start: Position!, end: Position!): Boolean defined in io.luna.game.model.collision.CollisionManager
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/telekineticGrab/TelekineticGrabAction.kt: (61, 38): Unresolved reference: TELEGRAB
+e: /workspace/luna-benchmark-work/legacy-live-fix-check/src/main/kotlin/world/player/skill/magic/telekineticGrab/TelekineticGrabAction.kt: (67, 22): Unresolved reference: setTargetPosition
+
+> Task :compileKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileKotlin'.
+> Compilation error. See log for more details
+
+* Try:
+Run with --stacktrace option to get the stack trace. Run with --info or --debug option to get more log output. Run with --scan to get full insights.
+
+* Get more help at https://help.gradle.org
+
+BUILD FAILED in 38s
+1 actionable task: 1 executed

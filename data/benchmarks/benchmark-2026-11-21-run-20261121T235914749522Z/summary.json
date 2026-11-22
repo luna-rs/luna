@@ -1,0 +1,268 @@
+{
+  "status": "COMPLETE",
+  "outcome": "Window finished and telemetry was flushed.",
+  "effective_beta": "true",
+  "runtime_mode": "DEVELOPMENT",
+  "duration_seconds": 3600.599964771,
+  "warmup_seconds": 900.595698016,
+  "measurement_utc": {
+    "start_utc": "2026-11-22T00:18:01.409+00:00",
+    "end_utc": "2026-11-22T01:18:02.010+00:00"
+  },
+  "event_timestamps_utc": {
+    "effective_beta": "2026-11-22T00:02:24.205+00:00",
+    "runtime_mode": "2026-11-22T00:02:24.211+00:00",
+    "spawn_started": "2026-11-22T00:02:24.212+00:00",
+    "warmup_started": "2026-11-22T00:03:01.087+00:00",
+    "measurement_started": "2026-11-22T00:18:01.441+00:00",
+    "measurement_finished": "2026-11-22T01:18:02.044+00:00"
+  },
+  "tick_budget_ms": 600,
+  "gap_threshold_ms_strictly_greater_than": 900.0,
+  "target_bots": 800,
+  "peak_active_bots_any_phase": 800,
+  "highest_bot_movement_ever_count": 800,
+  "pre_measurement_ticks_with_bot_combat": 0,
+  "npc_population_any_phase": {
+    "mean": 11722,
+    "median": 11722,
+    "p95": 11722,
+    "p99": 11722,
+    "max": 11722,
+    "min": 11722,
+    "samples": 7581
+  },
+  "latest_observed_utc": "2026-11-22T01:18:02.043+00:00",
+  "live": false,
+  "checks": {
+    "server_confirmed_beta": true,
+    "warmup_met": true,
+    "measurement_met": true,
+    "target_held": true,
+    "only_benchmark_players": true,
+    "continuous_tick_sequence": true,
+    "native_wandering_population_observed": true,
+    "movement_verified": true,
+    "no_bot_combat": true,
+    "npc_background_present": true,
+    "resource_samples_saved": true,
+    "completed_world_ticks_recorded": true
+  },
+  "metrics": {
+    "processing_ms": {
+      "mean": 36.07824794500917,
+      "median": 33.057266,
+      "p95": 44.677946,
+      "p99": 72.865277,
+      "max": 127.593151,
+      "min": 28.723024,
+      "samples": 6001
+    },
+    "spacing_ms": {
+      "mean": 599.9999941294784,
+      "median": 599.999977,
+      "p95": 600.075379,
+      "p99": 600.24675,
+      "max": 604.335544,
+      "min": 595.672536,
+      "samples": 6001
+    },
+    "lateness_ms": {
+      "mean": 0.021207137977437993,
+      "median": 0,
+      "p95": 0.0668600001372397,
+      "p99": 0.2807999999495223,
+      "max": 4.37588099995628,
+      "min": 0,
+      "samples": 6001
+    },
+    "tick_attempts": 6001,
+    "completed_world_ticks": 6001,
+    "over_budget_count": 0,
+    "over_budget_pct": 0.0,
+    "scheduling_gap_count": 0,
+    "scheduling_gap_spacing_ms": null,
+    "scheduling_gap_total_spacing_ms": 0,
+    "scheduling_gap_total_excess_ms": 0,
+    "online_bots": {
+      "mean": 800,
+      "median": 800,
+      "p95": 800,
+      "p99": 800,
+      "max": 800,
+      "min": 800,
+      "samples": 6001
+    },
+    "registered_players": {
+      "mean": 800,
+      "median": 800,
+      "p95": 800,
+      "p99": 800,
+      "max": 800,
+      "min": 800,
+      "samples": 6001
+    },
+    "npc_population": {
+      "mean": 11722,
+      "median": 11722,
+      "p95": 11722,
+      "p99": 11722,
+      "max": 11722,
+      "min": 11722,
+      "samples": 6001
+    },
+    "bots_moving_per_tick": {
+      "mean": 468.87935344109314,
+      "median": 469,
+      "p95": 495,
+      "p99": 504,
+      "max": 525,
+      "min": 416,
+      "samples": 6001
+    },
+    "wandering_bot_count": {
+      "mean": 800,
+      "median": 800,
+      "p95": 800,
+      "p99": 800,
+      "max": 800,
+      "min": 800,
+      "samples": 6001
+    },
+    "bots_moving_per_60s": {
+      "mean": 799.699716713881,
+      "median": 800,
+      "p95": 800,
+      "p99": 800,
+      "max": 800,
+      "min": 797,
+      "samples": 6001
+    },
+    "bots_moving_per_300s": {
+      "mean": 800,
+      "median": 800,
+      "p95": 800,
+      "p99": 800,
+      "max": 800,
+      "min": 800,
+      "samples": 6001
+    },
+    "bot_tick_position_changes": 2813745,
+    "ticks_below_target": 0,
+    "ticks_with_participants_in_combat": 0,
+    "measurement_movers": 800,
+    "ever_moved": 800,
+    "instrumentation_ns": {
+      "mean": 129940.65989001833,
+      "median": 112719,
+      "p95": 211276,
+      "p99": 364174,
+      "max": 2116233,
+      "min": 92989,
+      "samples": 6001
+    },
+    "resources": {
+      "sample_count": 720,
+      "rss_mib": {
+        "mean": 4907.925179036459,
+        "median": 4930.8828125,
+        "p95": 4969.9296875,
+        "p99": 4969.99609375,
+        "max": 4969.99609375,
+        "min": 4794.921875,
+        "samples": 720
+      },
+      "heap_used_mib": {
+        "mean": 3199.7263670815364,
+        "median": 3196.21244430542,
+        "p95": 4370.809303283691,
+        "p99": 4461.982208251953,
+        "max": 4519.3647537231445,
+        "min": 1748.937973022461,
+        "samples": 720
+      },
+      "heap_committed_mib": {
+        "mean": 4868.0,
+        "median": 4868.0,
+        "p95": 4868.0,
+        "p99": 4868.0,
+        "max": 4868.0,
+        "min": 4868.0,
+        "samples": 720
+      },
+      "heap_max_mib": {
+        "mean": 6144.0,
+        "median": 6144.0,
+        "p95": 6144.0,
+        "p99": 6144.0,
+        "max": 6144.0,
+        "min": 6144.0,
+        "samples": 720
+      },
+      "container_memory_mib": {
+        "mean": 5382.987944878472,
+        "median": 5248.17578125,
+        "p95": 6096.8984375,
+        "p99": 6310.6171875,
+        "max": 6326.140625,
+        "min": 5178.0,
+        "samples": 720
+      },
+      "cgroup_throttled_intervals": 0,
+      "cgroup_throttled_us": 0,
+      "cgroup_cpu_some_pressure_us": null,
+      "cgroup_cpu_full_pressure_us": null,
+      "cgroup_memory_some_pressure_us": null,
+      "cgroup_memory_full_pressure_us": null,
+      "cgroup_oom_events": 0,
+      "cgroup_oom_kills": 0,
+      "cpu_time_seconds": 281.39039720488466,
+      "cpu_ms_per_world_tick": 46.890584436741314,
+      "cpu_interval_coverage_seconds": 3600.599964771,
+      "process_cpu_pct": {
+        "mean": 7.815097482588049,
+        "median": 7.399964677008611,
+        "p95": 11.999964631304247,
+        "p99": 14.200020820070526,
+        "max": 18.80001576945323,
+        "min": 6.199994431165002,
+        "samples": 721
+      },
+      "sample_start_utc": "2026-11-22T00:18:04.479+00:00",
+      "sample_end_utc": "2026-11-22T01:17:59.479+00:00",
+      "heap_used_first_mib": 2415.9899673461914,
+      "heap_used_last_mib": 3705.228858947754
+    },
+    "gc": {
+      "pause_count": 64,
+      "collection_ids": 64,
+      "total_pause_ms": 3072.121,
+      "longest_pause_ms": 78.384,
+      "post_gc_mib": {
+        "mean": 1912.375,
+        "median": 1884.5,
+        "p95": 2114.0,
+        "p99": 2141.0,
+        "max": 2141.0,
+        "min": 1725.0,
+        "samples": 64
+      },
+      "post_gc_first_mib": 1726.0,
+      "post_gc_last_mib": 2141.0,
+      "post_gc_quarter_medians_mib": [
+        1755.0,
+        1842.0,
+        1925.0,
+        2080.0
+      ],
+      "post_gc_continuous_quarter_growth": true,
+      "old_regions_first": 388,
+      "old_regions_last": 477,
+      "normal_young_pauses": 64,
+      "mixed_pauses": 0,
+      "full_gc_pauses": 0,
+      "allocation_rate": null
+    }
+  },
+  "graphic_note": "6,001 completed ticks. 0 over budget and 0 significant scheduling gaps. At least 800 bots moved in each five-minute window. Post-GC heap grew. Applies to wandering-only server bots."
+}

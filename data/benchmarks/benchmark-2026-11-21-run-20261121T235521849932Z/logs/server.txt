@@ -1,0 +1,21 @@
+[21 Nov 2026 23:58:07] [io.luna.game.model.mob.bot.schedule.BotScheduleService] [BotScheduleService STARTING]
+WARN: Bot schedule service was stopped because "base_online_count" in "luna.jsonc" is < 1.
+[21 Nov 2026 23:58:09] [io.luna.game.LoginService] [LoginService STOPPING]
+FATAL: The login service has been shutdown.
+[21 Nov 2026 23:58:09] [io.luna.game.LogoutService] [LogoutService STOPPING]
+FATAL: The logout service has been shutdown.
+[21 Nov 2026 23:58:09] [io.luna.game.GameService] [GameService RUNNING]
+FATAL: Luna has been terminated because of an uncaught exception!
+java.lang.IllegalStateException: No usable spawn near 3027,3216
+	at io.luna.game.BenchmarkProbe.validSpawns(BenchmarkProbe.java:146) ~[luna-1.0.jar:?]
+	at io.luna.game.BenchmarkProbe.<init>(BenchmarkProbe.java:93) ~[luna-1.0.jar:?]
+	at io.luna.game.BenchmarkProbe.tick(BenchmarkProbe.java:163) ~[luna-1.0.jar:?]
+	at io.luna.game.GameService.runOneIteration(GameService.java:292) ~[luna-1.0.jar:?]
+	at com.google.common.util.concurrent.AbstractScheduledService$ServiceDelegate$Task.run(AbstractScheduledService.java:230) ~[guava-33.4.8-jre.jar:?]
+	at com.google.common.util.concurrent.Callables.lambda$threadRenaming$1(Callables.java:104) ~[guava-33.4.8-jre.jar:?]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572) ~[?:?]
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358) ~[?:?]
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]

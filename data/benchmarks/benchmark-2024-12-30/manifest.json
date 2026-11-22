@@ -1,0 +1,143 @@
+{
+  "run_id": "20261121T235037091540Z",
+  "folder_suffix_reason": null,
+  "checkpoint_key": "first-scripts",
+  "checkpoint": {
+    "sha": "2d197eb3267fd38b80b551c3f9a341a42a072199",
+    "label": "First bot scripts and first complete framework source",
+    "release": "Historical development snapshot",
+    "rationale": "First master tree with the missing AioBotScript and the executable GoHomeScript. GoHomeScript uses walk-to-home for short distances and the home command otherwise, then waits on a position condition. This is the earliest activity example found, and the earliest source candidate for a runnable framework.",
+    "context": "Kotlin coroutine bot scripts, with a scripted return-home activity and completion signal.",
+    "evidence": [
+      "src/main/kotlin/api/bot/AioBotScript.kt",
+      "src/main/kotlin/api/bot/scripts/GoHomeScript.kt",
+      "git log --reverse --first-parent 9cad662e70d8662ae5280be21310adc7c64b1826 -- src/main/kotlin/api/bot/AioBotScript.kt",
+      "src/main/java/io/luna/game/service/GameService.java"
+    ],
+    "blocked": "The checked-in activity goes to a fixed home destination or uses a teleport command. This revision has no native free-roaming bot action. It cannot provide the requested workload.",
+    "jdk": 11,
+    "validate_build": true
+  },
+  "code": {
+    "sha": "2d197eb3267fd38b80b551c3f9a341a42a072199",
+    "subject": "Update to signals and Kotlin coroutine bot subscripts, now with an example!",
+    "author": "lare96",
+    "author_timestamp": "2024-12-30T07:50:04-05:00",
+    "committer": "lare96",
+    "committer_timestamp": "2024-12-30T07:50:04-05:00",
+    "committer_timestamp_utc": "2024-12-30T12:50:04+00:00",
+    "date": "2024-12-30",
+    "date_convention": "UTC calendar date of base commit committer timestamp"
+  },
+  "selection": {
+    "task_started_utc": "2026-11-21T23:34:54.281Z",
+    "task_started_toronto": "2026-11-21T18:34:54.281-05:00",
+    "task_start_evidence": "Timestamp of the Cloud download that made the benchmark brief available for work.",
+    "calendar_month_cutoff_toronto": "2026-10-21T18:34:54.281-04:00",
+    "calendar_month_cutoff_utc": "2026-10-21T22:34:54.281Z",
+    "timezone": "America/Toronto",
+    "master_tip_at_selection": "9cad662e70d8662ae5280be21310adc7c64b1826"
+  },
+  "environment": {
+    "runner": "Managed Codex Cloud Linux allocation",
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+    "sched_getaffinity": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "cpu_max": "400000 100000",
+    "effective_cpuset": "0-4",
+    "memory_max_bytes": "17179869184",
+    "memory_swap_max_bytes": "max",
+    "cgroup_membership": "0::/",
+    "kernel": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "os_release": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"",
+    "java": "openjdk version \"11.0.33.1\" 2026-11-17\nOpenJDK Runtime Environment Temurin-11.0.33.1+1 (build 11.0.33.1+1)\nOpenJDK 64-Bit Server VM Temurin-11.0.33.1+1 (build 11.0.33.1+1, mixed mode)",
+    "heap_and_gc_args": [
+      "-Xms2g",
+      "-Xmx6g",
+      "-XX:+UseG1GC"
+    ],
+    "cgroup_cpu_pressure_available": false,
+    "cgroup_memory_pressure_available": false,
+    "disk_available_bytes_at_start": 31133175808
+  },
+  "workload": {
+    "target_active_bots": 800,
+    "runtime": "DEVELOPMENT, through the revision's betaMode() flag",
+    "network": "Native in-process Luna Bot clients, registered as active world players. No human connections.",
+    "spawn": "50 bots per 16 ground-level overworld centers. Jitter up to six tiles per axis, filtered for collision.",
+    "spawns_seed": 3772026,
+    "wandering_random_seed": null,
+    "seed_unavailable_reason": "Native wandering uses revision-provided random sources without a seed setting.",
+    "wander_action": "SmartWanderingAction, NORMAL frequency, 18-tile rectangular radius. Native pathfinder and queue.",
+    "wander_action_gate": "Disables autonomous bot decisions for these temporary bots through the saved source patch.",
+    "spawning": "Up to 40 native login submissions each tick.",
+    "background": "Revision-supplied world and NPC definitions, actions and tasks. Auto-scheduled bot population zero.",
+    "initial_data": "Fresh detached worktree, verified cache, empty saves, JSON serializer, no database.",
+    "cache_archive_sha256": "5467efe75598a77f6f8d1960178cc21ad32c17613143f8aeabfcdfd23a172ed4",
+    "cache_source": "OpenRS2 cache 657, RuneScape live #377, 2006-05-02 (provided cache archive)",
+    "warmup_required_seconds": 900,
+    "measurement_required_seconds": 3600,
+    "resource_sample_seconds": 5,
+    "movement_window_seconds": [
+      60,
+      300
+    ],
+    "spawn_validation": "Terrain, live collision and eight open steps on every eligible spawn tile.",
+    "participant_random_encounters": "Benchmark-only guard where the revision has a random encounter tick hook.",
+    "combat_engine": true
+  },
+  "tick_budget_ms": 600,
+  "attempt_started_utc": "2026-11-21T23:50:37.145+00:00",
+  "status": "BLOCKED",
+  "runner_stage": "finished",
+  "process_limits_seconds": {
+    "startup_before_first_tick": 1200,
+    "population_and_first_movement": 720,
+    "tick_silence": 120
+  },
+  "cloud_lifetime": "This allocation exposes no confirmed absolute lifetime in its status. Runs checkpoint evidence locally and interrupted measurement windows require a new attempt.",
+  "worktree": "/workspace/luna-benchmark-work/first-scripts-20261121T235037091540Z",
+  "commands": {
+    "isolated_checkout": "git worktree add --detach /workspace/luna-benchmark-work/first-scripts-20261121T235037091540Z 2d197eb3267fd38b80b551c3f9a341a42a072199",
+    "build": "cd /workspace/luna-benchmark-work/first-scripts-20261121T235037091540Z && env JAVA_HOME=/workspace/luna-benchmark-work/jdk-11.0.33.1+1 GRADLE_USER_HOME=/workspace/.gradle ./gradlew --no-daemon --console=plain installDist",
+    "regenerate": "python3 /workspace/luna/scripts/performance/reports.py /workspace/luna/docs/performance/benchmark-2024-12-30",
+    "new_attempt": "python3 /workspace/luna/scripts/performance/run.py run first-scripts",
+    "build_retry_with_trust_store": "cd /workspace/luna-benchmark-work/first-scripts-20261121T235037091540Z && env JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts JAVA_HOME=/workspace/luna-benchmark-work/jdk-11.0.33.1+1 GRADLE_USER_HOME=/workspace/.gradle ./gradlew --no-daemon --console=plain installDist"
+  },
+  "outcome": "The checked-in activity goes to a fixed home destination or uses a teleport command. This revision has no native free-roaming bot action. It cannot provide the requested workload.",
+  "historical_build_exit_code": 1,
+  "attempt_finished_utc": "2026-11-21T23:50:37.577+00:00",
+  "measurement_utc": null,
+  "checks": {
+    "server_confirmed_beta": false,
+    "warmup_met": false,
+    "measurement_met": false,
+    "target_held": false,
+    "only_benchmark_players": false,
+    "continuous_tick_sequence": false,
+    "native_wandering_population_observed": false,
+    "movement_verified": false,
+    "no_bot_combat": false,
+    "npc_background_present": false,
+    "resource_samples_saved": false,
+    "completed_world_ticks_recorded": false
+  },
+  "event_timestamps_utc": {},
+  "warmup_seconds": null,
+  "duration_seconds": null,
+  "evidence_sha256": {
+    "raw/README.md": "111a68fb4a5cbe16c72d9da80c07aa4bc1e0346ddf3720c20cd9a153a792713e",
+    "logs/build-truststore.txt": "b39f9021a4f5c466ac8b19591b9f442b767803c0f1c339d1de3e90f836e864d4",
+    "logs/build.txt": "a07072fa9e4d0e754a319177bea1ff67674a0468d35a197976ef5c277cb0ac51",
+    "logs/checkout.txt": "3611ab31f3a738b69596a45dbac3f18137da982e2658c06c5bb5fa8e3b001df8",
+    "config/README.md": "0e0ac0568cea9f5f29b5772f2068dbabae808ce58168afc2a4fbe4db4132ca7b",
+    "patches/README.md": "16dbcacf9488332e05604678ccc6278f76259f77497e92917116ef2481556482"
+  },
+  "build_verification": "With the Cloud trust store, Gradle reached compileKotlin and rejected stale plugins/ event and area APIs. The first recorded GoHomeScript source therefore did not establish a runnable server.",
+  "historical_build_retry_exit_code": 1
+}

@@ -1,0 +1,41 @@
+WHAT WAS TESTED
+
+Code date 2025-01-04. Earliest verified runnable bot framework and scripts. Commit
+027b89ac6d4b5b6e440a58b4878641616d4dc927. Server launch 2026-11-21 23:23:59 EST.
+
+Historical development snapshot. Effective beta mode unavailable. Status BLOCKED. Wandering-only workload with target
+800 bots and N/A observed. Warm-up N/A. Measured duration N/A.
+
+Revision context. Native bot login and coroutine script support with the JSON persistence fix.
+
+HOW THE SERVER PERFORMED
+
+The available activity uses a fixed home destination or the home command. No native free-roaming action exists in this
+revision.
+
+WHAT WENT WELL
+
+Performance observations are unavailable for this attempt.
+
+PROBLEMS AND CONCERNS
+
+The available activity uses a fixed home destination or the home command. No native free-roaming action exists in this
+revision.
+
+WHAT THE NUMBERS MEAN
+
+A tick is one server update. Processing time measures the work in a tick. Tick spacing is the time between the start of
+one update and the start of the next. p99 is the time within which about 99 out of 100 measured ticks finished their
+work.
+
+A process CPU value of 100% means one fully occupied core. Resident memory is RAM held by the JVM process. The JVM heap
+stores Java objects. Both may grow as workload changes. A memory leak requires evidence that the program keeps objects
+it can no longer use.
+
+LIMITS AND NEXT STEPS
+
+Findings apply to this single wandering-only attempt with Luna's in-process bot clients and ordinary NPC processing.
+Trading, combat, skilling, conversations and mixed human-player loads are outside its scope.
+
+See reproduce.txt for the regeneration and new-attempt commands. An interrupted measurement requires a new uninterrupted
+window.

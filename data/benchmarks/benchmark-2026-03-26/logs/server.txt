@@ -1,0 +1,14 @@
+[22 Nov 2026 02:36:20] [io.luna.game.model.mob.bot.BotRepository] [BackgroundLoaderThread]
+ERROR: Error while loading the usernames of saved bots.
+java.nio.file.NoSuchFileException: data/game/bots/saved_bots
+	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92) ~[?:?]
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111) ~[?:?]
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116) ~[?:?]
+	at java.base/sun.nio.fs.UnixFileSystemProvider.newDirectoryStream(UnixFileSystemProvider.java:432) ~[?:?]
+	at java.base/java.nio.file.Files.newDirectoryStream(Files.java:472) ~[?:?]
+	at io.luna.game.model.mob.bot.BotRepository.loadJsonNames(BotRepository.java:102) ~[luna-1.0.jar:?]
+	at io.luna.game.model.mob.bot.BotRepository.loadNames(BotRepository.java:84) ~[luna-1.0.jar:?]
+	at io.luna.LunaServer.lambda$initLaunchTasks$0(LunaServer.java:195) ~[luna-1.0.jar:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:829) [?:?]

@@ -1,0 +1,2 @@
+Preparing worktree (detached HEAD 9cad662e)
+HEAD is now at 9cad662e Give the Ape Atoll cave monsters their 2006 combat (#888)

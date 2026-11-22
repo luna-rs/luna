@@ -1,0 +1,2 @@
+Preparing worktree (detached HEAD a928f437)
+HEAD is now at a928f437 Make bots wear their partyhats when showing off (#680)

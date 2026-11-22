@@ -1,0 +1,32 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+Downloading https://services.gradle.org/distributions/gradle-5.6.4-bin.zip
+.........................................................................................
+
+Welcome to Gradle 5.6.4!
+
+Here are the highlights of this release:
+ - Incremental Groovy compilation
+ - Groovy compile avoidance
+ - Test fixtures for Java projects
+ - Manage plugin versions via settings script
+
+For more details see https://docs.gradle.org/5.6.4/release-notes.html
+
+To honour the JVM settings for this build a new JVM will be forked. Please consider using the daemon: https://docs.gradle.org/5.6.4/userguide/gradle_daemon.html.
+Daemon will be stopped at the end of the build stopping after processing
+Configuration on demand is an incubating feature.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+org/gradle/api/services/BuildService
+> org.gradle.api.services.BuildService
+
+* Try:
+Run with --stacktrace option to get the stack trace. Run with --info or --debug option to get more log output. Run with --scan to get full insights.
+
+* Get more help at https://help.gradle.org
+
+BUILD FAILED in 56s
+
+Build exit status 1

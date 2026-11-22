@@ -1,0 +1,2 @@
+Preparing worktree (detached HEAD 4d699a75)
+HEAD is now at 4d699a75 First framework for scriptable, fake player bots

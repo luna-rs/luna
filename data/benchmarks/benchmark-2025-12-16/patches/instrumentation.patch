@@ -1,0 +1,393 @@
+diff --git a/src/main/java/io/luna/LunaServer.java b/src/main/java/io/luna/LunaServer.java
+index 6963dba4..5c53a473 100644
+--- a/src/main/java/io/luna/LunaServer.java
++++ b/src/main/java/io/luna/LunaServer.java
+@@ -131,7 +131,7 @@ public final class LunaServer {
+         bootstrap.group(loopGroup);
+         bootstrap.channel(NioServerSocketChannel.class);
+         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
+-        bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly();
++        bootstrap.bind("127.0.0.1", Luna.settings().game().port()).syncUninterruptibly();
+     }
+ 
+     /**
+diff --git a/src/main/java/io/luna/game/BenchmarkProbe.java b/src/main/java/io/luna/game/BenchmarkProbe.java
+new file mode 100644
+index 00000000..b0342a3d
+--- /dev/null
++++ b/src/main/java/io/luna/game/BenchmarkProbe.java
+@@ -0,0 +1,326 @@
++package io.luna.game;
++
++import com.sun.management.OperatingSystemMXBean;
++import io.luna.Luna;
++import io.luna.game.model.Direction;
++import io.luna.game.model.EntityState;
++import io.luna.game.model.EntityType;
++import io.luna.game.model.Position;
++import io.luna.game.model.World;
++import io.luna.game.model.area.Area;
++import io.luna.game.model.mob.bot.Bot;
++import io.luna.game.model.mob.wandering.SmartWanderingAction;
++import io.luna.game.model.mob.wandering.WanderingFrequency;
++
++import java.io.BufferedWriter;
++import java.io.IOException;
++import java.io.UncheckedIOException;
++import java.lang.management.ManagementFactory;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Locale;
++import java.util.Random;
++import java.util.concurrent.Executors;
++import java.util.concurrent.TimeUnit;
++
++import static java.nio.file.StandardOpenOption.CREATE_NEW;
++import static java.nio.file.StandardOpenOption.WRITE;
++
++/**
++ * Headless workload driver and measurements for a disposable Luna world.
++ *
++ * @author Codex
++ */
++public final class BenchmarkProbe {
++
++    public static final boolean ENABLED = System.getProperty("luna.benchmark.raw") != null;
++
++    private static final int TARGET = 800;
++    private static final int RADIUS = 18;
++    private static final long SPAWN_SEED = 3772026L;
++    private static final long MINUTE = TimeUnit.MINUTES.toNanos(1);
++    private static final long WARMUP = 15 * MINUTE;
++    private static final long MEASUREMENT = 60 * MINUTE;
++    private static final int[][] CENTERS = {
++            {3209, 3221}, {3222, 3418}, {3253, 3424}, {3185, 3436},
++            {2966, 3379}, {3004, 3358}, {2981, 3195}, {3014, 3233},
++            {3094, 3242}, {3273, 3168}, {2845, 3432}, {2810, 3439},
++            {2758, 3477}, {2660, 3307}, {2613, 3092}, {2592, 3420}
++    };
++
++    private static final Path CGROUP = Path.of("/sys/fs/cgroup");
++    private static final Path PROC_STATUS = Path.of("/proc/self/status");
++    private static BenchmarkProbe instance;
++
++    private final Bot[] bots = new Bot[TARGET];
++    private final Position[] previous = new Position[TARGET];
++    private final long[] lastMove = new long[TARGET];
++    private final int[] measuredMoves = new int[TARGET];
++    private final boolean[] wandering = new boolean[TARGET];
++    private final String[] names = new String[TARGET];
++    private final BufferedWriter ticks;
++    private final BufferedWriter events;
++    private final BufferedWriter movement;
++    private int submitted;
++    private int loginErrors;
++
++    /** Reports membership for runtime hooks that would otherwise create non-wandering activity. */
++    public static boolean isParticipant(io.luna.game.model.mob.Player player) {
++        return player instanceof Bot && ((Bot) player).isBenchmarkWanderingOnly();
++    }
++    private long warmStart;
++    private long measureStart;
++    private long lastFlush;
++    private long tickNumber;
++    private long prevProbe;
++    private boolean done;
++    private long lastMovementSnapshot;
++
++    private BenchmarkProbe(World world) throws IOException {
++        Path output = Path.of(System.getProperty("luna.benchmark.raw"));
++        ticks = writer(output, "ticks.csv", "seq,start_ns,end_ns,wall_end_ms,phase,world_completed,online,"
++                + "players,npcs,moved,moved_60s,moved_300s,ever_moved,wandering,in_combat,"
++                + "login_errors,previous_probe_ns,measurement_movers");
++        events = writer(output, "events.csv", "event,monotonic_ns,utc_ms,value");
++        marker("effective_beta", System.nanoTime(), Luna.settings().game().betaMode());
++        marker("runtime_mode", System.nanoTime(), Luna.settings().game().runtimeMode());
++        marker("spawn_started", System.nanoTime(), TARGET);
++        movement = writer(output, "movement-by-bot.csv", "monotonic_ns,username,ever_moved,last_move_ns,measured_moves");
++        List<List<Position>> spawnOptions = new ArrayList<>();
++        for (int[] center : CENTERS) {
++            spawnOptions.add(validSpawns(world, center));
++        }
++        try (var spawns = writer(output, "spawns.csv", "index,username,center_x,center_y,spawn_x,spawn_y,plane")) {
++            Random random = new Random(SPAWN_SEED);
++            for (int i = 0; i < TARGET; ++i) {
++                int[] center = CENTERS[i % CENTERS.length];
++                String name = String.format(Locale.ROOT, "bench%04d", i);
++                List<Position> options = spawnOptions.get(i % CENTERS.length);
++                Position spawn = options.get(random.nextInt(options.size()));
++                names[i] = name;
++                spawns.write(i + "," + name + "," + center[0] + "," + center[1] + ","
++                        + spawn.getX() + "," + spawn.getY() + ",0\n");
++                Bot bot = new Bot.Builder(world.getContext()).setUsername(name).setSpawnPosition(spawn)
++                        .setTemporary().build();
++                bot.enableBenchmarkWanderingOnly();
++                bots[i] = bot;
++            }
++        }
++        var resources = writer(output, "resources.csv", "mono_ns,utc_ms,cpu_ns,rss_kib,heap_used_b,heap_committed_b,"
++                + "heap_max_b,nr_throttled,throttled_us,cpu_some_us,cpu_full_us,memory_current_b,"
++                + "memory_some_us,memory_full_us,memory_oom,memory_oom_kill");
++        var sampler = Executors.newSingleThreadScheduledExecutor(runnable -> {
++            var thread = new Thread(runnable, "BenchmarkResourceSampler");
++            thread.setDaemon(true);
++            return thread;
++        });
++        sampler.scheduleAtFixedRate(() -> sample(resources), 0, 5, TimeUnit.SECONDS);
++    }
++
++    private static List<Position> validSpawns(World world, int[] center) {
++        List<Position> candidates = openSpawns(world, center, 6, Direction.VIEW_CONE);
++        if (candidates.isEmpty()) {
++            candidates = openSpawns(world, center, RADIUS - 2, Direction.VIEW_CONE);
++        }
++        if (candidates.isEmpty()) {
++            candidates = openSpawns(world, center, RADIUS - 2, Direction.NESW);
++        }
++        if (candidates.isEmpty()) {
++            throw new IllegalStateException("No usable spawn near " + center[0] + "," + center[1]);
++        }
++        return candidates;
++    }
++
++    private static List<Position> openSpawns(World world, int[] center, int jitter, List<Direction> exits) {
++        var table = world.getContext().getCache().getMapIndexTable();
++        var collision = world.getCollisionManager();
++        List<Position> positions = new ArrayList<>();
++        for (int dx = -jitter; dx <= jitter; ++dx) {
++            for (int dy = -jitter; dy <= jitter; ++dy) {
++                var position = new Position(center[0] + dx, center[1] + dy);
++                var index = table.getIndexTable().get(position.getRegion());
++                if (index == null) {
++                    continue;
++                }
++                var grid = table.getTileSet().getGrid(index);
++                if (grid == null) {
++                    continue;
++                }
++                var tile = grid.getTile(position);
++                if (tile != null && !tile.isBlocked() && !collision.isBlocked(position, false)
++                        && exits.stream().allMatch(direction -> collision.traversable(
++                                position, EntityType.PLAYER, direction))) {
++                    positions.add(position);
++                }
++            }
++        }
++        return positions;
++    }
++
++    private static BufferedWriter writer(Path dir, String file, String header) throws IOException {
++        var result = Files.newBufferedWriter(dir.resolve(file), CREATE_NEW, WRITE);
++        result.write(header);
++        result.newLine();
++        result.flush();
++        return result;
++    }
++
++    public static void tick(World world, long start, long end, boolean worldCompleted) {
++        long probeStart = System.nanoTime();
++        try {
++            if (instance == null) {
++                instance = new BenchmarkProbe(world);
++            }
++            instance.record(world, start, end, worldCompleted);
++        } catch (IOException failure) {
++            throw new UncheckedIOException(failure);
++        } finally {
++            if (instance != null) {
++                instance.prevProbe = System.nanoTime() - probeStart;
++            }
++        }
++    }
++
++    private void record(World world, long start, long end, boolean worldCompleted) throws IOException {
++        if (done) {
++            return;
++        }
++        for (int i = 0; i < 40 && submitted < TARGET; ++i) {
++            int index = submitted++;
++            int[] center = CENTERS[index % CENTERS.length];
++            Bot bot = bots[index];
++            bot.login().thenRun(() -> {
++                bot.submitAction(new SmartWanderingAction(bot, Area.of(new Position(center[0], center[1]), RADIUS),
++                        WanderingFrequency.NORMAL));
++                wandering[index] = true;
++            }).exceptionally(failure -> {
++                ++loginErrors;
++                System.err.println("Benchmark login failed for " + names[index] + ": " + failure);
++                return null;
++            });
++        }
++        int online = 0;
++        int moved = 0;
++        int moved60 = 0;
++        int moved300 = 0;
++        int everMoved = 0;
++        int wanderingCount = 0;
++        int inCombat = 0;
++        int measuredMovers = 0;
++        for (int i = 0; i < TARGET; ++i) {
++            Bot bot = bots[i];
++            if (world.getPlayerMap().get(names[i]) != bot || bot.getState() != EntityState.ACTIVE
++                    || bot.getClient().isPendingLogout()) {
++                previous[i] = null;
++                continue;
++            }
++            ++online;
++            if (wandering[i]) {
++                ++wanderingCount;
++            }
++            Position position = bot.getPosition();
++            if (previous[i] != null && !position.equals(previous[i])) {
++                ++moved;
++                lastMove[i] = start;
++                if (measureStart != 0 && start - measureStart < MEASUREMENT) {
++                    ++measuredMoves[i];
++                }
++            }
++            if (measuredMoves[i] > 0) {
++                ++measuredMovers;
++            }
++            previous[i] = position;
++            if (lastMove[i] != 0) {
++                ++everMoved;
++                if (start - lastMove[i] <= MINUTE) {
++                    ++moved60;
++                }
++                if (start - lastMove[i] <= 5 * MINUTE) {
++                    ++moved300;
++                }
++            }
++        }
++
++        if (warmStart != 0 && measureStart == 0 && online != TARGET) {
++            marker("warmup_reset", start, online);
++            warmStart = 0;
++        }
++        if (warmStart == 0 && online == TARGET && wanderingCount == TARGET && everMoved == TARGET) {
++            warmStart = start;
++            marker("warmup_started", start, online);
++        }
++        if (warmStart != 0 && measureStart == 0 && start - warmStart >= WARMUP) {
++            measureStart = start;
++            marker("measurement_started", start, online);
++        }
++        String phase = measureStart != 0 ? "measurement" : warmStart != 0 ? "warmup" : "spawning";
++        if (measureStart != 0 && start - measureStart >= MEASUREMENT) {
++            phase = "boundary";
++        }
++        ticks.write(++tickNumber + "," + start + "," + end + "," + System.currentTimeMillis() + "," + phase + ","
++                + (worldCompleted ? 1 : 0) + "," + online + "," + world.getPlayers().size() + ","
++                + world.getNpcs().size() + "," + moved + "," + moved60 + "," + moved300 + "," + everMoved + ","
++                + wanderingCount + "," + "" + "," + loginErrors + "," + prevProbe + "," + measuredMovers + "\n");
++        if (start - lastFlush >= TimeUnit.SECONDS.toNanos(5)) {
++            ticks.flush();
++            lastFlush = start;
++        }
++        if (start - lastMovementSnapshot >= MINUTE || phase.equals("boundary")) {
++            for (int i = 0; i < TARGET; i++) {
++                movement.write(start + "," + names[i] + "," + (lastMove[i] != 0 ? 1 : 0) + "," + lastMove[i]
++                        + "," + measuredMoves[i] + "\n");
++            }
++            movement.flush();
++            lastMovementSnapshot = start;
++        }
++        if (phase.equals("boundary")) {
++            ticks.flush();
++            marker("measurement_finished", start, online);
++            done = true;
++        }
++    }
++
++    private void marker(String name, long clock, Object value) throws IOException {
++        events.write(name + "," + clock + "," + System.currentTimeMillis() + "," + value + "\n");
++        events.flush();
++    }
++
++    private static void sample(BufferedWriter writer) {
++        long mono = System.nanoTime();
++        long wall = System.currentTimeMillis();
++        var operatingSystem = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
++        var heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
++        try {
++            writer.write(mono + "," + wall + "," + operatingSystem.getProcessCpuTime() + ","
++                    + value(PROC_STATUS, "VmRSS:", 1) + "," + heap.getUsed() + "," + heap.getCommitted() + ","
++                    + heap.getMax() + "," + value(CGROUP.resolve("cpu.stat"), "nr_throttled", 1) + ","
++                    + value(CGROUP.resolve("cpu.stat"), "throttled_usec", 1) + ","
++                    + pressure("cpu", "some") + "," + pressure("cpu", "full") + ","
++                    + value(CGROUP.resolve("memory.current"), "", 0) + ","
++                    + pressure("memory", "some") + "," + pressure("memory", "full") + ","
++                    + value(CGROUP.resolve("memory.events"), "oom", 1) + ","
++                    + value(CGROUP.resolve("memory.events"), "oom_kill", 1) + "\n");
++            writer.flush();
++        } catch (IOException failure) {
++            System.err.println("Benchmark resource sample failed: " + failure);
++        }
++    }
++
++    private static String value(Path path, String key, int column) {
++        try (var lines = Files.lines(path)) {
++            return lines.map(String::strip)
++                    .map(line -> line.split("\\s+"))
++                    .filter(words -> words.length > column && (key.isEmpty() || key.equals(words[0])))
++                    .map(words -> words[column]).findFirst().orElse("");
++        } catch (IOException unavailable) {
++            return "";
++        }
++    }
++
++    private static String pressure(String resource, String kind) {
++        String total = value(CGROUP.resolve(resource + ".pressure"), kind, 4);
++        return total.startsWith("total=") ? total.substring(6) : "";
++    }
++}
+diff --git a/src/main/java/io/luna/game/GameService.java b/src/main/java/io/luna/game/GameService.java
+index 24b37f09..1da40119 100644
+--- a/src/main/java/io/luna/game/GameService.java
++++ b/src/main/java/io/luna/game/GameService.java
+@@ -167,7 +167,15 @@ public final class GameService extends AbstractScheduledService {
+ 
+     @Override
+     protected void runOneIteration() {
++        if (!BenchmarkProbe.ENABLED) {
++            process();
++            return;
++        }
++        long worldTick = world.getCurrentTick();
++        long start = System.nanoTime();
+         process();
++        long end = System.nanoTime();
++        BenchmarkProbe.tick(world, start, end, world.getCurrentTick() != worldTick);
+     }
+ 
+     @Override
+diff --git a/src/main/java/io/luna/game/model/mob/bot/Bot.java b/src/main/java/io/luna/game/model/mob/bot/Bot.java
+index ad6bf8f3..78a38111 100644
+--- a/src/main/java/io/luna/game/model/mob/bot/Bot.java
++++ b/src/main/java/io/luna/game/model/mob/bot/Bot.java
+@@ -291,7 +291,23 @@ public final class Bot extends Player {
+      * This method advances the bot’s script stack, processes contextual injections, and increments the internal
+      * cycle counter.
+      */
++    private boolean benchmarkWanderingOnly;
++
++    /** Suppresses decision scripts for this disposable workload participant. */
++    public void enableBenchmarkWanderingOnly() {
++        benchmarkWanderingOnly = true;
++    }
++
++    /** Returns whether this disposable bot is confined to the benchmark workload. */
++    public boolean isBenchmarkWanderingOnly() {
++        return benchmarkWanderingOnly;
++    }
++
+     public void process() {
++        if (benchmarkWanderingOnly) {
++            cycles++;
++            return;
++        }
+         try {
+             scriptStack.process();
+             manager.getInjectorManager().injectEvents(this);

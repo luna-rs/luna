@@ -1,0 +1,2 @@
+Preparing worktree (detached HEAD 0b3c6995)
+HEAD is now at 0b3c6995 Fix some todos, documentation, fix errors and startup errors

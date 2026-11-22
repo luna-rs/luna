@@ -1,0 +1,152 @@
+{
+  "task_started_utc": "2026-11-21T23:34:54.281Z",
+  "task_started_toronto": "2026-11-21T18:34:54.281-05:00",
+  "task_start_evidence": "Timestamp of the Cloud download that made the benchmark brief available for work.",
+  "calendar_month_cutoff_toronto": "2026-10-21T18:34:54.281-04:00",
+  "calendar_month_cutoff_utc": "2026-10-21T22:34:54.281Z",
+  "timezone": "America/Toronto",
+  "master_tip_at_selection": "9cad662e70d8662ae5280be21310adc7c64b1826",
+  "checkpoints": {
+    "current": {
+      "sha": "9cad662e70d8662ae5280be21310adc7c64b1826",
+      "label": "Current master",
+      "release": "Provisional pre-beta",
+      "rationale": "Fetched origin/master at task start. The open v0.5 release checklist leaves performance work, final content and polish, source audit, TODO review, wiki review, release announcements and licensing open.",
+      "context": "World includes Ape Atoll cave combat, native smart wandering and the bot scheduling and activity systems.",
+      "evidence": [
+        "git ls-remote origin refs/heads/master",
+        "https://github.com/luna-rs/luna/issues/581",
+        "https://github.com/luna-rs/luna/milestone/3"
+      ]
+    },
+    "one-month": {
+      "sha": "a928f437bb24f2a0af5ddc08ff03764fc40527b4",
+      "label": "One calendar month before the task",
+      "release": "Historical development snapshot",
+      "rationale": "Latest first-parent master commit at or before the recorded Toronto calendar-month cutoff.",
+      "context": "Native smart wandering and bot activity dispatch are present. This commit updates the show-off script so bots wear partyhats.",
+      "evidence": [
+        "git log -1 --first-parent --before=2026-10-21T18:34:54.281-04:00 9cad662e70d8662ae5280be21310adc7c64b1826",
+        "src/main/kotlin/engine/engine/test/gameTestHandler.kts",
+        "src/main/java/io/luna/game/model/mob/movement/wandering/SmartWanderingAction.java"
+      ]
+    },
+    "initial-framework": {
+      "sha": "4d699a75cc00abbf343103e1ee97b676b1a42ca8",
+      "label": "Initial bot framework introduction",
+      "release": "Historical development snapshot",
+      "rationale": "First master commit to add the Bot player type, client, repository and script APIs. Bot.java imports api.bot.AioBotScript, which is absent from this Git tree.",
+      "context": "Initial in-process bot client and Java script interfaces.",
+      "evidence": [
+        "git show --stat 4d699a75cc00abbf343103e1ee97b676b1a42ca8",
+        "src/main/java/io/luna/game/model/mob/bot/Bot.java",
+        "git ls-tree -r --name-only 4d699a75cc00abbf343103e1ee97b676b1a42ca8"
+      ],
+      "blocked": "The initial introduction omits its required default script and contains no native bot free-roaming action. An 800-bot wandering run cannot be configured from this tree.",
+      "jdk": 11,
+      "validate_build": true
+    },
+    "first-scripts": {
+      "sha": "2d197eb3267fd38b80b551c3f9a341a42a072199",
+      "label": "First bot scripts and first complete framework source",
+      "release": "Historical development snapshot",
+      "rationale": "First master tree with the missing AioBotScript and the executable GoHomeScript. GoHomeScript uses walk-to-home for short distances and the home command otherwise, then waits on a position condition. This is the earliest activity example found, and the earliest source candidate for a runnable framework.",
+      "context": "Kotlin coroutine bot scripts, with a scripted return-home activity and completion signal.",
+      "evidence": [
+        "src/main/kotlin/api/bot/AioBotScript.kt",
+        "src/main/kotlin/api/bot/scripts/GoHomeScript.kt",
+        "git log --reverse --first-parent 9cad662e70d8662ae5280be21310adc7c64b1826 -- src/main/kotlin/api/bot/AioBotScript.kt"
+      ],
+      "blocked": "The checked-in activity goes to a fixed home destination or uses a teleport command. This revision has no native free-roaming bot action. It cannot provide the requested workload.",
+      "jdk": 11,
+      "validate_build": true
+    },
+    "native-wander": {
+      "sha": "bb69251d721885eb020e70b00ac292eafaa03923",
+      "label": "Native-wandering substitute for the early bot checkpoints",
+      "release": "Historical development snapshot",
+      "rationale": "First supported substitute candidate with the native smart-wandering implementation from 45a8727a and both temporary bot login and a per-bot spawn position on the builder. A shared run can cover the two early checkpoint limitations if this workload succeeds.",
+      "context": "Native smart wandering with asynchronous pathfinding, randomized waypoints, and a corrected bot spawn lifecycle.",
+      "evidence": [
+        "git show --stat 45a8727a532db2006560c9e0505f6664f11817e8",
+        "git show --stat bb69251d721885eb020e70b00ac292eafaa03923",
+        "src/main/java/io/luna/game/model/mob/wandering/SmartWanderingAction.java"
+      ],
+      "jdk": 11
+    },
+    "native-wander-fixed": {
+      "sha": "c9552bea86a9bfaf37064ff51a43cee5d2e07420",
+      "label": "Native-wandering substitute for the early bot checkpoints",
+      "release": "Historical development snapshot",
+      "rationale": "First-parent master merge containing the stock WanderingAction polling fix (PR #468). A Java call to the Kotlin spell requirement API needs the fourth argument that Kotlin defaults to false. The isolated patch supplies that default and adds benchmark hooks. The runtime uses compiled class directories because this revision's ClassGraph configuration scans directories. The seeded spawn setup excludes (3013, 3237, 0) and (3185, 3434, 0). Eligible replacements stay in their roam boxes.",
+      "context": "Native SmartWanderingAction with the stock scheduler fix, asynchronous pathfinding and paused roaming.",
+      "evidence": [
+        "git merge-base --is-ancestor 1e3aa339 c9552bea",
+        "https://github.com/luna-rs/luna/pull/468",
+        "src/main/java/io/luna/game/model/mob/wandering/SmartWanderingAction.java",
+        "src/main/kotlin/game/game/skill/magic/Magic.kt",
+        "src/main/java/io/luna/LunaServer.java"
+      ],
+      "jdk": 11,
+      "launch_from_class_directories": true,
+      "substitute_for": [
+        "initial-framework",
+        "first-scripts"
+      ],
+      "excluded_spawn_tiles": [
+        "3013,3237",
+        "3185,3434"
+      ]
+    },
+    "runnable-framework": {
+      "sha": "0b3c69955a74e363acbe875d73c9cf149b1b257a",
+      "label": "Early runnable bot framework and scripts",
+      "release": "Historical development snapshot",
+      "rationale": "Historical startup candidate containing the early bot framework and GoHomeScript. This snapshot was retained as part of release-history verification.",
+      "context": "Scriptable in-process bots, coroutine return-home behavior and the original 600 ms world scheduler.",
+      "evidence": [
+        "src/main/java/io/luna/game/model/mob/bot/Bot.java",
+        "src/main/kotlin/api/bot/scripts/GoHomeScript.kt",
+        "src/main/java/io/luna/game/service/GameService.java",
+        "logs/legacy-startup.txt"
+      ],
+      "blocked": "The verified server starts in development mode, but this revision has no native free-roaming bot action. Its go-home script walks to one designated point or uses the home command.",
+      "jdk": 11,
+      "validate_build": true,
+      "verify_startup": true
+    },
+    "position-refactor-check": {
+      "sha": "246b88fd11c0c3bc736efd248d18c46b93caa50a",
+      "label": "Early bot framework startup candidate",
+      "release": "Historical development snapshot",
+      "rationale": "The position-refactoring commit builds and opens its listener. Its bot login task errors with JSON persistence.",
+      "context": "Scriptable in-process bots and a return-home activity following the position model refactor.",
+      "evidence": [
+        "src/main/java/io/luna/game/model/mob/bot/Bot.java",
+        "src/main/kotlin/api/bot/scripts/GoHomeScript.kt",
+        "logs/legacy-startup-with-empty-saves.txt"
+      ],
+      "blocked": "The normal bot login path threw an exception during the isolated startup check. This source also lacks native free roaming.",
+      "jdk": 11,
+      "validate_build": true,
+      "verify_startup": true,
+      "prepare_legacy_empty_saves": true
+    },
+    "runnable-framework-early": {
+      "sha": "027b89ac6d4b5b6e440a58b4878641616d4dc927",
+      "label": "Earliest verified runnable bot framework and scripts",
+      "release": "Historical development snapshot",
+      "rationale": "The earliest master revision verified to start the world and load its plugins without bot persistence errors. It includes the original bot framework and an executable return-home script.",
+      "context": "Native bot login and coroutine script support with the JSON persistence fix.",
+      "evidence": [
+        "src/main/java/io/luna/game/model/mob/persistence/JsonPlayerSerializer.java",
+        "src/main/kotlin/api/bot/scripts/GoHomeScript.kt",
+        "logs/legacy-startup.txt"
+      ],
+      "blocked": "The available activity uses a fixed home destination or the home command. No native free-roaming action exists in this revision.",
+      "jdk": 11,
+      "validate_build": true,
+      "verify_startup": true
+    }
+  }
+}

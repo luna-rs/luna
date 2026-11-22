@@ -1,0 +1,10 @@
+[22 Nov 2026 01:19:42] [io.luna.game.model.mob.bot.schedule.BotScheduleService] [BotScheduleService STARTING]
+WARN: Bot schedule service was stopped because "base_online_count" in "luna.jsonc" is < 1.
+[22 Nov 2026 02:35:39] [io.luna.game.GameService] [ShutdownHookThread]
+FATAL: Gracefully terminating Luna...
+[22 Nov 2026 02:35:39] [io.luna.game.LoginService] [LoginService STOPPING]
+FATAL: The login service has been shutdown.
+[22 Nov 2026 02:35:39] [io.luna.game.LogoutService] [LogoutService STOPPING]
+FATAL: The logout service has been shutdown.
+[22 Nov 2026 02:35:39] [io.luna.game.GameService] [GameService STOPPING]
+FATAL: The application will now exit.

@@ -1,0 +1,12 @@
+[22 Nov 2026 04:24:02] [io.luna.LunaServer] [InitializationThread]
+INFO: Waiting for 4 Java launch task(s) to complete...
+[22 Nov 2026 04:24:05] [io.luna.LunaServer] [InitializationThread]
+INFO: 43 Kotlin plugins containing 85 scripts have been loaded.
+[22 Nov 2026 04:24:05] [io.luna.LunaServer] [InitializationThread]
+INFO: All services are now running.
+[22 Nov 2026 04:24:09] [io.luna.game.model.map.DynamicMapSpacePool] [GameService RUNNING]
+INFO: Created 1377 pooled dynamic map spaces.
+[22 Nov 2026 04:24:09] [io.luna.game.service.GameService] [GameService RUNNING]
+INFO: Waiting for 1 Kotlin startup task(s) to complete...
+[22 Nov 2026 04:24:09] [io.luna.LunaServer] [InitializationThread]
+INFO: Luna is now online on port 43597 (took 8s).

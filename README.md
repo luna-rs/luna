@@ -25,9 +25,18 @@ gameplay for yourself!
 
 To get started, visit the [wiki](https://github.com/luna-rs/luna/wiki) and follow the setup instructions.
 
+# Benchmarked performance
+
+Luna held its 600 ms tick cadence for an hour with **800 in-process wandering bots and 11,722 registered NPCs**
+in the November benchmark. Processing time was **72.87 ms at p99**, with zero tick-budget overruns. If you're
+evaluating an RSPS base for a busy world, the reports show the workload, hardware limits, and raw measurements
+behind those numbers.
+
+[Read the benchmark overview](data/benchmarks/README.md) | [Browse the graphics](data/benchmarks/GALLERY.md)
+
 # Follow our development
 
-- [Benchmarks](https://github.com/luna-rs/luna/tree/master/data/benchmarks) 
+- [Benchmarks](data/benchmarks/README.md)
 - [Join the Discord](https://discord.gg/cpqFaHMdv9)
 
 # Support our development

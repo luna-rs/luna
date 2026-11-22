@@ -1,0 +1,47 @@
+{
+  "status": "FAILED",
+  "outcome": "The 12-minute qualification expired with 800 active bots and 799 showing position changes. The ordinary world ran with 52 registered NPCs. Warm-up and steady-state measurement did not start.",
+  "effective_beta": "true",
+  "runtime_mode": "DEVELOPMENT",
+  "duration_seconds": null,
+  "warmup_seconds": null,
+  "measurement_utc": null,
+  "event_timestamps_utc": {
+    "effective_beta": "2026-11-22T02:40:22.580+00:00",
+    "runtime_mode": "2026-11-22T02:40:22.586+00:00",
+    "spawn_started": "2026-11-22T02:40:22.586+00:00"
+  },
+  "tick_budget_ms": 600,
+  "gap_threshold_ms_strictly_greater_than": 900.0,
+  "target_bots": 800,
+  "peak_active_bots_any_phase": 800,
+  "highest_bot_movement_ever_count": 799,
+  "pre_measurement_ticks_with_bot_combat": 0,
+  "npc_population_any_phase": {
+    "mean": 52,
+    "median": 52.0,
+    "p95": 52,
+    "p99": 52,
+    "max": 52,
+    "min": 52,
+    "samples": 1214
+  },
+  "latest_observed_utc": "2026-11-22T02:52:20.714+00:00",
+  "live": false,
+  "checks": {
+    "server_confirmed_beta": true,
+    "warmup_met": false,
+    "measurement_met": false,
+    "target_held": false,
+    "only_benchmark_players": false,
+    "continuous_tick_sequence": false,
+    "native_wandering_population_observed": false,
+    "movement_verified": false,
+    "no_bot_combat": false,
+    "npc_background_present": false,
+    "resource_samples_saved": false,
+    "completed_world_ticks_recorded": false
+  },
+  "metrics": {},
+  "graphic_note": "800 bots connected before measurement. 799 had moved. Steady-state performance is unavailable."
+}

@@ -1,0 +1,287 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Configuration on demand is an incubating feature.
+> Task :checkKotlinGradlePluginConfigurationErrors
+> Task :processResources NO-SOURCE
+> Task :compileKotlin
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/SuspendableCondition.kt:49:25 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/SuspendableCondition.kt:49:52 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/SuspendableFuture.kt:71:26 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/SuspendableFuture.kt:71:54 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/BotGatheringTools.kt:48:27 Elvis operator (?:) always returns the left operand of non-nullable type Int?
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/PkLoadoutPreparation.kt:215:17 Name shadowed: purposes
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotFoodDemand.kt:167:23 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotFoodDemand.kt:175:20 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotGearDemand.kt:175:36 Parameter 'includePending' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotMerchantMarket.kt:13:19 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotMerchantMarket.kt:14:14 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotMerchantMarket.kt:15:19 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotMerchantMarket.kt:16:19 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotMerchantMarket.kt:16:29 Parameter 'id' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotMerchantMarket.kt:16:38 Parameter 'quantity' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotPotionDemand.kt:75:22 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotPotionDemand.kt:75:32 Parameter 'family' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeIntentions.kt:146:36 Parameter 'satisfying' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeManager.kt:335:34 Name shadowed: amount
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:41:30 Parameter 'bot' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:49:31 Parameter 'bot' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:88:30 Parameter 'bot' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:92:31 Parameter 'bot' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:121:31 Parameter 'bot' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:133:20 Parameter 'expected' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:133:30 Parameter 'bot' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:133:35 Parameter 'container' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:134:21 Parameter 'expected' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:134:31 Parameter 'bot' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/action/trading/BotTradeScrutiny.kt:134:36 Parameter 'receiving' is never used, could be renamed to _
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/boss/BossAttendance.kt:20:59 No cast needed
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/script/EquipmentDropPlan.kt:82:37 Projection is redundant: the corresponding type parameter of Map has the same variance
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/script/ZonedBotScript.kt:826:22 Name shadowed: bank
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/social/BotAmbientConversations.kt:86:40 No cast needed
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/bot/webwalk/visualize/WebWalkTerrain.kt:391:38 Variable 'underlayColour' initializer is redundant
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/combat/death/DeathHookHandler.kt:91:46 Unchecked cast: DeathHook<T> /* = DeathHookReceiver<T>.() -> Unit */ to DeathHook<Player> /* = DeathHookReceiver<Player>.() -> Unit */
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/combat/death/DeathHookHandler.kt:99:43 Unchecked cast: DeathHook<T> /* = DeathHookReceiver<T>.() -> Unit */ to DeathHook<Npc> /* = DeathHookReceiver<Npc>.() -> Unit */
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/api/api/predef/ext/ActionQueueExt.kt:10:66 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/engine/engine/bot/speech/BotReactions.kt:317:29 Parameter 'bot' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/engine/engine/obj/staircases.kts:79:26 Unnecessary safe call on a non-null receiver of type String!
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/bot/scripts/BlastFurnaceBotScript.kt:486:52 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/bot/scripts/CannonBotSupport.kt:161:29 Elvis operator (?:) always returns the left operand of non-nullable type Cannon?
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/bot/scripts/CastleWarsBotScript.kt:225:45 Elvis operator (?:) always returns the left operand of non-nullable type Position
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/bot/scripts/NpcCombatScript.kt:1214:26 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/bot/scripts/NpcCombatScript.kt:1351:55 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/bot/scripts/skills/CraftArmorBotScript.kt:182:60 Unnecessary non-null assertion (!!) on a non-null receiver of type Pair<Hide, Int>
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/combat/npcHooks/rockCrab/RockCrabs.kt:69:26 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/combat/npcHooks/shades/MorttonShades.kt:111:73 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/combat/npcHooks/shades/MorttonShades.kt:141:30 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/combat/npcHooks/shades/MorttonShades.kt:257:29 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/combat/npcHooks/throwerTroll.kts:58:22 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/combat/npcHooks/tzhaar/JadHealers.kt:178:59 'contains(Class<T!>!): Boolean' is deprecated. Deprecated in Java
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/content/brimhavenArena/ArenaObstacles.kt:69:23 Enum argument can be null in Java, but exhaustive when contains no null branch
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/content/brimhavenArena/ArenaObstacles.kt:79:23 Enum argument can be null in Java, but exhaustive when contains no null branch
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/content/partyRoom/partyRoomHandler.kts:61:23 Parameter 'npc' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/content/sailing/ShipGangplanks.kt:43:15 Enum argument can be null in Java, but exhaustive when contains no null branch
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/npc/spawn/alKharid/BorderGate.kt:138:16 Parameter 'plr' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/npc/spawn/falador/wyson.kts:55:28 Parameter 'npc' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/npc/spawn/rellekka/Fremennik.kt:14:21 Parameter 'plr' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/obj/entrances/karamjaCaves.kts:152:9 Variable 'rocks' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/player/command/developerCmd.kts:148:9 Variable 'amount' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/player/command/developerCmd.kts:286:9 Variable 'randomEquipment' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/skill/agility/roguesDen/roguesDenHandlers.kts:84:30 Parameter 'obj' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/skill/agility/skullball/Skullball.kt:180:26 Parameter 'plr' is never used
+w: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/kotlin/game/game/skill/crafting/hideTanning/Tanning.kt:36:87 Unnecessary non-null assertion (!!) on a non-null receiver of type Bot
+
+> Task :compileJava
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:140: warning: [unchecked] unchecked cast
+                return (T) action;
+                           ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>first(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:145: warning: [unchecked] unchecked cast
+                return (T) action;
+                           ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>first(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:163: warning: [unchecked] unchecked cast
+                filtered.add((T) action);
+                                 ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:168: warning: [unchecked] unchecked cast
+                filtered.add((T) action);
+                                 ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:182: warning: [unchecked] unchecked cast
+            all.add((T) action);
+                        ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll()
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:185: warning: [unchecked] unchecked cast
+            all.add((T) action);
+                        ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll()
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:202: warning: [unchecked] unchecked cast
+                filtered.add((T) action);
+                                 ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(ActionType)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/action/ActionQueue.java:207: warning: [unchecked] unchecked cast
+                filtered.add((T) action);
+                                 ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(ActionType)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/combat/damage/CombatDamage.java:125: warning: [unchecked] unchecked call to setLastAttackSent(CombatAttack<?>) as a member of the raw type CombatContext
+        attacker.getCombat().setLastAttackSent(source);
+                                              ^
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/combat/damage/CombatDamage.java:126: warning: [unchecked] unchecked call to setLastAttackReceived(CombatAttack<?>) as a member of the raw type CombatContext
+        victim.getCombat().setLastAttackReceived(source);
+                                                ^
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:128: warning: [unchecked] unchecked cast
+        return (T) previousValue;
+                   ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>set(Attribute<T>,T)
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:141: warning: [unchecked] unchecked cast
+            return (T) lastValue;
+                       ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>get(Attribute<T>)
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:160: warning: [unchecked] unchecked cast
+        return (T) lastValue;
+                   ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>get(Attribute<T>)
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/chunk/ChunkUpdatableView.java:41: warning: [unchecked] unchecked method invocation: constructor <init> in class ChunkUpdatableView is applied to given types
+    private static final ChunkUpdatableView GLOBAL_VIEW = new ChunkUpdatableView(Collections.EMPTY_SET);
+                                                          ^
+  required: Set<Player>
+  found:    Set
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/chunk/ChunkUpdatableView.java:41: warning: [unchecked] unchecked conversion
+    private static final ChunkUpdatableView GLOBAL_VIEW = new ChunkUpdatableView(Collections.EMPTY_SET);
+                                                                                            ^
+  required: Set<Player>
+  found:    Set
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/plugin/PluginManager.java:51: warning: [unchecked] unchecked cast
+        EventListenerPipeline<E> pipeline = (EventListenerPipeline<E>) pipelines.get(msg.getClass());
+                                                                                    ^
+  required: EventListenerPipeline<E>
+  found:    EventListenerPipeline<CAP#1>
+  where E is a type-variable:
+    E extends Event declared in method <E>post(E)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Event from capture of ? extends Event
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/net/msg/GameMessageReader.java:166: warning: [unchecked] unchecked cast
+                get((Class<E>) event.getClass()).getInteractionListeners(player, target, event);
+                                             ^
+  required: Class<E>
+  found:    Class<CAP#1>
+  where E is a type-variable:
+    E extends Event declared in class GameMessageReader
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Event from capture of ? extends Event
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/overlay/AbstractOverlaySet.java:183: warning: [unchecked] unchecked cast
+                return (T) overlay;
+                           ^
+  required: T
+  found:    AbstractOverlay
+  where T is a type-variable:
+    T extends AbstractOverlay declared in method <T>getOverlay(Class<T>)
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/overlay/AbstractOverlaySet.java:190: warning: [unchecked] unchecked cast
+                    return (T) overlay;
+                               ^
+  required: T
+  found:    AbstractOverlay
+  where T is a type-variable:
+    T extends AbstractOverlay declared in method <T>getOverlay(Class<T>)
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/overlay/AbstractOverlaySet.java:205: warning: [unchecked] unchecked cast
+        return (T) overlayMap.get(type);
+                                 ^
+  required: T
+  found:    AbstractOverlay
+  where T is a type-variable:
+    T extends AbstractOverlay declared in method <T>getOverlay(OverlayType)
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/bot/script/BotScriptManager.java:77: warning: [unchecked] unchecked cast
+        ScriptSupplier<T> supplier = (ScriptSupplier<T>) scriptMap.get(typeName);
+                                                                      ^
+  required: ScriptSupplier<T>
+  found:    ScriptSupplier<CAP#1>
+  where T is a type-variable:
+    T extends BotScriptData declared in method <T>loadScript(String,Bot,T)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends BotScriptData from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/bot/schedule/BotScheduleService.java:179: warning: [unchecked] unchecked conversion
+            Map<String, Number> loadedLogouts = GsonUtils.readAsType(LOGIN_REQUESTS_PATH, Map.class);
+                                                                    ^
+  required: Map<String,Number>
+  found:    Map
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/MobList.java:202: warning: [unchecked] unchecked cast
+        this.mobs = (E[]) new Mob[capacity + 1];
+                          ^
+  required: E[]
+  found:    Mob[]
+  where E is a type-variable:
+    E extends Mob declared in class MobList
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/util/parser/impl/BossFileParser.java:29: warning: [unchecked] unchecked method invocation: method setBosses in class NpcCombatContext is applied to given types
+            NpcCombatContext.setBosses(GsonUtils.readAsType(file, HashSet.class));
+                                      ^
+  required: Set<Integer>
+  found:    HashSet
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/util/parser/impl/BossFileParser.java:29: warning: [unchecked] unchecked conversion
+            NpcCombatContext.setBosses(GsonUtils.readAsType(file, HashSet.class));
+                                                           ^
+  required: Set<Integer>
+  found:    HashSet
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/util/markov/MarkovChainTypeAdapterFactory.java:38: warning: [unchecked] unchecked cast
+        return (TypeAdapter<T>) new MarkovChainTypeAdapter<>(stateAdapter);
+                                ^
+  required: TypeAdapter<T>
+  found:    MarkovChainTypeAdapter<CAP#1>
+  where T is a type-variable:
+    T extends Object declared in method <T>create(Gson,TypeToken<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Object from capture of ?
+/workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/path/astar/Node.java:64: warning: [unchecked] unchecked cast
+            Node<T> other = (Node<T>) obj;
+                                      ^
+  required: Node<T>
+  found:    Object
+  where T is a type-variable:
+    T extends Locatable declared in class Node
+Note: /workspace/luna-benchmark-work/current-20261121T235521849932Z/src/main/java/io/luna/game/model/mob/combat/damage/CombatDamageAction.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+27 warnings
+
+> Task :classes
+> Task :jar
+> Task :startScripts
+> Task :installDist
+
+[Incubating] Problems report is available at: file:///workspace/luna-benchmark-work/current-20261121T235521849932Z/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2m 36s
+6 actionable tasks: 6 executed

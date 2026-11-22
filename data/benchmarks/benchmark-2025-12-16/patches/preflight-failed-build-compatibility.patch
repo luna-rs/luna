@@ -1,0 +1,63 @@
+diff --git a/src/main/kotlin/api/api/predef/PropertiesPredef.kt b/src/main/kotlin/api/api/predef/PropertiesPredef.kt
+index a3eba6c3..093e3ed3 100644
+--- a/src/main/kotlin/api/api/predef/PropertiesPredef.kt
++++ b/src/main/kotlin/api/api/predef/PropertiesPredef.kt
+@@ -209,7 +209,7 @@ val Equipment.hands: Item?
+     get() = this[Equipment.HANDS]
+ 
+ val Equipment.feet: Item?
+-    get() = this[Equipment.BOOTS]
++    get() = this[Equipment.FEET]
+ 
+ val Equipment.ring: Item?
+     get() = this[Equipment.RING]
+diff --git a/src/main/kotlin/game/game/bot/script/LogoutBotScript.kt b/src/main/kotlin/game/game/bot/script/LogoutBotScript.kt
+index 313eb75c..70afc61c 100644
+--- a/src/main/kotlin/game/game/bot/script/LogoutBotScript.kt
++++ b/src/main/kotlin/game/game/bot/script/LogoutBotScript.kt
+@@ -3,7 +3,6 @@ package game.bot.script
+ import api.bot.BotScript
+ import api.bot.Suspendable.naturalDecisionDelay
+ import io.luna.game.model.mob.bot.Bot
+-import io.luna.game.model.mob.bot.script.BotScriptSnapshot
+ 
+ /**
+  * A simple script that will make a [Bot] logout.
+@@ -20,7 +19,4 @@ class LogoutBotScript(bot: Bot, private var urgent: Boolean) : BotScript<Boolean
+     }
+ 
+     override fun snapshot(): Boolean = urgent
+-    override fun load(snapshot: BotScriptSnapshot<Boolean>) {
+-        urgent = snapshot.data
+-    }
+ }
+\ No newline at end of file
+diff --git a/src/main/kotlin/game/game/skill/thieving/searchForTraps/OpenTrapAction.kt b/src/main/kotlin/game/game/skill/thieving/searchForTraps/OpenTrapAction.kt
+index d0a3d466..e2fd0970 100644
+--- a/src/main/kotlin/game/game/skill/thieving/searchForTraps/OpenTrapAction.kt
++++ b/src/main/kotlin/game/game/skill/thieving/searchForTraps/OpenTrapAction.kt
+@@ -6,8 +6,6 @@ import api.predef.ext.*
+ import io.luna.game.action.impl.ThrottledAction
+ import io.luna.game.model.EntityState
+ import io.luna.game.model.mob.Player
+-import io.luna.game.model.mob.block.Hit
+-import io.luna.game.model.mob.block.Hit.HitType
+ import io.luna.game.model.`object`.GameObject
+ import game.player.Animations
+ 
+@@ -39,12 +37,8 @@ class OpenTrapAction(plr: Player, val obj: GameObject, val thievable: ThievableC
+     /**
+      * Determines how much damage will be done when a trap is opened.
+      */
+-    private fun computeDamage(): Hit {
++    private fun computeDamage(): Int {
+         val maxDamage = (thievable.level / 2).coerceAtMost(mob.health)
+-        val damage = rand(1, maxDamage)
+-        return when {
+-            maxDamage == 0 -> Hit(0, HitType.BLOCKED)
+-            else -> Hit(damage, HitType.NORMAL)
+-        }
++        return if (maxDamage == 0) 0 else rand(1, maxDamage)
+     }
+ }
+\ No newline at end of file
