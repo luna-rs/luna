@@ -8,6 +8,7 @@ import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
 import api.predef.ext.scheduleOnce
+import api.quest.QuestProgress
 import game.obj.entrances.Zanaris
 import game.player.QuestJournalInterface
 import game.player.Sound
@@ -31,7 +32,7 @@ import io.luna.net.msg.out.WidgetItemModelMessageWriter
 
 /**
  * Lost City's adventurer, Shamus, Dramen guardian and staff progression, following the pinned 377 quest scripts.
- * Existing staff-based Zanaris travel remains available independently of quest progression.
+ * The Dramen requirements apply to the quest storyline.
  *
  * @author lare96
  */
@@ -52,18 +53,19 @@ object LostCity {
     const val COMPLETE = 6
     val SHAMUS_SPAWN = Position(3139, 3211)
     val SPIRIT_SPAWN = Position(2860, 9737)
+    private val progress = QuestProgress(PersistentVarp.LOST_CITY, COMPLETE, 3)
     private var Player.guardian by Attr.nullableObj(DramenSpirit::class)
 
     /**
-     * Reads the native saved quest word; later clicks cannot reset completed progress.
+     * Reads the player's saved Lost City stage.
      */
-    fun stage(player: Player): Int = player.varpManager.getValue(PersistentVarp.LOST_CITY).coerceIn(0, COMPLETE)
+    fun stage(player: Player): Int = progress.stage(player)
 
     /**
      * Advances monotonically and refreshes the native quest-list colour.
      */
     internal fun advance(player: Player, next: Int) {
-        if (next > stage(player)) player.varpManager.setAndSendValue(PersistentVarp.LOST_CITY, next.coerceAtMost(COMPLETE))
+        progress.advance(player, next)
         refresh(player)
     }
 
@@ -208,16 +210,14 @@ object LostCity {
      * Ordinary shed travel is available at every quest stage.
      */
     fun complete(player: Player): Boolean {
-        if (stage(player) != STAFF_MADE || !player.isAlive || player.z != Zanaris.LANDING.z ||
-            !player.position.isWithinDistance(Zanaris.LANDING, 2)) return false
-        advance(player, COMPLETE)
-        player.varpManager.setAndSendValue(PersistentVarp.QUEST_POINTS,
-            player.varpManager.getValue(PersistentVarp.QUEST_POINTS) + 3)
+        if (!player.isAlive || player.z != Zanaris.LANDING.z ||
+            !player.position.isWithinDistance(Zanaris.LANDING, 2) || !progress.complete(player, STAFF_MADE)) return false
+        refresh(player)
         player.sendMessage("Congratulations! Quest complete!")
         player.overlays.open(object : StandardInterface(12140) {
             override fun onOpen(plr: Player) {
                 plr.sendText("You have completed the\\nLost City of Zanaris Quest!", 12144)
-                plr.sendText("3 Quest Points", 12150)
+                plr.sendText("${progress.questPoints} Quest Points", 12150)
                 for (id in 12151..12155) plr.sendText("", id)
                 plr.queue(WidgetItemModelMessageWriter(12145, 250, 995))
             }
@@ -252,7 +252,7 @@ object LostCity {
             SPIRIT_DEFEATED -> listOf("@str@I defeated the Tree Spirit.", "@dbl@I can now cut a branch from the Dramen tree.")
             TREE_CHOPPED -> listOf("@str@I cut a branch from the Dramen tree.", "@dbl@I should carve it into a staff using a knife.")
             STAFF_MADE -> listOf("@str@I crafted a Dramen staff.", "@dbl@I should enter the shed in Lumbridge Swamp with it equipped.")
-            else -> listOf("@str@I found and entered the Lost City of Zanaris.", "", "@red@QUEST COMPLETE!", "3 Quest Points")
+            else -> listOf("@str@I found and entered the Lost City of Zanaris.", "", "@red@QUEST COMPLETE!", "${progress.questPoints} Quest Points")
         }
         lines.forEach(journal::addLine)
         player.overlays.open(journal)
