@@ -137,7 +137,7 @@ class TradeBotScript(bot: Bot,
          * Reads at most thirty-two prepared native sellers for the bounded personal food decision.
          * Quotes reserve nothing; native stock, payment and both acceptance screens still revalidate.
          */
-        internal fun foodSupply(buyer: Bot, ids: Set<Int>): List<BotFoodDemand.Basket> =
+        internal fun carriedSupply(buyer: Bot, ids: Set<Int>): List<BotFoodDemand.Basket> =
             BotMarketplace.entries.asSequence().flatMap { it.tradingSessions().asSequence() }
                 .filterIsInstance<TradeBotScript>().take(32).filter { seller ->
                     seller.bot !== buyer && !seller.buying && seller.prepared && !seller.browsing &&

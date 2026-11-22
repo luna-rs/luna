@@ -70,7 +70,7 @@ internal class PkLoadoutSelection(private val bot: Bot) {
                spellbook: Spellbook = bot.spellbook, preferOwned: Boolean = false,
                preferCheapest: Boolean = false,
                minimumCasts: Int = if (carriedOnly) 1 else MIN_CASTS,
-               purchasePlanning: Boolean = false): CombatLoadout? {
+               purchasePlanning: Boolean = false, purchaseCost: ((Map<Int, Int>) -> Long?)? = null): CombatLoadout? {
         if (minimumCasts < 1 || purpose !in purposes() || purchasePlanning && (!desired || carriedOnly)) return null
         // One synchronous stock snapshot avoids rescanning every bank slot for every weapon candidate.
         val carried = bot.inventory.filterNotNull() + bot.equipment.filterNotNull()
@@ -80,7 +80,7 @@ internal class PkLoadoutSelection(private val bot: Bot) {
         val economy = bot.world.economy
         val prices = HashMap<Int, Long>()
         fun price(id: Int) = prices.getOrPut(id) { economy.getPrice(id).coerceAtLeast(0) }
-        val risk = if (carriedOnly || purchasePlanning) null else PkRiskBudget.assess(bot,
+        val risk = if (carriedOnly || purchasePlanning && purchaseCost == null) null else PkRiskBudget.assess(bot,
             PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode()))
         val weaponAllowance = risk?.maximumLoss
         fun purchasable(id: Int): Boolean {
@@ -118,6 +118,13 @@ internal class PkLoadoutSelection(private val bot: Bot) {
                 (stock[id] ?: 0) >= amount.toLong() * minimumCasts
             } }
             val choices = if (!desired || preferOwned && supplied.isNotEmpty()) supplied else compatible
+            if (purchaseCost != null && preferCheapest) {
+                return@getOrPut choices.mapNotNull { spell ->
+                    val supply = CombatLoadout.runeCosts(spell, weapon).mapValues { (_, amount) -> amount * minimumCasts }
+                    purchaseCost(supply)?.let { cost -> spell to cost }
+                }.minWithOrNull(compareBy<Pair<CombatSpellDefinition, Long>> { it.second }
+                    .thenByDescending { it.first.maxHit })?.first
+            }
             if (preferCheapest) choices.minWithOrNull(compareBy<CombatSpellDefinition> { spell ->
                 CombatLoadout.runeCosts(spell, weapon).entries.fold(BigInteger.ZERO) { total, (id, amount) ->
                     total + BigInteger.valueOf(price(id)) * BigInteger.valueOf(amount.toLong() * minimumCasts)
@@ -150,7 +157,7 @@ internal class PkLoadoutSelection(private val bot: Bot) {
             }
         }
         fun bonus(id: Int, bonus: EquipmentBonus) = EquipmentDefinition.ALL.retrieve(id).getBonus(bonus.index)
-        fun essentialCost(weapon: Int): BigInteger {
+        fun essentialSupplies(weapon: Int): Map<Int, Int> {
             val supplies = linkedMapOf(weapon to 1)
             if (purpose == BotGearPurpose.RANGED && weapon !in AmmoDefinition.NO_AMMO_WEAPONS) {
                 ammunition(weapon)?.let { supplies[it] = 1 }
@@ -158,15 +165,22 @@ internal class PkLoadoutSelection(private val bot: Bot) {
             if (purpose == BotGearPurpose.MAGIC) CombatLoadout.runeCosts(spellFor(weapon), weapon).forEach { (id, amount) ->
                 supplies[id] = amount * minimumCasts
             }
-            return supplies.entries.fold(BigInteger.ZERO) { total, (id, amount) ->
+            return supplies
+        }
+        fun essentialCost(weapon: Int): BigInteger {
+            return essentialSupplies(weapon).entries.fold(BigInteger.ZERO) { total, (id, amount) ->
                 if (!ItemDefinition.ALL.retrieve(id).isTradeable) total else
                     total + BigInteger.valueOf(price(id)) * BigInteger.valueOf(amount.toLong())
             }
         }
-        val weapon = candidates.maxWithOrNull(compareBy<WeaponDefinition> {
-            if (preferOwned && (stock[it.id()] ?: 0) > 0) 1 else 0
+        val quotes = purchaseCost?.let { quote ->
+            candidates.mapNotNull { weapon -> quote(essentialSupplies(weapon.id()))?.let { weapon.id() to it } }.toMap()
+        }
+        val weapon = candidates.filter { quotes == null || it.id() in quotes }.maxWithOrNull(compareBy<WeaponDefinition> {
+            if (quotes == null && preferOwned && (stock[it.id()] ?: 0) > 0) 1 else 0
         }.thenBy {
-            if (preferCheapest) essentialCost(it.id()).negate() else BigInteger.ZERO
+            if (!preferCheapest) BigInteger.ZERO
+            else (quotes?.getValue(it.id())?.let(BigInteger::valueOf) ?: essentialCost(it.id())).negate()
         }.thenBy {
             if (purpose == BotGearPurpose.MAGIC) spellFor(it.id())?.maxHit ?: 0 else 0
         }.thenBy {

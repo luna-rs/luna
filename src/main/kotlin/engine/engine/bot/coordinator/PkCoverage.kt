@@ -55,7 +55,11 @@ internal class PkCoverage(
         internal fun scaled(online: Int, atFullPopulation: Int): Int =
             (online.coerceAtLeast(0).toLong() * atFullPopulation / FULL_POPULATION).toInt()
 
-        internal fun minimum(online: Int, purpose: Purpose): Int = scaled(online, fullMinimum[purpose] ?: 0)
+        internal fun minimum(online: Int, purpose: Purpose): Int =
+            if (purpose == Purpose.SKILL)
+                ((online.coerceAtLeast(0).toLong() * fullMinimum.getValue(purpose) + FULL_POPULATION / 2) /
+                    FULL_POPULATION).toInt()
+            else scaled(online, fullMinimum[purpose] ?: 0)
 
         internal fun target(online: Int, purpose: Purpose): Int = scaled(online, fullTarget[purpose] ?: 0)
 

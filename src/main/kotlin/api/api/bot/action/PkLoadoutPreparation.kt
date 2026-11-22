@@ -105,6 +105,11 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
         if (BotGearPurpose.MAGIC !in purposes()) return null
         val books = magicSpellbooks()
         if (books.any { selection.select(BotGearPurpose.MAGIC, spellbook = it) != null }) return emptyMap()
+        val acquisition = PkSupplyAcquisition(bot, handler)
+        val quote = acquisition.purchaseQuotes()
+        books.mapNotNull { book ->
+            quotedMagicSupplies(book, quote)?.let { required -> quote(required)?.let { required to it } }
+        }.minByOrNull { it.second }?.let { return it.first }
         val owned = books.mapNotNull { spellbook ->
             selection.select(BotGearPurpose.MAGIC, desired = true, spellbook = spellbook, preferOwned = true)
                 ?.takeIf { outfit -> outfit.gear[Equipment.WEAPON]?.let { selection.owned(it) > 0 } == true }
@@ -135,8 +140,8 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
 
     /**
      * Keeps a supplied owned discipline before considering purchases for one essential weapon and its supplies.
-     * One edible food is essential; the owned planner fills towards sixteen without requiring optional purchases.
-     * Supplies covered by the selected staff are omitted. Food quality respects the available risk allowance.
+     * Meals are sourced separately so the exact weapon and rune basket can be chosen from executable quotes.
+     * Supplies covered by the selected staff are omitted.
      */
     internal fun supplyRequirements(spellbook: Spellbook = bot.spellbook): Map<Int, Int>? {
         val purposes = departurePurposes(spellbook).takeIf { it.isNotEmpty() } ?: return null
@@ -149,22 +154,25 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             }
             return required
         }
-        val supplied = purposes.firstNotNullOfOrNull { selection.select(it, spellbook = spellbook) }
-        val required = supplied?.let(::requirements) ?: purposes.mapNotNull {
+        purposes.firstNotNullOfOrNull { selection.select(it, spellbook = spellbook) }?.let { return requirements(it) }
+        if (purposes.singleOrNull() == BotGearPurpose.MAGIC) {
+            quotedMagicSupplies(spellbook, PkSupplyAcquisition(bot, handler).purchaseQuotes())?.let { return it }
+        }
+        return purposes.mapNotNull {
             selection.select(it, desired = true, spellbook = spellbook, preferOwned = true,
                 preferCheapest = it == BotGearPurpose.MAGIC)?.let(::requirements)
         }.minByOrNull { candidate -> candidate.entries.sumOf { (id, amount) ->
             bot.world.economy.getPrice(id).coerceAtLeast(0).toDouble() *
                 (amount - selection.owned(id)).coerceAtLeast(0)
-        } } ?: return null
-        val risk = handler.combat.pkRiskBudget()
-        val foodAllowance = risk.maximumLoss
-        val food = Food.ID_TO_FOOD.entries.filter { it.value.heal > 0 && selection.available(it.key) &&
-            java.math.BigInteger.valueOf(bot.world.economy.getPrice(it.key).coerceAtLeast(0)) <= foodAllowance }
-            .maxWithOrNull(compareBy<Map.Entry<Int, Food>> { if (selection.owned(it.key) > 0) 1 else 0 }
-                .thenBy { it.value.heal })?.key ?: return null
-        required[food] = 1
-        return required
+        } }
+    }
+
+    private fun quotedMagicSupplies(spellbook: Spellbook, quote: (Map<Int, Int>) -> Long?): Map<Int, Int>? {
+        val outfit = selection.select(BotGearPurpose.MAGIC, desired = true, spellbook = spellbook,
+            preferOwned = true, preferCheapest = true, purchasePlanning = true, purchaseCost = quote) ?: return null
+        return linkedMapOf((outfit.gear[Equipment.WEAPON] ?: return null) to 1).apply {
+            outfit.runes.forEach { (id, amount) -> put(id, amount * PkLoadoutSelection.MIN_CASTS) }
+        }
     }
 
     /**
@@ -391,19 +399,10 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                         potionShopUntil: Long = Long.MAX_VALUE, allowed: () -> Boolean = { true }): Boolean {
         fun safe() = allowed() && bot.state == EntityState.ACTIVE && !bot.client.isPendingLogout &&
             ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness()
+        val acquisition = PkSupplyAcquisition(bot, handler)
+        if (!safe() || !acquisition.obtainFood(::safe)) return false
         for (spellbook in preparationSpellbooks()) {
             if (!safe()) return false
-            if (plan(allowMissingClanCape = true, spellbook = spellbook) == null) {
-                val required = supplyRequirements(spellbook)
-                if (required == null) {
-                    requestMissingFood()
-                    continue
-                }
-                val minimum = required.map { (id, amount) -> Item(id, amount) }
-                BotTradeIntentions.recordSupplies(bot, minimum)
-                val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
-                if (!PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)(minimum, emptyList(), true).withinBudget) continue
-            }
             if (!handler.combat.switchSpellbook(spellbook)) continue
             if (prepareCurrentSpellbook(optionalPotions, escapeDepth, potionShopUntil, ::safe)) return true
         }
@@ -429,7 +428,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                 val minimum = required.map { (id, amount) -> Item(id, amount) }
                 val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
                 if (!PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)(minimum, emptyList(), true).withinBudget) return false
-                PkSupplyAcquisition(bot, handler).obtain(required)
+                PkSupplyAcquisition(bot, handler).obtain(required, safe)
                 if (!safe() ||
                     !handler.banking.travelToBankOpen() || !safe() || !handler.banking.depositInventory() || !safe()) return false
             }

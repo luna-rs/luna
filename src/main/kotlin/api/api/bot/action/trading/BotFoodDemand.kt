@@ -228,7 +228,7 @@ object BotFoodDemand {
             BotSupplySources.quote(bot, id, minOf(need, request.minimum).coerceAtLeast(1))
                 ?.let { Basket(id, it.quantity, it.maximumUnitPrice) }
         }
-        return shops + TradeBotScript.foodSupply(bot, ids.toSet())
+        return shops + TradeBotScript.carriedSupply(bot, ids.toSet())
     }
 
     /**

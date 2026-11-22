@@ -231,7 +231,7 @@ class MageArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData()) : 
         val shops = BotSupplySources.quotes(bot, ids, MAXIMUM_FOOD_SLOTS).map { (id, quote) ->
             Triple(id, quote.quantity, quote.maximumUnitPrice)
         }
-        val trades = TradeBotScript.foodSupply(bot, ids).map { Triple(it.id, it.quantity, it.unitPrice) }
+        val trades = TradeBotScript.carriedSupply(bot, ids).map { Triple(it.id, it.quantity, it.unitPrice) }
         val sources = (shops + trades).sortedWith(compareBy<Triple<Int, Int, Long>> { (id, _, price) ->
             price.toDouble() / BossFood.portion(id)!!.healing
         }

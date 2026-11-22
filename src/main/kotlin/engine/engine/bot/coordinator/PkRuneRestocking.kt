@@ -2,6 +2,7 @@ package engine.bot.coordinator
 
 import api.bot.action.PkLoadoutSelection
 import api.bot.action.PkLoadoutPreparation
+import api.bot.action.PkSupplyAcquisition
 import api.bot.action.sourcesForStock
 import api.bot.action.stockIdFor
 import api.bot.action.trading.BotMarketExperience
@@ -110,26 +111,16 @@ internal object PkRuneRestocking {
      * @author lare96
      */
     private class ObtainSupplies(bot: Bot, required: Map<Int, Int>) : DynamicBotScript(bot) {
-        private val supplies = required.entries.map { it.key to it.value }
-        private var index = 0
+        private val supplies = required.toMap()
 
         override suspend fun run(): Boolean {
             val preparation = PkLoadoutPreparation(bot, handler)
-            while (index < supplies.size && isActionSafe()) {
-                if (!preparation.magicRestockRequired()) return true
-                val (id, amount) = supplies[index]
-                if (missingTargets(bot, mapOf(id to amount)).isEmpty()) {
-                    index++
-                    continue
-                }
-                handler.shop.obtainWantedItem(id, amount)
-                coroutineContext.ensureActive()
-                if (bot.scriptStack.current() !== this) return false
-                if (!isActionSafe()) return true
-                if (PkLoadoutSelection(bot).owned(id) < amount) return true
-                index++
-            }
-            return true
+            fun allowed() = bot.scriptStack.current() === this && isActionSafe()
+            if (!allowed() || !preparation.magicRestockRequired()) return true
+            val missing = missingTargets(bot, supplies)
+            PkSupplyAcquisition(bot, handler).obtain(supplies.filterKeys { it in missing }, ::allowed)
+            coroutineContext.ensureActive()
+            return bot.scriptStack.current() === this
         }
     }
 

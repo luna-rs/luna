@@ -1,7 +1,9 @@
 package api.bot.action
 
+import api.attr.Attr
 import api.bot.script.BotScript.ActionSafety
 import api.bot.action.trading.BotFoodDemand
+import game.bot.scripts.trading.TradeBotScript
 import api.bot.action.trading.BotTradeIntentions
 import api.predef.ext.get
 import engine.controllers.Controllers.inWilderness
@@ -23,6 +25,7 @@ import io.luna.game.model.mob.bot.brain.BotPkPreference
 import io.luna.game.model.mob.combat.Weapon
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Funds a concrete PK kit from existing gold, then uses ordinary wanted-item purchases.
@@ -32,6 +35,119 @@ import kotlin.time.Duration.Companion.minutes
  */
 internal class PkSupplyAcquisition(private val bot: Bot, private val handler: BotActionHandler) {
     private val selection = PkLoadoutSelection(bot)
+
+    companion object {
+        private val directRetryAt = Attr.map<Int, Long>()
+    }
+
+    /**
+     * A currently purchasable lot at a native shop or an active seller.
+     *
+     * @author lare96
+     */
+    private data class SupplyQuote(val item: Item, val unitPrice: Long, val coins: Long, val direct: Boolean)
+
+    /**
+     * Restocks a small number of interchangeable meals before a foodless bot attempts its equipment plan.
+     */
+    suspend fun obtainFood(allowed: () -> Boolean): Boolean {
+        if (hasFood()) return true
+        return withTimeoutOrNull(2.minutes) { buyFood(allowed) } == true
+    }
+
+    private suspend fun buyFood(allowed: () -> Boolean): Boolean {
+        BotTradeIntentions.requestFood(bot, 16, minimumHeal = 1)
+        val allowance = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
+        val food = BotFoodDemand.alternatives(bot)
+        val offers = TradeBotScript.carriedSupply(bot, food).groupBy { it.id }
+        val choices = food.asSequence().flatMap { id ->
+            listOfNotNull(shopQuote(id, 1), directQuote(id, 1, offers[id].orEmpty())).asSequence()
+        }.filter { it.coins in 1..allowance && it.unitPrice <= BotFoodDemand.priceCeiling(bot, it.item.id) }
+            .sortedWith(compareBy<SupplyQuote> { it.coins }.thenByDescending { it.direct })
+            .take(4).toList()
+        for (choice in choices) {
+            if (!allowed() || !safe()) return false
+            val id = choice.item.id
+            val budget = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
+            val ceiling = BotFoodDemand.priceCeiling(bot, id)
+            val amount = minOf(8L, BotFoodDemand.deficit(bot).toLong(), budget / choice.unitPrice).toInt()
+            val quote = (amount downTo 1).firstNotNullOfOrNull { quantity ->
+                (if (choice.direct) directQuote(id, quantity, offers[id].orEmpty()) else shopQuote(id, quantity))
+                    ?.takeIf { it.coins <= budget && it.unitPrice <= ceiling }
+            } ?: continue
+            buy(quote, allowed)
+            if (hasFood()) return true
+        }
+        return false
+    }
+
+    private fun hasFood(): Boolean = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +
+        bot.bank.filterNotNull()).any { Food.ID_TO_FOOD[it.unnotedItemDef.id()]?.heal?.let { heal -> heal > 0 } == true }
+
+    private fun shopQuote(id: Int, amount: Int): SupplyQuote? =
+        BotSupplySources.quote(bot, id, amount)?.takeIf { it.quantity >= amount }?.let {
+            // Reserve a coin per unit for rounding if a native visit splits the quoted purchase.
+            SupplyQuote(Item(id, amount), it.maximumUnitPrice, it.totalCoins + amount, false)
+        }
+
+    private fun directQuote(id: Int, amount: Int, offers: List<BotFoodDemand.Basket> =
+        TradeBotScript.carriedSupply(bot, setOf(id))): SupplyQuote? {
+        if ((bot.attributes()[directRetryAt.attr][id] ?: 0L) > System.currentTimeMillis()) return null
+        return offers.asSequence().filter { it.quantity >= amount && it.unitPrice in 1..Int.MAX_VALUE.toLong() }
+            .minByOrNull { it.unitPrice }?.let { SupplyQuote(Item(id, amount), it.unitPrice, it.unitPrice * amount, true) }
+    }
+
+    private suspend fun buy(quote: SupplyQuote, allowed: () -> Boolean) {
+        val item = quote.item
+        if (!allowed() || !safe() || quote.coins !in 1L..minOf(coins(), Int.MAX_VALUE.toLong())) return
+        val target = (selection.owned(item.id).toLong() + item.amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        if (quote.direct) {
+            val owner = bot.scriptStack.current() ?: return
+            val visit = 90.seconds
+            val deadline = System.currentTimeMillis() + visit.inWholeMilliseconds
+            val trade = TradeBotScript.buySpecific(bot, item.id, target,
+                deadline, quotedUnitPrice = quote.unitPrice,
+                tripPurchase = { !owner.isTerminated() && !owner.isFinished() && safe() }) ?: return
+            if (allowed() && handler.shop.obtainWantedItem(trade, visit))
+                bot.attributes()[directRetryAt.attr][item.id] = deadline + 30_000L
+        } else {
+            handler.shop.obtainWantedItems(mapOf(item.id to target), quote.coins.toInt(),
+                mapOf(item.id to quote.unitPrice))
+        }
+    }
+
+    /**
+     * Prices a complete basket from real owned stock, shops and active sellers.
+     */
+    internal fun purchaseQuotes(): (Map<Int, Int>) -> Long? {
+        val stock = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
+            .groupingBy { it.unnotedItemDef.id() }.fold(0L) { count, item -> count + item.amount }
+        val costs = mutableMapOf<Pair<Int, Int>, Long>()
+        return { required ->
+            basketCost(required) { id, target ->
+                val missing = (target - (stock[id] ?: 0L)).coerceAtLeast(0L).toInt()
+                if (missing == 0) 0L else costs.getOrPut(id to missing) { missingCost(id, missing) }
+            }
+        }
+    }
+
+    private fun quoteAvailable(required: Map<Int, Int>): Long? = basketCost(required) { id, target ->
+        val missing = target - selection.owned(id)
+        if (missing > 0) missingCost(id, missing) else 0L
+    }
+
+    private inline fun basketCost(required: Map<Int, Int>, cost: (Int, Int) -> Long): Long? {
+        var total = 0L
+        for ((id, target) in required) {
+            val price = cost(id, target)
+            if (price > Int.MAX_VALUE) return null
+            total += price
+        }
+        return total.takeIf { it <= Int.MAX_VALUE }
+    }
+
+    private fun missingCost(id: Int, missing: Int): Long =
+        minOf(shopCost(id, missing) ?: Long.MAX_VALUE, directQuote(id, missing)?.coins ?: Long.MAX_VALUE)
 
     /**
      * Combat equipment and consumables remain reserved even when they are absent from today's selected switches.
@@ -54,49 +170,35 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
      * Obtains a complete requested stock target. The whole funding/purchase visit has one five-minute deadline.
      * Failed or partial purchases remain owned, and departure still requires a fresh loadout/risk assessment.
      */
-    suspend fun obtain(required: Map<Int, Int>): Boolean = withTimeoutOrNull(5.minutes) {
+    suspend fun obtain(required: Map<Int, Int>, allowed: () -> Boolean = { true }): Boolean = withTimeoutOrNull(5.minutes) {
         if (!safe()) return@withTimeoutOrNull false
-        val exact = required.filterKeys { it !in Food.ID_TO_FOOD }
-        BotTradeIntentions.recordSupplies(bot, exact.map { (id, amount) -> Item(id, amount) })
-        for ((id, amount) in exact) bot.preferences.raiseWantedItemTarget(id, amount)
-        val foodCount = required.filterKeys { it in Food.ID_TO_FOOD }.values.sum()
-        if (foodCount > 0) BotTradeIntentions.requestFood(bot, foodCount, minimumHeal = 1)
+        BotTradeIntentions.recordSupplies(bot, required.map { (id, amount) -> Item(id, amount) })
+        for ((id, amount) in required) bot.preferences.raiseWantedItemTarget(id, amount)
         try {
-            // Quote all missing items together so funding does not repeatedly sell and return to the bank.
-            val cost = quoteMissing(required)
+            val cost = quoteAvailable(required)
             if (cost != null && coins() < cost && !fund(cost, required.keys)) return@withTimeoutOrNull false
-            if (exact.keys.any { it in Rune.ID_TO_RUNE }) {
-                val shopCost = quoteMissing(exact)
-                if (shopCost != null && shopCost in 1L..minOf(coins(), Int.MAX_VALUE.toLong())) {
-                    handler.shop.obtainWantedItems(exact, shopCost.toInt(), exact.keys.associateWith { shopCost })
-                }
+            val native = required.filter { (id, target) ->
+                val missing = target - selection.owned(id)
+                missing > 0 && shopCost(id, missing)?.let {
+                    it <= (directQuote(id, missing)?.coins ?: Long.MAX_VALUE)
+                } == true
+            }
+            val shopCost = quoteMissing(native)
+            if (allowed() && safe() && shopCost != null && shopCost in 1L..minOf(coins(), Int.MAX_VALUE.toLong())) {
+                handler.shop.obtainWantedItems(native, shopCost.toInt(), native.keys.associateWith { shopCost })
             }
             for ((id, amount) in required) {
-                if (!safe()) return@withTimeoutOrNull false
-                if (bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount) continue
-                val obtained = if (id in Food.ID_TO_FOOD && !BotTradeIntentions.hasLiteralSupplyDemand(bot, id)) {
-                    val owned = selection.owned(id)
-                    val missing = (amount - owned).coerceAtLeast(0)
-                    if (missing > 0 && (!BotFoodDemand.handles(bot, id) || BotFoodDemand.deficit(bot) < missing))
-                        return@withTimeoutOrNull false
-                    BotTradeIntentions.requestFood(bot, foodCount, minimumHeal = 1)
-                    val allowance = BotFoodDemand.allowance(bot)
-                    val ceiling = if (missing > 0) BotFoodDemand.priceCeiling(bot, id, missing) else 0L
-                    val ceilings = if (ceiling > 0L) mapOf(id to ceiling) else emptyMap()
-                    id in handler.shop.obtainWantedItems(mapOf(id to amount), allowance, ceilings)
-                } else handler.shop.obtainWantedItem(id, amount)
-                if (!obtained || !safe()) return@withTimeoutOrNull false
-                if (bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) < amount) {
+                if (!allowed() || !safe()) return@withTimeoutOrNull false
+                val missing = amount - selection.owned(id)
+                if (missing <= 0) continue
+                directQuote(id, missing)?.let { buy(it, allowed) }
+                if (!allowed() || !safe()) return@withTimeoutOrNull false
+                if (selection.owned(id) < amount && !handler.shop.obtainWantedItem(id, amount))
                     return@withTimeoutOrNull false
-                }
-                // Requote remaining shortages after dynamic shop prices or somebody else's purchases change stock.
-                val remainingCost = quoteMissing(required)
-                if (remainingCost != null && coins() < remainingCost &&
-                    !fund(remainingCost, required.keys)) return@withTimeoutOrNull false
             }
-            true
+            allowed() && safe() && required.all { (id, amount) -> selection.owned(id) >= amount }
         } finally {
-            bot.overlays.closeWindows()
+            if (allowed()) bot.overlays.closeWindows()
         }
     } == true
 
@@ -107,23 +209,29 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
     internal fun quoteMissing(required: Map<Int, Int>): Long? {
         var total = 0L
         for ((id, amount) in required) {
-            var missing = (amount - selection.owned(id)).coerceAtLeast(0)
-            val shops = bot.world.shops.sourcesForStock(id).asSequence()
-                .filter { it.currency == Currency.COINS && it.npcSellers.isNotEmpty() }
-                .map { shop -> shop to shop.stockIdFor(id) }
-                .sortedBy { (shop, stockId) -> shop.computeBuyValue(stockId, 1).orElse(Int.MAX_VALUE) }
-            for ((shop, stockId) in shops) {
-                if (missing == 0) break
-                val count = minOf(missing, shop.items.computeAmountForId(stockId))
-                if (count < 1) continue
-                val quote = shop.computeBuyValue(stockId, count).orElse(-1)
-                if (quote < 0) continue
-                total += quote.toLong() + count // Bound per-click integer rounding in the one-item acquisition API.
-                missing -= count
-            }
-            if (missing > 0) return null
+            val missing = amount - selection.owned(id)
+            if (missing > 0) total += shopCost(id, missing) ?: return null
         }
         return total
+    }
+
+    private fun shopCost(id: Int, amount: Int): Long? {
+        var missing = amount
+        var total = 0L
+        val shops = bot.world.shops.sourcesForStock(id).asSequence()
+            .filter { it.currency == Currency.COINS && it.npcSellers.isNotEmpty() }
+            .map { shop -> shop to shop.stockIdFor(id) }
+            .sortedBy { (shop, stockId) -> shop.computeBuyValue(stockId, 1).orElse(Int.MAX_VALUE) }
+        for ((shop, stockId) in shops) {
+            val count = minOf(missing, shop.items.computeAmountForId(stockId))
+            if (count < 1) continue
+            val quote = shop.computeBuyValue(stockId, count).orElse(-1)
+            if (quote < 0) continue
+            total += quote.toLong() + count
+            missing -= count
+            if (missing == 0) return total
+        }
+        return null
     }
 
     /**
