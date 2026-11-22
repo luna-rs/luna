@@ -25,7 +25,7 @@ enum class EmptyVessel(val container: Int, val noun: String) {
 
         private val BUCKETS = setOf("full bucket", "apple mush", "compost", "super compost", "ugthanki dung")
         private val BOWLS = setOf("nettle-water", "nettle tea", "burnt egg", "burnt onion", "burnt mushroom")
-        private val POTS = setOf("pot of flour", "pot of cornflour", "pot of vinegar", "bonemeal")
+        private val POTS = setOf("pot of flour", "pot of cornflour", "pot of vinegar")
         private val CUPS = setOf("cup of water", "cup of hot water", "ruined herb tea", "herb tea mix")
         private val VIALS = setOf("vial of water", "unfinished potion", "unfinished potion.", "weapon poison",
             "weapon poison(+)", "weapon poison(s)", "coconut milk", "plant cure", "cat antipoison",
