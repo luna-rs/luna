@@ -185,16 +185,17 @@ enum class SlayerMaster(val id: Int,
         val VALUES = ImmutableSet.copyOf(values())
 
         /**
-         * Computes the next best slayer master based on [other].
+         * Returns the next Slayer master if the player meets that master's level requirements.
          */
-        fun computeNextBestMaster(other: SlayerMaster): SlayerMaster {
-            return when (other) {
+        fun nextEligibleMaster(current: SlayerMaster, combatLevel: Int, slayerLevel: Int): SlayerMaster? {
+            val next = when (current) {
                 TURAEL -> MAZCHNA
                 MAZCHNA -> VANNAKA
                 VANNAKA -> CHAELDAR
                 CHAELDAR -> DURADEL
-                DURADEL -> DURADEL
+                DURADEL -> return null
             }
+            return next.takeIf { combatLevel >= it.combatLevel && slayerLevel >= it.slayerLevel }
         }
     }
 }

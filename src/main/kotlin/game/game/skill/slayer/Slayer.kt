@@ -182,10 +182,9 @@ object Slayer {
         }
 
         if (plr.activeSlayerTask == null) {
-            if ((plr.combatLevel >= master.combatLevel && plr.slayer.level >= master.slayerLevel) && master != SlayerMaster.DURADEL) {
-                // No slayer task, but we have high levels.
-                val nextMasterId = SlayerMaster.computeNextBestMaster(master).id
-                val nextMasterName = npcDef(nextMasterId).name
+            val nextMaster = SlayerMaster.nextEligibleMaster(master, plr.combatLevel, plr.slayer.level)
+            if (nextMaster != null) {
+                val nextMasterName = npcDef(nextMaster.id).name
                 dialogue.npc(master.id,
                              Expression.DEFAULT,
                              "You're actually very strong, are you sure you",
