@@ -10,7 +10,6 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CraftRuneBotScript
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.PURE_ESSENCE
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.RUNE_ESSENCE
-import game.obj.entrances.Zanaris
 import game.player.item.consume.food.Food
 import game.skill.runecrafting.craftRune.CraftableRune
 import game.skill.runecrafting.enterAltar.Altar
@@ -73,8 +72,7 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
                 val talisman = rune.altar.talisman
                 val hasAccess = owned(talisman)
                 if (!hasAccess && source(talisman) == null) continue
-                val needsAbyss = rune.altar == Altar.DEATH ||
-                    rune.altar == Altar.COSMIC && !owned(Zanaris.STAFF)
+                val needsAbyss = rune.altar == Altar.DEATH
                 if (needsAbyss && !canUseAbyss) continue
                 for (essence in listOf(RUNE_ESSENCE, PURE_ESSENCE)) {
                     if (essence == RUNE_ESSENCE && rune.level > 20) continue
@@ -100,7 +98,6 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
                 deadlineLimit = previous?.deadline ?: Long.MAX_VALUE)?.productionPlan
                 ?: continue
             val viaAbyss = canUseAbyss && (rune.altar == Altar.DEATH ||
-                rune.altar == Altar.COSMIC && !owned(Zanaris.STAFF) ||
                 rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5))
             return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss, profit = !training).also {
                 it.trainingGoal = if (training) skillId else null

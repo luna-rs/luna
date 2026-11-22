@@ -16,7 +16,6 @@ import engine.bot.coordinator.RuneRunningCoordinator.BATCH
 import engine.bot.coordinator.RuneRunningCoordinator.COINS
 import engine.bot.coordinator.RuneRunningCoordinator.HostTerms
 import engine.bot.coordinator.RuneRunningCoordinator.Route
-import game.obj.entrances.Zanaris
 import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.GroundItem
@@ -143,9 +142,7 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
                 !handler.equipment.unequipAll() || !handler.banking.depositInventory())
                 return@withTimeoutOrNull false
             handler.banking.clickBankingMode(false)
-            if (!handler.banking.withdraw(Item(entryItem)) ||
-                altar == Altar.COSMIC && !handler.banking.withdraw(Item(Zanaris.STAFF)))
-                return@withTimeoutOrNull false
+            if (!handler.banking.withdraw(Item(entryItem))) return@withTimeoutOrNull false
             val gold = offer.loads * offer.fee + RuneRunningCoordinator.fare(altar)
             if (!handler.banking.withdraw(Item(COINS, gold)) || bot.inventory.computeAmountForId(COINS) != gold)
                 return@withTimeoutOrNull false
@@ -160,7 +157,6 @@ class RuneCrafterBotScript(bot: Bot, data: CrafterData) : BotScript(bot), Social
             bot.overlays.closeWindows()
         }
         (!offer.tiara || handler.equipment.equip(entryItem)) &&
-            (altar != Altar.COSMIC || handler.equipment.equip(Zanaris.STAFF)) &&
             isActionSafe(ActionSafety.NON_COMBAT)
     } == true
 

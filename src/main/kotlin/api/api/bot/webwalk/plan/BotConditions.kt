@@ -46,8 +46,6 @@ import io.luna.game.model.mob.bot.Bot
  * There is a flag for each [ShipSearch] that searches for something, which a bot has if the search finds nothing on it,
  * such as [shipSearchFlag] of [ShipSearch.ENTRANA] for a bot without weapons or armour.
  *
- * Can also be used to check if spirit trees are unlocked, or if Zanaris is unlocked, and if a dramen or lunar staff is available in the inventory.
- *
  * @author Hydrozoa
  */
 object BotConditions {

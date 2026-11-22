@@ -4,14 +4,10 @@ import api.bot.Suspendable.waitFor
 import api.bot.webwalk.plan.PlanLeg
 import api.bot.webwalk.walk.LegContext
 import game.obj.entrances.Zanaris
-import io.luna.game.model.item.Equipment
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Uses the native Zanaris entrance with a carried staff and its unrestricted return ring.
+ * Uses the native Zanaris entrance and return ring.
  *
  * @author lare96
  */
@@ -25,28 +21,7 @@ object ZanarisCrossing : CrossingHandler {
         val id = action.objectId ?: return "the Zanaris crossing has no object id"
         if (id != Zanaris.DOOR && id != Zanaris.RETURN_RING) return "unsupported Zanaris crossing $id"
         context.walk(leg.from, 0)?.let { return it }
-        if (id == Zanaris.RETURN_RING) return use(context, leg)
-
-        val bot = context.bot
-        val previousWeapon = bot.equipment[Equipment.WEAPON]?.id
-        if (previousWeapon != Zanaris.STAFF && !context.handler.equipment.equip(Zanaris.STAFF)) {
-            return "could not wear the dramen staff"
-        }
-        var restoreFailed = false
-        val failure = try {
-            use(context, leg)
-        } finally {
-            // Preserve a weapon change made by another activity while this trip was interrupted.
-            if (currentCoroutineContext().isActive && previousWeapon != Zanaris.STAFF &&
-                bot.equipment[Equipment.WEAPON]?.id == Zanaris.STAFF &&
-                !context.interrupted) {
-                restoreFailed = withTimeoutOrNull(5.seconds) {
-                    if (previousWeapon == null) context.handler.equipment.unequip(Equipment.WEAPON)
-                    else context.handler.equipment.equip(previousWeapon)
-                } != true
-            }
-        }
-        return failure ?: if (restoreFailed) "could not restore the previous weapon after the Zanaris crossing" else null
+        return use(context, leg)
     }
 
     /**

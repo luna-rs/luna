@@ -205,7 +205,7 @@ object LostCity {
 
     /**
      * Awards Lost City's three quest points once after the staff-making player actually arrives in Zanaris.
-     * Existing players with a staff can still enter without starting or completing this quest.
+     * Ordinary shed travel is available at every quest stage.
      */
     fun complete(player: Player): Boolean {
         if (stage(player) != STAFF_MADE || !player.isAlive || player.z != Zanaris.LANDING.z ||
@@ -218,8 +218,7 @@ object LostCity {
             override fun onOpen(plr: Player) {
                 plr.sendText("You have completed the\\nLost City of Zanaris Quest!", 12144)
                 plr.sendText("3 Quest Points", 12150)
-                plr.sendText("Access to Zanaris", 12151)
-                for (id in 12152..12155) plr.sendText("", id)
+                for (id in 12151..12155) plr.sendText("", id)
                 plr.queue(WidgetItemModelMessageWriter(12145, 250, 995))
             }
         })

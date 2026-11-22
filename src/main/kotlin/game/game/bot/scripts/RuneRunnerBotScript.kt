@@ -14,7 +14,6 @@ import engine.bot.coordinator.RuneRunningCoordinator
 import engine.bot.coordinator.RuneRunningCoordinator.BATCH
 import engine.bot.coordinator.RuneRunningCoordinator.COINS
 import engine.bot.coordinator.RuneRunningCoordinator.Route
-import game.obj.entrances.Zanaris
 import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
@@ -136,7 +135,6 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
                 !handler.banking.depositInventory() || !handler.equipment.unequipAll() ||
                 !handler.banking.depositInventory()) return@withTimeoutOrNull false
             handler.banking.clickBankingMode(false)
-            if (altar == Altar.COSMIC && !handler.banking.withdraw(Item(Zanaris.STAFF))) return@withTimeoutOrNull false
             val fare = RuneRunningCoordinator.fare(altar)
             if (fare > 0 && !handler.banking.withdraw(Item(COINS, fare))) return@withTimeoutOrNull false
             if (!handler.banking.withdraw(Item(essenceId, BATCH)) ||
@@ -145,7 +143,7 @@ class RuneRunnerBotScript(bot: Bot, data: RunnerData) : BotScript(bot), SocialBo
             if (bot.bank.isOpen) handler.banking.clickBankingMode(previous != 0)
             bot.overlays.closeWindows()
         }
-        (altar != Altar.COSMIC || handler.equipment.equip(Zanaris.STAFF)) && isActionSafe(ActionSafety.NON_COMBAT)
+        isActionSafe(ActionSafety.NON_COMBAT)
     } == true
 
     private suspend fun failedAttempt(): Boolean {

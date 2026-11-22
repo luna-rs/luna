@@ -114,7 +114,7 @@ object LostCityDialogue {
                 .npc(LostCity.SHAMUS, "Yer'll be needing that funny little shed in the swamp.")
                 .player("But Zanaris is a city! How does it fit in a shed?")
                 .npc(LostCity.SHAMUS, "The city isn't IN the shed! Its doorway is a portal!",
-                    "Yer need to be holding a Dramenwood staff to get there.")
+                    "Wear a Dramenwood staff when yer go through.")
                 .player("Where would I get a staff?")
                 .npc(LostCity.SHAMUS, "Craft one from a branch of the Dramen tree.",
                     "There's one in a cave on Entrana.",
@@ -126,7 +126,7 @@ object LostCityDialogue {
                     }
                 }.open()
             else -> dialogue.options("I'm not sure.", { disappear(it, shamus) },
-                "How do I get to Zanaris again?", {
+                "What do I do with the staff again?", {
                     it.newDialogue().npc(LostCity.SHAMUS,
                         "Enter the shed while holding a Dramenwood staff!",
                         "Make it from a Dramen branch. There's a tree in a cave on Entrana.")

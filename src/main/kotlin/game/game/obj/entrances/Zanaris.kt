@@ -13,7 +13,7 @@ import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 
 /**
- * The dramen-staff entrance to Zanaris and its unrestricted fairy-ring return to Lumbridge swamp.
+ * The swamp shed entrance to Zanaris and its fairy-ring return to Lumbridge Swamp.
  *
  * @author lare96
  */
@@ -28,7 +28,7 @@ object Zanaris {
     private val doorType = DoorType(DOOR, 1532, null, null, null, 3)
 
     /**
-     * Opens the shed normally; entering with the staff equipped triggers its magic.
+     * Opens the shed and teleports players who step inside.
      */
     fun openDoor(plr: Player, door: GameObject) {
         if (plr.actions.first(Crossing::class.java) == null) {
@@ -59,7 +59,7 @@ object Zanaris {
         plr.actions.getAll(MobDeathAction::class.java).none { !it.isFinished }
 
     /**
-     * Checks the worn staff only after stepping into the shed.
+     * Starts the Zanaris teleport after stepping into the shed.
      *
      * @author lare96
      */
@@ -67,7 +67,7 @@ object Zanaris {
         override fun checkAccess(entering: Boolean): Boolean = true
 
         override fun onPassage(entering: Boolean) {
-            if (!entering && mob.equipment[Equipment.WEAPON]?.id == STAFF) {
+            if (!entering) {
                 mob.submitAction(ShedTeleport(mob))
             }
         }
@@ -93,7 +93,7 @@ object Zanaris {
         }
 
         override fun onLand() {
-            LostCity.complete(mob)
+            if (mob.equipment[Equipment.WEAPON]?.id == STAFF) LostCity.complete(mob)
         }
     }
 }

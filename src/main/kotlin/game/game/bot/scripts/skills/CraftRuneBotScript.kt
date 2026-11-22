@@ -30,7 +30,6 @@ import engine.controllers.Controllers.inWilderness
 import game.content.abyss.*
 import game.content.sailing.Entrana
 import game.player.item.consume.food.Food
-import game.obj.entrances.Zanaris
 import api.bot.script.ProductionPlan
 import game.skill.mining.Pickaxe
 import game.skill.woodcutting.cutTree.Axe
@@ -381,8 +380,6 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         val access = buildList {
             if (bot.equipment[Equipment.HEAD]?.id != altar.tiara || productionPlan?.recipe?.tools?.contains(altar.talisman) == true)
                 add(Item(altar.talisman))
-            if (altar == Altar.COSMIC && bot.equipment[Equipment.WEAPON]?.id != Zanaris.STAFF)
-                add(Item(Zanaris.STAFF))
         }
         val tools = (if (viaAbyss) abyssSupplies() else access) + pouches.map { pouch ->
             Item(pouch.ids.first { bot.itemTracker.contains(it) })

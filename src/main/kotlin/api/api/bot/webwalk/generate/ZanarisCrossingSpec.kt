@@ -1,20 +1,18 @@
 package api.bot.webwalk.generate
 
-import api.bot.webwalk.model.ItemRequirement
-import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.walk.crossing.ZanarisCrossing
 import game.obj.entrances.Zanaris
 import io.luna.game.model.Position
 
 /**
- * The staff-equipped shed entrance and the separate, staff-free return ring.
+ * The swamp shed entrance to Zanaris and the separate return ring.
  *
  * @author lare96
  */
 object ZanarisCrossingSpec {
 
     val ENTRY = CrossingSpec(ZanarisCrossing.ID, setOf(Zanaris.DOOR),
-        Requirements(items = listOf(ItemRequirement(Zanaris.STAFF))), bidirectional = false, cost = 8,
+        bidirectional = false, cost = 8,
         placements = listOf(CrossingPlacement(Zanaris.DOOR, Position(3202, 3169),
             Zanaris.SHED_OUTSIDE, Zanaris.LANDING)))
 

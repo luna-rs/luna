@@ -13,7 +13,6 @@ import game.bot.scripts.RuneCrafterBotScript
 import game.bot.scripts.RuneRunnerBotScript
 import game.bot.scripts.RuneRunningDialogue
 import game.bot.scripts.RuneRunningWaitBotScript
-import game.obj.entrances.Zanaris
 import game.skill.runecrafting.craftRune.CraftableRune
 import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.model.EntityState
@@ -180,7 +179,6 @@ object RuneRunningCoordinator : BotCoordinator {
         (!bot.inWilderness() || route.altar == Altar.CHAOS)
 
     private fun canRun(bot: Bot, route: Route): Boolean = runnerEligible(bot, route.altar) &&
-        (route.altar != Altar.COSMIC || owns(bot, Zanaris.STAFF)) &&
         ownedEssence(bot, route) >= BATCH && owned(bot, COINS) >= fare(route.altar)
 
     private fun hasFirstLoad(bot: Bot): Boolean =
@@ -374,7 +372,7 @@ object RuneRunningCoordinator : BotCoordinator {
     private fun terms(bot: Bot, route: Route, minimum: Int, training: Boolean): HostTerms? {
         val altar = route.altar
         val tiara = owns(bot, altar.tiara)
-        if (!tiara && !owns(bot, altar.talisman) || altar == Altar.COSMIC && !owns(bot, Zanaris.STAFF)) return null
+        if (!tiara && !owns(bot, altar.talisman)) return null
         val coins = owned(bot, COINS)
         val fee = RuneRunningEconomics.quoteFee(bot, route, minimum, coins, training) ?: return null
         val maxLoads = if (tiara) 6 else 2
