@@ -44,7 +44,7 @@ val levelUpTable = listOf(
     LevelUpData(4278, 4279, 4277),
     LevelUpData(4263, 4264, 4261),
     LevelUpData(12123, 12124, 12122),
-    LevelUpData(4889, 4890, 4887),
+    LevelUpData(360, 361, 359), // Farming uses the two-line text dialogue.
     LevelUpData(4268, 4269, 4267))
 
 /**
