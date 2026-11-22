@@ -86,7 +86,7 @@ gradle-app.setting
 # Log file
 *.log
 /data/logs
-/data/benchmarks/**/*.md
+/data/benchmarks/benchmark-*/**/*.md
 
 # Package Files #
 *.jar
