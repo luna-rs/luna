@@ -1,0 +1,42 @@
+LUNA BENCHMARK REPRODUCTION
+
+Run these commands from the repository root unless a working directory is part of the command.
+Replay creates a fresh dated folder and applies the archived source patch and runtime settings.
+A new attempt uses the current harness. An interrupted measurement window starts over.
+The recorded checkout, preparation, build, and start commands describe the original attempt.
+
+ISOLATED CHECKOUT
+git worktree add --detach /workspace/luna-benchmark-work/native-wander-20261122T023540625993Z \
+bb69251d721885eb020e70b00ac292eafaa03923
+
+PREPARE WORKTREE
+python3 /workspace/luna/scripts/performance/prepare.py \
+/workspace/luna-benchmark-work/native-wander-20261122T023540625993Z \
+/workspace/luna/docs/performance/benchmark-2025-12-16 /workspace/.onboarding/luna-cache-377-openrs2-657.zip
+
+BUILD
+cd /workspace/luna-benchmark-work/native-wander-20261122T023540625993Z && env \
+JAVA_HOME=/workspace/luna-benchmark-work/jdk-11.0.33.1+1 GRADLE_USER_HOME=/workspace/.gradle \
+JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts ./gradlew --no-daemon --console=plain \
+installDist
+
+START
+cd /workspace/luna-benchmark-work/native-wander-20261122T023540625993Z && \
+/workspace/luna-benchmark-work/jdk-11.0.33.1+1/bin/java -Xms2g -Xmx6g -XX:+UseG1GC \
+'-Xlog:gc*,safepoint:file=/workspace/luna/docs/performance/benchmark-2025-12-16/logs/gc.txt:u'\
+tctime,uptimenanos,level,tags -Dluna.benchmark.raw=/workspace/luna/docs/performance/benchmark-2025-12-16/raw -cp \
+'/workspace/luna-benchmark-work/native-wander-20261122T023540625993Z/build/install/luna/lib/*' io.luna.Luna
+
+REGENERATE
+python3 /workspace/luna/scripts/performance/reports.py /workspace/luna/docs/performance/benchmark-2025-12-16
+
+NEW ATTEMPT
+python3 /workspace/luna/scripts/performance/run.py run native-wander
+
+EARLIER COMPATIBILITY BUILD
+cd /workspace/luna-benchmark-work/native-preflight && env JAVA_HOME=/workspace/luna-benchmark-work/jdk-11.0.33.1+1 \
+GRADLE_USER_HOME=/workspace/.gradle JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts ./gradlew \
+--no-daemon --console=plain installDist
+
+REPLAY ARCHIVED SOURCE AND CONFIGURATION
+python3 /workspace/luna/scripts/performance/run.py replay /workspace/luna/docs/performance/benchmark-2025-12-16

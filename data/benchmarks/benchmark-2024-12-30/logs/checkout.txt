@@ -1,0 +1,2 @@
+Preparing worktree (detached HEAD 2d197eb3)
+HEAD is now at 2d197eb3 Update to signals and Kotlin coroutine bot subscripts, now with an example!

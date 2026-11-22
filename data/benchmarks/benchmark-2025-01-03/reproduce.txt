@@ -1,0 +1,32 @@
+LUNA BENCHMARK REPRODUCTION
+
+Run these commands from the repository root unless a working directory is part of the command.
+Replay creates a fresh dated folder and applies the archived source patch and runtime settings.
+A new attempt uses the current harness. An interrupted measurement window starts over.
+The recorded checkout, preparation, build, and start commands describe the original attempt.
+
+ISOLATED CHECKOUT
+git worktree add --detach /workspace/luna-benchmark-work/history-246b88fd 246b88fd11c0c3bc736efd248d18c46b93caa50a
+
+BUILD
+cd /workspace/luna-benchmark-work/history-246b88fd && env JAVA_HOME=/workspace/luna-benchmark-work/jdk-11.0.33.1+1 \
+GRADLE_USER_HOME=/workspace/.gradle JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts ./gradlew \
+--no-daemon --console=plain installDist
+
+START
+cd /workspace/luna-benchmark-work/history-246b88fd && timeout -k 10 35 \
+/workspace/luna-benchmark-work/jdk-11.0.33.1+1/bin/java -Xms512m -Xmx3g -XX:+UseG1GC -cp \
+/workspace/luna-benchmark-work/history-246b88fd/build/classes/java/main:/workspace/luna-benc\
+hmark-work/history-246b88fd/build/classes/kotlin/main:/workspace/luna-benchmark-work/history\
+-246b88fd/build/resources/main:/workspace/luna-benchmark-work/history-246b88fd/build/install\
+'/luna/lib/*' io.luna.Luna
+
+REGENERATE
+python3 /workspace/luna/scripts/performance/reports.py /workspace/luna/docs/performance/benchmark-2025-01-03
+
+NEW ATTEMPT
+python3 /workspace/luna/scripts/performance/run.py run position-refactor-check
+
+CREATE EMPTY SAVE DIRECTORIES
+mkdir -p /workspace/luna-benchmark-work/history-246b88fd/data/game/saved_bots \
+/workspace/luna-benchmark-work/history-246b88fd/data/game/saved_players

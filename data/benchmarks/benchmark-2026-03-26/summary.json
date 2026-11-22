@@ -1,0 +1,47 @@
+{
+  "status": "FAILED",
+  "outcome": "Stopped spawn qualification after telemetry recorded zero world NPCs. This revision disables ClassGraph jar scanning, so the packaged application launch did not discover ordinary world plugins.",
+  "effective_beta": "true",
+  "runtime_mode": "DEVELOPMENT",
+  "duration_seconds": null,
+  "warmup_seconds": null,
+  "measurement_utc": null,
+  "event_timestamps_utc": {
+    "effective_beta": "2026-11-22T02:36:33.283+00:00",
+    "runtime_mode": "2026-11-22T02:36:33.291+00:00",
+    "spawn_started": "2026-11-22T02:36:33.291+00:00"
+  },
+  "tick_budget_ms": 600,
+  "gap_threshold_ms_strictly_greater_than": 900.0,
+  "target_bots": 800,
+  "peak_active_bots_any_phase": 800,
+  "highest_bot_movement_ever_count": 773,
+  "pre_measurement_ticks_with_bot_combat": 0,
+  "npc_population_any_phase": {
+    "mean": 0,
+    "median": 0,
+    "p95": 0,
+    "p99": 0,
+    "max": 0,
+    "min": 0,
+    "samples": 161
+  },
+  "latest_observed_utc": "2026-11-22T02:37:59.277+00:00",
+  "live": false,
+  "checks": {
+    "server_confirmed_beta": true,
+    "warmup_met": false,
+    "measurement_met": false,
+    "target_held": false,
+    "only_benchmark_players": false,
+    "continuous_tick_sequence": false,
+    "native_wandering_population_observed": false,
+    "movement_verified": false,
+    "no_bot_combat": false,
+    "npc_background_present": false,
+    "resource_samples_saved": false,
+    "completed_world_ticks_recorded": false
+  },
+  "metrics": {},
+  "graphic_note": "800 bots connected before measurement. 773 had moved. Steady-state performance is unavailable."
+}

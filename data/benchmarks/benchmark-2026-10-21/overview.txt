@@ -1,0 +1,46 @@
+WHAT WAS TESTED
+
+Code date 2026-10-21. One calendar month before the task. Commit a928f437bb24f2a0af5ddc08ff03764fc40527b4. Server launch
+2026-11-21 20:19:35 EST.
+
+Historical development snapshot. Effective beta mode true. Status COMPLETE. Wandering-only workload with target 800 bots
+and 800 measured. Warm-up 15m 00.6s. Measured duration 60m 00.0s.
+
+Revision context. Native smart wandering and bot activity dispatch are present. This commit updates the show-off script
+so bots wear partyhats.
+
+HOW THE SERVER PERFORMED
+
+The server kept up with its configured update schedule in this window. The server completed 6,000 world updates in 60m
+00.0s. The average update took 30.97 ms out of the 600 ms budget. About 99 in 100 start-to-start intervals were at most
+600.32 ms.
+
+WHAT WENT WELL
+
+At least 800 bots changed tiles during every rolling five-minute window. Mean server CPU was 6.68% and mean resident
+memory was 4,603 MiB.
+
+PROBLEMS AND CONCERNS
+
+Heap remaining after garbage collection rose through the hour, from a median of 1,643 MiB in the first quarter to 1,770
+MiB in the last.
+
+WHAT THE NUMBERS MEAN
+
+A tick is one server update. Processing time measures the work in a tick. Tick spacing is the time between the start of
+one update and the start of the next. p99 is the time within which about 99 out of 100 measured ticks finished their
+work.
+
+A process CPU value of 100% means one fully occupied core. Resident memory is RAM held by the JVM process. The JVM heap
+stores Java objects. Both may grow as workload changes. A memory leak requires evidence that the program keeps objects
+it can no longer use.
+
+LIMITS AND NEXT STEPS
+
+Findings apply to this single wandering-only attempt with Luna's in-process bot clients and ordinary NPC processing.
+Trading, combat, skilling, conversations and mixed human-player loads are outside its scope.
+
+See reproduce.txt for exact reproduction and regeneration commands.
+
+A longer run that captures the older part of the heap being collected, with object retention sampling, would help
+explain the growth.

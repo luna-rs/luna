@@ -1,0 +1,43 @@
+[22 Nov 2026 04:26:05] [io.luna.LunaServer] [InitializationThread]
+INFO: Waiting for 4 Java launch task(s) to complete...
+[22 Nov 2026 04:26:08] [io.luna.LunaServer] [InitializationThread]
+INFO: 43 Kotlin plugins containing 85 scripts have been loaded.
+[22 Nov 2026 04:26:08] [io.luna.LunaServer] [InitializationThread]
+INFO: All services are now running.
+[22 Nov 2026 04:26:13] [io.luna.game.model.mob.bot.BotRepository] [GameService RUNNING]
+ERROR: Catching
+java.nio.file.NoSuchFileException: data/game/saved_bots
+	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92) ~[?:?]
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111) ~[?:?]
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116) ~[?:?]
+	at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55) ~[?:?]
+	at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149) ~[?:?]
+	at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99) ~[?:?]
+	at java.base/java.nio.file.Files.readAttributes(Files.java:1764) ~[?:?]
+	at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219) ~[?:?]
+	at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276) ~[?:?]
+	at java.base/java.nio.file.FileTreeWalker.walk(FileTreeWalker.java:322) ~[?:?]
+	at java.base/java.nio.file.FileTreeIterator.<init>(FileTreeIterator.java:71) ~[?:?]
+	at java.base/java.nio.file.Files.walk(Files.java:3825) ~[?:?]
+	at java.base/java.nio.file.Files.walk(Files.java:3879) ~[?:?]
+	at io.luna.game.model.mob.persistence.JsonPlayerSerializer.loadBotUsernames(JsonPlayerSerializer.java:65) ~[main/:?]
+	at io.luna.game.model.mob.bot.BotRepository.load(BotRepository.java:123) ~[main/:?]
+	at io.luna.game.model.World.start(World.java:209) ~[main/:?]
+	at io.luna.game.service.GameService$GameServiceListener.lambda$running$0(GameService.java:66) ~[main/:?]
+	at io.luna.game.service.GameService.runSynchronizationTasks(GameService.java:197) ~[main/:?]
+	at io.luna.game.service.GameService.loop(GameService.java:176) ~[main/:?]
+	at io.luna.game.service.GameService.runOneIteration(GameService.java:152) ~[main/:?]
+	at com.google.common.util.concurrent.AbstractScheduledService$ServiceDelegate$Task.run(AbstractScheduledService.java:234) ~[guava-33.0.0-jre.jar:?]
+	at com.google.common.util.concurrent.Callables.lambda$threadRenaming$3(Callables.java:105) ~[guava-33.0.0-jre.jar:?]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515) ~[?:?]
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305) ~[?:?]
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+[22 Nov 2026 04:26:15] [io.luna.game.model.map.DynamicMapSpacePool] [GameService RUNNING]
+INFO: Created 1377 pooled dynamic map spaces.
+[22 Nov 2026 04:26:15] [io.luna.game.service.GameService] [GameService RUNNING]
+INFO: Waiting for 1 Kotlin startup task(s) to complete...
+[22 Nov 2026 04:26:15] [io.luna.LunaServer] [InitializationThread]
+INFO: Luna is now online on port 43597 (took 10s).

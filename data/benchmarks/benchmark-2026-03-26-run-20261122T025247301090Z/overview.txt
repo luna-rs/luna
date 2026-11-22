@@ -1,0 +1,41 @@
+WHAT WAS TESTED
+
+Code date 2026-03-26. Native-wandering substitute for the early bot checkpoints. Commit
+c9552bea86a9bfaf37064ff51a43cee5d2e07420. Server launch 2026-11-21 21:53:33 EST.
+
+Historical development snapshot. Effective beta mode true. Status FAILED. Wandering-only workload with target 800 bots
+and 800 pre-measurement peak. Warm-up N/A. Measured duration N/A.
+
+Revision context. Native SmartWanderingAction with the stock scheduler fix, asynchronous pathfinding and paused roaming.
+
+HOW THE SERVER PERFORMED
+
+Qualification ended with 800 active bots, 799 observed moving, and 52 background NPCs. Warm-up and steady-state
+measurement did not start.
+
+WHAT WENT WELL
+
+Before measurement the server registered up to 800 active bots, and 799 had changed tiles.
+
+PROBLEMS AND CONCERNS
+
+Qualification ended with 800 active bots, 799 observed moving, and 52 background NPCs. Warm-up and steady-state
+measurement did not start.
+
+WHAT THE NUMBERS MEAN
+
+A tick is one server update. Processing time measures the work in a tick. Tick spacing is the time between the start of
+one update and the start of the next. p99 is the time within which about 99 out of 100 measured ticks finished their
+work.
+
+A process CPU value of 100% means one fully occupied core. Resident memory is RAM held by the JVM process. The JVM heap
+stores Java objects. Both may grow as workload changes. A memory leak requires evidence that the program keeps objects
+it can no longer use.
+
+LIMITS AND NEXT STEPS
+
+Findings apply to this single wandering-only attempt with Luna's in-process bot clients and ordinary NPC processing.
+Trading, combat, skilling, conversations and mixed human-player loads are outside its scope.
+
+See reproduce.txt for the regeneration and new-attempt commands. An interrupted measurement requires a new uninterrupted
+window.

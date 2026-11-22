@@ -1,0 +1,4 @@
+event,monotonic_ns,utc_ms,value
+effective_beta,10920516382780,1795314993283,true
+runtime_mode,10920523600011,1795314993291,DEVELOPMENT
+spawn_started,10920523621123,1795314993291,800

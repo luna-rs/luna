@@ -1,0 +1,178 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Configuration on demand is an incubating feature.
+> Task :processResources NO-SOURCE
+> Task :compileKotlin
+w: /workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/kotlin/api/api/bot/SuspendableCondition.kt: (43, 6): This annotation should be used with the compiler argument '-opt-in=kotlin.RequiresOptIn'
+w: /workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/kotlin/api/api/bot/SuspendableFuture.kt: (62, 6): This annotation should be used with the compiler argument '-opt-in=kotlin.RequiresOptIn'
+w: /workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/kotlin/api/api/combat/death/DeathHookHandler.kt: (82, 46): Unchecked cast: DeathHook<T> /* = DeathHookReceiver<T>.() -> Unit */ to DeathHook<Player> /* = DeathHookReceiver<Player>.() -> Unit */
+w: /workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/kotlin/api/api/combat/death/DeathHookHandler.kt: (90, 43): Unchecked cast: DeathHook<T> /* = DeathHookReceiver<T>.() -> Unit */ to DeathHook<Npc> /* = DeathHookReceiver<Npc>.() -> Unit */
+w: /workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/kotlin/api/api/combat/weapons/SpecialAttackHandler.kt: (5, 18): Parameter 'id' is never used
+w: /workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/kotlin/engine/engine/combat/prayer/CombatPrayerSet.kt: (108, 27): Check for instance is always 'true'
+w: /workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/kotlin/game/game/obj/resource/fillable/FillableResource.kt: (31, 41): Parameter 'resourceObject' is never used
+
+> Task :compileJava
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/action/ActionQueue.java:137: warning: [unchecked] unchecked cast
+                return (T) action;
+                           ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>first(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/action/ActionQueue.java:142: warning: [unchecked] unchecked cast
+                return (T) action;
+                           ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>first(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/action/ActionQueue.java:158: warning: [unchecked] unchecked cast
+                filtered.add((T) action);
+                                 ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/action/ActionQueue.java:163: warning: [unchecked] unchecked cast
+                filtered.add((T) action);
+                                 ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(Class<T>)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/action/ActionQueue.java:176: warning: [unchecked] unchecked cast
+        List<T> filtered = new ArrayList<>((Collection<? extends T>) processing.get(type));
+                                                                                   ^
+  required: Collection<? extends T>
+  found:    List<Action<?>>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(ActionType)
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/action/ActionQueue.java:179: warning: [unchecked] unchecked cast
+                filtered.add((T) action);
+                                 ^
+  required: T
+  found:    Action<CAP#1>
+  where T is a type-variable:
+    T extends Action<?> declared in method <T>getAll(ActionType)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Mob from capture of ?
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/MobList.java:127: warning: [unchecked] unchecked cast
+        this.mobs = (E[]) new Mob[capacity + 1];
+                          ^
+  required: E[]
+  found:    Mob[]
+  where E is a type-variable:
+    E extends Mob declared in class MobList
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/chunk/ChunkUpdatableView.java:41: warning: [unchecked] unchecked method invocation: constructor <init> in class ChunkUpdatableView is applied to given types
+    private static final ChunkUpdatableView GLOBAL_VIEW = new ChunkUpdatableView(Collections.EMPTY_SET);
+                                                          ^
+  required: Set<Player>
+  found: Set
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/chunk/ChunkUpdatableView.java:41: warning: [unchecked] unchecked conversion
+    private static final ChunkUpdatableView GLOBAL_VIEW = new ChunkUpdatableView(Collections.EMPTY_SET);
+                                                                                            ^
+  required: Set<Player>
+  found:    Set
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:117: warning: [unchecked] unchecked cast
+        return (T) previousValue;
+                   ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>set(Attribute<T>,T)
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:130: warning: [unchecked] unchecked cast
+            return (T) lastValue;
+                       ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>get(Attribute<T>)
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:149: warning: [unchecked] unchecked cast
+        return (T) lastValue;
+                   ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>get(Attribute<T>)
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/net/msg/GameMessageReader.java:141: warning: [unchecked] unchecked cast
+                get((Class<E>) event.getClass()).getInteractionListeners(player, event);
+                                             ^
+  required: Class<E>
+  found:    Class<CAP#1>
+  where E is a type-variable:
+    E extends Event declared in class GameMessageReader
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Event from capture of ? extends Event
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/bot/script/BotScriptManager.java:75: warning: [unchecked] unchecked cast
+        ScriptSupplier<T> supplier = (ScriptSupplier<T>) scriptMap.get(typeName);
+                                                                      ^
+  required: ScriptSupplier<T>
+  found:    ScriptSupplier<CAP#1>
+  where T is a type-variable:
+    T extends Object declared in method <T>loadScript(String,Bot,T)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Object from capture of ?
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/plugin/PluginManager.java:51: warning: [unchecked] unchecked cast
+        EventListenerPipeline<E> pipeline = (EventListenerPipeline<E>) pipelines.get(msg.getClass());
+                                                                                    ^
+  required: EventListenerPipeline<E>
+  found:    EventListenerPipeline<CAP#1>
+  where E is a type-variable:
+    E extends Event declared in method <E>post(E)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Event from capture of ? extends Event
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/overlay/AbstractOverlaySet.java:183: warning: [unchecked] unchecked cast
+                return (T) overlay;
+                           ^
+  required: T
+  found:    AbstractOverlay
+  where T is a type-variable:
+    T extends AbstractOverlay declared in method <T>getOverlay(Class<T>)
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/overlay/AbstractOverlaySet.java:190: warning: [unchecked] unchecked cast
+                    return (T) overlay;
+                               ^
+  required: T
+  found:    AbstractOverlay
+  where T is a type-variable:
+    T extends AbstractOverlay declared in method <T>getOverlay(Class<T>)
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/mob/overlay/AbstractOverlaySet.java:205: warning: [unchecked] unchecked cast
+        return (T) overlayMap.get(type);
+                                 ^
+  required: T
+  found:    AbstractOverlay
+  where T is a type-variable:
+    T extends AbstractOverlay declared in method <T>getOverlay(OverlayType)
+/workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/src/main/java/io/luna/game/model/path/Node.java:64: warning: [unchecked] unchecked cast
+            Node<T> other = (Node<T>) obj;
+                                      ^
+  required: Node<T>
+  found:    Object
+  where T is a type-variable:
+    T extends Locatable declared in class Node
+19 warnings
+
+> Task :classes
+> Task :inspectClassesForKotlinIC
+> Task :jar
+> Task :startScripts
+> Task :installDist
+
+[Incubating] Problems report is available at: file:///workspace/luna-benchmark-work/native-wander-fixed-20261122T025247301090Z/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 44s
+6 actionable tasks: 6 executed

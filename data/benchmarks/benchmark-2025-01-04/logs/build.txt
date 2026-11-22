@@ -1,0 +1,116 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+To honour the JVM settings for this build a new JVM will be forked. Please consider using the daemon: https://docs.gradle.org/5.6.4/userguide/gradle_daemon.html.
+Daemon will be stopped at the end of the build stopping after processing
+Configuration on demand is an incubating feature.
+
+> Task :compileKotlin
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/api/item/dropTable/DropTable.kt: (47, 29): Parameter 'mob' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/api/item/dropTable/DropTable.kt: (47, 40): Parameter 'source' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/api/predef/ext/DurationExtensionFunctions.kt: (17, 2): This class can only be used with the compiler argument '-Xopt-in=kotlin.RequiresOptIn'
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/command/generic/playerCmd.kts: (52, 22): Parameter 'plr' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/command/generic/playerCmd.kts: (56, 24): Parameter 'plr' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/command/generic/playerCmd.kts: (60, 23): Parameter 'plr' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/command/generic/playerCmd.kts: (64, 27): Parameter 'plr' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/command/generic/playerCmd.kts: (68, 24): Parameter 'plr' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/command/generic/playerCmd.kts: (72, 24): Parameter 'plr' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/command/generic/playerCmd.kts: (76, 23): Parameter 'plr' is never used
+w: /workspace/luna-benchmark-work/history-027b89ac/src/main/kotlin/world/player/item/consumable/potion/Potion.kt: (193, 33): Parameter 'immunityDuration' is never used
+
+> Task :compileJava
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/plugin/PluginManager.java:49: warning: [unchecked] unchecked cast
+        EventListenerPipeline<E> pipeline = (EventListenerPipeline<E>) pipelines.get(msg.getClass());
+                                                                                    ^
+  required: EventListenerPipeline<E>
+  found:    EventListenerPipeline<CAP#1>
+  where E is a type-variable:
+    E extends Event declared in method <E>post(E)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Event from capture of ? extends Event
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/plugin/PluginManager.java:63: warning: [unchecked] unchecked cast
+        EventListenerPipeline<E> pipeline = (EventListenerPipeline<E>) pipelines.get(msg.getClass());
+                                                                                    ^
+  required: EventListenerPipeline<E>
+  found:    EventListenerPipeline<CAP#1>
+  where E is a type-variable:
+    E extends Event declared in method <E>lazyPost(E)
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Event from capture of ? extends Event
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/chunk/ChunkRepository.java:172: warning: [unchecked] unchecked cast
+        return (Set<E>) entities.get(type);
+                                    ^
+  required: Set<E>
+  found:    Set<Entity>
+  where E is a type-variable:
+    E extends Entity declared in method <E>getAll(EntityType)
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/chunk/ChunkRepository.java:183: warning: [unchecked] unchecked cast
+        return (Stream<E>) getAll(type).stream();
+                                              ^
+  required: Stream<E>
+  found:    Stream<Entity>
+  where E is a type-variable:
+    E extends Entity declared in method <E>stream(EntityType)
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/chunk/ChunkRepository.java:194: warning: [unchecked] unchecked cast
+        return (Iterator<E>) getAll(type).iterator();
+                                                  ^
+  required: Iterator<E>
+  found:    Iterator<Entity>
+  where E is a type-variable:
+    E extends Entity declared in method <E>iterator(EntityType)
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/mob/attr/Attribute.java:91: warning: [unchecked] unchecked cast
+        valueType = (Class<T>) initialValue.getClass();
+                                                    ^
+  required: Class<T>
+  found:    Class<CAP#1>
+  where T is a type-variable:
+    T extends Object declared in class Attribute
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Object from capture of ? extends Object
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/chunk/ChunkUpdatableView.java:21: warning: [unchecked] unchecked conversion
+    public static final Set<Player> GLOBAL = Collections.EMPTY_SET;
+                                                        ^
+  required: Set<Player>
+  found:    Set
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/mob/controller/ControllerKey.java:52: warning: [unchecked] unchecked cast
+                locationKeys.add((ControllerKey<? extends PlayerLocationController>) newKey);
+                                                                                     ^
+  required: ControllerKey<? extends PlayerLocationController>
+  found:    ControllerKey<T>
+  where T is a type-variable:
+    T extends PlayerController declared in method <T>of(Class<T>,Supplier<T>)
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:64: warning: [unchecked] unchecked cast
+            var nextMap = (LinkedHashMap<String, Object>) value;
+                                                          ^
+  required: LinkedHashMap<String,Object>
+  found:    Object
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:141: warning: [unchecked] unchecked cast
+        return (T) previousValue;
+                   ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>set(Attribute<T>,T)
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:155: warning: [unchecked] unchecked cast
+            return (T) lastValue;
+                       ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>get(Attribute<T>)
+/workspace/luna-benchmark-work/history-027b89ac/src/main/java/io/luna/game/model/mob/attr/AttributeMap.java:174: warning: [unchecked] unchecked cast
+        return (T) lastValue;
+                   ^
+  required: T
+  found:    Object
+  where T is a type-variable:
+    T extends Object declared in method <T>get(Attribute<T>)
+12 warnings
+
+> Task :processResources
+> Task :classes
+> Task :inspectClassesForKotlinIC
+> Task :jar
+> Task :startScripts
+> Task :installDist
+
+BUILD SUCCESSFUL in 35s
+7 actionable tasks: 7 executed

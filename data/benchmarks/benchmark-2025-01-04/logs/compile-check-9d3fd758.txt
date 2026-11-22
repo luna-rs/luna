@@ -1,0 +1,24 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+To honour the JVM settings for this build a new JVM will be forked. Please consider using the daemon: https://docs.gradle.org/5.6.4/userguide/gradle_daemon.html.
+Daemon will be stopped at the end of the build stopping after processing
+Configuration on demand is an incubating feature.
+
+> Task :compileKotlin FAILED
+e: /workspace/luna-benchmark-work/history-9d3fd758/src/main/kotlin/world/player/following/FollowingAction.kt: (33, 37): Unresolved reference: getDistance
+e: /workspace/luna-benchmark-work/history-9d3fd758/src/main/kotlin/world/player/following/FollowingAction.kt: (41, 59): Type mismatch: inferred type is Direction! but Int was expected
+e: /workspace/luna-benchmark-work/history-9d3fd758/src/main/kotlin/world/player/skill/firemaking/LightLogAction.kt: (77, 60): Type mismatch: inferred type is Direction but Int was expected
+e: /workspace/luna-benchmark-work/history-9d3fd758/src/main/kotlin/world/player/skill/thieving/pickpocketNpc/PickpocketAction.kt: (78, 45): Unresolved reference: RESET
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileKotlin'.
+> Compilation error. See log for more details
+
+* Try:
+Run with --stacktrace option to get the stack trace. Run with --info or --debug option to get more log output. Run with --scan to get full insights.
+
+* Get more help at https://help.gradle.org
+
+BUILD FAILED in 26s
+1 actionable task: 1 executed
