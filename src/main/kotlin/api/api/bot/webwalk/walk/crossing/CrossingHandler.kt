@@ -35,6 +35,8 @@ object CrossingHandlers {
      */
     private val handlers: Map<String, CrossingHandler> = mapOf(AltarCrossing.ID to AltarCrossing,
                                                                GliderCrossing.ID to GliderCrossing,
+                                                               CanoeCrossing.ID to CanoeCrossing,
+                                                               SpiritTreeCrossing.ID to SpiritTreeCrossing,
                                                                ContextualItemCrossing.ID to ContextualItemCrossing,
                                                                JarvaldCrossing.ID to JarvaldCrossing,
                                                                WaterbirthCrossing.ID to WaterbirthCrossing,

@@ -2,9 +2,11 @@ package api.bot.webwalk.plan
 
 import api.bot.webwalk.walk.crossing.AltarCrossing
 import api.bot.webwalk.walk.crossing.AbyssCrossing
+import api.bot.webwalk.walk.crossing.CanoeCrossing
 import api.bot.webwalk.walk.crossing.JarvaldCrossing
 import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
 import game.content.waterbirth.Jarvald
+import game.content.canoes.CanoeType
 import api.bot.webwalk.walk.crossing.EssenceMineCrossing
 import api.bot.webwalk.walk.crossing.BrimhavenCrossing
 import api.bot.webwalk.walk.crossing.ProductionAccessCrossing
@@ -130,6 +132,9 @@ object BotConditions {
                 } +
                 NativeAgilityShortcutSpec.PASSAGES.map { it.level }.filter { it > 0 }.distinct().associate { level ->
                     NativeAgilityShortcutCrossing.flag(level) to { bot: Bot -> NativeAgilityShortcutCrossing.ready(bot, level) }
+                } +
+                CanoeType.entries.associate { type ->
+                    CanoeCrossing.flag(type) to { bot: Bot -> CanoeCrossing.canBuild(bot, type) }
                 } +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->

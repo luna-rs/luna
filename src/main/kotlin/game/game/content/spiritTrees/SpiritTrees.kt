@@ -39,6 +39,21 @@ object SpiritTrees {
     private const val TOUCH_TREE = 828
 
     /**
+     * The old trees' option to see the list of destinations.
+     */
+    const val ASK_DESTINATIONS = "Where can I go?"
+    /**
+     * The young trees' option to accept their one offered trip.
+     */
+    const val ACCEPT_YOUNG_TREE = "Yes please."
+
+    /**
+     * The only destination the young trees know.
+     */
+    val youngDestination: SpiritTree
+        get() = SpiritTree.TREE_GNOME_VILLAGE
+
+    /**
      * Talks to an old spirit tree, which offers a trip to any of [destinations].
      */
     fun talkToOldTree(plr: Player, destinations: List<SpiritTree>) {
@@ -46,7 +61,7 @@ object SpiritTrees {
             .text("The tree talks in an old tired voice...")
             .text("You friend of gnome people, you friend of mine.", "Would you like me to take you somewhere?")
             .options("No thanks, old tree.", { it.newDialogue().player("No thanks, old tree.").open() },
-                     "Where can I go?", { askWhere(it, destinations) })
+                     ASK_DESTINATIONS, { askWhere(it, destinations) })
             .open()
     }
 
@@ -56,7 +71,7 @@ object SpiritTrees {
     private fun askWhere(plr: Player, destinations: List<SpiritTree>) {
         val (first, second, third) = destinations
         plr.newDialogue()
-            .player(Expression.QUIZZICAL, "Where can I go?")
+            .player(Expression.QUIZZICAL, ASK_DESTINATIONS)
             .text("The tree talks again...")
             .text("You can travel to the trees", "which are related to me.")
             .options(first.option, { travel(it, first) },
@@ -72,10 +87,10 @@ object SpiritTrees {
         plr.newDialogue()
             .text("The young spirit tree talks...")
             .text("Hello gnome friend. Would you like to", "travel to the home of the tree gnomes?")
-            .options("Yes please.", {
+            .options(ACCEPT_YOUNG_TREE, {
                 it.newDialogue()
-                    .player("Yes please.")
-                    .then { player -> travel(player, SpiritTree.TREE_GNOME_VILLAGE) }
+                    .player(ACCEPT_YOUNG_TREE)
+                    .then { player -> travel(player, youngDestination) }
                     .open()
             }, "No thank you.", { it.newDialogue().player("No thank you.").open() })
             .open()

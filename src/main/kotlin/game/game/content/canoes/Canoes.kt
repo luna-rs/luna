@@ -47,6 +47,11 @@ object Canoes {
     const val MAP_INTERFACE = 18220
 
     /**
+     * The confirmation for the one-way trip to the Wilderness pond.
+     */
+    const val ACCEPT_WILDERNESS = "Yes, I'm brave."
+
+    /**
      * The varp that holds what every station shows.
      */
     const val STATIONS_VARP = 674
@@ -262,7 +267,7 @@ object Canoes {
             .text("@dre@Warning!@bla@ This canoe will take you deep into the @dre@Wilderness@bla@. There",
                   "are no trees suitable to make a canoe there. You will have to walk",
                   "back.")
-            .options("Yes, I'm brave.", {
+            .options(ACCEPT_WILDERNESS, {
                 it.overlays.closeWindows()
                 CanoeTrip.start(it, map.station, destination, map.type)
             },

@@ -258,6 +258,8 @@ object WebWalkLiveGenerator {
         climbs += BrimhavenRouteGenerator.gather(report)
         climbs += KillerwattRouteGenerator.gather(report)
         climbs += GliderRouteGenerator.gather(report)
+        climbs += CanoeRouteGenerator.gather(report)
+        climbs += SpiritTreeRouteGenerator.gather(report)
         climbs += ContextualItemRouteGenerator.gather(report)
         climbs += MoleRouteGenerator.gather(report)
         climbs += MournerBasementRouteGenerator.gather(report)
