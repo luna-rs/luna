@@ -24387,6 +24387,16 @@
       5
     ]
   },
+  // Held in the right hand while riding a magic carpet; it has no bonuses.
+  {
+    "id": 5614, // Magic carpet
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
   {
     "id": 5616, // Bronze arrow(+)
     "index": 13,

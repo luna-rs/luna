@@ -64,8 +64,8 @@ on(LoginEvent::class) {
     // Desert Treasure: the five ice trolls killed, which clears the ice from their cave.
     plr.sendVarp(Varp(442, 5 shl 11))
 
-    // The Golem: the golem told about the demon, which opens the door to Uzer's portal room.
-    plr.sendVarp(Varp(437, 5))
+    // The Golem: completed, which opens the door to Uzer's portal room and shows Uzer's rug merchant.
+    plr.sendVarp(Varp(437, 10))
 
     // Ernest the Chicken: the rift to the Killerwatt plane in Draynor Manor.
     plr.sendVarbit(Varbit(1766, 1))
