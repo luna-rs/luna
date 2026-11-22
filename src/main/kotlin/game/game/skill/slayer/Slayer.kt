@@ -137,6 +137,16 @@ object Slayer {
      */
     private fun openAssignmentDialogue(plr: Player, master: SlayerMaster) {
         val dialogue = plr.newDialogue().player("I need another assignment.")
+        if (!master.canTeach(plr.combatLevel, plr.slayer.level)) {
+            val best = SlayerMaster.bestEligibleMaster(plr.combatLevel, plr.slayer.level)
+            dialogue.npc(master.id,
+                         Expression.SAD,
+                         "Sorry, but you're not strong enough to be taught by",
+                         "me. Your best trainer would be ${npcDef(best.id).name}",
+                         "${best.location}.")
+                .open()
+            return
+        }
 
         fun assignTaskDialogue(lastDialogue: DialogueQueueBuilder?) {
             var last = lastDialogue
