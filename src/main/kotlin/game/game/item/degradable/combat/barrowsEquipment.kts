@@ -6,7 +6,10 @@ import api.attr.setValue
 import api.combat.player.PlayerCombatHandler.playerCombat
 import game.item.degradable.DegradableEquipmentHandler.charges
 import game.item.degradable.DegradableEquipmentHandler.degrade
+import game.item.degradable.DegradableEquipmentHandler.getDegradable
 import io.luna.game.model.item.DynamicItem
+import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Player
 
 /**
  * The charge count assigned to a Barrows item when it first becomes tracked or advances to its next degradable stage.
@@ -44,10 +47,25 @@ fun reduceCharges(item: DynamicItem): Boolean {
     return false
 }
 
+/**
+ * Turns a fixed Barrows piece into its 100 piece. A fixed piece holds no charges of its own: the four numbered stages
+ * hold them all.
+ *
+ * @return `true` if the item in equipment slot [index] was a fixed Barrows piece.
+ */
+fun startWearing(plr: Player, index: Int, item: Item): Boolean {
+    val (set, stage) = getDegradable(item.id) ?: return false
+    if (item is DynamicItem || !set.type.isBarrows() || stage.prevId != -1) {
+        return false
+    }
+    plr.equipment[index] = DynamicItem(stage.nextId).also { it.charges = BARROWS_CHARGES }
+    return true
+}
+
 playerCombat {
     var sent = false
     for ((index, item) in equipment.withIndex()) {
-        if (item != null) {
+        if (item != null && !startWearing(this, index, item)) {
             // Degrade barrows type equipment on any index.
             degrade(this, index,
                     BARROWS_CHARGES,
