@@ -1,1 +1,0 @@
-Command '['./gradlew', '--no-daemon', '--console=plain', 'installDist']' returned non-zero exit status 1.

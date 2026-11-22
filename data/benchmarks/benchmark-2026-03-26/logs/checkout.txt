@@ -1,2 +1,0 @@
-Preparing worktree (detached HEAD c9552bea)
-HEAD is now at c9552bea Merge remote-tracking branch 'origin/master'

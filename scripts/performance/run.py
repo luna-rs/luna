@@ -339,7 +339,6 @@ def execute(key, staged=False, archived=None):
         manifest["attempt_finished_utc"] = now()
         save_json(path, manifest)
         reports.write(folder)
-        reports.index()
     return folder
 
 

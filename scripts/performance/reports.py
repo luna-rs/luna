@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate one benchmark from its manifest and saved measurements, then update the navigation index."""
+"""Regenerate one benchmark from its manifest and saved measurements."""
 import argparse
 import csv
 import gzip
@@ -18,14 +18,6 @@ from results import analysis, save_json
 SCRIPTS = Path(__file__).resolve().parent
 REPORTS = SCRIPTS.parents[1] / "data/benchmarks"
 WIDTH = 120
-ARTIFACTS = (
-    ("graphic", "graphic.png"),
-    ("plain-English overview", "overview.txt"),
-    ("technical report", "report.md"),
-    ("manifest", "manifest.json"),
-    ("raw evidence", "raw/"),
-    ("reproduction", "reproduce.txt"),
-)
 
 
 def wrapped(*lines):
@@ -395,51 +387,8 @@ def write(folder):
             raise ValueError(f"Empty benchmark output {file}")
 
 
-def index():
-    entries = []
-    gallery = []
-    for folder in sorted(REPORTS.glob("benchmark-*")):
-        if not (folder / "graphic.png").exists():
-            continue
-        manifest = json.loads((folder / "manifest.json").read_text())
-        summary = json.loads((folder / "summary.json").read_text())
-        code = manifest["code"]
-        checkpoint = manifest["checkpoint"]
-        timestamp = manifest.get("server_started_utc") or manifest["attempt_started_utc"]
-        disposition = "Execution" if "server_started_utc" in manifest else "Attempt"
-        links = "\n".join(f"- [{label}]({folder.name}/{path})" for label, path in ARTIFACTS)
-        identity = wrapped(
-            f"Commit `{code['sha']}`. {disposition} date {toronto(timestamp).date()} Toronto. "
-            f"{checkpoint['release']}. **{summary['status']}**."
-        )
-        entries.append(
-            f"### {code['date']} — {checkpoint['label']}\n\n"
-            f"{identity}\n\n"
-            f"800-bot wandering workload · {population(summary)} · {duration(summary['duration_seconds'])} measured.\n\n"
-            f"{links}"
-        )
-        gallery.append(
-            f"## {code['date']} · {checkpoint['label']} · {summary['status']}\n\n"
-            f"Commit `{code['sha'][:8]}` · Attempt `{manifest['run_id']}`\n\n"
-            f"![{checkpoint['label']} benchmark results]({folder.name}/graphic.png)\n\n"
-            f"[Technical report]({folder.name}/report.md) · [Manifest]({folder.name}/manifest.json)"
-        )
-    (REPORTS / "GALLERY.md").write_text(
-        "# Benchmark gallery\n\n[Benchmark overview](README.md) · [Run index](RUNS.md)\n\n"
-        + "\n\n".join(gallery) + "\n"
-    )
-    (REPORTS / "RUNS.md").write_text("# Benchmark run index\n\n"
-        "[Benchmark overview](README.md) · [All benchmark graphics](GALLERY.md)\n\n"
-        "[Reproduction workflow](../../scripts/performance/README.md)\n\n"
-        "Folder dates use the base Git commit's UTC committer date. Execution dates are recorded separately.\n\n"
-        "- [ ] Final beta benchmark after the release checklist is complete.\n"
-        "  [Release checklist](https://github.com/luna-rs/luna/issues/581)\n\n"
-        + "\n\n".join(entries) + "\n")
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("folder", type=Path)
     args = parser.parse_args()
     write(args.folder)
-    index()
