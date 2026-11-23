@@ -7,7 +7,6 @@ package game.npc.spawn.catherby
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
-import game.npc.spawn.GeneralStore
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -29,4 +28,6 @@ ShopHandler.create("Candle Shop") {
     }
 }
 
-npc1(562) { GeneralStore.open(plr, "Candle Shop") }
+BlackCandle.initialize()
+
+npc1(562) { BlackCandle.talk(plr) }

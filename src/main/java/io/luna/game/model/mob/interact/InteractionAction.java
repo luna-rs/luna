@@ -139,6 +139,11 @@ public final class InteractionAction extends Action<Player> {
      */
     private Position routedNpcPosition;
 
+    /**
+     * Whether this NPC attack was pending while the player still had walking steps.
+     */
+    private boolean followedNpcAttackRoute;
+
     private int npcReroutes;
     private CompletableFuture<Void> npcRoute;
 
@@ -241,10 +246,9 @@ public final class InteractionAction extends Action<Player> {
             return true;
         }
 
-        boolean normalNpcClick = target instanceof Npc && event instanceof NpcClickEvent &&
-                !(event instanceof AttackNpcEvent);
-        if (normalNpcClick && (target.getState() != EntityState.ACTIVE || !((Npc) target).isAlive() ||
-                !mob.getPosition().isViewable(target.getPosition()))) {
+        boolean npcAttack = event instanceof AttackNpcEvent;
+        boolean normalNpcClick = target instanceof Npc && event instanceof NpcClickEvent && !npcAttack;
+        if (normalNpcClick && !isLocalNpc((Npc) target)) {
             return true;
         }
 
@@ -278,28 +282,43 @@ public final class InteractionAction extends Action<Player> {
                     event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent || event instanceof PickupItemEvent;
             onReached(target instanceof Mob, instantEvent, trigger, pending);
             return true;
-        } else if (mob.getWalking().isEmpty() && !listeners.isEmpty()) {
-            if (npcRoute != null && !npcRoute.isDone()) {
-                return false;
-            }
-            if (!retry) {
-                retry = true;
-                return false;
-            }
-            if (normalNpcClick && rerouteMovedNpc((Npc) target, listeners.getFirst().getPolicy())) {
-                return false;
-            }
-            onStanding();
+        }
+        if (listeners.isEmpty()) {
             return true;
-        } else return listeners.isEmpty();
+        }
+        if (!mob.getWalking().isEmpty()) {
+            if (npcAttack) {
+                followedNpcAttackRoute = true;
+            }
+            return false;
+        }
+        if (npcRoute != null && !npcRoute.isDone()) {
+            return false;
+        }
+        if (!retry) {
+            retry = true;
+            return false;
+        }
+        if (target instanceof Npc npc && (normalNpcClick || followedNpcAttackRoute && isLocalNpc(npc)) &&
+                rerouteNpc(npc, listeners.getFirst().getPolicy())) {
+            return false;
+        }
+        onStanding();
+        return true;
+    }
+
+    private boolean isLocalNpc(Npc npc) {
+        return npc.getState() == EntityState.ACTIVE && npc.isAlive() && mob.getPosition().isViewable(npc.getPosition());
     }
 
     /**
-     * Replaces an exhausted client route when the NPC has left the tile it was headed toward.
+     * Replaces an exhausted route when the NPC has moved. The first attack route can already be stale
+     * at packet dispatch, before the server records the NPC tile.
      */
-    private boolean rerouteMovedNpc(Npc npc, InteractionPolicy policy) {
+    private boolean rerouteNpc(Npc npc, InteractionPolicy policy) {
         Position position = npc.getPosition();
-        if (position.equals(routedNpcPosition) || npcReroutes >= MAX_NPC_REROUTES ||
+        boolean firstAttackReroute = followedNpcAttackRoute && npcReroutes == 0;
+        if ((!firstAttackReroute && position.equals(routedNpcPosition)) || npcReroutes >= MAX_NPC_REROUTES ||
                 mob.getWalking().isLocked() || mob.getStatus().isImmobilized() || mob.getNavigator().isActive()) {
             return false;
         }
@@ -501,6 +520,7 @@ public final class InteractionAction extends Action<Player> {
         mob.getCombat().finishFirstAttack(this);
         this.target = target;
         routedNpcPosition = target instanceof Npc ? target.getPosition() : null;
+        followedNpcAttackRoute = false;
         npcReroutes = 0;
         claimFirstAttack(this);
         retry = false;
