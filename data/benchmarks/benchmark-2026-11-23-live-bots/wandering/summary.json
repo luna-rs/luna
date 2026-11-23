@@ -1,0 +1,322 @@
+{
+  "status": "COMPLETE",
+  "outcome": "Measurement window finished and telemetry was flushed.",
+  "effective_beta": "false",
+  "runtime_mode": "PRODUCTION",
+  "duration_seconds": 3600.59997611,
+  "warmup_seconds": 900.294905357,
+  "measurement_utc": {
+    "start_utc": "2026-11-23T15:13:28.107+00:00",
+    "end_utc": "2026-11-23T16:13:28.708+00:00"
+  },
+  "event_timestamps_utc": {
+    "effective_beta": "2026-11-23T14:58:25.140+00:00",
+    "workload": "2026-11-23T14:58:25.144+00:00",
+    "runtime_mode": "2026-11-23T14:58:25.144+00:00",
+    "spawn_started": "2026-11-23T14:58:25.144+00:00",
+    "warmup_started": "2026-11-23T14:58:27.866+00:00",
+    "measurement_started": "2026-11-23T15:13:28.148+00:00",
+    "measurement_finished": "2026-11-23T16:13:28.747+00:00"
+  },
+  "tick_budget_ms": 600,
+  "gap_threshold_ms_strictly_greater_than": 900.0,
+  "target_bots": 1500,
+  "peak_active_bots_any_phase": 1500,
+  "highest_bot_movement_ever_count": 1500,
+  "pre_measurement_ticks_with_bot_combat": 0,
+  "npc_population_any_phase": {
+    "mean": 11722,
+    "median": 11722.0,
+    "p95": 11722,
+    "p99": 11722,
+    "max": 11722,
+    "min": 11722,
+    "samples": 7550
+  },
+  "latest_observed_utc": "2026-11-23T16:13:28.744+00:00",
+  "live": false,
+  "checks": {
+    "warmup_met": true,
+    "measurement_met": true,
+    "target_held": true,
+    "only_benchmark_players": true,
+    "continuous_tick_sequence": true,
+    "native_wandering_population_observed": true,
+    "movement_verified": true,
+    "no_bot_combat": true,
+    "npc_background_present": true,
+    "resource_samples_saved": true,
+    "completed_world_ticks_recorded": true,
+    "production_mode": true,
+    "all_world_ticks_completed": true,
+    "no_login_errors": true,
+    "webwalk_data_generated": true
+  },
+  "metrics": {
+    "processing_ms": {
+      "mean": 39.3576717733711,
+      "median": 36.475237,
+      "p95": 53.459911,
+      "p99": 80.135294,
+      "max": 207.663051,
+      "min": 30.097244,
+      "samples": 6001
+    },
+    "spacing_ms": {
+      "mean": 599.9999960189969,
+      "median": 600.000079,
+      "p95": 600.070985,
+      "p99": 600.210569,
+      "max": 602.395093,
+      "min": 597.555261,
+      "samples": 6001
+    },
+    "lateness_ms": {
+      "mean": 0.014632966338179254,
+      "median": 0,
+      "p95": 0.07692399999359623,
+      "p99": 0.24805599998217076,
+      "max": 2.604338999837637,
+      "min": 0,
+      "samples": 6001
+    },
+    "tick_attempts": 6001,
+    "completed_world_ticks": 6001,
+    "over_budget_count": 0,
+    "over_budget_pct": 0.0,
+    "scheduling_gap_count": 0,
+    "scheduling_gap_spacing_ms": null,
+    "scheduling_gap_total_spacing_ms": 0,
+    "scheduling_gap_total_excess_ms": 0,
+    "online_bots": {
+      "mean": 1500,
+      "median": 1500,
+      "p95": 1500,
+      "p99": 1500,
+      "max": 1500,
+      "min": 1500,
+      "samples": 6001
+    },
+    "registered_players": {
+      "mean": 1500,
+      "median": 1500,
+      "p95": 1500,
+      "p99": 1500,
+      "max": 1500,
+      "min": 1500,
+      "samples": 6001
+    },
+    "npc_population": {
+      "mean": 11722,
+      "median": 11722,
+      "p95": 11722,
+      "p99": 11722,
+      "max": 11722,
+      "min": 11722,
+      "samples": 6001
+    },
+    "bots_moving_per_tick": {
+      "mean": 879.4737543742709,
+      "median": 880,
+      "p95": 909,
+      "p99": 922,
+      "max": 937,
+      "min": 797,
+      "samples": 6001
+    },
+    "wandering_bot_count": {
+      "mean": 1500,
+      "median": 1500,
+      "p95": 1500,
+      "p99": 1500,
+      "max": 1500,
+      "min": 1500,
+      "samples": 6001
+    },
+    "bots_moving_per_60s": {
+      "mean": 1491.407765372438,
+      "median": 1493,
+      "p95": 1498,
+      "p99": 1500,
+      "max": 1500,
+      "min": 1469,
+      "samples": 6001
+    },
+    "bots_moving_per_300s": {
+      "mean": 1499.9871688051992,
+      "median": 1500,
+      "p95": 1500,
+      "p99": 1500,
+      "max": 1500,
+      "min": 1499,
+      "samples": 6001
+    },
+    "bot_tick_position_changes": 5277722,
+    "ticks_below_target": 0,
+    "ticks_with_participants_in_combat": 0,
+    "measurement_movers": 1500,
+    "ever_moved": 1500,
+    "instrumentation_ns": {
+      "mean": 628609.1069821697,
+      "median": 560313,
+      "p95": 911272,
+      "p99": 2237688,
+      "max": 5562073,
+      "min": 451149,
+      "samples": 6001
+    },
+    "resources": {
+      "sample_count": 720,
+      "rss_mib": {
+        "mean": 4090.7509711371526,
+        "median": 4093.3828125,
+        "p95": 4099.734375,
+        "p99": 4099.77734375,
+        "max": 4116.68359375,
+        "min": 4074.25,
+        "samples": 720
+      },
+      "heap_used_mib": {
+        "mean": 2506.6926750924854,
+        "median": 2515.2111892700195,
+        "p95": 3377.449462890625,
+        "p99": 3472.034065246582,
+        "max": 3490.665298461914,
+        "min": 1548.8031463623047,
+        "samples": 720
+      },
+      "heap_committed_mib": {
+        "mean": 3768.0,
+        "median": 3768.0,
+        "p95": 3768.0,
+        "p99": 3768.0,
+        "max": 3768.0,
+        "min": 3768.0,
+        "samples": 720
+      },
+      "heap_max_mib": {
+        "mean": 6144.0,
+        "median": 6144.0,
+        "p95": 6144.0,
+        "p99": 6144.0,
+        "max": 6144.0,
+        "min": 6144.0,
+        "samples": 720
+      },
+      "container_memory_mib": {
+        "mean": 4641.471408420139,
+        "median": 4528.30859375,
+        "p95": 4871.921875,
+        "p99": 4875.6171875,
+        "max": 4875.86328125,
+        "min": 4493.03125,
+        "samples": 720
+      },
+      "cgroup_throttled_intervals": 0,
+      "cgroup_throttled_us": 0,
+      "cgroup_cpu_some_pressure_us": null,
+      "cgroup_cpu_full_pressure_us": null,
+      "cgroup_memory_some_pressure_us": null,
+      "cgroup_memory_full_pressure_us": null,
+      "cgroup_oom_events": 0,
+      "cgroup_oom_kills": 0,
+      "cpu_time_seconds": 407.0690861663488,
+      "cpu_ms_per_world_tick": 67.8335421040408,
+      "cpu_interval_coverage_seconds": 3600.59997611,
+      "process_cpu_pct": {
+        "mean": 11.305590425686121,
+        "median": 9.000103085380719,
+        "p95": 27.59993707766345,
+        "p99": 53.19933097585351,
+        "max": 58.79954939553316,
+        "min": 7.199991979208935,
+        "samples": 721
+      },
+      "sample_start_utc": "2026-11-23T15:13:30.401+00:00",
+      "sample_end_utc": "2026-11-23T16:13:25.400+00:00",
+      "heap_used_first_mib": 3406.071662902832,
+      "heap_used_last_mib": 2225.2286682128906
+    },
+    "gc": {
+      "pause_count": 161,
+      "collection_ids": 129,
+      "total_pause_ms": 3356.168,
+      "longest_pause_ms": 65.728,
+      "post_gc_mib": {
+        "mean": 1584.1490683229813,
+        "median": 1560.0,
+        "p95": 1665.0,
+        "p99": 1688.0,
+        "max": 1701.0,
+        "min": 1529.0,
+        "samples": 161
+      },
+      "post_gc_first_mib": 1563.0,
+      "post_gc_last_mib": 1533.0,
+      "post_gc_quarter_medians_mib": [
+        1569.0,
+        1559.0,
+        1557.5,
+        1557.0
+      ],
+      "post_gc_continuous_quarter_growth": false,
+      "old_regions_first": 369,
+      "old_regions_last": 362,
+      "normal_young_pauses": 0,
+      "mixed_pauses": 32,
+      "full_gc_pauses": 0,
+      "allocation_rate": null
+    }
+  },
+  "activity": {
+    "experience_gained": {
+      "Attack": 0.0,
+      "Defence": 0.0,
+      "Strength": 0.0,
+      "Hitpoints": 0.0,
+      "Ranged": 0.0,
+      "Prayer": 0.0,
+      "Magic": 0.0,
+      "Cooking": 0.0,
+      "Woodcutting": 0.0,
+      "Fletching": 0.0,
+      "Fishing": 0.0,
+      "Firemaking": 0.0,
+      "Crafting": 0.0,
+      "Smithing": 0.0,
+      "Mining": 0.0,
+      "Herblore": 0.0,
+      "Agility": 0.0,
+      "Thieving": 0.0,
+      "Slayer": 0.0,
+      "Farming": 0.0,
+      "Runecrafting": 0.0
+    },
+    "trades_completed": 0,
+    "bots_in_combat_per_tick": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "p99": 0,
+      "max": 0,
+      "min": 0,
+      "samples": 6001
+    },
+    "top_script_observations": {
+      "(none)": 67740,
+      "PkBotScript": 22260
+    },
+    "bots_with_scripts_per_snapshot": {
+      "mean": 371,
+      "median": 371.0,
+      "p95": 371,
+      "p99": 371,
+      "max": 371,
+      "min": 371,
+      "samples": 60
+    }
+  },
+  "server_warnings": 0,
+  "server_errors": 0,
+  "longest_gaps": []
+}

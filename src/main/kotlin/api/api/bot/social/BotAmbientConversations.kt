@@ -52,12 +52,13 @@ object BotAmbientConversations {
             return
         }
         if (now < timing.nextDecision || now < timing.availableAt) return
-        val idle = topic == ConversationSpeech.HOME || topic == ConversationSpeech.IDLE
+        val idle = topic == ConversationSpeech.HOME || topic == ConversationSpeech.IDLE || topic == ConversationSpeech.BANK
         timing.nextDecision = now + (if (idle) IDLE_DECISION_TICKS else WORK_DECISION_TICKS).random()
         if (!BotConversations.available(bot, allowWorking = true) ||
             Random.nextDouble() >= if (idle) IDLE_START_CHANCE else WORK_START_CHANCE) return
         val partner = findPartner(bot, now) ?: return
-        val lines = BotConversationPool.select(bot, partner, topic) ?: return
+        val partnerTopic = (partner.scriptStack.current() as? SocialBotScript)?.ambientConversationTopic()
+        val lines = BotConversationPool.select(bot, partner, topicForPair(topic, partnerTopic)) ?: return
         BotConversations.start(bot, partner, lines, allowWorking = true, finished = {
             val endedAt = bot.world.currentTick
             for (participant in listOf(bot, partner)) {
@@ -66,6 +67,15 @@ object BotAmbientConversations {
                 state.nextDecision = maxOf(state.nextDecision, state.availableAt)
             }
         })?.tick()
+    }
+
+    /**
+     * These exchanges assume that both participants are in the same kind of scene.
+     */
+    internal fun topicForPair(first: ConversationSpeech, second: ConversationSpeech?): ConversationSpeech = when (first) {
+        ConversationSpeech.WOODCUTTING, ConversationSpeech.FISHING, ConversationSpeech.BANK ->
+            if (first == second) first else ConversationSpeech.IDLE
+        else -> first
     }
 
     /**
