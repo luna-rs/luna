@@ -21,6 +21,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
 
 import java.util.ArrayList;
@@ -404,8 +405,9 @@ public final class InteractionAction extends Action<Player> {
      * Performs any final movement adjustments required before the interaction executes.
      * <p>
      * This only applies to close {@link InteractionType#SIZE} interactions with distance {@code 1} against mobs or
-     * size-{@code 1} entities. In that case, diagonal adjacency may be corrected by stepping to a cardinal tile, and
-     * standing on the same tile may be corrected by stepping away. A reached multi-tile mob already has valid
+     * size-{@code 1} entities, and for bots against any entity. In that case, diagonal adjacency may be corrected by
+     * stepping to a cardinal tile, and standing on the same tile may be corrected by stepping away. Diagonal adjacency
+     * to an object is measured against its whole footprint. A reached multi-tile mob already has valid
      * footprint contact, so diagonal southwest anchors do not require correction.
      * Ordinary immobilization prevents only a required corrective step; it does not reject an already-reached
      * cardinal interaction that needs no movement.
@@ -423,14 +425,15 @@ public final class InteractionAction extends Action<Player> {
         if ((isMob || mob.isBot() || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
             Position current = mob.getPosition();
-            Set<Direction> directions = isMob && target.size() > 1 ? Set.of() : getClosestNESW();
-            boolean needsMovement = (!directions.isEmpty() && target.isWithinDistance(mob, 1)) ||
-                    target.getPosition().equals(current);
+            Position closest = getClosestTargetTile();
+            Set<Direction> directions = isMob && target.size() > 1 ? Set.of() : getClosestNESW(closest);
+            boolean diagonal = !directions.isEmpty() && closest.isWithinDistance(current, 1);
+            boolean needsMovement = diagonal || target.getPosition().equals(current);
             if (needsMovement && mob.getStatus().isImmobilized()) {
                 interrupt();
                 return false;
             }
-            if (!directions.isEmpty() && target.isWithinDistance(mob, 1)) {
+            if (diagonal) {
                 /*
                  * We are diagonal to the target: walk one step to the closest cardinal (NESW) tile so the player
                  * is no longer standing diagonally adjacent.
@@ -463,15 +466,43 @@ public final class InteractionAction extends Action<Player> {
     }
 
     /**
+     * Returns the target tile closest to the player. For a multi-tile object, this is the tile of its rotated
+     * footprint nearest the player, so a player beside any of its tiles isn't treated as diagonal to its anchor.
+     * Every other target is its own tile.
+     *
+     * @return The closest target tile.
+     */
+    private Position getClosestTargetTile() {
+        Position anchor = target.getPosition();
+        if (!(target instanceof GameObject)) {
+            return anchor;
+        }
+        GameObject object = (GameObject) target;
+        ObjectType type = object.getObjectType();
+        if (type != ObjectType.DEFAULT && type != ObjectType.DIAGONAL_DEFAULT && type != ObjectType.GROUND_DECORATION) {
+            return anchor;
+        }
+        ObjectDirection direction = object.getDirection();
+        boolean rotated = direction == ObjectDirection.NORTH || direction == ObjectDirection.SOUTH;
+        int sizeX = Math.max(1, rotated ? object.sizeY() : object.sizeX());
+        int sizeY = Math.max(1, rotated ? object.sizeX() : object.sizeY());
+        Position from = mob.getPosition();
+        int x = Math.max(anchor.getX(), Math.min(from.getX(), anchor.getX() + sizeX - 1));
+        int y = Math.max(anchor.getY(), Math.min(from.getY(), anchor.getY() + sizeY - 1));
+        return new Position(x, y, anchor.getZ());
+    }
+
+    /**
      * Returns the cardinal directions that best approximate the direction from the player to the target.
      * <p>
      * When the player is diagonally adjacent to the target, this returns the two relevant cardinal
      * directions used for corrective stepping. Otherwise, an empty set is returned.
      *
+     * @param closest The target tile closest to the player.
      * @return The candidate cardinal directions for diagonal correction.
      */
-    private Set<Direction> getClosestNESW() {
-        Direction direction = Direction.between(mob.getPosition(), target.getPosition());
+    private Set<Direction> getClosestNESW(Position closest) {
+        Direction direction = Direction.between(mob.getPosition(), closest);
         switch (direction) {
             case SOUTH_WEST:
                 return Set.of(Direction.SOUTH, Direction.WEST);
