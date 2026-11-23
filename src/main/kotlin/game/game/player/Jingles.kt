@@ -55,6 +55,7 @@ enum class Jingles(val id: Int, val length: Int) {
     DICE_WIN(232, 6000),
     DICE_LOSE(234, 6000),
     SAILING_JOURNEY(225, 27645),
+    MAGIC_CARPET_RIDE(421, 45897),
     TREASURE_HUNT_WIN(237, 8727),
     QUEST_COMPLETE_1(238, 9600),
     QUEST_COMPLETE_2(239, 12000),
