@@ -1,6 +1,7 @@
 package game.content.bankPin
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.Bank
 import io.luna.game.model.mob.Player
@@ -12,12 +13,18 @@ on(ServerLaunchEvent::class) {
 PinEntryInterface.BUTTONS.forEach {
     button(it) {
         val keypad = plr.overlays.getOverlay(PinEntryInterface::class.java) ?: return@button
+        plr.playSound(Sound.PIN_BEEP)
         if (keypad.press(plr, id)) {
             BankPin.entered(plr, keypad)
         }
     }
 }
-button(PinEntryInterface.EXIT_BUTTON) { plr.overlays.closeWindows() }
+button(PinEntryInterface.EXIT_BUTTON) {
+    if (plr.overlays.has(PinEntryInterface::class.java)) {
+        plr.playSound(Sound.PIN_CANCEL)
+        plr.overlays.closeWindows()
+    }
+}
 button(PinEntryInterface.FORGOT_BUTTON) {
     if (plr.overlays.getOverlay(PinEntryInterface::class.java)?.purpose?.forgettable == true) {
         BankPin.forgot(plr)

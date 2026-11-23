@@ -212,6 +212,7 @@ object BankPin {
     private fun checkPin(plr: Player, pin: String, purpose: PinPurpose) {
         if (pin != plr.bankPin) {
             plr.overlays.closeWindows()
+            plr.playSound(Sound.PIN_CANCEL)
             plr.bankPinWrongTries++
             val tier = plr.bankPinWrongTries.coerceAtMost(LOCK_SECONDS.lastIndex)
             val lock = TimeUnit.SECONDS.toMillis(LOCK_SECONDS[tier])
