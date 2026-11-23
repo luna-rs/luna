@@ -11,11 +11,12 @@ import io.luna.game.model.area.Area
  * @author TheLining
  */
 enum class DarkArea(val darkness: Int, vararg val areas: Area) {
-    // TODO Swamp gas, which makes naked flames flare up and explode.
     LUMBRIDGE_SWAMP_CAVES(darkness = 3, Area.of(3145, 9540, 3258, 9600)),
     CAVE_GOBLIN_MINE(darkness = 3, Area.of(3221, 9602, 3325, 9657)),
     GENIE_CAVE(darkness = 3, Area.of(3369, 9299, 3377, 9312)),
-    GIANT_MOLE_LAIR(darkness = 3, Area.of(1732, 5133, 1787, 5244));
+    GIANT_MOLE_LAIR(darkness = 3, Area.of(1732, 5133, 1787, 5244)),
+    CHASM_OF_TEARS(darkness = 2, Area.of(3200, 9472, 3263, 9535, 2)),
+    TEMPLE_OF_IKOV_LOWER_ROOM(darkness = 1, Area.of(2639, 9760, 2655, 9767));
 
     companion object {
 
