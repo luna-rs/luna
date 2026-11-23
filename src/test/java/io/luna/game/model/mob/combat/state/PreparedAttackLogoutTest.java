@@ -60,6 +60,7 @@ class PreparedAttackLogoutTest {
         Npc target(int index) {
             Npc npc = mock(Npc.class, RETURNS_DEEP_STUBS);
             when(npc.getState()).thenReturn(EntityState.ACTIVE);
+            when(npc.isAlive()).thenReturn(true);
             when(npc.getPosition()).thenReturn(new Position(101, 100));
             when(npc.getIndex()).thenReturn(index);
             when(npc.getIncarnation()).thenReturn((long) index);

@@ -56,9 +56,9 @@ class DeveloperItemIntegrationTest {
         (field.get(option) as Consumer<Player>).accept(actor)
     }
 
-    @Test fun combatIsFirstAndDispatchesToExistingTrainingCoordinator() = runBlocking {
+    @Test fun combatDispatchesToExistingTrainingCoordinatorFromTheAutomationMenu() = runBlocking {
         DeveloperItemHandler.automation(actor)
-        assertTrue(name(options.first()).startsWith("Combat"))
+        assertEquals("Events", name(options.first()))
         click("Combat")
         val capture = ArgumentCaptor.forClass(BotScript::class.java)
         verify(actor).startAutomation(capture.capture())
@@ -75,12 +75,14 @@ class DeveloperItemIntegrationTest {
         assertEquals(Skill.IDS.toSet(), DeveloperAutomation.skillIds.toSet() + DeveloperAutomation.combatSkills)
     }
 
-    @Test fun repeatReopensMenuWithoutReexecutingItsCommand() {
+    @Test fun repeatReopensAutomationWithoutRestartingCombat() {
         DeveloperItemHandler.automation(actor)
         click("Combat")
+        options = emptyList()
         clearInvocations(actor)
         DeveloperItemHandler.repeat(actor)
-        assertTrue(name(options.first()).startsWith("Combat"))
+        assertEquals("Events", name(options.first()))
+        assertTrue(options.any { name(it).startsWith("Combat") })
         verify(actor, never()).startAutomation(any())
     }
 

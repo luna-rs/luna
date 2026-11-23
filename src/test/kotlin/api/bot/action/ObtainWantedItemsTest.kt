@@ -12,11 +12,13 @@ import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.item.shop.ShopManager
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.interact.InteractionPolicy
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -47,17 +49,31 @@ class ObtainWantedItemsTest {
         }
     }
 
+    private lateinit var previousShops: ShopManager
+
     @BeforeEach
-    fun resetShops() {
-        `when`(world.shops.values()).thenReturn(emptyList())
+    fun installShopRegistry() {
+        previousShops = world.shops
+        `when`(world.shops).thenReturn(ShopManager())
     }
 
-    private fun bot(): Bot = InventoryProductionFixtures.bot().also {
-        doReturn(EnumSet.of(SubZone.HOME)).`when`(it).subZones
+    @AfterEach
+    fun restoreShopRegistry() {
+        `when`(world.shops).thenReturn(previousShops)
+    }
+
+    private fun bot(): Bot = InventoryProductionFixtures.bot().also { bot ->
+        `when`(bot.scriptStack.current()).thenReturn(null)
+        `when`(bot.preferences.activities).thenReturn(emptyMap())
+        val sellerWorld = mock(World::class.java, RETURNS_DEEP_STUBS)
+        val shops = world.shops
+        `when`(sellerWorld.shops).thenReturn(shops)
+        `when`(bot.world).thenReturn(sellerWorld)
+        doReturn(EnumSet.of(SubZone.HOME)).`when`(bot).subZones
     }
 
     private suspend fun shop(bot: Bot, vararg ids: Int): Shop =
-        spy(Shop(world, "Basket fixture", RestockPolicy.DEFAULT, BuyPolicy.ALL, Currency.COINS)).also { shop ->
+        spy(Shop(bot.world, "Basket fixture", RestockPolicy.DEFAULT, BuyPolicy.ALL, Currency.COINS)).also { shop ->
             ids.forEach { check(shop.items.add(Item(it))) }
             val position = Position(3222, 3218)
             val seller = mock(Npc::class.java)
@@ -67,9 +83,8 @@ class ObtainWantedItemsTest {
             `when`(seller.isAlive).thenReturn(true)
             shop.registerNpcSeller(Shop.NpcSeller(seller.id, 2, null, null))
 
-            val sellerWorld = mock(World::class.java, RETURNS_DEEP_STUBS)
-            `when`(sellerWorld.npcs.byCurrentNpcIds(setOf(seller.id))).thenReturn(listOf(seller))
-            `when`(bot.world).thenReturn(sellerWorld)
+            `when`(bot.world.npcs.byCurrentNpcIds(setOf(seller.id))).thenReturn(listOf(seller))
+            bot.world.shops.register(shop)
             `when`(bot.position).thenReturn(position)
             `when`(bot.walking.isEmpty).thenReturn(true)
             `when`(bot.overlays.player).thenReturn(bot)
@@ -125,7 +140,6 @@ class ObtainWantedItemsTest {
         val bot = bot()
         InventoryProductionFixtures.inventory(bot, Item(995, 30))
         val shop = shop(bot, 1755, 946)
-        `when`(world.shops.values()).thenReturn(listOf(shop))
         val shopping = spy(BotShopActionHandler(bot, bot.actionHandler))
         assertEquals(setOf(1755, 946), shopping.obtainWantedItems(listOf(4151, 1755, 946)))
         assertEquals(28, bot.inventory.computeAmountForId(995))
@@ -137,17 +151,18 @@ class ObtainWantedItemsTest {
     @Test
     fun bankCapacityDepositPreservesWholeBasket(): Unit = runBlocking {
         val bot = bot()
-        InventoryProductionFixtures.inventory(bot, Item(1755), Item(1511, 27))
+        InventoryProductionFixtures.inventory(bot, Item(1755), Item(995, 10), Item(1511, 26))
         InventoryProductionFixtures.bank(bot, Item(946))
         withdrawNormally(bot)
-        `when`(bot.actionHandler.banking.depositInventory(setOf(1755, 946))).thenAnswer {
-            check(bot.inventory.remove(Item(1511, 27)))
+        `when`(bot.actionHandler.banking.depositInventory(setOf(1755, 946, 995))).thenAnswer {
+            check(bot.inventory.remove(Item(1511, 26)))
             true
         }
         assertEquals(setOf(1755, 946), BotShopActionHandler(bot, bot.actionHandler)
             .obtainWantedItems(listOf(1755, 946)))
-        verify(bot.actionHandler.banking).depositInventory(setOf(1755, 946))
+        verify(bot.actionHandler.banking).depositInventory(setOf(1755, 946, 995))
         assertTrue(bot.inventory.contains(1755))
+        assertEquals(10, bot.inventory.computeAmountForId(995))
     }
 
     @Test
@@ -156,8 +171,7 @@ class ObtainWantedItemsTest {
         InventoryProductionFixtures.inventory(bot, Item(1755), Item(1511, 27))
         InventoryProductionFixtures.bank(bot, Item(995, 20))
         withdrawNormally(bot)
-        val shop = shop(bot, 946)
-        `when`(world.shops.values()).thenReturn(listOf(shop))
+        shop(bot, 946)
         `when`(bot.actionHandler.banking.depositInventory(setOf(1755, 946, 995))).thenAnswer {
             check(bot.inventory.remove(Item(1511, 27)))
             true
@@ -174,7 +188,6 @@ class ObtainWantedItemsTest {
         InventoryProductionFixtures.inventory(bot, Item(995, 1_000))
         val shop = shop(bot, 556)
         shop.items.set(0, Item(556, 100))
-        `when`(world.shops.values()).thenReturn(listOf(shop))
         val shopping = spy(BotShopActionHandler(bot, bot.actionHandler))
         assertTrue(shopping.obtainWantedItem(556, 100))
         assertEquals(100, bot.inventory.computeAmountForId(556))
@@ -187,7 +200,6 @@ class ObtainWantedItemsTest {
         val bot = bot()
         InventoryProductionFixtures.inventory(bot, Item(1755), Item(995, 20))
         val shop = shop(bot, 946)
-        `when`(world.shops.values()).thenReturn(listOf(shop))
         val shopping = spy(BotShopActionHandler(bot, bot.actionHandler))
         doReturn(true).`when`(shopping).buyUpTo(shop, 946, 1, 20)
         assertEquals(setOf(1755), shopping.obtainWantedItems(listOf(1755, 946)))

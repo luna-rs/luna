@@ -16,7 +16,7 @@ import io.luna.net.msg.out.GameChatboxMessageWriter
 import org.mockito.Mockito.*
 
 /**
- * Exercises the live trade script's payment recap, lot ratios and cumulative marketplace spending boundaries.
+ * Exercises the live trade script's carried funding, lot ratios and advertisement settlement.
  * No trade-screen items are transferred and no server or network is started by these local regression checks.
  *
  * @author lare96
@@ -79,7 +79,7 @@ class PlayerTradeAdvertisementTradeAccountingTest {
         assertEquals(70L, context.pricing!!.quote.price.coins)
     }
 
-    @Test fun aFundedSellerReservesItsCarriedBuyingAllowanceOnceRatherThanOnEveryPoll() {
+    @Test fun aSellingTraderCanQuoteItsEntireCarriedCoinStack() {
         val seller = fixture.human()
         val buyer = fixture.trader(seller, target = 1_000, coins = 1_000, purpose = BotTradePurpose.SELL)
         val entry = fixture.publish(seller, "selling 1000 feathers 1 gp ea")
@@ -87,38 +87,35 @@ class PlayerTradeAdvertisementTradeAccountingTest {
         val first = buyer.advertisementCandidate(fixture.market, entry, entry.offers.single())!!
         val second = buyer.advertisementCandidate(fixture.market, entry, entry.offers.single())!!
 
-        assertEquals(mapOf(995 to 800), first.allowance)
+        assertEquals(mapOf(995 to 1_000), first.allowance)
         assertEquals(first.allowance, second.allowance)
-        assertEquals(800, first.plan!!.quantity)
-        assertEquals(800, second.plan!!.quantity)
+        assertEquals(1_000, first.plan!!.quantity)
+        assertEquals(1_000, second.plan!!.quantity)
         assertEquals(1_000, buyer.bot.inventory.computeAmountForId(995))
     }
 
-    @Test fun completedCuriosityPurchasesReduceTheWholeVisitAllowanceExactlyOnce() {
+    @Test fun unrelatedPurchasesUseTheRemainingCarriedCashAfterSettlement() {
         val seller = fixture.human()
         val buyer = fixture.trader(seller, coins = 1_009, specific = false)
-        fixture.set(buyer, "curiousVisit\$delegate", lazyOf(true))
         fixture.publish(seller, "selling 60 feathers 1 gp ea")
         val first = fixture.market.claim(buyer)!!
         assertTrue(first.unexpected)
         assertEquals(60L, first.plan!!.paidValue)
 
+        assertTrue(buyer.bot.inventory.remove(Item(995, 60)))
         complete(buyer, first)
         complete(buyer, first)
         fixture.market.release(first)
-        fixture.publish(seller, "selling 100 feathers 1 gp ea")
+        fixture.publish(seller, "selling 1000 feathers 1 gp ea")
         val next = fixture.market.claim(buyer)!!
 
-        assertTrue(next.unexpected)
-        assertEquals(40, next.plan!!.quantity)
-        assertEquals(40L, next.plan!!.paidValue)
-        assertEquals(40L, field(buyer, "curiosityRemaining"))
+        assertEquals(949, next.plan!!.quantity)
+        assertEquals(949L, next.plan!!.paidValue)
     }
 
-    @Test fun anOpenPurchaseStillChargesItsCuriosityBudgetAfterItsAdvertisementExpires() {
+    @Test fun anOpenPurchaseStillCompletesAfterItsAdvertisementExpires() {
         val seller = fixture.human()
         val buyer = fixture.trader(seller, coins = 1_000, specific = false)
-        fixture.set(buyer, "curiousVisit\$delegate", lazyOf(true))
         val entry = fixture.publish(seller, "selling 60 feathers 1 gp ea")
         val context = fixture.market.claim(buyer)!!
         fixture.now = fixture.now.plusSeconds(60)
@@ -126,25 +123,20 @@ class PlayerTradeAdvertisementTradeAccountingTest {
 
         complete(buyer, context)
 
-        assertEquals(40L, field(buyer, "curiosityRemaining"))
         assertEquals(60, entry.remainingQuantity(context.offer))
         assertTrue(context.completed)
     }
 
-    @Test fun aCurrentGenuineNeedCanSpendBeyondTheRemainingCuriosityAllowance() {
+    @Test fun anAdvertisedLotCanExceedTheBuyersCurrentNeed() {
         val seller = fixture.human()
         val buyer = fixture.trader(seller, target = 150, coins = 1_000, specific = false)
         BotTradeIntentions.recordSupplies(buyer.bot, listOf(Item(314, 150)), stockTarget = 150)
-        fixture.set(buyer, "curiosityRemaining", 0L)
-        fixture.publish(seller, "selling 150 feathers 1 gp ea")
+        fixture.publish(seller, "selling 300 feathers 1 gp ea")
 
         val context = fixture.market.claim(buyer)!!
 
-        assertFalse(context.unexpected)
-        assertEquals(150, context.plan!!.quantity)
-        assertEquals(150L, context.plan!!.paidValue)
-        complete(buyer, context)
-        assertEquals(0L, field(buyer, "curiosityRemaining"))
+        assertEquals(300, context.plan!!.quantity)
+        assertEquals(300L, context.plan!!.paidValue)
     }
 
     @Test fun actualUnnotedGoodsAreCappedByNativeSlotsWhileTheRemainingCoinStackKeepsItsSlot() {
@@ -173,8 +165,8 @@ class PlayerTradeAdvertisementTradeAccountingTest {
 
         fixture.market.release(context)
         val featherBuyer = fixture.trader(seller, target = 1_000, coins = 2_000)
-        fixture.publish(seller, "selling 1000 feathers 1 gp ea")
-        val feathers = fixture.market.claim(featherBuyer)!!
+        val entry = fixture.publish(seller, "selling 1000 feathers 1 gp ea")
+        val feathers = featherBuyer.advertisementCandidate(fixture.market, entry, entry.offers.single())!!
         assertEquals(1_000, replan(featherBuyer, feathers, mapOf(314 to 1_000), emptyList())!!.quantity)
     }
 
@@ -224,13 +216,13 @@ class PlayerTradeAdvertisementTradeAccountingTest {
 
     @Test fun aQuantityUpdateUsesTheFeasibleMaximumInsteadOfThePlayersOneItemIncrementAndDoesNotBounce() {
         val seller = fixture.human()
-        val buyer = fixture.trader(seller, id = 1779, target = 100, coins = 1_000)
+        val buyer = fixture.trader(seller, id = 1779, target = 100, coins = 250)
         fixture.publish(seller, "selling 1000 flax 1 gp ea")
         val context = fixture.market.claim(buyer)!!
         val notify = TradeBotScript::class.java.getDeclaredMethod("notifyAdvertisementQuantity",
             Opportunity::class.java, Plan::class.java).apply { isAccessible = true }
         notify.invoke(buyer, context, context.plan!!)
-        assertEquals(100, context.lastNotifiedQuantity)
+        assertEquals(250, context.lastNotifiedQuantity)
 
         assertEquals(1, replan(buyer, context, mapOf(1779 to 1), emptyList())!!.quantity)
         val rawMaximum = maximum(buyer, context, mapOf(1779 to 1))!!
@@ -242,7 +234,7 @@ class PlayerTradeAdvertisementTradeAccountingTest {
 
         val messages = ArgumentCaptor.forClass(GameChatboxMessageWriter::class.java)
         verify(seller, times(2)).queue(messages.capture())
-        assertEquals(listOf(100, 27).map {
+        assertEquals(listOf(250, 27).map {
             "${buyer.bot.username}:@blu@${buyer.bot.username} wants up to $it ${itemDef(1779).name}.@bla@:tradeinfo:"
         }, messages.allValues.map { it.message })
         assertTrue(context.quantityShrinkNotified)
@@ -272,6 +264,4 @@ class PlayerTradeAdvertisementTradeAccountingTest {
             Plan::class.java).apply { isAccessible = true }.invoke(script, context, context.plan!!)
     }
 
-    private fun field(script: TradeBotScript, name: String): Any? =
-        TradeBotScript::class.java.getDeclaredField(name).apply { isAccessible = true }.get(script)
 }

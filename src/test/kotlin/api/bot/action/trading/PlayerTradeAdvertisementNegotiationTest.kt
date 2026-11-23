@@ -13,6 +13,7 @@ import api.predef.world
 import com.google.common.collect.Multimap
 import com.google.common.base.Stopwatch
 import com.google.common.base.Ticker
+import engine.trade.ConfirmTradeInterface
 import engine.trade.OfferTradeInterface
 import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.event.Event
@@ -27,11 +28,13 @@ import io.luna.game.model.Position
 import io.luna.game.model.def.WidgetDefinition
 import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.economy.ItemPriceData
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerContextMenuOption.TRADE
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.overlay.AbstractOverlaySet
+import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.task.Task
 import io.luna.game.task.TaskState
 import io.luna.net.msg.out.PrivateChatMessageWriter
@@ -98,6 +101,7 @@ class PlayerTradeAdvertisementNegotiationTest {
     private lateinit var buttons: Map<Int, EventMatcherListener<ButtonClickEvent>>
     private var humanOffer = Item(314, 25)
     private var beforeNativeRequest: (() -> Unit)? = null
+    private val acceptedScreens = ArrayList<Int>()
 
     private lateinit var scope: TestScope
     private lateinit var stopwatches: MockedStatic<Stopwatch>
@@ -158,8 +162,7 @@ class PlayerTradeAdvertisementNegotiationTest {
             assertFalse(seller.overlays.hasWindow())
             assertFalse(fixture.market.registry.release(context.response!!))
             verify(buyer.bot.output).sendPlayerInteraction(TRADE.index, seller)
-            verify(buyer.bot.output).clickButton(3420)
-            verify(buyer.bot.output).clickButton(3546)
+            assertEquals(listOf(3420, 3546), acceptedScreens)
             verify(seller, never()).queue(any(PrivateChatMessageWriter::class.java))
         }
 
@@ -195,7 +198,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         assertEquals(3, buyer.bot.inventory.computeAmountForId(556))
         assertEquals(0, seller.inventory.computeAmountForId(556))
         assertEquals(10, seller.inventory.computeAmountForId(995))
-        verify(buyer.bot.output).clickButton(3546)
+        assertEquals(listOf(3420, 3546), acceptedScreens)
     }
 
     @Test fun anExplicitBuyingMessageLetsACashlessBotSellForGoldThroughBothNativeScreens(): Unit = runTradeTest {
@@ -204,30 +207,29 @@ class PlayerTradeAdvertisementNegotiationTest {
         attempt(context)
 
         assertTrue(context.completed)
-        assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+        assertEquals(75, buyer.bot.inventory.computeAmountForId(314))
         assertEquals(25, buyer.bot.inventory.computeAmountForId(995))
         assertEquals(125, seller.inventory.computeAmountForId(314))
         assertEquals(0, seller.inventory.computeAmountForId(995))
         assertNull(fixture.market.registry.find(seller))
-        verify(buyer.bot.output).clickButton(3420)
-        verify(buyer.bot.output).clickButton(3546)
+        assertEquals(listOf(3420, 3546), acceptedScreens)
     }
 
     @Test fun anExplicitBuyingMessageLetsACashlessBotAcceptItemPaymentThroughBothNativeScreens(): Unit = runTradeTest {
         val previous = world.economy.getPrice(1779)
-        `when`(world.economy.getPrice(1779)).thenReturn(25L)
+        `when`(world.economy.getPrice(1779)).thenReturn(27L)
         try {
             val context = prepareNativeSale(Item(1779, 1))
 
             attempt(context)
 
             assertTrue(context.completed)
-            assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+            assertEquals(75, buyer.bot.inventory.computeAmountForId(314))
             assertEquals(1, buyer.bot.inventory.computeAmountForId(1779))
             assertEquals(125, seller.inventory.computeAmountForId(314))
             assertEquals(0, seller.inventory.computeAmountForId(1779))
             assertEquals(0, buyer.bot.inventory.computeAmountForId(995))
-            verify(buyer.bot.output).clickButton(3546)
+            assertEquals(listOf(3420, 3546), acceptedScreens)
         } finally {
             `when`(world.economy.getPrice(1779)).thenReturn(previous)
         }
@@ -237,27 +239,27 @@ class PlayerTradeAdvertisementNegotiationTest {
         fixture.close()
         fixture = AdvertisementRuntimeFixture(PlayerTradeAdvertisementMarket.live)
         prepareNativeTrader(coins = 0)
-        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 30))
-        fixture.set(buyer, "carriedOffer", mapOf(314 to 30))
-        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 30), 1, BotTradePurpose.SELL, buyer.bot)))
+        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 100))
+        fixture.set(buyer, "carriedOffer", mapOf(314 to 100))
+        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 100), 1, BotTradePurpose.SELL, buyer.bot)))
         humanOffer = Item(995, 25)
         check(seller.inventory.add(humanOffer))
         fixture.publish(seller, "buying 25 feathers 1 gp ea")
 
         directAttempt()
 
-        assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+        assertEquals(75, buyer.bot.inventory.computeAmountForId(314))
         assertEquals(25, buyer.bot.inventory.computeAmountForId(995))
         assertEquals(125, seller.inventory.computeAmountForId(314))
         assertNull(fixture.market.registry.find(seller))
-        verify(buyer.bot.output).clickButton(3546)
+        assertEquals(listOf(3420, 3546), acceptedScreens)
     }
 
     @Test fun anOrdinaryDirectRequestBuysAdvertisedStockThroughBothNativeScreens(): Unit = runTradeTest {
         prepareNativeTrader(coins = 0, purpose = BotTradePurpose.SELL)
-        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 30))
-        fixture.set(buyer, "carriedOffer", mapOf(314 to 30))
-        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 30), 1, BotTradePurpose.SELL, buyer.bot)))
+        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 100))
+        fixture.set(buyer, "carriedOffer", mapOf(314 to 100))
+        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 100), 1, BotTradePurpose.SELL, buyer.bot)))
         humanOffer = Item(995, 25)
         check(seller.inventory.add(humanOffer))
 
@@ -265,14 +267,92 @@ class PlayerTradeAdvertisementNegotiationTest {
         assertTrue(serviceIncomingRequest())
 
         assertNull(fixture.market.registry.find(seller))
-        assertEquals(5, buyer.bot.inventory.computeAmountForId(314))
+        assertEquals(75, buyer.bot.inventory.computeAmountForId(314))
         assertEquals(25, buyer.bot.inventory.computeAmountForId(995))
         assertEquals(125, seller.inventory.computeAmountForId(314))
         assertEquals(0, seller.inventory.computeAmountForId(995))
         assertFalse(buyer.bot.overlays.hasWindow())
         assertFalse(seller.overlays.hasWindow())
-        verify(buyer.bot.output).clickButton(3420)
-        verify(buyer.bot.output).clickButton(3546)
+        assertEquals(listOf(3420, 3546), acceptedScreens)
+    }
+
+    @Test fun aMerchantCompletesAWantedAndSurplusStrengthAmuletPurchaseBeyondItsTradingBudget(): Unit = runTradeTest {
+        val amulet = 1725
+        val previous = world.economy.getPrice(amulet)
+        val previousPrices = world.economy.prices
+        val amuletPrice = ItemPriceData(amulet, 1_180.0, 1_180.0, 0, 0)
+        `when`(world.economy.getPrice(amulet)).thenReturn(1_180L)
+        `when`(world.economy.prices).thenReturn(mapOf(amulet to amuletPrice))
+        try {
+            prepareNativeTrader(id = amulet, target = 1, coins = 2_360, purpose = BotTradePurpose.MERCHANT_BUY,
+                maxUnit = 1_180L)
+            `when`(buyer.bot.preferences.isMerchant).thenReturn(true)
+            fixture.set(buyer, "carriedOffer", mapOf(995 to 50))
+            humanOffer = Item(amulet, 2)
+            check(seller.inventory.add(humanOffer))
+            val cost = 1_180 + 1_062
+            assertTrue(BotMerchantCapital.active(buyer.bot))
+            assertFalse(BotMerchantCapital.snapshot(buyer.bot, emptyList())
+                .allows(mapOf(995 to cost.toLong()), mapOf(amulet to 2L)))
+
+            directAttempt()
+
+            assertEquals(2, buyer.bot.inventory.computeAmountForId(amulet))
+            assertEquals(0, seller.inventory.computeAmountForId(amulet))
+            assertEquals(2_360 - cost, buyer.bot.inventory.computeAmountForId(995))
+            assertEquals(cost, seller.inventory.computeAmountForId(995))
+            assertEquals(listOf(3420, 3546), acceptedScreens)
+        } finally {
+            `when`(world.economy.getPrice(amulet)).thenReturn(previous)
+            `when`(world.economy.prices).thenReturn(previousPrices)
+        }
+    }
+
+    @Test fun anUnwantedPlayerSaleReceivesASingleFortyPercentDiscountAndCanSettle(): Unit = runTradeTest {
+        val flax = 1779
+        val previous = world.economy.getPrice(flax)
+        `when`(world.economy.getPrice(flax)).thenReturn(100L)
+        try {
+            prepareNativeTrader(coins = 60)
+            `when`(buyer.bot.personality.confidence).thenReturn(1.0)
+            `when`(buyer.bot.personality.kindness).thenReturn(0.0)
+            `when`(buyer.bot.preferences.activities).thenReturn(mapOf(BotActivity.MERCHANTING to 1.0))
+            humanOffer = Item(flax)
+            fixture.publish(seller, "selling 1 flax 100 gp ea")
+            val context = fixture.market.claim(buyer)!!
+            assertEquals(60L, context.plan?.cost)
+            assertTrue(context.pricing!!.quote.counteroffer)
+
+            attempt(context)
+
+            assertTrue(context.completed)
+            assertEquals(1, buyer.bot.inventory.computeAmountForId(flax))
+            assertEquals(60, seller.inventory.computeAmountForId(995))
+            assertEquals(0, buyer.bot.inventory.computeAmountForId(995))
+            assertEquals(listOf(3420, 3546), acceptedScreens)
+        } finally {
+            `when`(world.economy.getPrice(flax)).thenReturn(previous)
+        }
+    }
+
+    @Test fun anOrdinaryBuyerCanPurchaseFoodFromAPlayerWithoutAnActiveFoodAllowance(): Unit = runTradeTest {
+        val lobster = 379
+        val previous = world.economy.getPrice(lobster)
+        `when`(world.economy.getPrice(lobster)).thenReturn(100L)
+        try {
+            prepareNativeTrader(coins = 100)
+            humanOffer = Item(lobster)
+            check(seller.inventory.add(humanOffer))
+
+            directAttempt()
+
+            assertEquals(1, buyer.bot.inventory.computeAmountForId(lobster))
+            assertEquals(90, seller.inventory.computeAmountForId(995))
+            assertEquals(10, buyer.bot.inventory.computeAmountForId(995))
+            assertEquals(listOf(3420, 3546), acceptedScreens)
+        } finally {
+            `when`(world.economy.getPrice(lobster)).thenReturn(previous)
+        }
     }
 
     @Test fun aDifferentCommodityDuringTheAcceptanceDelayRejectsTheTradeAndReturnsEscrow(): Unit =
@@ -300,8 +380,7 @@ class PlayerTradeAdvertisementNegotiationTest {
             assertFalse(buyer.bot.overlays.hasWindow())
             assertFalse(seller.overlays.hasWindow())
             assertFalse(fixture.market.registry.release(context.response!!))
-            verify(buyer.bot.output, never()).clickButton(3420)
-            verify(buyer.bot.output, never()).clickButton(3546)
+            assertTrue(acceptedScreens.isEmpty())
         }
 
     @Test fun theFirstSentItemQuoteSurvivesALaterQuoteForAnotherItemOnADirectNativeTrade(): Unit =
@@ -320,7 +399,7 @@ class PlayerTradeAdvertisementNegotiationTest {
             assertEquals(18, seller.inventory.computeAmountForId(995))
             assertEquals(75, entry.remainingQuantity(feathers))
             assertEquals(100, entry.remainingQuantity(flax))
-            verify(buyer.bot.output).clickButton(3546)
+            assertEquals(listOf(3420, 3546), acceptedScreens)
         }
 
     @Test fun actualFlaxSelectsItsOwnSavedPriceInsteadOfTheEarlierFeatherQuote(): Unit =
@@ -336,7 +415,7 @@ class PlayerTradeAdvertisementNegotiationTest {
             assertEquals(1, seller.inventory.computeAmountForId(995))
             assertEquals(100, entry.remainingQuantity(entry.offers.first()))
             assertEquals(99, entry.remainingQuantity(entry.offers.last()))
-            verify(buyer.bot.output).clickButton(3546)
+            assertEquals(listOf(3420, 3546), acceptedScreens)
         }
 
     @Test fun theMostRecentlyCommunicatedPriceForTheActualCommodityWinsWithoutDiscardingOtherItems(): Unit =
@@ -409,7 +488,7 @@ class PlayerTradeAdvertisementNegotiationTest {
             assertEquals(82, buyer.bot.inventory.computeAmountForId(995))
             assertEquals(18, seller.inventory.computeAmountForId(995))
             assertEquals(100, entry.remainingQuantity(entry.offers.first()))
-            verify(buyer.bot.output).clickButton(3546)
+            assertEquals(listOf(3420, 3546), acceptedScreens)
         }
 
     @Test fun anUnfundableMatchingSavedQuoteDeclinesWithoutUsingAnOrdinaryReplacementOffer(): Unit =
@@ -426,13 +505,12 @@ class PlayerTradeAdvertisementNegotiationTest {
             assertEquals(100, entry.remainingQuantity(entry.offers.first()))
             assertFalse(buyer.bot.overlays.hasWindow())
             assertFalse(seller.overlays.hasWindow())
-            verify(buyer.bot.output, never()).clickButton(3420)
-            verify(buyer.bot.output, never()).clickButton(3546)
+            assertTrue(acceptedScreens.isEmpty())
         }
 
     @Test fun replacingNotesWithRawGoodsUpdatesTheSmallerQuantityNoticeOnceAndPaysOnlyForWhatFits(): Unit =
         runTradeTest {
-            prepareNativeTrader(id = 1779, target = 500, coins = 1_000)
+            prepareNativeTrader(id = 1779, target = 500, coins = 700)
             assertTrue(seller.inventory.remove(Item(314, 100)))
             assertTrue(seller.inventory.add(Item(1779, 26)))
             val note = itemDef(1779).notedId.orElseThrow()
@@ -453,38 +531,30 @@ class PlayerTradeAdvertisementNegotiationTest {
 
             assertTrue(context.completed)
             assertEquals(27, buyer.bot.inventory.computeAmountForId(1779))
-            assertEquals(973, buyer.bot.inventory.computeAmountForId(995))
+            assertEquals(673, buyer.bot.inventory.computeAmountForId(995))
             assertEquals(27, seller.inventory.computeAmountForId(995))
             assertEquals(973, context.entry.remainingQuantity(context.offer))
             val name = itemDef(1779).name
             val messages = ArgumentCaptor.forClass(GameChatboxMessageWriter::class.java)
             verify(seller, atLeastOnce()).queue(messages.capture())
             val quantities = messages.allValues.map { it.message.toString() }.filter { "wants up to" in it }
-            assertEquals(listOf(500, 27).map {
+            assertEquals(listOf(700, 27).map {
                 "${buyer.bot.username}:@blu@${buyer.bot.username} wants up to $it $name.@bla@:tradeinfo:"
             }, quantities)
-            verify(buyer.bot.output).clickButton(3546)
+            assertEquals(listOf(3420, 3546), acceptedScreens)
         }
 
-    private fun prepare(barter: Boolean = false): Opportunity {
-        prepareNativeTrader(coins = if (barter) 0 else 100)
-        if (barter) {
-            InventoryProductionFixtures.inventory(buyer.bot, Item(556, 3))
-            fixture.set(buyer, "carriedOffer", mapOf(556 to 3))
-            @Suppress("UNCHECKED_CAST")
-            val guides = TradeBotScript::class.java.getDeclaredField("advertisementGuides")
-                .apply { isAccessible = true }.get(buyer) as MutableMap<Int, Long>
-            guides[556] = 10L
-        }
+    private fun prepare(): Opportunity {
+        prepareNativeTrader()
         fixture.publish(seller, "selling 100 feathers 1 gp ea")
         return fixture.market.claim(buyer)!!
     }
 
     private fun prepareNativeSale(payment: Item): Opportunity {
         prepareNativeTrader(coins = 0)
-        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 30))
-        fixture.set(buyer, "carriedOffer", mapOf(314 to 30))
-        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 30), 1, BotTradePurpose.SELL, buyer.bot)))
+        InventoryProductionFixtures.inventory(buyer.bot, Item(314, 100))
+        fixture.set(buyer, "carriedOffer", mapOf(314 to 100))
+        fixture.set(buyer, "offering", listOf(BotTradeItem(Item(314, 100), 1, BotTradePurpose.SELL, buyer.bot)))
         humanOffer = payment
         if (seller.inventory.computeAmountForId(payment.id) < payment.amount) {
             check(seller.inventory.add(payment))
@@ -494,7 +564,7 @@ class PlayerTradeAdvertisementNegotiationTest {
     }
 
     private fun prepareNativeTrader(id: Int = 314, target: Int = 25, coins: Int = 100,
-                                    purpose: BotTradePurpose = BotTradePurpose.BUY) {
+                                    purpose: BotTradePurpose = BotTradePurpose.BUY, maxUnit: Long = 1L) {
         seller = fixture.human()
         `when`(seller.inventory).thenReturn(Inventory(seller))
         `when`(seller.overlays).thenReturn(AbstractOverlaySet(seller))
@@ -504,7 +574,7 @@ class PlayerTradeAdvertisementNegotiationTest {
         `when`(seller.contextMenu.contains(TRADE)).thenReturn(true)
         check(seller.inventory.add(Item(314, 100)))
         check(seller.inventory.add(Item(1779)))
-        buyer = fixture.trader(seller, id = id, target = target, coins = coins, purpose = purpose)
+        buyer = fixture.trader(seller, id = id, target = target, coins = coins, maxUnit = maxUnit, purpose = purpose)
         val bot = buyer.bot
         `when`(bot.overlays).thenReturn(AbstractOverlaySet(bot))
         `when`(bot.type).thenReturn(EntityType.PLAYER)
@@ -558,6 +628,24 @@ class PlayerTradeAdvertisementNegotiationTest {
             seller.overlays[OfferTradeInterface::class]!!.apply {
                 add(seller, seller.inventory.computeIndexForId(humanOffer.id), humanOffer.amount)
             }
+            scope.backgroundScope.launch {
+                delay(3_000)
+                while (seller.overlays.hasWindow()) {
+                    val offer = seller.overlays[OfferTradeInterface::class]
+                    val confirm = seller.overlays[ConfirmTradeInterface::class]
+                    val button = when {
+                        offer != null && !offer.accepted && offer.otherOffer.accepted -> 3420
+                        confirm != null && !confirm.accepted &&
+                            bot.overlays[ConfirmTradeInterface::class]?.accepted == true -> 3546
+                        else -> null
+                    }
+                    if (button != null) {
+                        acceptedScreens.add(button)
+                        buttons.getValue(button).apply(ButtonClickEvent(seller, button))
+                    }
+                    delay(600)
+                }
+            }
             true
         }
         `when`(bot.output.sendItemWidgetClick(anyInt(), anyInt(), anyInt(), anyInt())).thenAnswer {
@@ -578,12 +666,6 @@ class PlayerTradeAdvertisementNegotiationTest {
         }
         `when`(bot.output.enterAmount(anyInt())).thenAnswer {
             dispatch(NumberInputEvent(bot, it.getArgument(0)))
-            true
-        }
-        `when`(bot.output.clickButton(anyInt())).thenAnswer {
-            val button = it.getArgument<Int>(0)
-            buttons.getValue(button).apply(ButtonClickEvent(seller, button))
-            buttons.getValue(button).apply(ButtonClickEvent(bot, button))
             true
         }
     }
