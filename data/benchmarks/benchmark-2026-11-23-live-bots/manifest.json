@@ -1,0 +1,55 @@
+{
+  "code": {
+    "sha": "f5ae37757edddc3fa9e47996d9a3cdd231e29289",
+    "subject": "Blow the oil lamp empty (#914)"
+  },
+  "measurement_date": "2026-11-23",
+  "timezone": "America/Toronto",
+  "environment": {
+    "runner": "Codex Cloud Linux allocation",
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+    "sched_getaffinity": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "cpu_max": "400000 100000",
+    "memory_max_bytes": 17179869184,
+    "kernel": "6.18.57",
+    "java": "openjdk version \"21.0.8\" 2025-07-15 LTS\nOpenJDK Runtime Environment Temurin-21.0.8+9 (build 21.0.8+9-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.8+9 (build 21.0.8+9-LTS, mixed mode, sharing)",
+    "jvm_args": [
+      "-Xms2g",
+      "-Xmx6g",
+      "-XX:+UseG1GC"
+    ]
+  },
+  "workload": {
+    "target_active_bots": 1500,
+    "warmup_required_seconds": 900,
+    "measurement_required_seconds": 3600,
+    "resource_sample_seconds": 5,
+    "activity_sample_seconds": 60,
+    "runtime_mode": "PRODUCTION",
+    "initial_state": "Fresh local JSON saves for each run, native 377 NPC and world data, webwalker data generated at startup.",
+    "account_creation": "Ordinary persistent Bot.Builder and Bot.login() with randomized native preferences, supplied names and starting positions.",
+    "spawn": "Up to 40 login submissions per tick. Bots assigned round-robin to 16 overworld centers, with matching seeded walkable tiles.",
+    "spawn_seed": 3772026,
+    "network": "Native in-process clients. No networked player traffic. Desktop TCP listener bound to loopback.",
+    "population": "The driver supplies all 1,500 logins. The default rotation service stays enabled with automatic login admission set to zero.",
+    "live": "Unmodified autonomous activity selection, scripts, reflexes, ambient interactions, combat, and random events.",
+    "wandering": "Native SmartWanderingAction at NORMAL frequency inside an 18-tile radius. Autonomous decisions and participant random encounters disabled.",
+    "order": [
+      "live",
+      "wandering"
+    ]
+  },
+  "tick_budget_ms": 600,
+  "cache": {
+    "revision": 377,
+    "openrs2_id": 657,
+    "sha256": "5467efe75598a77f6f8d1960178cc21ad32c17613143f8aeabfcdfd23a172ed4"
+  },
+  "instrumentation_patch_sha256": "04bfea218586c14bd7434ba79610bd831e4177d457522d695d2271fa1c51de9a"
+}

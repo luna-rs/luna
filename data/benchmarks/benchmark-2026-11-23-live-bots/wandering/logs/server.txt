@@ -1,0 +1,8 @@
+[23 Nov 2026 16:13:36] [io.luna.game.GameService] [ShutdownHookThread]
+FATAL: Gracefully terminating Luna...
+[23 Nov 2026 16:13:36] [io.luna.game.LoginService] [LoginService STOPPING]
+FATAL: The login service has been shutdown.
+[23 Nov 2026 16:13:36] [io.luna.game.LogoutService] [LogoutService STOPPING]
+FATAL: The logout service has been shutdown.
+[23 Nov 2026 16:13:36] [io.luna.game.GameService] [GameService STOPPING]
+FATAL: The application will now exit.
