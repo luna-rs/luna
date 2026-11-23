@@ -57,10 +57,10 @@ class CookFoodActionItem(plr: Player,
     override fun add(): List<Item> =
         if (computeFoodBurnt()) {
             experience = null
-            listOf(food.burntItem)
+            listOfNotNull(food.burntItem, food.extraItem)
         } else {
             experience = food.exp
-            listOf(food.cookedItem)
+            listOfNotNull(food.cookedItem, food.extraItem)
         }
 
     /**
