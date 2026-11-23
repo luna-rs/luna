@@ -7,6 +7,7 @@ import api.bot.action.PkLoadoutPreparation
 import engine.bot.coordinator.PkCoverage
 import engine.bot.coordinator.PkRuneRestocking
 import engine.bot.coordinator.ScavengingCoordinator
+import engine.bot.event.BotEventParticipant
 import api.bot.action.PkClanPolicy
 import api.bot.script.BotScript
 import api.bot.social.BotSocialInteractions
@@ -116,6 +117,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Keeps a rune-short hybrid on its prepared physical styles until it packs its next kit.
      */
     private var allowMagic = true
+    private var event: BotEventParticipant? = null
+    private var eventFightQueued = false
 
     /**
      * Keeps resupply separate from a final departure, so an aborted trip cannot restart after prices change.
@@ -133,14 +136,14 @@ class PkBotScript(bot: Bot, val duration: Duration,
     /**
      * Counts a ready wilderness parent even while its ordinary combat child is running.
      */
-    internal fun coverageActive(now: Long): Boolean = !isTerminated() && !isFinished() &&
+    internal fun coverageActive(now: Long): Boolean = event == null && !isTerminated() && !isFinished() &&
         preparationState == PreparationState.READY && now < expireAt && bot.inWilderness() &&
         insidePatrolArea(bot.position) && (!isGroupOuting() || clanReadyToHunt() || bot.combat.target is Player)
 
     /**
      * Identifies a live departure that can reserve coverage while normal preparation and travel finish.
      */
-    internal fun coverageIncoming(now: Long): Boolean = !isTerminated() && !isFinished() &&
+    internal fun coverageIncoming(now: Long): Boolean = event == null && !isTerminated() && !isFinished() &&
         preparationState != PreparationState.RESTOCKING && preparationState != PreparationState.LEAVING &&
         now < expireAt && !coverageActive(now)
 
@@ -155,6 +158,14 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Shared PK bot constants.
      */
     companion object {
+
+        internal fun forEvent(bot: Bot, participant: BotEventParticipant, area: PkPatrolArea): PkBotScript =
+            PkBotScript(bot, Duration.ZERO, soloClanOuting = true, purpose = Purpose.VALUE).apply {
+                event = participant
+                expireAt = Long.MAX_VALUE
+                patrolArea = area
+                preparationState = PreparationState.READY
+            }
 
         /**
          * Shared patrol groups for hunting and supply-starved scavenging.
@@ -592,8 +603,11 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Checks the session's hunting boundary. SKILL sessions stay on the surface north of Edgeville;
      * their combat-level matchups still use the ordinary two-sided Wilderness range.
      */
-    internal fun allowsHuntingAt(position: Position): Boolean =
-        !isSkillSession || PkPatrolArea.at(position) == PkPatrolArea.EDGEVILLE
+    internal fun allowsHuntingAt(position: Position): Boolean = when {
+        event != null -> PkPatrolArea.at(position) == patrolArea
+        isSkillSession -> PkPatrolArea.at(position) == PkPatrolArea.EDGEVILLE
+        else -> true
+    }
 
     internal fun insidePatrolArea(position: Position): Boolean {
         if (purpose != Purpose.CLAN) return allowsHuntingAt(position)
@@ -609,8 +623,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Current death loss must remain affordable after stock, skull, prayer or equipment changes.
      * Defensive combat started by another coordinator does not inherit this session boundary.
      */
-    internal fun allowsPursuit(target: Player): Boolean = permitsPursuit(target) &&
-        combatPolicy.pkRiskBudget().withinBudget
+    internal fun allowsPursuit(target: Player): Boolean = permitsPursuit(target) && riskAffordable()
+
+    private fun riskAffordable(): Boolean = event != null || combatPolicy.pkRiskBudget().withinBudget
+
+    private fun patrolReady(): Boolean = event != null || preparation.ready(allowMagic)
+
+    private fun mayStartFight(): Boolean = event?.canStart?.invoke() != false
 
     /**
      * Allows a stocked Magic outing to use its remaining casts while keeping a melee fallback on melee.
@@ -827,7 +846,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             (if (clan.clanOuting) observations.canDefendClanAgainst(it) else observations.canProtectAgainst(it)) &&
                 allowsPursuit(it) && combatPolicy.canAttackWildernessPlayer(it)
         } ?: return false
-        bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
+        queueFight(attacker)
         return true
     }
 
@@ -843,7 +862,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
     private fun outingPatrolGroups(): List<List<Position>> {
         val area = patrolArea ?: return patrolGroups(bot, purpose = purpose)
         val groups = patrolGroups(bot, area, purpose)
-        if (groups.isNotEmpty()) return groups
+        if (groups.isNotEmpty() || event != null) return groups
         patrolArea = null
         return patrolGroups(bot, purpose = purpose)
     }
@@ -935,8 +954,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
                         scouting.onAwait { target ->
                             huntingTravelInterrupted = true
                             travel.cancelAndJoin()
-                            if (canSearchWhileTravelling() && preparation.ready(allowMagic) && checkTarget(target)) {
-                                bot.scriptStack.pushHead(CombatBotScript(bot, target, pkSession = this@PkBotScript))
+                            if (canSearchWhileTravelling() && patrolReady() && checkTarget(target)) {
+                                queueFight(target)
                                 coroutineContext.ensureActive()
                             }
                             false
@@ -957,7 +976,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     private fun canSearchWhileTravelling(): Boolean = huntingTravel && isRunning() &&
         bot.scriptStack.current() === this && preparationState == PreparationState.READY &&
-        System.currentTimeMillis() < expireAt && isActionSafe() && !bot.combat.inCombat() &&
+        System.currentTimeMillis() < expireAt && mayStartFight() && isActionSafe() && !bot.combat.inCombat() &&
         bot.combat.target == null && bot.inWilderness() && insidePatrolArea(bot.position)
 
     /**
@@ -987,7 +1006,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         val clanReady = !clan.clanOuting || clanReadyToHunt()
         val eligible = local.filter { permitsPursuit(it, clanReady) && wantsToAttack(it, clanReady) &&
             combatPolicy.canAttackWildernessPlayer(it) }
-        if (eligible.isEmpty() || !preparation.ready(allowMagic) || !combatPolicy.pkRiskBudget().withinBudget) return null
+        if (eligible.isEmpty() || !patrolReady() || !riskAffordable()) return null
         return orderTargets(eligible).firstOrNull()
     }
 
@@ -996,6 +1015,18 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     private fun checkTarget(other: Player): Boolean = other !== bot && allowsPursuit(other) &&
         wantsToAttack(other) && combatPolicy.canAttackWildernessPlayer(other)
+
+    private fun queueFight(target: Player) {
+        val participant = event
+        val fight = if (participant == null) CombatBotScript(bot, target, pkSession = this) else {
+            if (!participant.canStart()) return
+            eventFightQueued = true
+            CombatBotScript(bot, target, pkSession = this, allowPlayerRetargeting = false,
+                targetAllowed = { participant.canStart() ||
+                    (bot.combat.inCombat() && bot.combat.lastCombatWith === target) })
+        }
+        bot.scriptStack.pushHead(fight)
+    }
 
     override suspend fun init(resumed: Boolean): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
@@ -1014,6 +1045,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
     }
 
     override suspend fun run(): Boolean {
+        if (event != null) return runEvent()
         if (BotSocialInteractions.participate(bot)) {
             delay(1.seconds)
             return false
@@ -1089,6 +1121,21 @@ class PkBotScript(bot: Bot, val duration: Duration,
             return false
         }
 
+        return patrol()
+    }
+
+    private suspend fun runEvent(): Boolean {
+        if (!mayStartFight() || !bot.isAlive) return true
+        if (!bot.combat.inCombat() && (eventFightQueued || isRestocking())) return true
+        if (!eventFightQueued) return patrol()
+        // Supply replacement waits until the native combat window has ended, including incoming attacks.
+        val attacker = bot.combat.lastCombatWith as? Player
+        if (attacker != null && attacker.combat.target === bot && checkTarget(attacker)) queueFight(attacker)
+        delay(1.seconds)
+        return false
+    }
+
+    private suspend fun patrol(): Boolean {
         if (checkCombat()) {
             bot.log("checkCombat handled current state.")
             delay(1.seconds, 3.seconds)
@@ -1145,6 +1192,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             )
 
             if (!bot.inWilderness()) {
+                if (event != null) return true
                 bot.log("Bot is in combat outside wilderness. Routing to safety.")
                 handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
                 return true
@@ -1152,8 +1200,9 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 avoidNpcCombat(attacker)
                 return allowsHuntingAt(bot.position)
             } else if (attacker is Player) {
+                if (event != null && (!mayStartFight() || !checkTarget(attacker))) return true
                 bot.log("Player attacker detected. Pushing CombatBotScript for $attacker")
-                bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
+                queueFight(attacker)
                 return true
             }
         }
@@ -1171,6 +1220,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * @return `true` if a combat child was queued, otherwise `false`.
      */
     fun searchAndAttack(): Boolean {
+        if (!mayStartFight()) return false
 
         if (bot.combat.inCombat()) {
             bot.log("Skipping target search because bot is already in combat.")
@@ -1207,7 +1257,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             if (checkTarget(other)) {
                 bot.log("Selected target $other. Pushing CombatBotScript.")
                 // The child owns the first attack, after its reaction delay and carried-supply checks.
-                bot.scriptStack.pushHead(CombatBotScript(bot, other, pkSession = this))
+                queueFight(other)
                 return true
             }
         }
@@ -1252,13 +1302,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
             bot.walking.isEmpty && bot.cycles >= nextPatrolCycle
         ) {
             val anchor = patrolDestination ?: selectPatrolDestination()?.also { patrolDestination = it } ?: run {
-                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
+                if (event == null) PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
                 preparationState = PreparationState.LEAVING
                 return
             }
             bot.log("Travelling to PK patrol anchor=$anchor")
             val reached = if (isGroupOuting()) walkWithClan(anchor, 2) else
-                walkHuntingRoute(anchor)
+                walkHuntingRoute(anchor, fallback = event == null)
             if (reached && bot.position.z == anchor.z && bot.position.computeLongestDistance(anchor) <= 2) {
                 patrolDestination = null
                 nextPatrolCycle = bot.cycles + rand(8, 20)
@@ -1279,7 +1329,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * @return `true` if the bot is in the Wilderness, otherwise `false`.
      */
     internal suspend fun enterWild(): Boolean {
-        if (!combatPolicy.pkRiskBudget().withinBudget || !clan.wearingCape() || !clanCanHunt()) return false
+        if (!riskAffordable() || !clan.wearingCape() || !clanCanHunt()) return false
         if (!bot.inWilderness() || !insidePatrolArea(bot.position)) {
             val anchor = patrolDestination?.takeUnless { bot.recentEscape?.avoids(it) == true } ?: when {
                 isGroupOuting() -> selectPatrolDestination()
@@ -1287,7 +1337,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 rand(2 of 3) -> hotspotGroups(bot, purpose = purpose).randomOrNull()?.randomOrNull() ?: patrolAnchors().randomOrNull()
                 else -> patrolAnchors().randomOrNull()
             } ?: run {
-                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
+                if (event == null) PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
                 preparationState = PreparationState.LEAVING
                 return false
             }
@@ -1295,14 +1345,14 @@ class PkBotScript(bot: Bot, val duration: Duration,
 
             bot.log("Bot is outside hunting area. Walking to entry anchor $anchor")
             val reached = if (isGroupOuting()) walkHuntingRoute(anchor, PkClanPolicy.FOLLOW_RADIUS, fallback = false)
-                else walkHuntingRoute(anchor)
+                else walkHuntingRoute(anchor, fallback = event == null)
             if (!reached && !huntingTravelInterrupted) {
-                PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
+                if (event == null) PkCoverage.live.recordFailure(bot, PkCoverage.Failure.TRAVEL)
                 patrolDestination = null
             }
 
             if (!bot.inWilderness() || !insidePatrolArea(bot.position) || !clan.wearingCape() || !clanCanHunt() ||
-                !combatPolicy.pkRiskBudget().withinBudget) {
+                !riskAffordable()) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
                 return false
             }

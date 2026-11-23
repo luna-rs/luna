@@ -193,13 +193,14 @@ object BrimhavenArena {
             else player.sendMessage("You can only get one ticket at a time, wait till the arrow moves again.")
             return false
         }
-        if (session.eligible && !player.inventory.add(Item(TICKET))) {
+        if (session.eligible && !player.isEventBot && !player.inventory.add(Item(TICKET))) {
             player.sendMessage("Make room for your Agility Arena Ticket and tag the pillar again."); return false
         }
         session.tagged = true
         session.first = !session.eligible
         session.eligible = true
         refresh(player)
+        if (player.isEventBot) return true
         if (session.first) {
             firstTagLines(player)
             player.newDialogue().text("You get tickets by tagging more than one pillar in a row. @red@Tag the",

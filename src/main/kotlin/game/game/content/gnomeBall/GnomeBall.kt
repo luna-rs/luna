@@ -160,11 +160,14 @@ object GnomeBall {
                 player.sendMessage("You score!")
                 if (session.score == 5) {
                     session.score = 0
+                    // Bot scripts use this marker to detect a completed game.
                     player.rewardBall = true
-                    player.ranged.addExperience(30.0)
-                    player.agility.addExperience(30.0)
-                    player.sendMessage("You win! Your prize ball will be returned when you leave.")
-                } else player.ranged.addExperience((session.score + 3).toDouble())
+                    if (!player.isEventBot) {
+                        player.ranged.addExperience(30.0)
+                        player.agility.addExperience(30.0)
+                        player.sendMessage("You win! Your prize ball will be returned when you leave.")
+                    } else player.sendMessage("You win!")
+                } else if (!player.isEventBot) player.ranged.addExperience((session.score + 3).toDouble())
                 player.sendVarp(Varp(143, session.score))
             } else player.sendMessage("Your shot misses.")
         }
@@ -211,7 +214,7 @@ object GnomeBall {
      * Reward balls can also be passed outside the pitch, using an inventory item on another player.
      */
     fun passPersonal(player: Player, recipient: Player): Boolean {
-        if (inside(player.position) || inside(recipient.position) || player === recipient ||
+        if (player.isEventBot || recipient.isEventBot || inside(player.position) || inside(recipient.position) || player === recipient ||
             player.state != EntityState.ACTIVE || recipient.state != EntityState.ACTIVE ||
             !player.isAlive || !recipient.isAlive || player.isLocked || recipient.isLocked ||
             player.combat.inCombat() || recipient.combat.inCombat() || recipient.overlays.hasWindow() ||
@@ -333,7 +336,10 @@ object GnomeBall {
 
     fun claim(player: Player) {
         if (session(player) != null) return
-        if (player.rewardBall && player.heldBalls < Int.MAX_VALUE) { player.heldBalls++; player.rewardBall = false }
+        if (player.rewardBall && player.heldBalls < Int.MAX_VALUE) {
+            if (!player.isEventBot) player.heldBalls++
+            player.rewardBall = false
+        }
         val inventoryCount = minOf(player.heldBalls, player.inventory.computeRemainingSize())
         if (inventoryCount > 0 && player.inventory.add(Item(BALL, inventoryCount))) player.heldBalls -= inventoryCount
         if (player.heldBalls > 0 && player.bank.add(Item(BALL, player.heldBalls))) player.heldBalls = 0

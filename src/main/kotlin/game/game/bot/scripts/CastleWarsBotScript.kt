@@ -48,7 +48,8 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
                           private val deadline: Long = System.currentTimeMillis() + 1_800_000,
                           private var role: Role? = null,
                           private var rewardAttempted: Boolean = false,
-                          private var waitingUntil: Long = System.currentTimeMillis() + 480_000) : BotScript(bot), SocialBotScript {
+                          private var waitingUntil: Long = System.currentTimeMillis() + 480_000,
+                          private val eventCanStart: (() -> Boolean)? = null) : BotScript(bot), SocialBotScript {
 
     /**
      * A saved single-match purpose; role changes never discard a carried standard or interrupt a native fight.
@@ -145,6 +146,12 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
         if (role == null) role = CastleWarsBotSupport.chooseRole(bot)
         if (entered) return CastleWars.game.match.team(bot) == null
         if (!eligible(bot)) return true
+        if (eventCanStart != null) {
+            if (eventCanStart?.invoke() == false) return true
+            entered = CastleWars.game.enter(bot)
+            waitingUntil = Long.MAX_VALUE
+            return !entered
+        }
         val banked = withTimeoutOrNull(180_000) {
             if (!handler.banking.travelToBankDepositAll()) return@withTimeoutOrNull false
             handler.widgets.clickCloseInterface() && handler.equipment.unequip(Equipment.HEAD) &&
@@ -170,7 +177,7 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
         val team = match.team(bot) ?: return true
         if (System.currentTimeMillis() >= deadline) return true
         if (match.isWaiting(bot)) {
-            if (started || System.currentTimeMillis() >= waitingUntil) return true
+            if (started || System.currentTimeMillis() >= waitingUntil || eventCanStart?.invoke() == false) return true
             waitInRoom(team)
             delay(3.seconds)
             return false
@@ -242,7 +249,7 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
             }
         }
         delay(2.seconds)
-        return failures >= 20
+        return eventCanStart == null && failures >= 20
     }
 
     override fun canSocialize(): Boolean {
@@ -315,7 +322,9 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
 
     override suspend fun finish() { paused() }
 
-    override suspend fun completed() { redeem() }
+    override suspend fun completed() {
+        if (eventCanStart == null) redeem()
+    }
 
     /**
      * Reserves one unowned equippable reward goal, letting intelligent bots save for higher tiers.

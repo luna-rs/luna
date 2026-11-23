@@ -279,15 +279,17 @@ object RoguesDen {
         }
         val agilityXp = (run.agilitySpent * multiplier).toInt()
         val thievingXp = (run.thievingSpent * multiplier).toInt()
-        if (agilityXp > 0) plr.agility.addExperience(agilityXp.toDouble())
-        if (thievingXp > 0) plr.thieving.addExperience(thievingXp.toDouble())
+        if (!plr.isEventBot) {
+            if (agilityXp > 0) plr.agility.addExperience(agilityXp.toDouble())
+            if (thievingXp > 0) plr.thieving.addExperience(thievingXp.toDouble())
+        }
         val line = when {
             multiplier == 0.0 -> NOT_FAR
             exit == Exit.SAFE || inSafeRoom(from) -> SO_FAR
             else -> NOT_BAD
         }
         val dialogue = plr.newDialogue().npc(BRIAN, *line)
-        if (multiplier > 0.0) {
+        if (!plr.isEventBot && multiplier > 0.0) {
             dialogue.text("You gained:", "$thievingXp Thieving Experience.", "$agilityXp Agility Experience.")
         }
         dialogue.open()

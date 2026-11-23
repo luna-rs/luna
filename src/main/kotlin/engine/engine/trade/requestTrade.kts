@@ -14,6 +14,7 @@ on(PlayerFourthClickEvent::class)
     .filter { plr.contextMenu.contains(OPTION_TRADE) }
     .then {
         when {
+            plr.isEventBot || targetPlr.isEventBot -> plr.sendMessage("Event bots cannot trade.")
             targetPlr.combat.inCombat() || targetPlr.overlays.hasWindow() -> plr.sendMessage(Messages.busy(targetPlr))
             plr.overlays.hasWindow() -> plr.sendMessage(Messages.busy())
             else -> {

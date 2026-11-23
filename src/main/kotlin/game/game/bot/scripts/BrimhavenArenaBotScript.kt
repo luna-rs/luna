@@ -47,9 +47,9 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
                 })
 
         /**
-         * Izzy's 200-coin fee unless already paid, and the fare of the ship that every way to Brimhaven takes.
+         * Izzy's entrance fee and the ship fare for visitors travelling to Brimhaven.
          */
-        private fun coins(bot: Bot): Int = (if (bot.paid) 0 else 200) + Sailing.FARE
+        private fun coins(bot: Bot): Int = (if (bot.paid) 0 else 200) + (if (bot.isEventBot) 0 else Sailing.FARE)
 
         /**
          * Chooses the largest affordable native experience bundle, including saved tickets from earlier visits.
@@ -159,17 +159,10 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
         if (data.entered && data.leaving && bot.position.isWithinDistance(BrimhavenArena.ENTRANCE, 16)) return false
         if (data.attempted || System.currentTimeMillis() >= data.deadline || !eligible(bot)) return true
         data.attempted = true
-        if (data.rewardGoal.isEmpty()) data.rewardGoal = rewardGoal(bot).name
+        if (!bot.isEventBot && data.rewardGoal.isEmpty()) data.rewardGoal = rewardGoal(bot).name
         return withTimeoutOrNull(data.deadline - System.currentTimeMillis()) {
-            if (!handler.banking.travelToBankDepositAll() ||
-                !handler.banking.withdrawAnyFood(12, minimumHeal = 6, retry = false) ||
-                !handler.banking.withdraw(Item(995, coins(bot)))) return@withTimeoutOrNull true
-            val savedTickets = bot.bank.computeAmountForId(BrimhavenArena.TICKET)
-            if (savedTickets > 0 && !handler.banking.withdraw(Item(BrimhavenArena.TICKET, savedTickets)))
-                return@withTimeoutOrNull true
-            if (!handler.widgets.clickCloseInterface()) return@withTimeoutOrNull true
-            if (!handler.webWalkTo(BrimhavenArena.ENTRANCE, bank = BankAccess.NONE) || !live() ||
-                System.currentTimeMillis() >= data.deadline) return@withTimeoutOrNull true
+            if (!bot.isEventBot && !prepareVisit()) return@withTimeoutOrNull true
+            if (!live() || System.currentTimeMillis() >= data.deadline) return@withTimeoutOrNull true
             if (!bot.paid) {
                 val clerk = world.locator.findNpcs(BrimhavenArena.ENTRANCE, 16) { it.id == 437 }.firstOrNull()
                     ?: return@withTimeoutOrNull true
@@ -186,6 +179,16 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
             data.entered = true; data.lastTag = System.currentTimeMillis()
             false
         } ?: true
+    }
+
+    private suspend fun prepareVisit(): Boolean {
+        if (!handler.banking.travelToBankDepositAll() ||
+            !handler.banking.withdrawAnyFood(12, minimumHeal = 6, retry = false) ||
+            !handler.banking.withdraw(Item(995, coins(bot)))) return false
+        val savedTickets = bot.bank.computeAmountForId(BrimhavenArena.TICKET)
+        if (savedTickets > 0 && !handler.banking.withdraw(Item(BrimhavenArena.TICKET, savedTickets))) return false
+        return handler.widgets.clickCloseInterface() &&
+            handler.webWalkTo(BrimhavenArena.ENTRANCE, bank = BankAccess.NONE)
     }
 
     /**
@@ -254,7 +257,7 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
 
     override suspend fun run(): Boolean {
         if (!live() || System.currentTimeMillis() >= data.deadline + 120_000 || data.failures >= 5) return true
-        if (!BrimhavenArena.inside(bot.position)) return redeem()
+        if (!BrimhavenArena.inside(bot.position)) return bot.isEventBot || redeem()
         if (!visiting()) return true
         if (!settled()) { delay(100); return false }
         val earned = bot.inventory.computeAmountForId(BrimhavenArena.TICKET) - data.initialTickets

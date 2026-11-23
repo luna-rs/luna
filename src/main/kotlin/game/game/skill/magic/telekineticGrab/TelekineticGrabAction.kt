@@ -70,6 +70,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
      * Performs the native initial checks before either an event offer or the spell's rune consumption.
      */
     private fun checkCast(): List<Item>? {
+        if (mob.isEventBot) return null
         mob.walking.clear()
         mob.face(groundItem.position)
         if (!world.collisionManager.raycast(mob.position, groundItem.position)) {

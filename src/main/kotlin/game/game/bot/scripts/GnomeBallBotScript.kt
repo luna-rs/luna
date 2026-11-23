@@ -138,6 +138,15 @@ class GnomeBallBotScript(bot: Bot, private var attempted: Boolean = false,
     override suspend fun init(resumed: Boolean): Boolean {
         if (attempted || System.currentTimeMillis() >= deadline || !eligible(bot)) return true
         attempted = true
+        if (bot.isEventBot) {
+            val gate = world.locator.findObjects(GnomeBall.EXIT, 3) { it.id == GnomeBall.GATE }.firstOrNull()
+                ?: return true
+            entering = true
+            if (!handler.interactions.interact(1, gate) { isActionSafe() } ||
+                !waitFor(10.seconds) { GnomeBall.session(bot) != null }) return true
+            ownedSession = GnomeBall.session(bot)
+            return false
+        }
         return withTimeoutOrNull(180_000) {
             if (!handler.banking.travelToBankDepositAll() || !handler.widgets.clickCloseInterface() ||
                 !handler.equipment.unequipAll() || !handler.banking.travelToBankDepositAll() ||

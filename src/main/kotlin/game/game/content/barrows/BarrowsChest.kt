@@ -52,15 +52,17 @@ object BarrowsChest {
             manager.setAndSendValue(PersistentVarp.BARROWS_KILLS, BarrowsVarbit.CHEST_OPEN.write(kills, 1))
             return
         }
-        val reward = player.pendingBarrowsReward ?: Reward(BarrowsRewards.roll(kills, random).toTypedArray()).also {
-            player.pendingBarrowsReward = it
+        if (!player.isEventBot) {
+            val reward = player.pendingBarrowsReward ?: Reward(BarrowsRewards.roll(kills, random).toTypedArray()).also {
+                player.pendingBarrowsReward = it
+            }
+            if (!player.inventory.hasSpaceForAll(reward.items.asList())) {
+                player.sendMessage("You need more inventory space to take the treasure.")
+                return
+            }
+            // Inventory and flags are updated on the game thread and share the player save.
+            player.inventory.addAll(reward.items.asList())
         }
-        if (!player.inventory.hasSpaceForAll(reward.items.asList())) {
-            player.sendMessage("You need more inventory space to take the treasure.")
-            return
-        }
-        // All checks and mutations run together on the game thread. Inventory and flags share the player save.
-        player.inventory.addAll(reward.items.asList())
         manager.setAndSendValue(PersistentVarp.BARROWS, BarrowsRun.state(player) or BarrowsRun.COLLAPSING_MASK)
         player.pendingBarrowsReward = null
         player.queue(JingleMessageWriter(Jingles.GRAVE_ROBBER))

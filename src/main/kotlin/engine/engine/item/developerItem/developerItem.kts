@@ -28,4 +28,7 @@ on(ItemOnItemEvent::class).filter {
         DeveloperInspection.inventoryItem(plr, targetItemIndex, targetItemId)
     }
 }
-on(LogoutEvent::class) { DeveloperItemHandler.forget(plr) }
+on(LogoutEvent::class) {
+    DeveloperItemHandler.forget(plr)
+    if (plr.isEventBot) DeveloperEventMenu.onLogout(plr.asBot())
+}

@@ -112,6 +112,7 @@ object FightCave {
      * Gives [plr] an item, or drops it under them if it won't fit.
      */
     fun give(plr: Player, id: Int, amount: Int) {
+        if (plr.isEventBot) return
         if (!plr.inventory.add(Item(id, amount))) world.addItem(id, amount, plr.position, plr)
     }
 }

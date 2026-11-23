@@ -6,6 +6,7 @@ import api.attr.setValue
 import api.combat.death.DeathHookHandler
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.event.canJoinEventMatch
 import engine.combat.status.StatusEffectType
 import game.player.Animations
 import io.luna.game.model.EntityState
@@ -65,7 +66,7 @@ object PestControl {
     }
 
     fun board(player: Player) {
-        if (!player.isAlive || !player.position.isWithinDistance(DOCK, 8) ||
+        if (!player.canJoinEventMatch() || !player.isAlive || !player.position.isWithinDistance(DOCK, 8) ||
             player.controllers.primary.javaClass != PlayerController::class.java) return
         if (player.combatLevel < 40) {
             player.sendMessage("You need a combat level of 40 to join Pest Control.")
@@ -81,6 +82,7 @@ object PestControl {
     }
 
     private fun startReadyRound(advance: Boolean = true) {
+        round.waiting().filterNot { it.canJoinEventMatch() }.forEach(::leave)
         val players = round.launch(advance)
         if (players.isEmpty()) return
         defences.reset()
@@ -249,12 +251,13 @@ object PestControl {
         knight = null
         defences.reset()
         settlement.forEach { (player, eligible) ->
-            if (eligible) {
+            if (eligible && !player.isEventBot) {
                 player.commendations = (player.commendations + 1).coerceIn(0, PestControlRound.POINT_CAP)
                 player.unclaimedPestCoins = (player.unclaimedPestCoins.toLong().coerceAtLeast(0) +
                     player.combatLevel * 10).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
             }
             player.sendMessage(if (!won) "The Void Knight was overwhelmed. The mission failed."
+                else if (player.isEventBot) "Victory! The Void Knight survived."
                 else if (!eligible) "Victory! You did not contribute enough to earn a reward."
                 else "Victory! You have ${player.commendations} commendations (maximum 15).")
             leave(player)
@@ -307,6 +310,7 @@ object PestControl {
     }
 
     fun claimCoins(player: Player) {
+        if (player.isEventBot) return
         val amount = player.unclaimedPestCoins
         if (amount <= 0 || !atOutpost(player.position)) return
         if (player.inventory.add(Item(995, amount))) player.unclaimedPestCoins = 0

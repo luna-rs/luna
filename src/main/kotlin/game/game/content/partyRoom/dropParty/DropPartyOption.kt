@@ -231,7 +231,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      */
     internal fun spawnReward(item: Item, position: Position, plr: Player): GroundItem? {
         val previous = world.locator.findItems(position, 0) { true }
-        val spawned = world.addItem(item, position, plr)
+        val spawned = if (plr.isEventBot) world.addItem(item, position) else world.addItem(item, position, plr)
         if (spawned.state == EntityState.ACTIVE) return spawned
         return world.locator.findItems(position, 0) {
             it.id == item.id && it.view == spawned.view && it !in previous
@@ -331,7 +331,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      * Stages a donation through the same checked inventory transfer used by the chest interface.
      */
     fun stageDeposit(plr: Player, id: Int, index: Int, amount: Int): Boolean {
-        if (!plr.overlays.has(DropPartyInterface::class.java) || amount <= 0 ||
+        if (plr.isEventBot || !plr.overlays.has(DropPartyInterface::class.java) || amount <= 0 ||
             chest.locked && plr.rights < RIGHTS_ADMIN) return false
         if (index !in 0 until plr.inventory.capacity()) return false
         val held = plr.inventory[index] ?: return false
@@ -351,7 +351,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      * Transfers only accepted staged items; a full or locked chest leaves the remaining items with the player.
      */
     fun confirmDeposit(plr: Player): Boolean {
-        if (!plr.overlays.has(DropPartyInterface::class.java) ||
+        if (plr.isEventBot || !plr.overlays.has(DropPartyInterface::class.java) ||
             chest.locked && plr.rights < RIGHTS_ADMIN) return false
         var moved = false
         for (item in plr.depositItems.filterNotNull().toList()) {

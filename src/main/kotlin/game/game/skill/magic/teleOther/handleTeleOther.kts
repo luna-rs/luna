@@ -19,7 +19,7 @@ fun open(source: Player, target: Player, type: TeleOtherType) {
         source.sendMessage(Messages.busy(target))
         return
     }
-    if (target.varpManager.getValue(PersistentVarp.ACCEPT_AID) == 0) {
+    if (target.isEventBot || target.varpManager.getValue(PersistentVarp.ACCEPT_AID) == 0) {
         source.sendMessage("This player has accept aid turned off.")
         return
     }

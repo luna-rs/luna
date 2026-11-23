@@ -42,7 +42,8 @@ class FightPitBotScript(bot: Bot, private var entered: Boolean = false, private 
                         private var waitingUntil: Long = System.currentTimeMillis() + 300_000,
                         private val deadline: Long = System.currentTimeMillis() + 1_200_000,
                         private var discipline: BotGearPurpose? = null,
-                        private var previousRetaliate: Int? = null) : BotScript(bot) {
+                        private var previousRetaliate: Int? = null,
+                        private val eventCanStart: (() -> Boolean)? = null) : BotScript(bot) {
     companion object {
         private val DISCIPLINES = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
 
@@ -120,15 +121,24 @@ class FightPitBotScript(bot: Bot, private var entered: Boolean = false, private 
             ownRetaliation()
             return discipline == null
         }
-        if (System.currentTimeMillis() >= waitingUntil || System.currentTimeMillis() >= deadline || !eligible(bot)) return true
+        if (System.currentTimeMillis() >= waitingUntil || System.currentTimeMillis() >= deadline ||
+            eventCanStart?.invoke() == false || !eligible(bot)) return true
+        if (eventCanStart != null) {
+            discipline = BotGearPurpose.MELEE
+            if (DuelBotPolicy.loadout(bot, BotGearPurpose.MELEE, true) == null) return true
+        }
         return withTimeoutOrNull(180_000) {
-            if (!prepare() || !handler.webWalkTo(FightPit.OUTSIDE, radius = 0)) return@withTimeoutOrNull true
+            if (eventCanStart == null) {
+                if (!prepare() || !handler.webWalkTo(FightPit.OUTSIDE, radius = 0)) return@withTimeoutOrNull true
+            } else if (bot.position != FightPit.OUTSIDE) return@withTimeoutOrNull true
             entered = true
             FightPitDoors.ownTraversals(bot, traversalOwner)
             ownRetaliation()
             val door = world.locator.findObjects(FightPit.OUTSIDE, 8) { it.id == FightPit.NORTH_DOOR }.firstOrNull()
                 ?: return@withTimeoutOrNull true
-            handler.interactions.interact(1, door) { isActionSafe() && System.currentTimeMillis() < deadline }
+            handler.interactions.interact(1, door) {
+                isActionSafe() && System.currentTimeMillis() < deadline && eventCanStart?.invoke() != false
+            }
             val arrived = waitFor(5.seconds) {
                 bot.controllers.primary is FightPitController && FightPit.WAITING_ROOM.contains(bot.position)
             }
@@ -140,7 +150,8 @@ class FightPitBotScript(bot: Bot, private var entered: Boolean = false, private 
 
     override suspend fun run(): Boolean {
         if (cleaned || bot.controllers.primary !== controller || !FightPit.inside(bot.position)) return true
-        if (leaving || System.currentTimeMillis() >= deadline || !started && System.currentTimeMillis() >= waitingUntil)
+        if (leaving || System.currentTimeMillis() >= deadline ||
+            !started && (System.currentTimeMillis() >= waitingUntil || eventCanStart?.invoke() == false && !FightPitRound.fighting(bot)))
             return leave()
         if (!FightPitRound.fighting(bot)) {
             if (started) return leave()
@@ -178,7 +189,7 @@ class FightPitBotScript(bot: Bot, private var entered: Boolean = false, private 
             if (attacked) nextAttackAt = System.currentTimeMillis() + 12_000
         }
         delay(1.seconds)
-        if (failures >= 5) leaving = true
+        if (eventCanStart == null && failures >= 5) leaving = true
         return false
     }
 
@@ -230,6 +241,12 @@ class FightPitBotScript(bot: Bot, private var entered: Boolean = false, private 
         leaving = true
         bot.combat.target = null
         bot.combat.autoRetaliateTarget = null
+        if (eventCanStart != null) {
+            controller?.withdraw()
+            if (!FightPit.inside(bot.position)) return true
+            delay(1.seconds)
+            return false
+        }
         val doorId = if (FightPit.PIT.contains(bot.position)) FightPit.SOUTH_DOOR else FightPit.NORTH_DOOR
         val stand = if (doorId == FightPit.SOUTH_DOOR) FightPit.PIT_EXIT else FightPit.NORTH_INSIDE
         val exited = withTimeoutOrNull(20_000) {

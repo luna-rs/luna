@@ -5,6 +5,7 @@ import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.event.canJoinEventMatch
 import game.skill.Skills
 import game.player.Jingles
 import io.luna.game.model.EntityState
@@ -53,7 +54,12 @@ object FishingTrawler {
     fun inWreck(position: Position): Boolean = position.x in 1920..1983 && position.y in 4800..4863 && position.z == 0
     private fun inLobby(position: Position): Boolean = position.x in 2669..2673 && position.y in 3166..3182 && position.z in 0..1
 
+    internal fun acceptingPassengers(): Boolean = voyage == null
+    internal fun waitingToSail(player: Player): Boolean = player in waiting
+    internal fun onVoyage(player: Player): Boolean = player in crew || player in journeys
+
     fun board(player: Player) {
+        if (!player.canJoinEventMatch()) return
         if (voyage != null) { player.sendMessage("There is already someone on a fishing trip!"); return }
         if (player.catchRolls > 0 || player.unclaimedCatch.isNotEmpty()) {
             player.sendMessage("Collect your previous catch from the reward net before sailing again."); return
@@ -67,6 +73,7 @@ object FishingTrawler {
         world.schedule(object : Task(100) {
             override fun execute() {
                 departure = false
+                waiting.filterNot { it.canJoinEventMatch() }.forEach(::abandon)
                 waiting.removeIf { it.state != EntityState.ACTIVE || !inLobby(it.position) }
                 if (waiting.isNotEmpty()) start()
                 cancel()
@@ -309,11 +316,12 @@ object FishingTrawler {
         val share = if (success && crew.isNotEmpty()) boat.catch / crew.size else 0
         crew.toList().forEach {
             if (!success) { shipwreck(it); return@forEach }
-            it.catchRolls = share
+            if (!it.isEventBot) it.catchRolls = share
             it.overlays.closeWalkable()
             stopCamera(it)
             journey(it, true)
-            it.sendMessage("Murphy returns to shore. Collect your catch from the net.")
+            it.sendMessage(if (it.isEventBot) "Murphy returns to shore."
+                else "Murphy returns to shore. Collect your catch from the net.")
         }
         crew.clear()
         cooldowns.clear()
@@ -322,7 +330,7 @@ object FishingTrawler {
     }
 
     fun claim(player: Player) {
-        if (!player.position.isWithinDistance(DOCK, 25)) return
+        if (player.isEventBot || !player.position.isWithinDistance(DOCK, 25)) return
         if (player.fishing.level < 15) { player.sendMessage("You need a Fishing level of 15 to find fish here."); return }
         val rolls = player.catchRolls.coerceAtLeast(0)
         player.catchRolls = 0

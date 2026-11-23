@@ -104,7 +104,7 @@ public final class BotReflex {
             }
         }
 
-        if (TeleOtherBotScript.respond(bot)) {
+        if (!bot.isEventBot() && TeleOtherBotScript.respond(bot)) {
             return false;
         }
 
@@ -123,16 +123,17 @@ public final class BotReflex {
             return false;
         }
 
-        if (BossOutingDefence.respond(bot)) {
+        if (!bot.isEventBot() && BossOutingDefence.respond(bot)) {
             return false;
         }
 
-        if (BotCombatActionHandler.respondToWitnessedPvp(bot)) {
+        if (!bot.isEventBot() && BotCombatActionHandler.respondToWitnessedPvp(bot)) {
             return false;
         }
 
         // Automatically respond to combat if we aren't already.
-        if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
+        if (!bot.isEventBot() && !disableCombatReflex && bot.getCombat().inCombat() &&
+                !(bot.getScriptStack().current() instanceof CombatBotScript)) {
             if (bot.getScriptStack().current() != null && !bot.getScriptStack().current().getAllowsCombatResponse()) {
                 // Activities such as scavenging and Abyss trips own escape without creating an attacking child.
                 return true;

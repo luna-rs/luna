@@ -147,6 +147,13 @@ class MageArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData()) : 
             data.leaving = true
             return false
         }
+        if (bot.isEventBot) {
+            if (!MageArena.cave(bot.position) || !MageArena.canStart(bot)) return true
+            data.god = MageArena.God.SARADOMIN.ordinal
+            data.attempted = true
+            data.lastProgress = System.currentTimeMillis()
+            return false
+        }
         if (!eligible(bot) || System.currentTimeMillis() >= data.deadline) return true
         data.god = (MageArena.ownedGod(bot) ?: MageArena.God.SARADOMIN).ordinal
         if (withTimeoutOrNull(minOf(180_000L, data.deadline - System.currentTimeMillis())) { prepare() } != true) {
@@ -283,7 +290,10 @@ class MageArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData()) : 
     private suspend fun rewards(): Boolean {
         if (MageArena.cave(bot.position) && !click(2878) { MageArena.chamber(bot.position) }) return false
         if (!MageArena.chamber(bot.position)) return false
-        if (MageArena.ownedGod(bot) == null) {
+        if (MageArena.ownedGod(bot) == null && bot.isEventBot) {
+            if (!handler.webWalkTo(god.capeTile, radius = 1, bank = BankAccess.NONE, fallback = false) ||
+                !click(god.statue) { MageArena.ownedGod(bot) == god }) return false
+        } else if (MageArena.ownedGod(bot) == null) {
             val drops = bot.world.locator.findItems(god.capeTile, 1, true) {
                 it.id == god.cape && it.state == EntityState.ACTIVE && it.isVisibleTo(bot)
             }

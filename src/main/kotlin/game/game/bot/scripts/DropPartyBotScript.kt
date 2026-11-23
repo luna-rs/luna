@@ -81,6 +81,7 @@ class DropPartyBotScript(bot: Bot, private val partyId: Long, private val deadli
             waitFor(3.seconds) { balloon.stompedBy != null }
             if (balloon.stompedBy !== bot) return@withTimeoutOrNull true
             if (!waitFor(3.seconds) { balloon.state == EntityState.INACTIVE }) return@withTimeoutOrNull false
+            if (bot.isEventBot) return@withTimeoutOrNull true
             val reward = balloon.reward ?: return@withTimeoutOrNull false
             if (reward.state != EntityState.ACTIVE || !reward.view.isViewableFor(bot)) return@withTimeoutOrNull false
             if (!bot.inventory.hasSpaceFor(reward.toItem())) return@withTimeoutOrNull false

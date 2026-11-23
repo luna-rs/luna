@@ -43,7 +43,8 @@ class DuelArenaBotScript(bot: Bot, private var attempted: Boolean = false,
                          private val deadline: Long = System.currentTimeMillis() + 1_200_000,
                          private var discipline: BotGearPurpose? = null,
                          private var stakeBudget: Int = -1,
-                         private var plannedRules: Int? = null) : BotScript(bot) {
+                         private var plannedRules: Int? = null,
+                         private val eventCanStart: (() -> Boolean)? = null) : BotScript(bot) {
     companion object {
         private val DISCIPLINES = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
 
@@ -137,6 +138,12 @@ class DuelArenaBotScript(bot: Bot, private var attempted: Boolean = false,
             return duel == null
         }
         if (System.currentTimeMillis() >= waitingUntil || !eligible(bot)) return true
+        if (eventCanStart != null) {
+            if (eventCanStart?.invoke() == false || !DuelArena.inside(bot.position) || DuelArena.arena(bot.position)) return true
+            discipline = BotGearPurpose.MELEE
+            stakeBudget = 0
+            return !meleeReady(bot)
+        }
         return withTimeoutOrNull(180_000) {
             !prepareOuting() || !DuelArena.inside(bot.position) && !handler.webWalkTo(DuelArena.LOBBY, radius = 3)
         } ?: true
@@ -178,7 +185,7 @@ class DuelArenaBotScript(bot: Bot, private var attempted: Boolean = false,
                     failures = if (attacked) 0 else failures + 1
                 }
             } else {
-                if (System.currentTimeMillis() >= waitingUntil || !isActionSafe()) return true
+                if (System.currentTimeMillis() >= waitingUntil || eventCanStart?.invoke() == false || !isActionSafe()) return true
                 if (!duel.confirmation && !negotiate(duel)) { delay(1.seconds); return failures >= 5 }
                 if (!acceptable(bot, duel)) {
                     handler.widgets.clickButton(if (duel.confirmation) 6412 else 6575,
@@ -195,9 +202,10 @@ class DuelArenaBotScript(bot: Bot, private var attempted: Boolean = false,
                 }
             }
             delay(1.seconds)
-            return failures >= 5
+            return eventCanStart == null && failures >= 5
         }
         if (observed != null || started || System.currentTimeMillis() >= waitingUntil ||
+            eventCanStart?.invoke() == false ||
             !DuelArena.inside(bot.position) || DuelArena.arena(bot.position) || !isActionSafe() ||
             bot.overlays.hasWindow()) return true
         val target = DuelArena.challengers(bot).firstOrNull() ?: if (!attempted)
@@ -207,6 +215,7 @@ class DuelArenaBotScript(bot: Bot, private var attempted: Boolean = false,
             val challenged = withTimeoutOrNull(15_000) {
                 handler.interactions.interact(PlayerContextMenuOption.CHALLENGE.index, target) {
                     isActionSafe() && System.currentTimeMillis() < waitingUntil &&
+                        eventCanStart?.invoke() != false &&
                         DuelArena.inside(bot.position) && DuelArena.inside(target.position) &&
                         DuelArena.session(bot) == null && DuelArena.session(target) == null
                 }

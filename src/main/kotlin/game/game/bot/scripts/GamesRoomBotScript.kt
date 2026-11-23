@@ -32,7 +32,8 @@ class GamesRoomBotScript(bot: Bot, private var attempted: Boolean = false,
                          private var started: Boolean = false,
                          private val runeLink: Boolean = rand().nextBoolean(),
                          private val waitingUntil: Long = System.currentTimeMillis() + 300_000,
-                         private val deadline: Long = System.currentTimeMillis() + 1_200_000) : BotScript(bot) {
+                         private val deadline: Long = System.currentTimeMillis() + 1_200_000,
+                         private val eventCanStart: (() -> Boolean)? = null) : BotScript(bot) {
     companion object {
         val LOBBY = Position(2208, 4938)
 
@@ -95,6 +96,7 @@ class GamesRoomBotScript(bot: Bot, private var attempted: Boolean = false,
         if (System.currentTimeMillis() >= deadline || !isActionSafe()) return true
         if (attempted || started) return !GamesRoom.playing(bot)
         if (System.currentTimeMillis() >= waitingUntil || !eligible(bot)) return true
+        if (eventCanStart != null) return eventCanStart?.invoke() == false || !GamesRoom.inRoom(bot.position)
         return withTimeoutOrNull(180_000) {
             (!GamesRoom.inRoom(bot.position) || bot.position.z != LOBBY.z) && !handler.webWalkTo(LOBBY, radius = 3)
         } ?: true
@@ -115,7 +117,7 @@ class GamesRoomBotScript(bot: Bot, private var attempted: Boolean = false,
             delay(2.seconds)
             return false
         }
-        if (started || System.currentTimeMillis() >= waitingUntil) return true
+        if (started || System.currentTimeMillis() >= waitingUntil || eventCanStart?.invoke() == false) return true
         if (bot.overlays.hasWindow()) return true
         val incoming = GamesRoom.challengers(bot).firstOrNull()
         val target = incoming ?: if (!attempted) opponent(bot,
@@ -125,6 +127,7 @@ class GamesRoomBotScript(bot: Bot, private var attempted: Boolean = false,
             val success = withTimeoutOrNull(20_000) {
                 if (!handler.interactions.interact(PlayerContextMenuOption.CHALLENGE.index, target) {
                     isActionSafe() && System.currentTimeMillis() < waitingUntil &&
+                        eventCanStart?.invoke() != false &&
                         GamesRoom.inRoom(bot.position) && GamesRoom.inRoom(target.position) &&
                         !GamesRoom.playing(target)
                 }) return@withTimeoutOrNull false

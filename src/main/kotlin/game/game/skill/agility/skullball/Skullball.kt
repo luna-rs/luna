@@ -396,7 +396,7 @@ object Skullball {
     private fun result(game: Game) {
         val plr = game.player
         games.remove(plr)
-        val xp = xpFor(game.lapTicks)
+        val xp = if (plr.isEventBot) 0 else xpFor(game.lapTicks)
         plr.sendText(time(game.lapTicks), RESULT_TIME)
         plr.sendText(xp, RESULT_XP)
         plr.overlays.open(StandardInterface(RESULT))

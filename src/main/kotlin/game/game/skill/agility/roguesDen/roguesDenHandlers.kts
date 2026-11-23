@@ -512,9 +512,11 @@ object1(7237) {
                     }
                     if (slipped) {
                         mob.sendMessage("You slip and trigger a trap!")
-                    } else {
+                    } else if (!mob.isEventBot) {
                         mob.sendMessage("You get some loot.")
                         mob.inventory.add(Item(if (rand(0, 7) < 3) 5558 else RoguesDen.ROGUE_PIECES.random()))
+                    } else {
+                        mob.sendMessage("You crack the safe.")
                     }
                 }
                 4 -> {

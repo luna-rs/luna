@@ -33,6 +33,7 @@ val WEREWOLF_STICK = 4179
  * Pickup the item.
  */
 on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.GROUND_ITEM_PICKUP_BIF) {
+    if (plr.isEventBot) return@on
     val pickupItem = groundItem.toItem()
     val pouch = EssencePouch.ID_TO_POUCH[pickupItem.id]
     when {

@@ -184,6 +184,7 @@ class FightCaveController(plr: Player, startWave: Int) : DynamicMapController(pl
         val reached = reached
         ending = Ending.LEFT
         player.dynamicMap.remove(player)
+        if (player.isEventBot) return
         if (reached > 0) {
             FightCave.give(player, FightCave.TOKKUL, FightCave.tokkul(reached))
             player.newDialogue().npc(FightCave.MEJ_JAL, "Well done in the cave, here take TokKul as reward.").open()
@@ -218,14 +219,16 @@ class FightCaveController(plr: Player, startWave: Int) : DynamicMapController(pl
         if (!player.isAlive) return
         ending = Ending.WON
         player.dynamicMap.remove(player)
-        if (FightCave.hasFireCape(player)) {
-            FightCave.give(player, FightCave.TOKKUL, FightCave.REPEAT_WIN_TOKKUL)
-        } else {
-            FightCave.give(player, FightCave.FIRE_CAPE, 1)
-            FightCave.give(player, FightCave.TOKKUL, FightCave.WIN_TOKKUL)
+        if (!player.isEventBot) {
+            if (FightCave.hasFireCape(player)) {
+                FightCave.give(player, FightCave.TOKKUL, FightCave.REPEAT_WIN_TOKKUL)
+            } else {
+                FightCave.give(player, FightCave.FIRE_CAPE, 1)
+                FightCave.give(player, FightCave.TOKKUL, FightCave.WIN_TOKKUL)
+            }
+            player.newDialogue().npc(FightCave.MEJ_JAL, "You even defeated TzTok-Jad, I am most impressed!",
+                                     "Please accept this gift as a reward.").open()
         }
-        player.newDialogue().npc(FightCave.MEJ_JAL, "You even defeated TzTok-Jad, I am most impressed!",
-                                 "Please accept this gift as a reward.").open()
         player.playJingle(Jingles.FIGHT_CONTINUES)
     }
 

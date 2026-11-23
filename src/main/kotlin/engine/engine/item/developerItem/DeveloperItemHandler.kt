@@ -89,6 +89,7 @@ object DeveloperItemHandler {
     internal fun automation(plr: Player) {
         if (!allowed(plr)) return
         menu(plr, listOf(
+            "Events" to DeveloperEventMenu::open,
             "Combat (melee, ranged, magic)" to { p -> start(p, p, DeveloperAutomation::combat) },
             "Skills" to { p -> skillsAutomation(p, p) },
             "Auto-walker" to { p -> navigation(p) },
@@ -97,6 +98,10 @@ object DeveloperItemHandler {
 
     private fun start(actor: Player, target: Player, factory: (Bot) -> BotScript) {
         if (!available(actor, target)) return
+        if (target.isEventBot) {
+            actor.sendMessage("Use the Events menu to manage this bot.")
+            return
+        }
         try {
             if (target.isRealBot()) {
                 target.scriptStack.pushHead(factory(target))

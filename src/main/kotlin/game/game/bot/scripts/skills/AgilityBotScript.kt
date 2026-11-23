@@ -915,7 +915,7 @@ data class AgilityStep(val obstacle: AgilityObstacle?, val plane: Int, val objec
  * @param duration Shared travel and play budget.
  * @author lare96
  */
-class SkullballBotScript(bot: Bot, duration: Duration) :
+class SkullballBotScript(bot: Bot, duration: Duration, private val canStartLap: () -> Boolean = { true }) :
     ZonedBotScript(bot, duration, mutableListOf(SubZone.WEREWOLF_SKULLBALL)) {
     companion object {
         /**
@@ -961,8 +961,9 @@ class SkullballBotScript(bot: Bot, duration: Duration) :
                 handler.widgets.clickCloseInterface()
                 observedGame = null
                 failures = 0
-                return true
+                return !bot.isEventBot
             }
+            if (!canStartLap()) return false
             if (bot.overlays.hasWindow()) return record(false)
             return record(startGame())
         }
@@ -997,12 +998,12 @@ class SkullballBotScript(bot: Bot, duration: Duration) :
             it.id == Skullball.BOSS && it.state == EntityState.ACTIVE
         }.firstOrNull() ?: return false
         val response = "I would like to do the skullball course."
-        if (!handler.interactions.interact(1, boss) { isActionSafe() && Skullball.game(bot) == null } ||
+        if (!handler.interactions.interact(1, boss) { isActionSafe() && canStartLap() && Skullball.game(bot) == null } ||
             !waitFor(6.seconds) { bot.overlays.getOverlay(OptionDialogue::class.java)?.options?.contains(response) == true })
             return false
         val page = bot.overlays.getOverlay(OptionDialogue::class.java) ?: return false
         ownedOptions = page
-        if (!isActionSafe() || !handler.widgets.clickDialogueOption(response)) return false
+        if (!isActionSafe() || !canStartLap() || !handler.widgets.clickDialogueOption(response)) return false
         return waitFor(8.seconds) { Skullball.game(bot) != null }.also {
             if (it) observedGame = Skullball.game(bot)
         }

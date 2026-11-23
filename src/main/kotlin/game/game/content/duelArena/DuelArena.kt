@@ -9,6 +9,7 @@ import api.attr.setValue
 import api.combat.death.DeathHookHandler
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.event.canJoinEventMatch
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -93,7 +94,7 @@ object DuelArena {
 
     private fun available(p: Player): Boolean = p.state == EntityState.ACTIVE && p.isAlive && !p.isLocked &&
         !p.combat.inCombat() && inside(p.position) && !arena(p.position) &&
-        p.controllers.primary.javaClass == PlayerController::class.java && !p.overlays.hasWindow()
+        p.controllers.primary.javaClass == PlayerController::class.java && !p.overlays.hasWindow() && p.canJoinEventMatch()
 
     fun challenge(player: Player, other: Player): Boolean {
         if (player === other || !available(player) || !available(other) ||
@@ -219,6 +220,7 @@ object DuelArena {
         var revision = 0
             private set
         private val accepted = mutableSetOf<Player>()
+        private val allowsStakes get() = !first.isEventBot && !second.isEventBot
         val players get() = listOf(first, second)
         fun other(p: Player): Player = if (p === first) second else first
         fun contains(p: Player): Boolean = p === first || p === second
@@ -242,6 +244,10 @@ object DuelArena {
 
         fun stake(player: Player, index: Int, id: Int, quantity: Int, remove: Boolean = false): Boolean {
             if (!negotiating(player) || confirmation || index !in 0..27 || quantity == 0 || quantity < -1) return false
+            if (!remove && !allowsStakes) {
+                player.sendMessage("Duels with event bots are practice only.")
+                return false
+            }
             val offered = escrow(player).toMutableList()
             val source = if (remove) offered.getOrNull(index) else player.inventory.get(index)
             if (source == null || source.id != id || source.isDynamic || !source.itemDef.isTradeable) return false
@@ -276,7 +282,7 @@ object DuelArena {
         }
 
         fun accept(player: Player): Boolean {
-            if (!negotiating(player)) return false
+            if (!negotiating(player) || players.any { !it.canJoinEventMatch() }) return false
             val overlay = player.overlays[DuelInterface::class] ?: return false
             if (overlay.duel !== this || overlay.confirm != confirmation) return false
             accepted.add(player)
@@ -407,8 +413,12 @@ object DuelArena {
             if (ended) return
             require(winner == null || contains(winner))
             ended = true
-            val prizes = if (winner != null) escrow(first) + escrow(second) else emptyList()
-            if (winner != null) { save(other(winner), emptyList()); save(winner, prizes) }
+            val prizes = if (winner != null && allowsStakes) {
+                val combined = escrow(first) + escrow(second)
+                save(other(winner), emptyList())
+                save(winner, combined)
+                combined
+            } else emptyList()
             players.forEach { sessions.remove(it) }
             for (player in players) {
                 player.inventory.clearSecondaryWidget()

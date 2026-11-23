@@ -146,25 +146,12 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
             takeCombat()
             return false
         }
-        if (System.currentTimeMillis() >= data.deadline || !canStart(bot)) return true
-        val outfit = loadout(bot) ?: return true
-        val ammo = outfit.gear[Equipment.AMMUNITION]!!
-        val prepared = withTimeoutOrNull(240_000) {
-            if (!BotGearLocator(bot, outfit.gear, clearUnselected = true).locateAndEquip() || !handler.banking.travelToBankDepositAll())
-                return@withTimeoutOrNull false
-            val extraAmmo = AMMO_COUNT - bot.equipment.computeAmountForId(ammo)
-            val supplies = listOf(Item(FOOD, FOOD_COUNT), Item(PRAYER, POTION_COUNT), Item(995, 3000)) +
-                if (extraAmmo > 0) listOf(Item(ammo, extraAmmo)) else emptyList()
-            if (!handler.banking.withdrawAll(supplies) || !handler.widgets.clickCloseInterface())
-                return@withTimeoutOrNull false
-            if (extraAmmo > 0 && !handler.equipment.equip(ammo)) return@withTimeoutOrNull false
-            bot.inventory.computeAmountForId(FOOD) >= FOOD_COUNT &&
-                bot.inventory.computeAmountForId(PRAYER) >= POTION_COUNT &&
-                bot.equipment.computeAmountForId(ammo) >= AMMO_COUNT && rangedReady()
-        } == true
-        if (!prepared) return true
+        if (System.currentTimeMillis() >= data.deadline) return true
+        if (bot.isEventBot) {
+            if (!levelsReady(bot) || !rangedReady()) return true
+        } else if (!canStart(bot) || !prepareLoadout()) return true
         takeCombat()
-        if (withTimeoutOrNull(240_000) {
+        if (!bot.isEventBot && withTimeoutOrNull(240_000) {
                 handler.webWalkTo(FightCave.OUTSIDE, radius = 2, bank = BankAccess.NONE, fallback = false)
             } != true) return true
         val entrance = bot.world.locator.findObjects(bot, 16) { it.id == FightCave.ENTRANCE }.firstOrNull()
@@ -179,6 +166,24 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
         } == true
         data.lastProgress = System.currentTimeMillis()
         return !entered
+    }
+
+    private suspend fun prepareLoadout(): Boolean {
+        val outfit = loadout(bot) ?: return false
+        val ammo = outfit.gear[Equipment.AMMUNITION]!!
+        return withTimeoutOrNull(240_000) {
+            if (!BotGearLocator(bot, outfit.gear, clearUnselected = true).locateAndEquip() || !handler.banking.travelToBankDepositAll())
+                return@withTimeoutOrNull false
+            val extraAmmo = AMMO_COUNT - bot.equipment.computeAmountForId(ammo)
+            val supplies = listOf(Item(FOOD, FOOD_COUNT), Item(PRAYER, POTION_COUNT), Item(995, 3000)) +
+                if (extraAmmo > 0) listOf(Item(ammo, extraAmmo)) else emptyList()
+            if (!handler.banking.withdrawAll(supplies) || !handler.widgets.clickCloseInterface())
+                return@withTimeoutOrNull false
+            if (extraAmmo > 0 && !handler.equipment.equip(ammo)) return@withTimeoutOrNull false
+            bot.inventory.computeAmountForId(FOOD) >= FOOD_COUNT &&
+                bot.inventory.computeAmountForId(PRAYER) >= POTION_COUNT &&
+                bot.equipment.computeAmountForId(ammo) >= AMMO_COUNT && rangedReady()
+        } == true
     }
 
     private fun takeCombat() {
@@ -315,7 +320,7 @@ class FightCaveBotScript(bot: Bot, private val data: FightCaveData = FightCaveDa
     }
 
     private suspend fun collectRewards(): Boolean {
-        if (!data.attempted) return true
+        if (!data.attempted || bot.isEventBot) return true
         for (reward in bot.world.locator.findViewableItems(bot) {
                 it.id in setOf(FightCave.FIRE_CAPE, FightCave.TOKKUL) && it.isVisibleTo(bot) &&
                     it.position.isWithinDistance(bot.position, 2)

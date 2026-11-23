@@ -95,7 +95,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
     /**
      * Attendance never interrupts combat, trade windows, reflexes, death or a donation already in progress.
      */
-    internal fun safeToAttend(bot: Bot): Boolean = bot.state == EntityState.ACTIVE &&
+    internal fun safeToAttend(bot: Bot): Boolean = !bot.isEventBot && bot.state == EntityState.ACTIVE &&
         BotScript.ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness() &&
         !bot.emotions.isNervousAboutHp && bot.reflex.activeReflex == null &&
         !bot.overlays.hasWindow() && bot.dialogues == null && !bot.inventory.isFull &&

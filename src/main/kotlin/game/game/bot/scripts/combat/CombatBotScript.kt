@@ -667,6 +667,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * @return `true` if the opponent carries a prize.
      */
     private fun hasPrize(): Boolean {
+        if (bot.isEventBot) return false
         val opponent = combatPolicy.opponent() ?: focus.takeIf { focusAlive() } ?: return false
         val spawn = (opponent as? Npc)?.spawnCount
         if (opponent !== prizeOwner || spawn != prizeOwnerSpawn) {
@@ -1080,6 +1081,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * Actual capacity is rechecked per item, so existing stacks remain collectable after the last free slot is used.
      */
     private suspend fun lootItems() {
+        if (bot.isEventBot) return
         // TODO@1.0 Move looting into its own dynamic system. What a bot wants to loot should depend on its current
         //  intent. PK bots may prefer food and valuables, while PvM bots may prefer stackables, resources, and alchables.
         val local = world.locator.findViewableItems(bot) {

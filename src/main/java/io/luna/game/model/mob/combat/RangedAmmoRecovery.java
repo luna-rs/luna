@@ -49,7 +49,8 @@ public final class RangedAmmoRecovery {
      * @return Ground recovery ownership, or null when nothing should be placed on the ground.
      */
     public static RangedAmmoRecovery launch(Player owner, Item item) {
-        if (item == null || RandomUtils.inclusive(4) == 0 || owner.getControllers().getPrimary().recoverAmmo(item)) {
+        if (item == null || owner.isEventBot() || RandomUtils.inclusive(4) == 0 ||
+                owner.getControllers().getPrimary().recoverAmmo(item)) {
             return null;
         }
         return new RangedAmmoRecovery(owner, item);

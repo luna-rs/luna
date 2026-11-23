@@ -33,15 +33,19 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -151,9 +155,22 @@ public final class BotScheduleService extends AbstractScheduledService {
     private final AtomicDouble onlineMultiplier = new AtomicDouble(1.0);
 
     /**
-     * Generates usernames for newly created bots.
+     * Names being checked or held for a new bot that has not reached the world yet.
      */
-    private BotUsernameGenerator usernameGenerator;
+    private final Set<String> reservedUsernames = ConcurrentHashMap.newKeySet();
+
+    /**
+     * Loads the shared username model on the first naming request, including when bot rotation is disabled.
+     *
+     * @author lare96
+     */
+    private static final class UsernameModel {
+        private static final BotUsernameGenerator GENERATOR = new BotUsernameGenerator(new MarkovChain.Builder<Character>()
+                .setName("username")
+                .setOrder(12)
+                .train("username", new TypeToken<>() {
+                }).build());
+    }
 
     /**
      * Creates a new bot schedule service for [world].
@@ -186,13 +203,6 @@ public final class BotScheduleService extends AbstractScheduledService {
                 }
             }
         }
-
-        // Create our Markov chain that will generate usernames for new bots.
-        usernameGenerator = new BotUsernameGenerator(new MarkovChain.Builder<Character>()
-                .setName("username")
-                .setOrder(12)
-                .train("username", new TypeToken<>() {
-                }).build());
 
         logger.info("Bot scheduler is now running!");
     }
@@ -301,8 +311,7 @@ public final class BotScheduleService extends AbstractScheduledService {
     }
 
     /**
-     * Checks that no bot or player uses {@code username}, online or saved. This runs on the scheduler's thread, so
-     * the save lookup stays off the game thread.
+     * Checks that no bot or player uses {@code username}, online or saved. Callers run off the game thread.
      *
      * @param username The generated username.
      * @return {@code true} if a new bot may take the username.
@@ -318,6 +327,45 @@ public final class BotScheduleService extends AbstractScheduledService {
             // A save that can't be read still belongs to someone.
             return false;
         }
+    }
+
+    /**
+     * Reserves available names on the persistence worker and passes them to the event login on the game thread.
+     * Reservations are released after the game callback, including on failure.
+     *
+     * @param count The number of names to reserve.
+     * @param start The event start callback.
+     * @param <T> The result of starting the event.
+     * @return A future for the game-thread callback's result.
+     */
+    public <T> CompletableFuture<T> withEventUsernames(int count, Function<List<String>, T> start) {
+        List<String> names = new ArrayList<>(count);
+        return world.getPersistenceService().execute(() -> {
+            for (int index = 0; index < count; index++) {
+                names.add(reserveUsername().orElseThrow(() ->
+                        new IllegalStateException("Could not find enough available names for the event.")));
+            }
+        }).thenCompose(ignored -> world.getContext().getGame().sync(() -> {
+            return start.apply(List.copyOf(names));
+        }))
+                .whenComplete((ignored, error) -> names.forEach(reservedUsernames::remove));
+    }
+
+    private Optional<String> reserveUsername() {
+        return UsernameModel.GENERATOR.generate(name -> {
+            if (!reservedUsernames.add(name)) {
+                return false;
+            }
+            boolean available = false;
+            try {
+                available = isUsernameFree(name);
+                return available;
+            } finally {
+                if (!available) {
+                    reservedUsernames.remove(name);
+                }
+            }
+        });
     }
 
     /**
@@ -414,23 +462,26 @@ public final class BotScheduleService extends AbstractScheduledService {
         }
 
         // Generate a username and attempt to log the bot in.
-        Optional<String> generatedUsername = usernameGenerator.generate(this::isUsernameFree);
+        Optional<String> generatedUsername = reserveUsername();
         if (generatedUsername.isEmpty()) {
             return false;
         }
         String username = generatedUsername.get();
 
-        BotPersonality personality = personalityBuilder.build();
-        BotPreference.Builder preferences = new BotPreference.Builder(
-                world.getBotManager().getPersonalityManager(), personality).randomizeSmart();
-        for (var entry : USERNAME_TAGS.entrySet()) {
-            String tag = entry.getKey();
-            if (username.contains(tag)) {
-                entry.getValue().accept(preferences);
+        try {
+            BotPersonality personality = personalityBuilder.build();
+            BotPreference.Builder preferences = new BotPreference.Builder(
+                    world.getBotManager().getPersonalityManager(), personality).randomizeSmart();
+            for (var entry : USERNAME_TAGS.entrySet()) {
+                String tag = entry.getKey();
+                if (username.contains(tag)) {
+                    entry.getValue().accept(preferences);
+                }
             }
+            return login(username, personality, preferences.build());
+        } finally {
+            reservedUsernames.remove(username);
         }
-
-        return login(username, personality, preferences.build());
     }
 
     /**

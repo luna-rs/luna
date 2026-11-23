@@ -541,7 +541,7 @@ public class Player extends Mob {
         if (bank.hasSpaceFor(item) && !controllers.contains(WildernessLocatableController.INSTANCE)) {
             bank.add(item);
             sendMessage(name + "(x" + item.getAmount() + ")" + " has been deposited into your bank.");
-        } else {
+        } else if (!isEventBot()) {
             world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
                     position, ChunkUpdatableView.localView(this)));
             sendMessage(name + "(x" + item.getAmount() + ")" + " has been dropped on the floor under you.");
@@ -675,6 +675,13 @@ public class Player extends Mob {
      */
     public boolean isBot() {
         return this instanceof Bot;
+    }
+
+    /**
+     * Returns whether this player is a temporary participant managed by a developer event.
+     */
+    public boolean isEventBot() {
+        return false;
     }
 
     /**

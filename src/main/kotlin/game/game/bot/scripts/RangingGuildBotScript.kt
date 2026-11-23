@@ -121,6 +121,10 @@ class RangingGuildBotScript(bot: Bot, private val data: ArcheryData = ArcheryDat
         if (data.attempted || !eligible(bot)) return true
         data.attempted = true
         data.entered = bot.count in 1..11
+        if (bot.isEventBot) {
+            data.prepared = inside(bot.position)
+            return !data.prepared
+        }
         return withTimeoutOrNull(180_000) {
             val bow = if (bot.count == 11) null else ownedBow(bot) ?: return@withTimeoutOrNull true
             if (inside(bot.position) && !gate(false)) return@withTimeoutOrNull true
@@ -227,14 +231,23 @@ class RangingGuildBotScript(bot: Bot, private val data: ArcheryData = ArcheryDat
         if (!live() || !data.prepared || !inside(bot.position) || data.failures >= 3) return true
         if (!settled()) { delay(100); return false }
         val success = when {
-            bot.count == 0 && data.entered -> { redeem(); gate(false); return true }
+            bot.count == 0 && data.entered -> {
+                if (!bot.isEventBot) {
+                    redeem()
+                    gate(false)
+                }
+                return true
+            }
             bot.count == 0 -> {
                 if (data.admissionAttempted) return true
                 data.admissionAttempted = true
                 judge("Enter the competition (200 coins)") && await { bot.count == 1 }
             }
             bot.count == 11 -> judge()
-            !BotCombatActionHandler.mayGainExperience(bot, SKILL_RANGED) -> { gate(false); return true }
+            !BotCombatActionHandler.mayGainExperience(bot, SKILL_RANGED) -> {
+                if (!bot.isEventBot) gate(false)
+                return true
+            }
             else -> fire()
         }
         if (bot.count in 1..11) data.entered = true

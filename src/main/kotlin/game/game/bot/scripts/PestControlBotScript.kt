@@ -38,7 +38,8 @@ import kotlin.time.Duration.Companion.seconds
 class PestControlBotScript(bot: Bot, private var boarded: Boolean = false,
                            private var started: Boolean = false,
                            private var waitingUntil: Long = 0,
-                           private val deadline: Long = System.currentTimeMillis() + 2_100_000) : BotScript(bot) {
+                           private val deadline: Long = System.currentTimeMillis() + 2_100_000,
+                           private val eventCanStart: (() -> Boolean)? = null) : BotScript(bot) {
     companion object {
         private val CLOSED_GATES = setOf(14233, 14235, 14237, 14239, 14241, 14243)
         private val DAMAGED_DEFENCES = (14216..14221).toSet() + (14227..14232) + (14237..14248)
@@ -99,6 +100,13 @@ class PestControlBotScript(bot: Bot, private var boarded: Boolean = false,
         if (cleaned || System.currentTimeMillis() >= deadline) return true
         if (boarded) return !member()
         if (!eligible(bot)) return true
+        if (eventCanStart != null) {
+            if (eventCanStart?.invoke() == false) return true
+            PestControl.board(bot)
+            boarded = member()
+            waitingUntil = Long.MAX_VALUE
+            return !boarded
+        }
         return withTimeoutOrNull(180_000) {
             if (!PestControl.atOutpost(bot.position)) {
                 fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
@@ -136,7 +144,7 @@ class PestControlBotScript(bot: Bot, private var boarded: Boolean = false,
     override suspend fun run(): Boolean {
         if (cleaned || System.currentTimeMillis() >= deadline) return true
         if (bot in PestControl.round.waiting()) {
-            if (started || System.currentTimeMillis() >= waitingUntil) return true
+            if (started || System.currentTimeMillis() >= waitingUntil || eventCanStart?.invoke() == false) return true
             delay(3.seconds)
             return false
         }
@@ -196,7 +204,7 @@ class PestControlBotScript(bot: Bot, private var boarded: Boolean = false,
             if (openGate(target)) failures = 0
         }
         delay(2.seconds)
-        return failures >= 8
+        return eventCanStart == null && failures >= 8
     }
 
     /**
@@ -279,6 +287,7 @@ class PestControlBotScript(bot: Bot, private var boarded: Boolean = false,
     override suspend fun finish() { paused() }
 
     override suspend fun completed() {
+        if (eventCanStart != null) return
         if (!bot.isAlive && bot.controllers.primary is PestControlController) {
             waitFor(10.seconds) { bot.isAlive && bot.controllers.primary !is PestControlController }
         }

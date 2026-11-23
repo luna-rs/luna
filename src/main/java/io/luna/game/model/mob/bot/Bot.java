@@ -51,6 +51,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
@@ -92,6 +94,7 @@ public final class Bot extends Player {
         private final LunaContext context;
         private final BotManager manager;
         private boolean temporary;
+        private BooleanSupplier eventAdmission;
         private boolean connectedPlayer;
         private String username;
         private Position spawnPosition = Luna.settings().game().startingPosition();
@@ -158,6 +161,18 @@ public final class Bot extends Player {
          * @return This builder.
          */
         public Builder setTemporary() {
+            temporary = true;
+            return this;
+        }
+
+        /**
+         * Creates an event participant whose equipment and activity are managed in memory.
+         *
+         * @param eventAdmission Whether the event is still admitting participants to new matches.
+         * @return This builder.
+         */
+        public Builder setEventBot(BooleanSupplier eventAdmission) {
+            this.eventAdmission = requireNonNull(eventAdmission);
             temporary = true;
             return this;
         }
@@ -232,6 +247,9 @@ public final class Bot extends Player {
             if (username == null) {
                 throw new IllegalStateException("Username was not set.");
             }
+            if (eventAdmission != null && brain == null) {
+                throw new IllegalStateException("An event bot needs an activity brain.");
+            }
             if (reflex == null) {
                 reflex = new BotReflex();
             }
@@ -239,14 +257,18 @@ public final class Bot extends Player {
                 brain = new BotBrain();
             }
             if (personality == null) {
-                personality = new BotPersonality.Builder(manager.getPersonalityManager()).randomizeSmart().build();
+                personality = eventAdmission != null ? BotPersonality.DEFAULT :
+                        new BotPersonality.Builder(manager.getPersonalityManager()).randomizeSmart().build();
             }
             if (preferences == null) {
-                preferences = new BotPreference.Builder(manager.getPersonalityManager(), personality).randomizeSmart()
-                        .build();
+                BotPreference.Builder builder = new BotPreference.Builder(manager.getPersonalityManager(), personality);
+                if (eventAdmission == null) {
+                    builder.randomizeSmart();
+                }
+                preferences = builder.build();
             }
             return new Bot(context, username, RandomUtils.nextBoolean() ? "lunaisthebest1997" : "chubbychaser123",
-                    reflex, brain, personality, preferences, spawnPosition, temporary, connectedPlayer);
+                    reflex, brain, personality, preferences, spawnPosition, temporary, connectedPlayer, eventAdmission);
         }
     }
 
@@ -293,6 +315,11 @@ public final class Bot extends Player {
     private final boolean temporary;
 
     /**
+     * The admission window of this bot's event, if it belongs to one.
+     */
+    private final BooleanSupplier eventAdmission;
+
+    /**
      * A real client owns this account; bot behavior is explicit and session-only.
      */
     private final boolean connectedPlayer;
@@ -333,6 +360,18 @@ public final class Bot extends Player {
     @Override
     public boolean isBot() {
         return !connectedPlayer;
+    }
+
+    @Override
+    public boolean isEventBot() {
+        return eventAdmission != null;
+    }
+
+    /**
+     * Checks whether this bot can start a new match, including matches launched by native queues.
+     */
+    public boolean canJoinEventMatch() {
+        return eventAdmission == null || eventAdmission.getAsBoolean();
     }
 
     /**
@@ -486,10 +525,12 @@ public final class Bot extends Player {
      * @param preferences The preference model assigned to the bot.
      * @param position The fallback spawn position used when no saved position exists.
      * @param temporary Whether this bot should skip normal persistence.
+     * @param connectedPlayer Whether the bot facilities belong to a human session.
+     * @param eventAdmission The admission window of the developer event, or null for an ordinary bot.
      */
     private Bot(LunaContext context, String username, String password, BotReflex reflex, BotBrain brain,
                 BotPersonality personality, BotPreference preferences, Position position, boolean temporary,
-                boolean connectedPlayer) {
+                boolean connectedPlayer, BooleanSupplier eventAdmission) {
         super(context, new PlayerCredentials(username, password));
         this.reflex = reflex;
         this.brain = brain;
@@ -497,6 +538,7 @@ public final class Bot extends Player {
         this.preferences = preferences;
         this.temporary = temporary;
         this.connectedPlayer = connectedPlayer;
+        this.eventAdmission = eventAdmission;
 
         spawnPosition = position;
         botClient = new BotClient(this, context.getServer().getMessageRepository());
@@ -526,6 +568,10 @@ public final class Bot extends Player {
     @Override
     protected void onActive() {
         super.onActive();
+        if (isEventBot()) {
+            reflex.add(new EatFoodReflexScript(this));
+            return;
+        }
         if (connectedPlayer) {
             reflex.add(new EatFoodReflexScript(this));
             reflex.add(new LootItemReflexScript(this));
@@ -557,6 +603,9 @@ public final class Bot extends Player {
             stopAutomation();
             super.forceLogout();
             return;
+        }
+        if (isEventBot()) {
+            scriptStack.stopAll();
         }
         scriptStack.shutdown();
         reflex.stop();
@@ -598,6 +647,9 @@ public final class Bot extends Player {
         if (connectedPlayer) {
             throw new IllegalStateException("Use normal human login.");
         }
+        if (isEventBot()) {
+            throw new IllegalStateException("Use event login for a temporary participant.");
+        }
         CompletableFuture<PlayerData> future = new CompletableFuture<>();
         String username = getUsername();
         if (world.isFull()) {
@@ -632,15 +684,54 @@ public final class Bot extends Player {
                     if (world.isFull() || world.getPlayerMap().containsKey(username)) {
                         throw new IllegalStateException("World filled or account logged in during clan registration.");
                     }
-                    if (world.getPlayers().add(this)) {
-                        world.getBots().add(this);
-                        setState(EntityState.ACTIVE);
-                        log("I'm alive!");
-                        logger.info("{} has logged in.", username);
-                        return data;
-                    }
+                    activateSession();
                     return data;
                 }, service.getGameExecutor());
+    }
+
+    /**
+     * Logs an event bot in on the game thread after applying its event kit.
+     *
+     * @param prepare Initializes the bot's equipment and skills before it becomes visible.
+     */
+    public void loginForEvent(Consumer<Bot> prepare) {
+        if (Thread.currentThread() != service.getThread()) {
+            throw new IllegalStateException("Event login must run on the game thread.");
+        }
+        if (!isEventBot() || getState() != EntityState.NEW) {
+            throw new IllegalStateException("Only a new event bot can use event login.");
+        }
+        String username = getUsername();
+        if (world.isFull() || world.getPlayerMap().containsKey(username) || world.getBots().exists(username) ||
+                world.getLoginService().hasRequest(username) || world.getLogoutService().isSavePending(username)) {
+            throw new IllegalStateException("No available world slot for event bot " + username + ".");
+        }
+        loadData(null);
+        setPosition(spawnPosition);
+        prepare.accept(this);
+        try {
+            if (!activateSession()) {
+                throw new IllegalStateException("World is full.");
+            }
+        } catch (RuntimeException error) {
+            if (getIndex() != -1) {
+                forceLogout();
+            }
+            throw error;
+        }
+    }
+
+    private boolean activateSession() {
+        if (!world.getPlayers().add(this)) {
+            return false;
+        }
+        if (!isEventBot()) {
+            world.getBots().add(this);
+        }
+        setState(EntityState.ACTIVE);
+        log("I'm alive!");
+        logger.info("{} has logged in.", getUsername());
+        return true;
     }
 
     /**
@@ -679,6 +770,15 @@ public final class Bot extends Player {
             return;
         }
         try {
+            if (isEventBot()) {
+                if (!getClient().isPendingLogout() && isAlive()) {
+                    speechStack.process();
+                    if (reflex.process(this)) {
+                        processScripts();
+                    }
+                }
+                return;
+            }
             BotTradeManager.discardExpiredTradeRequests(this);
             if (preferences.getScavenging().isIntroductory()) {
                 preferences.getScavenging().advance(getTimePlayed().toMillis());
@@ -698,19 +798,19 @@ public final class Bot extends Player {
                 // Process context injectors before scripts so we can still react to events while doing stuff.
                 manager.getInjectorManager().injectEvents(this);
 
-                // Short-circuit if we still have stuff to do (scripts still in buffer).
-                if (!scriptStack.process()) {
-                    return;
-                }
-
-                // No scripts in buffer, consult brain for something to do.
-                BotCoordinator coordinator = brain.process(this);
-                if (coordinator != null) {
-                    coordinator.accept(this);
-                }
+                processScripts();
             }
         } finally {
             cycles++;
+        }
+    }
+
+    private void processScripts() {
+        if (scriptStack.process()) {
+            BotCoordinator coordinator = brain.process(this);
+            if (coordinator != null) {
+                coordinator.accept(this);
+            }
         }
     }
 

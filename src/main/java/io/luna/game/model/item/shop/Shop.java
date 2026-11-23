@@ -459,6 +459,9 @@ public final class Shop {
     }
 
     private boolean canTradeWith(Player player) {
+        if (player.isEventBot()) {
+            return false;
+        }
         return !(player instanceof Bot bot) || !bot.isBot() || bot.getActionHandler().getShop().canTradeWith(this);
     }
 

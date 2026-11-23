@@ -40,11 +40,12 @@ object BotWildernessLures {
      * Predatory combat must fit the permanent purpose. Recreational SKILL bots and cape-clan outings do not become
      * solo hunters through a scam; kind or uncertain GENERIC bots retain their protection/defence-only behavior.
      */
-    internal fun canAmbush(bot: Bot): Boolean = !bot.preferences.isSkiller && when (bot.preferences.pk?.purpose()) {
-        Purpose.VALUE -> true
-        Purpose.GENERIC -> !bot.personality.isKind && !bot.personality.isUncertain
-        else -> false
-    }
+    internal fun canAmbush(bot: Bot): Boolean =
+        !bot.isEventBot && !bot.preferences.isSkiller && when (bot.preferences.pk?.purpose()) {
+            Purpose.VALUE -> true
+            Purpose.GENERIC -> !bot.personality.isKind && !bot.personality.isUncertain
+            else -> false
+        }
 
     /**
      * Compares prospective native death loss with the victim's carried value. Low intelligence permits full risk;
@@ -80,7 +81,8 @@ object BotWildernessLures {
      */
     fun approach(actor: Bot, victim: Bot, useAccomplice: Boolean): Boolean {
         val now = System.currentTimeMillis()
-        if (!actor.preferences.isScammer || actor === victim || now < actor.nextLure || now < victim.nextLure ||
+        if (actor.isEventBot || victim.isEventBot || !actor.preferences.isScammer || actor === victim ||
+            now < actor.nextLure || now < victim.nextLure ||
             !BotConversations.available(actor) || !BotConversations.available(victim) ||
             victim.preferences.getFeelingsToward(actor.username) < 0.4
         ) return false

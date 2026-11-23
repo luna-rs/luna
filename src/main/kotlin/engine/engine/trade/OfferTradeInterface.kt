@@ -197,6 +197,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      * @param amount The quantity to offer, or `-1` for all available.
      */
     fun add(plr: Player, index: Int, amount: Int) {
+        if (plr.isEventBot || other.isEventBot) return
         val inv = plr.inventory
         val item = inv.get(index) ?: return
 

@@ -7,6 +7,7 @@ import api.predef.world
 import api.predef.gameService
 import com.google.common.util.concurrent.Service
 import com.google.gson.JsonObject
+import engine.spawn.PersistentGroundItem
 import game.skill.agility.roguesDen.RoguesDen
 import game.skill.agility.roguesDen.RoguesDen.denRun
 import game.skill.agility.roguesDen.RoguesDenMap
@@ -131,7 +132,8 @@ class RoguesDenBotScript(bot: Bot, private val data: MazeData) : BotScript(bot) 
 
     override suspend fun run(): Boolean {
         if (!live()) return true
-        if (System.currentTimeMillis() >= data.deadline || data.attempts >= MAX_ATTEMPTS && !data.inAttempt)
+        val attemptLimit = if (bot.isEventBot) 1 else MAX_ATTEMPTS
+        if (System.currentTimeMillis() >= data.deadline || data.attempts >= attemptLimit && !data.inAttempt)
             data.leaving = true
         if (bot.denRun == null) {
             if (RoguesDenMap.inBox(bot.position)) return true
@@ -143,9 +145,9 @@ class RoguesDenBotScript(bot: Bot, private val data: MazeData) : BotScript(bot) 
                 data.failures = 0
                 if (!settleDialogue()) return true
             }
-            if (data.attempts >= MAX_ATTEMPTS || System.currentTimeMillis() >= data.deadline) data.leaving = true
+            if (data.attempts >= attemptLimit || System.currentTimeMillis() >= data.deadline) data.leaving = true
             if (data.leaving) {
-                if (ordinary()) handler.banking.travelToBankDepositAll()
+                if (!bot.isEventBot && ordinary()) handler.banking.travelToBankDepositAll()
                 return true
             }
             if (!ordinary() || !prepareAndEnter()) return record(false)
@@ -208,12 +210,14 @@ class RoguesDenBotScript(bot: Bot, private val data: MazeData) : BotScript(bot) 
         minOf(180_000L, data.deadline - System.currentTimeMillis()).coerceAtLeast(1)) {
         if (!ordinary() || !eligible(bot)) return@withTimeoutOrNull false
         if (bot.equipment.size() > 0 || bot.inventory.any { it != null && it.id != RoguesDen.JEWEL }) {
+            if (bot.isEventBot) return@withTimeoutOrNull false
             if (!handler.banking.travelToBankDepositAll() || !handler.widgets.clickCloseInterface() ||
                 !handler.equipment.unequipAll() || !handler.banking.travelToBankDepositAll() ||
                 !handler.widgets.clickCloseInterface()) return@withTimeoutOrNull false
         }
-        if (!handler.webWalkTo(RoguesDen.START, bank = BankAccess.NONE, fallback = false) || !live() || !ordinary())
+        if (!bot.isEventBot && !handler.webWalkTo(RoguesDen.START, bank = BankAccess.NONE, fallback = false))
             return@withTimeoutOrNull false
+        if (!live() || !ordinary()) return@withTimeoutOrNull false
         if (amount(RoguesDen.JEWEL) == 0) {
             val brian = world.locator.findNpcs(RoguesDen.START, 32) { it.id == RoguesDen.BRIAN }.firstOrNull()
                 ?: return@withTimeoutOrNull false
@@ -348,11 +352,15 @@ class RoguesDenBotScript(bot: Bot, private val data: MazeData) : BotScript(bot) 
         val item = withTimeoutOrNull(12_000) {
             var found: GroundItem? = null
             while (visiting() && found == null) {
-                found = world.locator.findItems(bot.position, 0) { it.id == id }.firstOrNull()
+                found = world.locator.findItems(bot.position, 0) {
+                    it.id == id && (!bot.isEventBot || it is PersistentGroundItem)
+                }.firstOrNull()
                 if (found == null) delay(650)
             }
             found
         } ?: return false
+        // Maze supplies for an event run leave the shared spawn available to other players.
+        if (bot.isEventBot) return visiting() && bot.inventory.add(item.toItem())
         return visiting() && output.sendGroundItemInteraction(1, item) &&
             await(5_000) { !visiting() || amount(id) > before } && visiting() && amount(id) > before
     }

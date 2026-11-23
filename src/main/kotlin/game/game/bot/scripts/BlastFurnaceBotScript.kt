@@ -302,7 +302,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
      * Returns the room's ore seller while this smelter has no complete recipe left in its bank or as notes.
      */
     private fun seller(): Shop? {
-        if (role != Role.SMELTER || trainingComplete() || BlastFurnace.ingredients(selectedBar)
+        if (bot.isEventBot || role != Role.SMELTER || trainingComplete() || BlastFurnace.ingredients(selectedBar)
                 .all { owned(bot, it.id) - bot.inventory.computeAmountForId(it.id) >= it.amount }) return null
         return BlastFurnaceSupplies.seller(bot, selectedBar)
     }
@@ -450,9 +450,14 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     private fun carriedOre(): Boolean = BlastFurnace.ingredients(selectedBar).any { bot.inventory.contains(it.id) }
 
     override suspend fun init(resumed: Boolean): Boolean {
-        if (System.currentTimeMillis() >= deadline || failures >= 5 || !available(bot) || !canWork(bot, role) ||
+        if (System.currentTimeMillis() >= deadline || failures >= 5 ||
+            (!bot.isEventBot && !available(bot)) || !canWork(bot, role) ||
             !BlastFurnaceCrew.claim(bot, this, role, deadline)) return true
         BlastFurnaceCrew.refresh(bot, this)
+        if (bot.isEventBot) {
+            resetProgress()
+            return !BlastFurnace.present(bot) || !BlastFurnace.hasAccess(bot)
+        }
         val finished = withTimeoutOrNull((deadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
             if (!prepareSupplies()) return@withTimeoutOrNull true
             if (!prepared || tools(bot, role).any { !bot.inventory.contains(it.id) }) {
@@ -567,6 +572,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             return finishBanking()
         }
         if (role == Role.SMELTER && !BlastFurnace.hasAccess(bot)) {
+            if (bot.isEventBot) return true
             val plan = if (bot.inventory.computeAmountForId(995) >= BlastFurnace.FEE) null else plan(false)
             val renewed = (plan != null || bot.inventory.computeAmountForId(995) >= BlastFurnace.FEE) &&
                 withTimeoutOrNull(minOf(TRAVEL_MILLIS, (deadline - System.currentTimeMillis()).coerceAtLeast(1L))) {
@@ -591,7 +597,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             val shop = seller()
             val load = shop?.let { nextLoad(it) }
             if (shop != null && load != null) return buyLoad(shop, load)
-            if (BlastFurnace.totalBars(bot) == 0) return restock()
+            if (BlastFurnace.totalBars(bot) == 0) return bot.isEventBot || restock()
         }
         val success = withTimeoutOrNull(if (bot.inventory.isFull && BlastFurnace.totalBars(bot) > 0)
                 minOf(TRAVEL_MILLIS, (deadline - System.currentTimeMillis()).coerceAtLeast(1L)) else 30_000) {
@@ -633,7 +639,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     private suspend fun finishBanking(): Boolean {
         BlastFurnaceCrew.release(bot, this)
         retireSupplies()
-        if (bot.state == EntityState.ACTIVE && isActionSafe() && !bot.inWilderness()) {
+        if (!bot.isEventBot && bot.state == EntityState.ACTIVE && isActionSafe() && !bot.inWilderness()) {
             withTimeoutOrNull(120_000) { bank(emptyList(), ending = true) }
         }
         return true
@@ -665,6 +671,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
      * Picks up a tool lying in the furnace room. A taken spawn is a normal wait for its respawn.
      */
     private suspend fun takeRoomTool(id: Int): Boolean {
+        if (bot.isEventBot) return false
         val tool = world.locator.findItems(bot.position, 32) {
             it.id == id && it.state == EntityState.ACTIVE && it.isVisibleTo(bot) && BlastFurnace.inside(it.position)
         }.minByOrNull { bot.position.computeLongestDistance(it.position) } ?: return false
@@ -688,6 +695,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         }
         if (BlastFurnace.totalBars(bot) > 0) {
             if (bot.inventory.isFull) {
+                if (bot.isEventBot) return false
                 // Saved mixed stock can exceed one inventory. Preserve it and make as many real bank trips
                 // as the saved visit budget allows; never withdraw another ore batch during claim recovery.
                 val plan = (if (seller() != null) plan() else null) ?: plan(false) ?: return false

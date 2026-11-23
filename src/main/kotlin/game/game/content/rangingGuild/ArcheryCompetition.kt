@@ -103,11 +103,12 @@ object ArcheryCompetition {
 
     fun claim(p: Player, judge: Npc): Boolean {
         if (!near(p, judge, 693) || p.count != 11) return false
-        val tickets = p.score / 10
+        val tickets = if (p.isEventBot) 0 else p.score / 10
         if (tickets > 0 && !p.inventory.add(Item(TICKET, tickets))) {
             p.sendMessage("Make room for your tickets, then speak to me again."); return false
         }
-        p.sendMessage("You scored ${p.score} points and earned $tickets archery tickets.")
+        p.sendMessage(if (p.isEventBot) "You scored ${p.score} points."
+            else "You scored ${p.score} points and earned $tickets archery tickets.")
         p.count = 0; p.score = 0; p.hit = 11
         refresh(p)
         return true
@@ -193,7 +194,7 @@ object ArcheryCompetition {
             mob.hit = result
             val points = points(result)
             mob.score += points
-            if (points > 0) mob.ranged.addExperience(points / 2.0)
+            if (points > 0 && !mob.isEventBot) mob.ranged.addExperience(points / 2.0)
             refresh(mob)
             mob.overlays.open(Result())
             mob.sendText(when (points) {

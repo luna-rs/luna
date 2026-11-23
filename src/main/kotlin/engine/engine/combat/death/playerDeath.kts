@@ -57,6 +57,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
             val selection = PlayerDeathItems.select(removedItems, PlayerDeathItems.keepCount(victim))
             BotWildernessLures.onDeath(victim, source, selection.lost.isNotEmpty())
             victim.inventory.addAll(selection.kept)
+            if (victim.isEventBot) return@death
 
             val view =
                 if (source is Player) ChunkUpdatableView.localView(source) else ChunkUpdatableView.localView(victim)

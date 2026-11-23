@@ -88,6 +88,10 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         if (accepted || completed) {
             return
         }
+        if (plr.isEventBot || other.isEventBot) {
+            plr.overlays.closeWindows()
+            return
+        }
 
         val allowed = try {
             offer.nativeTradeAllowed() && confirm.offer.nativeTradeAllowed()

@@ -28,7 +28,8 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 class FishingTrawlerBotScript(bot: Bot, private var boarded: Boolean = false,
-                              private val deadline: Long = System.currentTimeMillis() + 1_200_000) : BotScript(bot) {
+                              private val deadline: Long = System.currentTimeMillis() + 1_200_000,
+                              private val eventCanStart: (() -> Boolean)? = null) : BotScript(bot) {
     companion object {
         private var Bot.supplyRetryAt by Attr.long()
 
@@ -110,6 +111,7 @@ class FishingTrawlerBotScript(bot: Bot, private var boarded: Boolean = false,
     override suspend fun init(resumed: Boolean): Boolean {
         if (!isActionSafe()) return true
         if (System.currentTimeMillis() >= deadline) return true
+        if (eventCanStart != null) return eventCanStart?.invoke() == false
         if (boarded && bot.catchRolls <= 0 && bot.unclaimedCatch.isEmpty()) return true
         if (bot.fishing.level < 15) return true
         if (bot.inWilderness()) return true
@@ -139,6 +141,21 @@ class FishingTrawlerBotScript(bot: Bot, private var boarded: Boolean = false,
     }
 
     override suspend fun run(): Boolean {
+        if (eventCanStart != null && !boarded) {
+            if (eventCanStart?.invoke() == false) return true
+            if (FishingTrawler.acceptingPassengers()) {
+                FishingTrawler.board(bot)
+                boarded = FishingTrawler.waitingToSail(bot)
+                if (!boarded) return true
+            }
+            delay(2.seconds)
+            return false
+        }
+        if (eventCanStart != null && FishingTrawler.waitingToSail(bot)) {
+            if (eventCanStart?.invoke() == false) return true
+            delay(2.seconds)
+            return false
+        }
         if (!isActionSafe()) return true
         if (System.currentTimeMillis() >= deadline) return true
         if (FishingTrawler.inWreck(bot.position)) {

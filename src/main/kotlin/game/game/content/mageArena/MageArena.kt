@@ -165,7 +165,7 @@ object MageArena {
     fun canTakeCape(player: Player): Boolean = ownedGod(player) == null
 
     /**
-     * Creates the cape on the floor, including when the inventory is full. Failed registration changes no stage.
+     * Places a player's cape on the floor or adds an event bot's cape straight to its inventory.
      */
     fun pray(player: Player, god: God): Boolean {
         if (!live(player) || !completed(player) || !chamber(player.position)) return false
@@ -178,13 +178,18 @@ object MageArena {
             player.sendMessage("... but there is no response.")
             return false
         }
-        val item = GroundItem(player.context, god.cape, 1, god.capeTile, ChunkUpdatableView.localView(player))
-        if (!player.world.items.register(item)) return false
-        player.pendingCape = item
+        if (player.isEventBot) {
+            if (!player.inventory.add(Item(god.cape))) return false
+        } else {
+            val item = GroundItem(player.context, god.cape, 1, god.capeTile, ChunkUpdatableView.localView(player))
+            if (!player.world.items.register(item)) return false
+            player.pendingCape = item
+            player.world.scheduleOnce(200) { if (item.state == EntityState.ACTIVE) player.world.items.unregister(item) }
+        }
         if (stage(player) == COMPLETE) setStage(player, 7)
         player.animation(Animation(645))
-        player.sendMessage("You feel a rush of energy charge through your veins. Suddenly a cape appears before you.")
-        player.world.scheduleOnce(200) { if (item.state == EntityState.ACTIVE) player.world.items.unregister(item) }
+        player.sendMessage(if (player.isEventBot) "A cape appears in your inventory."
+            else "You feel a rush of energy charge through your veins. Suddenly a cape appears before you.")
         return true
     }
 
@@ -194,10 +199,12 @@ object MageArena {
     fun claimStaff(player: Player): Boolean {
         if (!live(player) || stage(player) != 7 || !chamber(player.position)) return false
         val god = ownedGod(player) ?: return false
-        if (!player.inventory.hasSpaceFor(Item(god.staff))) {
+        val staff = Item(god.staff)
+        if (!player.inventory.hasSpaceFor(staff)) {
+            if (player.isEventBot) return false
             val drop = GroundItem(player.context, god.staff, 1, player.position, ChunkUpdatableView.localView(player))
             if (!player.world.items.register(drop)) return false
-        } else if (!player.inventory.add(Item(god.staff))) return false
+        } else if (!player.inventory.add(staff)) return false
         setStage(player, STAFF_GIVEN)
         player.sendMessage("The guardian hands you an ornate magic staff.")
         return true

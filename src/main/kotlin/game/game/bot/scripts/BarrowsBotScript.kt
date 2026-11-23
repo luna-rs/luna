@@ -12,6 +12,7 @@ import api.bot.script.BotScriptData
 import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.event.BotEventParticipant
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
@@ -239,6 +240,9 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
          * Both minigame and profit selection use the same owned-kit admission check.
          */
         fun eligible(bot: Bot): Boolean = ActionSafety.NON_COMBAT.allows(bot) && plan(bot) != null
+
+        internal fun forEvent(bot: Bot, participant: BotEventParticipant): BarrowsBotScript =
+            BarrowsBotScript(bot).apply { event = participant }
     }
 
     /**
@@ -279,6 +283,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
     private var lastDoor: BarrowsDoor? = null
     private var lastProgress = System.currentTimeMillis()
     private var observed: Pair<Npc, Int>? = null
+    private var event: BotEventParticipant? = null
     override val actionSafety = ActionSafety.COMBAT
     override val allowsCombatResponse = false
     override fun allowsLoot(item: GroundItem): Boolean = false
@@ -290,6 +295,10 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
         }
         if (previousRetaliate == null) previousRetaliate = bot.varpManager.getValue(PersistentVarp.AUTO_RETALIATE)
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
+        if (event != null) {
+            selected = plan(bot, carriedOnly = true)
+            return selected?.let { !armourMatches(bot, it) } ?: true
+        }
         if (BarrowsAreaListener.inside(bot.position)) {
             runStarted = true
             selected = plan(bot, carriedOnly = true)
@@ -304,6 +313,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
      * Banking may happen between brothers; native defeat and maze flags survive that ordinary departure.
      */
     private suspend fun prepare(): Boolean {
+        if (event != null) return false
         if (BarrowsAreaListener.inside(bot.position) && !leaveUnderground()) return false
         if (withTimeoutOrNull(30_000) {
                 if (bot.combat.inCombat()) handler.combat.fleeCombat()
@@ -403,6 +413,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
 
     override suspend fun run(): Boolean {
         if (!bot.isAlive || bot.state != EntityState.ACTIVE) return true
+        if (!runStarted && event?.canStart?.invoke() == false) return true
         maintain()
         val underground = BarrowsAreaListener.inside(bot.position)
         if (runStarted && BarrowsRun.state(bot) and BarrowsRun.COLLAPSING_MASK != 0) returning = true
@@ -410,6 +421,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
             System.currentTimeMillis() - lastProgress > 240_000) returning = true
         if (returning) {
             if (underground && !leaveUnderground()) return ++failures >= MAX_FAILURES
+            if (event != null) return true
             withTimeoutOrNull(30_000) {
                 if (bot.combat.inCombat()) handler.combat.fleeCombat()
                 if (awaitActionSafety(ActionSafety.NON_COMBAT)) handler.banking.travelToBankDepositAll()
@@ -467,6 +479,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
     private suspend fun dig(): Boolean {
         val destination = mounds.getValue(nextBrother())
         if (!walk(destination, radius = 0, timeout = 180_000, fallback = true)) return false
+        if (!runStarted && event?.canStart?.invoke() == false) return false
         if (!isActionSafe(ActionSafety.NON_COMBAT) || !handler.inventory.clickItem(1, SPADE)) return false
         val entered = waitFor(5.seconds) { BarrowsAreaListener.inside(bot.position) && bot.position.z == 3 }
         if (entered) runStarted = true
@@ -517,7 +530,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
             return waitFor(3.seconds) { !bot.overlays.has(BarrowsPuzzleInterface::class.java) }
         }
         if (bot.position.isWithinDistance(BarrowsChest.position, 3)) {
-            while (bot.inventory.computeRemainingSize() < 8) {
+            while (event == null && bot.inventory.computeRemainingSize() < 8) {
                 val expendable = bot.inventory.filterNotNull().firstOrNull { it.id == 229 }
                     ?: bot.inventory.filterNotNull().firstOrNull {
                         food(bot, true) > 4 && (Food.ID_TO_FOOD[it.id]?.heal ?: 0) >= 16
@@ -525,7 +538,7 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
                     ?: break
                 if (!handler.inventory.dropItem(expendable.id)) return false
             }
-            if (bot.inventory.computeRemainingSize() < 8) return false
+            if (event == null && bot.inventory.computeRemainingSize() < 8) return false
             val chest = world.locator.findObjectsOnTile(BarrowsChest.position) { it.id == CHEST }.firstOrNull() ?: return false
             return handler.interactions.interact(1, chest)
         }
@@ -561,6 +574,15 @@ class BarrowsBotScript(bot: Bot, private var attempted: Boolean = false,
     private suspend fun leaveUnderground(): Boolean {
         bot.combat.target = null
         clearMagic()
+        val participant = event
+        if (participant != null) {
+            withTimeoutOrNull(15_000) {
+                handler.webWalkTo(participant.spawn, radius = 3, bank = BankAccess.NONE, fallback = false)
+            }
+            // An event run that cannot route out still exits through the area's ordinary position cleanup.
+            if (BarrowsAreaListener.inside(bot.position)) bot.move(participant.spawn)
+            return true
+        }
         handler.webWalkTo(SubZone.HOME, bank = BankAccess.NONE, fallback = false)
         return waitFor(8.seconds) { !BarrowsAreaListener.inside(bot.position) }
     }

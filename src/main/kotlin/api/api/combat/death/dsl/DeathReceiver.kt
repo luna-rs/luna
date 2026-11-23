@@ -91,6 +91,7 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
      */
     fun DeathReceiver<Npc>.drop() {
         val source = receiver.source
+        if (source is Player && source.isEventBot) return
         val victim = receiver.victim
         if (source is Player) TreasureTrails.drop(source, victim)
         val table = getDropTable(victim)

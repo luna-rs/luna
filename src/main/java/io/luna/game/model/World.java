@@ -335,7 +335,7 @@ public final class World {
      */
     public void removePlayer(Player player) {
         playerMap.remove(player.getUsername());
-        if (player.isBot()) {
+        if (player.isBot() && !player.isEventBot()) {
             botRepository.remove(player.asBot());
         }
     }

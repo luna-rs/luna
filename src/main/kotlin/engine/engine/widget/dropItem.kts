@@ -33,6 +33,11 @@ on(DropItemEvent::class, EventPriority.HIGH) {
         if (DeveloperItemHandler.allowed(plr)) plr.sendMessage("You cannot drop Luna's toy.")
         return@on
     }
+    if (plr.isEventBot) {
+        plr.inventory[index] = null
+        plr.overlays.closeWindows()
+        return@on
+    }
     if (MageArena.dropCape(plr, index)) {
         plr.overlays.closeWindows()
     } else if(DegradableEquipmentHandler.isDropRestricted(item.id)) {

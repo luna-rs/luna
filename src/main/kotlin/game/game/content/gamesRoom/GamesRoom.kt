@@ -5,6 +5,7 @@ package game.content.gamesRoom
 
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.event.canJoinEventMatch
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -43,7 +44,7 @@ object GamesRoom {
 
     private fun available(player: Player): Boolean = inRoom(player.position) &&
         player.state == EntityState.ACTIVE && player.isAlive && !player.isLocked &&
-        !player.combat.inCombat() && player !in sessions
+        !player.combat.inCombat() && player !in sessions && player.canJoinEventMatch()
 
     private fun canChallenge(player: Player, opponent: Player): Boolean = player !== opponent &&
         available(player) && available(opponent) && player.position.isWithinDistance(opponent.position, 16)

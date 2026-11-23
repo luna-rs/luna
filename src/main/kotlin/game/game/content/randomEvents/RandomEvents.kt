@@ -127,10 +127,10 @@ object RandomEvents {
 
     /**
      * Checks native lifecycle, source exclusions and the personal event slot before reading readiness.
-     * Banks and the Wilderness are eligible. Bots are not excluded. Instanced maps and the Fight Pit are not: an
-     * event's move would end the run there, and a later return could land in an instance that was since deleted.
+     * Banks and the Wilderness are eligible for players and ordinary bots. Temporary event participants stay in
+     * their activity. Instanced maps and the Fight Pit also need to preserve their runs and return positions.
      */
-    fun allowed(player: Player): Boolean = player.state == EntityState.ACTIVE && player.isAlive &&
+    fun allowed(player: Player): Boolean = !player.isEventBot && player.state == EntityState.ACTIVE && player.isAlive &&
         areaAllowed(player.position) && !CastleWarsGame.inArena(player.position) &&
         !CastleWarsGame.inWaitingRoom(player.position) && player.dynamicMap == null &&
         !FightPit.inside(player.position) && encounters[player]?.blocksNewEvents != true

@@ -6,6 +6,7 @@ import api.attr.setValue
 import api.combat.death.DeathHookHandler
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.event.canJoinEventMatch
 import game.content.castleWars.CastleWarsMatch.Team
 import game.player.item.consume.potion.Potion
 import game.skill.magic.CombinationRune
@@ -63,7 +64,7 @@ class CastleWarsGame(val match: CastleWarsMatch<Player> = CastleWarsMatch()) {
     }
 
     fun enter(player: Player, preferred: Team? = null): Boolean {
-        if (!player.position.isWithinDistance(LOBBY, 16) ||
+        if (!player.canJoinEventMatch() || !player.position.isWithinDistance(LOBBY, 16) ||
             player.controllers.primary.javaClass != PlayerController::class.java) return false
         if (player.equipment.occupied(Equipment.HEAD) || player.equipment.occupied(Equipment.CAPE)) {
             player.sendMessage("You can't wear hats, capes, or helms in the arena.")
@@ -86,10 +87,11 @@ class CastleWarsGame(val match: CastleWarsMatch<Player> = CastleWarsMatch()) {
     }
 
     fun tick(): CastleWarsMatch.Update<Player> {
+        if (!match.active) match.waitingPlayers().keys.filterNot { it.canJoinEventMatch() }.forEach(::exit)
         val update = match.tick()
         update.started.forEach { (player, team) -> start(player, team) }
         update.rewards.forEach { (player, amount) ->
-            player.castleWarsTickets = Math.addExact(player.castleWarsTickets, amount)
+            if (!player.isEventBot) player.castleWarsTickets = Math.addExact(player.castleWarsTickets, amount)
             exit(player)
             claimTickets(player)
         }
@@ -104,7 +106,7 @@ class CastleWarsGame(val match: CastleWarsMatch<Player> = CastleWarsMatch()) {
     }
 
     fun joinInProgress(player: Player): Boolean {
-        if (!inWaitingRoom(player.position) || !match.joinInProgress(player)) return false
+        if (!player.canJoinEventMatch() || !inWaitingRoom(player.position) || !match.joinInProgress(player)) return false
         start(player, match.team(player)!!)
         return true
     }
@@ -119,7 +121,7 @@ class CastleWarsGame(val match: CastleWarsMatch<Player> = CastleWarsMatch()) {
 
     fun quit(player: Player, owner: Team) {
         val team = match.team(player) ?: return
-        if (team != owner || !match.isPlaying(player)) { exit(player); return }
+        if (!player.canJoinEventMatch() || team != owner || !match.isPlaying(player)) { exit(player); return }
         detach(player)
         match.requeue(player, team)
         player.equipment.set(Equipment.CAPE, Item(team.cloak))
@@ -156,6 +158,7 @@ class CastleWarsGame(val match: CastleWarsMatch<Player> = CastleWarsMatch()) {
     }
 
     fun claimTickets(player: Player) {
+        if (player.isEventBot) return
         val amount = player.castleWarsTickets
         if (amount <= 0 || !player.position.isWithinDistance(LOBBY, 16)) return
         val previous = player.inventory.computeAmountForId(4067)

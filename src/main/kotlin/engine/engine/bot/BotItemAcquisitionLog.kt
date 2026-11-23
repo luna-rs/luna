@@ -56,7 +56,7 @@ class BotItemAcquisitionLog private constructor(private val bot: Bot) : ItemCont
          * Registers one observer after login while preserving every existing container listener.
          */
         fun attach(player: Player) {
-            if (!player.isRealBot() || player.acquisitionLogAttached) return
+            if (!player.isRealBot() || player.isEventBot || player.acquisitionLogAttached) return
             val observer = BotItemAcquisitionLog(player)
             player.inventory.addListener(observer)
             player.bank.addListener(observer)

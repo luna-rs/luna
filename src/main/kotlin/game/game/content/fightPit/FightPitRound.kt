@@ -5,6 +5,7 @@ import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.event.canJoinEventMatch
 import engine.combat.status.StatusEffectType
 import game.content.fightCave.FightCave
 import game.npc.spawn.tzhaar.TzHaarNames
@@ -213,6 +214,7 @@ object FightPitRound {
         fighters.filter { it.health == 0 }.forEach(::died)
         when (phase) {
             Phase.IDLE, Phase.COUNTDOWN -> {
+                champion?.let { if (!it.canJoinEventMatch()) walkedOut(it) }
                 val ready = waiting().size + (if (champion != null) 1 else 0)
                 if (ready < 2) {
                     phase = Phase.IDLE
@@ -233,7 +235,7 @@ object FightPitRound {
      * The players in the waiting room, or watching through its orb, who'd be moved into the pit now.
      */
     private fun waiting() = members.filter {
-        it.isAlive && !it.isLocked && (it.controllers.primary as? FightPitController)?.withdrawing != true &&
+        it.canJoinEventMatch() && it.isAlive && !it.isLocked && (it.controllers.primary as? FightPitController)?.withdrawing != true &&
             (FightPit.WAITING_ROOM.contains(it.position) || viewing(it))
     }
 
@@ -295,7 +297,7 @@ object FightPitRound {
         fighters.forEach { it.contextMenu.hide(OPTION_ATTACK) }
         fighters.clear()
         if (winner != null) {
-            winner.fightPitTokkul += fallen.sum()
+            if (!winner.isEventBot) winner.fightPitTokkul += fallen.sum()
             winner.skullIcon = SkullIcon.RED
             champion = winner
             FightPit.crown(TzHaarNames.name(winner))
