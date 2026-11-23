@@ -1,6 +1,7 @@
 package engine.bank
 
 import api.predef.*
+import game.content.bankPin.BankPin
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.Player
 
@@ -49,6 +50,7 @@ fun openDialogue(plr: Player, id: Int) {
     plr.newDialogue()
         .npc(id, "Good day, how may I help you?")
         .options("I'd like to access my bank account, please.", { accessAccountDialogue(it) },
+                 "I'd like to check my PIN settings.", { pinSettingsDialogue(it) },
                  "What is this place?", { areaInfoDialogue(it, id) },
                  "How can I save space with banknotes?", { banknoteInfoDialogue(it, id) },
                  "Didn't you used to be called the bank of Varrock?", { oldNameInfoDialogue(it, id) }).open()
@@ -72,6 +74,16 @@ fun accessAccountDialogue(plr: Player) {
     plr.newDialogue()
         .player("I'd like to access my bank account, please.")
         .then { plr.bank.open() }
+        .open()
+}
+
+/**
+ * Opens the sub-dialogue for the Bank PIN settings.
+ */
+fun pinSettingsDialogue(plr: Player) {
+    plr.newDialogue()
+        .player("I'd like to check my PIN settings.")
+        .then { BankPin.openSettings(plr) }
         .open()
 }
 
