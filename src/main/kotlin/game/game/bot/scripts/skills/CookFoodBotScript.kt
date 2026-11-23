@@ -170,7 +170,7 @@ class CookFoodBotScript(
         if (cookingObject?.state != EntityState.ACTIVE) {
             // Ranges and map fires stay put, so they come before fires that other players have lit.
             cookingObject = world.locator
-                .findObjects(zone.area.centerPosition.setZ(zone.inside.z), zone.area.tileRadius) { it.id in COOKING_OBJECTS }
+                .findObjects(zone.area.centerPosition.setZ(zone.inside.z), zone.area.tileRadius) { it.id in COOKING_OBJECTS && food.cooksOn(it.id) }
                 .minByOrNull { it.isDynamic }
         }
 
