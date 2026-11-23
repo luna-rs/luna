@@ -65,6 +65,21 @@
     "tradeable": true
   },
   {
+    "id": 32, // Lit black candle
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 33, // Lit candle
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 34, // Lit candle
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
     "id": 35, // Excalibur
     "weight": 2.2,
     "tradeable": false
@@ -742,7 +757,12 @@
   {
     "id": 594, // Torch
     "weight": 0.5,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 595, // Torch
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 596, // Torch
@@ -6462,12 +6482,27 @@
   {
     "id": 4524, // Oil lamp
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4525, // Oil lamp
     "weight": 0.4,
     "tradeable": true
+  },
+  {
+    "id": 4531, // Candle lantern
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 4534, // Candle lantern
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 4539, // Oil lantern
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 4544, // Bullseye lantern
@@ -6487,7 +6522,7 @@
   {
     "id": 4550, // Bullseye lantern
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4551, // Spiny helmet
@@ -6677,7 +6712,7 @@
   {
     "id": 4702, // Sapphire lantern
     "weight": 1.3,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4708, // Ahrims hood
@@ -7462,7 +7497,7 @@
   {
     "id": 5013, // Mining helmet
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5014, // Mining helmet
@@ -10022,7 +10057,7 @@
   {
     "id": 7053, // Lit bug lantern
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7054, // Chilli potato

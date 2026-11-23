@@ -61,21 +61,6 @@
     "initial_popularity": 20
   },
   {
-    "id": 32, // Lit black candle
-    "initial_price": 25,
-    "initial_popularity": 20
-  },
-  {
-    "id": 33, // Lit candle
-    "initial_price": 25,
-    "initial_popularity": 20
-  },
-  {
-    "id": 34, // Lit candle
-    "initial_price": 5,
-    "initial_popularity": 20
-  },
-  {
     "id": 36, // Candle
     "initial_price": 25,
     "initial_popularity": 20
@@ -1469,16 +1454,6 @@
     "id": 592, // Ashes
     "initial_price": 25,
     "initial_popularity": 60
-  },
-  {
-    "id": 594, // Torch
-    "initial_price": 25,
-    "initial_popularity": 20
-  },
-  {
-    "id": 595, // Torch
-    "initial_price": 5,
-    "initial_popularity": 20
   },
   {
     "id": 596, // Torch
@@ -8326,11 +8301,6 @@
     "initial_popularity": 20
   },
   {
-    "id": 4524, // Oil lamp
-    "initial_price": 28,
-    "initial_popularity": 20
-  },
-  {
     "id": 4525, // Oil lamp
     "initial_price": 25,
     "initial_popularity": 20
@@ -8346,17 +8316,7 @@
     "initial_popularity": 20
   },
   {
-    "id": 4531, // Candle lantern
-    "initial_price": 25,
-    "initial_popularity": 20
-  },
-  {
     "id": 4532, // Candle lantern
-    "initial_price": 25,
-    "initial_popularity": 20
-  },
-  {
-    "id": 4534, // Candle lantern
     "initial_price": 25,
     "initial_popularity": 20
   },
@@ -8367,11 +8327,6 @@
   },
   {
     "id": 4537, // Oil lantern
-    "initial_price": 125,
-    "initial_popularity": 20
-  },
-  {
-    "id": 4539, // Oil lantern
     "initial_price": 125,
     "initial_popularity": 20
   },
@@ -8397,11 +8352,6 @@
   },
   {
     "id": 4548, // Bullseye lantern
-    "initial_price": 420,
-    "initial_popularity": 20
-  },
-  {
-    "id": 4550, // Bullseye lantern
     "initial_price": 420,
     "initial_popularity": 20
   },
@@ -8627,11 +8577,6 @@
   },
   {
     "id": 4701, // Sapphire lantern
-    "initial_price": 600,
-    "initial_popularity": 40
-  },
-  {
-    "id": 4702, // Sapphire lantern
     "initial_price": 600,
     "initial_popularity": 40
   },
@@ -9029,11 +8974,6 @@
     "id": 5010, // Key
     "initial_price": 25,
     "initial_popularity": 5
-  },
-  {
-    "id": 5013, // Mining helmet
-    "initial_price": 600,
-    "initial_popularity": 10
   },
   {
     "id": 5014, // Mining helmet
@@ -12392,11 +12332,6 @@
   },
   {
     "id": 7051, // Unlit bug lantern
-    "initial_price": 130,
-    "initial_popularity": 10
-  },
-  {
-    "id": 7053, // Lit bug lantern
     "initial_price": 130,
     "initial_popularity": 10
   },
