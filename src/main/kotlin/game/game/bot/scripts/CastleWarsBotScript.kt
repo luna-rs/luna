@@ -359,7 +359,7 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
                 if (!isActionSafe(ActionSafety.NON_COMBAT) || bot.inventory.computeAmountForId(4067) < cost) return@withTimeoutOrNull
                 val lanthus = world.locator.findNpcs(CastleWarsGame.LOBBY, 16) { it.id == 1526 }.firstOrNull()
                     ?: return@withTimeoutOrNull
-                if (!handler.interactions.interact(2, lanthus) { isActionSafe(ActionSafety.NON_COMBAT) } ||
+                if (!handler.interactions.interact(4, lanthus) { isActionSafe(ActionSafety.NON_COMBAT) } ||
                     !waitFor(3.seconds) { bot.overlays.has(CastleWarsRewardInterface::class.java) }) return@withTimeoutOrNull
                 ownedShop = bot.overlays.getOverlay(CastleWarsRewardInterface::class.java)
                 val before = bot.inventory.computeAmountForId(id)

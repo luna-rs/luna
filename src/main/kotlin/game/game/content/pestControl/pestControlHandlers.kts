@@ -41,7 +41,7 @@ npc1(3781) {
 }
 for (id in 3786..3789) {
     npc1(id) { PestControlTraining.show(plr) }
-    npc3(id) { PestControlTraining.show(plr) }
+    npc2(id) { PestControlTraining.show(plr) }
 }
 object1(14315) { PestControl.board(plr) }
 object1(14314) { if (PestControl.onLander(plr.position)) PestControl.leave(plr) }

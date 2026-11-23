@@ -33,7 +33,7 @@ npc1(957) {
     DuelArena.scoreboard(plr)
 }
 object1(3192) { DuelArena.scoreboard(plr) }
-for (id in 959..961) npc3(id) {
+for (id in 959..962) npc2(id) {
     if (DuelArena.session(plr) == null && DuelArena.inside(plr.position) && plr.isAlive && !plr.combat.inCombat()) {
         plr.hitpoints.adjustLevel(12)
         plr.sendMessage("You feel a little better.")

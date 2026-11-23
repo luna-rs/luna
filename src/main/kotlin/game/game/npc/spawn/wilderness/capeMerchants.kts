@@ -46,8 +46,8 @@ merchants.forEachIndexed { index, name ->
             }
         }
 
-        // Trade is the third action in the 377 NPC definitions (the second slot is empty).
-        open { npc3 += npcId }
+        // Trade sits in the third menu slot, which the 377 client sends as the second NPC click.
+        open { npc2 += npcId }
     }
 
     npc1(npcId) {
