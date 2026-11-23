@@ -14,7 +14,7 @@ enum class GlassMaterial(val id: Int, val make1Id: Int, val level: Int, val exp:
                    make1Id = 12404,
                    level = 4,
                    exp = 19.0),
-    OIL_LAMP(id = 4522,
+    OIL_LAMP(id = 4525,
              make1Id = 12408,
              level = 12,
              exp = 25.0),
