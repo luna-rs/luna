@@ -6,21 +6,42 @@ import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.EntityState
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.PlayerAppearance.DesignPlayerInterface
+import io.luna.game.model.mob.block.PlayerAppearance
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
+import io.luna.game.model.mob.dialogue.Expression
 
 /**
- * interface id
- *  0 = legs (male)
- *  4731 = legs (female)
- *  2851 = torso (male)
- *  3038 = torso (female)
+ * Thessalia's shop, and her make-overs: a new top or new legwear for [MAKEOVER_FEE] coins each, picked from the
+ * [TailorStyle] catalogues.
+ *
  * @author hydrozoa
  */
-// TODO@0.5.0 Make the interfaces work.
 
 val shopkeeperId = 548
+
+/**
+ * What one make-over costs.
+ */
+val MAKEOVER_FEE = 500
+
+/**
+ * How close Thessalia must be to speak to the player after a make-over.
+ */
+val TALK_DISTANCE = 4
+
+/**
+ * What Thessalia says after a make-over.
+ */
+val COMPLIMENTS = listOf("Totally cool! That outfit looks great!",
+                         "Very stylish! It really suits you!",
+                         "Woah! Fabulous! You look absolutely great!",
+                         "Wow! Good choice! You're looking great!",
+                         "WoooOOOooo! Hot stuff!",
+                         "Fantastic! You should be a model!")
 
 ShopHandler.create("Thessalia's Fine Clothes.") {
     buy = BuyPolicy.EXISTING
@@ -57,11 +78,13 @@ npc1(shopkeeperId) {
                 .options("Tell me more about this makeover.", {
                     plr.newDialogue()
                         .npc(targetNpc.id, "Certainly!")
-                        .npc(targetNpc.id, "Here at Thessalia's fine clothing boutique,", "we offer a unique service where we will totally", "revamp your outfit to your choosing.")
-                        .npc(targetNpc.id, "It's on the house, completely free! Tired of ", "always wearing the same old outfit, day in, day out?", "This is the service for you!")
-                        .npc(targetNpc.id, "So what do you say? Interested?")
-                        .options("I'd like the makeover please.", {
-                            plr.overlays.open(DesignPlayerInterface())
+                        .npc(targetNpc.id, "Here at Thessalia's fine clothing boutique,", "we offer a unique service where we will totally", "revamp your outfit to your choosing, for... wait", "for it...")
+                        .npc(targetNpc.id, "A fee of only 500 gold coins! Tired of always", "wearing the same old outfit, day in, day out?", "This is the service for you!")
+                        .npc(targetNpc.id, "So what do you say? Interested? We can change", "either your top, or your legwear for only 500 gold", "an item!")
+                        .options("I'd like to change my top please.", {
+                            catalogue(plr, targetNpc, if (plr.appearance.isMale) TailorStyle.MAN_TOP else TailorStyle.WOMAN_TOP)
+                        }, "I'd like to change my legwear please.", {
+                            catalogue(plr, targetNpc, if (plr.appearance.isMale) TailorStyle.MAN_LEGS else TailorStyle.WOMAN_LEGS)
                         }, "I'd just like to buy some clothes.", {
                             plr.overlays.open(ShopInterface(world, "Thessalia's Fine Clothes."))
                         }, "No, thank you.", {
@@ -85,4 +108,68 @@ fun noThanksDialogue(plr: Player, targetNpc: Npc) {
         .player("No, thank you.")
         .npc(targetNpc.id, "Well, please return if ", "you change your mind.")
         .open()
+}
+
+/**
+ * Thessalia hands [plr] the [style] catalogue.
+ */
+fun catalogue(plr: Player, thessalia: Npc, style: TailorStyle) {
+    plr.newDialogue()
+        .npc(thessalia.id, Expression.HAPPY,
+             "Just select what style and colour you would like",
+             "from this catalogue, and then give me the 500",
+             "coins when you've picked.")
+        .then { it.overlays.open(TailorInterface(style, thessalia)) }
+        .open()
+}
+
+/**
+ * Returns the [style] catalogue if [plr] has it open.
+ */
+fun catalogueOpen(plr: Player, style: TailorStyle): TailorInterface? {
+    val window = plr.overlays.getOverlay(TailorInterface::class.java)
+    return if (window?.style == style) window else null
+}
+
+/**
+ * Gives [plr] the picks on the open [style] catalogue, for [MAKEOVER_FEE] coins.
+ */
+fun confirm(plr: Player, style: TailorStyle) {
+    val window = catalogueOpen(plr, style) ?: return
+    val kit = window.kit
+    val arms = window.arms
+    val colour = window.colour
+    if (kit == null || colour == null || (style.top && arms == null)) {
+        plr.sendMessage(if (style.top) "You must make a selection from all three categories." else
+                            "You must make a selection from both categories.")
+        return
+    }
+    plr.overlays.closeWindows()
+    if (plr.appearance.get(PlayerAppearance.GENDER) != style.gender) {
+        return
+    }
+    if (plr.inventory.computeAmountForId(995) < MAKEOVER_FEE || !plr.inventory.remove(Item(995, MAKEOVER_FEE))) {
+        plr.sendMessage("You do not have enough money.")
+        return
+    }
+    plr.appearance.set(style.part, kit)
+    if (arms != null) {
+        plr.appearance.set(PlayerAppearance.ARMS, arms)
+    }
+    plr.appearance.set(style.colourPart, colour)
+    plr.flags.flag(UpdateFlag.APPEARANCE)
+    val thessalia = window.thessalia
+    if (thessalia.state == EntityState.ACTIVE && plr.position.isWithinDistance(thessalia.position, TALK_DISTANCE)) {
+        plr.newDialogue()
+            .npc(thessalia.id, Expression.HAPPY, COMPLIMENTS.random())
+            .player(Expression.HAPPY, "Thanks!")
+            .open()
+    }
+}
+
+TailorStyle.values().forEach { style ->
+    style.styles.forEach { (id, kit) -> button(id) { catalogueOpen(plr, style)?.kit = kit } }
+    style.arms.forEach { (id, kit) -> button(id) { catalogueOpen(plr, style)?.arms = kit } }
+    style.colours.forEachIndexed { colour, id -> button(id) { catalogueOpen(plr, style)?.colour = colour } }
+    button(style.confirmButton) { confirm(plr, style) }
 }
