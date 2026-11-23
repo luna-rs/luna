@@ -52,6 +52,7 @@ ShopHandler.create("Thessalia's Fine Clothes.") {
         "White apron" x 30
         "Leather body" x 120
         "Leather gloves" x 100
+        "Leather boots" x 100
         "Brown apron" x 10
         "Pink skirt" x 50
         "Black skirt" x 30
