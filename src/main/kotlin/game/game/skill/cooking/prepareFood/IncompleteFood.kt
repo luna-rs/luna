@@ -127,6 +127,21 @@ enum class IncompleteFood(val id: Int, val lvl: Int, val exp: Double, val baseIn
                    exp = 0.0,
                    baseIngredient = 7214,
                    otherIngredients = listOf(1955)),
+    PART_WILD_PIE_1(id = 7202,
+                    lvl = 85,
+                    exp = 0.0,
+                    baseIngredient = 2315,
+                    otherIngredients = listOf(2136)),
+    PART_WILD_PIE_2(id = 7204,
+                    lvl = 85,
+                    exp = 0.0,
+                    baseIngredient = 7202,
+                    otherIngredients = listOf(2876)),
+    RAW_WILD_PIE(id = 7206,
+                 lvl = 85,
+                 exp = 0.0,
+                 baseIngredient = 7204,
+                 otherIngredients = listOf(3226)),
 
     // Stews and curries
     INCOMPLETE_STEW_WITH_POTATO(id = 1997,
@@ -206,8 +221,8 @@ enum class IncompleteFood(val id: Int, val lvl: Int, val exp: Double, val baseIn
 
     // Cakes
     UNCOOKED_CAKE(id = 1889,
-                  lvl = 65,
-                  exp = 45.0,
+                  lvl = 40,
+                  exp = 0.0,
                   baseIngredient = 1887,
                   otherIngredients = listOf(1944, 1927, 1933)),
     CHOCOLATE_CAKE(id = 1897,

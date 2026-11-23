@@ -10,8 +10,10 @@ import com.google.common.collect.ImmutableSet
 enum class SlayerMaster(val id: Int,
                         val combatLevel: Int = 0,
                         val slayerLevel: Int = 0,
+                        val location: String,
                         val tasks: List<SlayerTask>) {
     TURAEL(id = 70,
+           location = "in Burthorpe",
            tasks = listOf(
                SlayerTask(type = SlayerTaskType.BANSHEE, amount = 15..30, weight = 8),
                SlayerTask(type = SlayerTaskType.BAT, amount = 15..30, weight = 7),
@@ -39,6 +41,7 @@ enum class SlayerMaster(val id: Int,
            )),
 
     MAZCHNA(id = 1596,
+            location = "in Canifis",
             combatLevel = 20,
             tasks = listOf(
                 SlayerTask(type = SlayerTaskType.BANSHEE, amount = 30..50, weight = 8),
@@ -69,6 +72,7 @@ enum class SlayerMaster(val id: Int,
             )),
 
     VANNAKA(id = 1597,
+            location = "under Edgeville",
             combatLevel = 40,
             tasks = listOf(
                 SlayerTask(type = SlayerTaskType.ABERRANT_SPECTRE, amount = 40..90, weight = 8),
@@ -112,6 +116,7 @@ enum class SlayerMaster(val id: Int,
             )),
 
     CHAELDAR(id = 1598,
+             location = "in Zanaris",
              combatLevel = 70,
              tasks = listOf(
                  SlayerTask(type = SlayerTaskType.ABYSSAL_DEMON, amount = 70..130, weight = 12),
@@ -142,6 +147,7 @@ enum class SlayerMaster(val id: Int,
              )),
 
     DURADEL(id = 1599,
+            location = "in Shilo Village",
             combatLevel = 100,
             slayerLevel = 50,
             tasks = listOf(
@@ -177,6 +183,12 @@ enum class SlayerMaster(val id: Int,
      */
     val types = tasks.map { it.type }.toSet()
 
+    /**
+     * Returns `true` if a player with these levels meets this master's requirements.
+     */
+    fun canTeach(combatLevel: Int, slayerLevel: Int) =
+        combatLevel >= this.combatLevel && slayerLevel >= this.slayerLevel
+
     companion object {
 
         /**
@@ -197,5 +209,11 @@ enum class SlayerMaster(val id: Int,
             }
             return next.takeIf { combatLevel >= it.combatLevel && slayerLevel >= it.slayerLevel }
         }
+
+        /**
+         * Returns the strongest Slayer master whose requirements the player meets.
+         */
+        fun bestEligibleMaster(combatLevel: Int, slayerLevel: Int): SlayerMaster =
+            values().last { it.canTeach(combatLevel, slayerLevel) }
     }
 }
