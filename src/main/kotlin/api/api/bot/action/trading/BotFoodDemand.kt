@@ -4,6 +4,7 @@ import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
 import api.bot.action.BotSupplySources
+import api.bot.action.FoodSupplyAcquisition
 import api.predef.ext.allSuitableFood
 import api.predef.ext.canUseWantedItem
 import api.predef.ext.totalItemAmount
@@ -67,6 +68,7 @@ object BotFoodDemand {
         Food.KARAMBWAN to 10, Food.MANTA_RAY to 5, Food.SEA_TURTLE to 5, Food.TUNA_POTATO to 3)
     private val foods = weights.keys.flatMap { it.ids }.sorted()
     private val foodIds = foods.toSet()
+    private val healingIds = Food.ID_TO_FOOD.filterValues { it.heal > 0 }.keys
 
     private fun live(bot: Bot, now: Long = System.currentTimeMillis()): Request? {
         val value = bot.attributes()[state.attr]
@@ -158,10 +160,7 @@ object BotFoodDemand {
      */
     fun physicalPieces(bot: Bot, offered: Map<Int, Int> = emptyMap()): Long {
         val request = live(bot) ?: return 0L
-        return foods.asSequence().filter { compatible(request, it) }.sumOf { id ->
-            (bot.totalItemAmount(id).toLong() + (offered[id] ?: 0) -
-                BotTradeIntentions.literalSupplyTarget(bot, id)).coerceAtLeast(0L)
-        }
+        return stockPieces(bot, foods.filter { compatible(request, it) }, offered)
     }
 
     fun pendingPieces(bot: Bot): Long = 0L
@@ -310,11 +309,27 @@ object BotFoodDemand {
             foods.values.sumOf { it.toLong() } <= deficit(bot)
     }
 
-    fun wouldRetain(bot: Bot, id: Int): Boolean = compatible(bot, id) && physicalPieces(bot) < reserve(bot)
+    private fun retentionIds(bot: Bot): Collection<Int> {
+        if (FoodSupplyAcquisition.retainedReserve(bot) > 0) return healingIds
+        val request = live(bot) ?: return emptyList()
+        return foods.filter { compatible(request, it) }
+    }
+
+    private fun retentionTarget(bot: Bot): Int = maxOf(reserve(bot), FoodSupplyAcquisition.retainedReserve(bot))
+
+    private fun stockPieces(bot: Bot, ids: Collection<Int>, offered: Map<Int, Int> = emptyMap()): Long = ids.sumOf { id ->
+        (bot.totalItemAmount(id).toLong() + (offered[id] ?: 0) -
+            BotTradeIntentions.literalSupplyTarget(bot, id)).coerceAtLeast(0L)
+    }
+
+    fun wouldRetain(bot: Bot, id: Int): Boolean {
+        val ids = retentionIds(bot)
+        return id in ids && stockPieces(bot, ids) < retentionTarget(bot)
+    }
 
     fun retainedStock(bot: Bot): Map<Int, Int> = buildMap {
-        var remaining = reserve(bot)
-        for (id in foods.filter { compatible(bot, it) }.sortedByDescending(::remainingHealing)) {
+        var remaining = retentionTarget(bot)
+        for (id in retentionIds(bot).sortedByDescending(::remainingHealing)) {
             if (remaining <= 0) break
             val literal = BotTradeIntentions.literalSupplyTarget(bot, id)
             val held = minOf((bot.totalItemAmount(id) - literal).coerceAtLeast(0), remaining)
@@ -323,14 +338,19 @@ object BotFoodDemand {
         }
     }
 
-    fun retained(bot: Bot, id: Int): Int = if (compatible(bot, id)) retainedStock(bot)[id] ?: 0 else 0
+    fun retained(bot: Bot, id: Int): Int = if (id in healingIds) retainedStock(bot)[id] ?: 0 else 0
 
-    fun outgoingAllowed(bot: Bot, offered: Map<Int, Int>): Boolean =
-        offered.keys.none { compatible(bot, it) } || physicalPieces(bot) >= minOf(reserve(bot).toLong(), physicalPieces(bot, offered))
+    fun outgoingAllowed(bot: Bot, offered: Map<Int, Int>): Boolean {
+        val ids = retentionIds(bot)
+        return offered.keys.none { it in ids } ||
+            stockPieces(bot, ids) >= minOf(retentionTarget(bot).toLong(), stockPieces(bot, ids, offered))
+    }
 
-    fun saleableLimit(bot: Bot, id: Int, offered: Map<Int, Int> = emptyMap()): Long =
-        if (!compatible(bot, id)) Long.MAX_VALUE else
-            (physicalPieces(bot, offered) - reserve(bot)).coerceAtLeast(0L)
+    fun saleableLimit(bot: Bot, id: Int, offered: Map<Int, Int> = emptyMap()): Long {
+        if (id !in healingIds) return Long.MAX_VALUE
+        val ids = retentionIds(bot)
+        return if (id !in ids) Long.MAX_VALUE else (stockPieces(bot, ids, offered) - retentionTarget(bot)).coerceAtLeast(0L)
+    }
 
     private fun receivingCapacity(bot: Bot, id: Int): Int {
         val definition = ItemDefinition.ALL.get(id).orElse(null) ?: return 0

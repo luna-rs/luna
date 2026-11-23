@@ -4,6 +4,8 @@ import api.bot.script.BotScript
 import api.bot.script.ProfitGatheringGoal
 import api.bot.script.VoidBotScript
 import api.bot.script.recentEscape
+import game.player.item.consume.food.Food as CookedFood
+import game.skill.cooking.cookFood.Food as RawFood
 import api.bot.action.trading.ProfitGatheringDemand
 import game.skill.Skills
 import api.bot.zone.SubZone
@@ -16,6 +18,7 @@ import game.bot.scripts.GiantMoleTrip
 import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
 import game.skill.fishing.catchFish.Tool.*
 import io.luna.game.model.mob.bot.Bot
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Creates Fishing bot scripts.
@@ -177,6 +180,33 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
      * Tools with supported bot routes. Keep selection and routing based on the same declarations.
      */
     private val BOT_TOOLS = Tool.entries.filter { tool -> FishingZone.entries.any { tool in it.tools } }
+
+    internal fun forFoodReserve(bot: Bot, quantity: Int): FishBotScript? {
+        if (quantity <= 0) return null
+        val fishing = minOf(bot.fishing.level, bot.fishing.staticLevel)
+        val cooking = minOf(bot.cooking.level, bot.cooking.staticLevel)
+        val edible = RawFood.entries.filter { it.lvl <= cooking }
+            .mapNotNull { raw -> CookedFood.ID_TO_FOOD[raw.cooked]?.heal?.takeIf { it > 0 }?.let { raw.raw to it } }
+            .toMap()
+        val candidates = BOT_TOOLS.asSequence().filter { tool ->
+            tool.level <= fishing && bot.itemTracker.contains(
+                if (tool == KARAMBWAN_VESSEL) Tool.EMPTY_KARAMBWAN_VESSEL else tool.id) &&
+                (if (tool == KARAMBWAN_VESSEL) Fish.KARAMBWANJI.id else tool.bait)
+                    ?.let { bot.itemTracker.contains(it) } != false &&
+                (tool != CAVE_EEL_FISHING_ROD || GiantMoleTrip.lightOwned(bot) &&
+                    (bot.swampCavesRoped || bot.itemTracker.contains(954)))
+        }.mapNotNull { tool ->
+            val heal = tool.fish.filter { it.level <= fishing }.mapNotNull { edible[it.id] }.maxOrNull()
+                ?: return@mapNotNull null
+            val zones = FishingZone.entries.filter { tool in it.tools && fishing >= it.requiredLevel }
+                .flatMap { it.zones(bot) }.distinct().filter { it.entryBlocker(bot) == null &&
+                    bot.recentEscape?.avoids(it) != true }
+            zones.takeIf { it.isNotEmpty() }?.let { Triple(tool, heal, it) }
+        }
+        val (tool, _, zones) = candidates.maxByOrNull { it.second } ?: return null
+        return FishBotScript(bot, tool, 20.minutes, zones.toMutableList(),
+            reserveCatchTarget = quantity)
+    }
 
     /**
      * Builds a Fishing training script.

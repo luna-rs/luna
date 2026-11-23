@@ -89,6 +89,7 @@ import game.bot.scripts.skills.SplashBotScript.Companion.SplashData
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CollectHidesBotScript.Companion.CollectHidesData
 import game.bot.scripts.skills.CookFoodBotScript
+import game.bot.scripts.skills.CookFoodBotScript.Companion.CookFoodData
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
 import game.bot.scripts.skills.CraftRuneBotScript
@@ -282,7 +283,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ScavengeData>(WildernessScavengeBotScript::class) { bot, data -> WildernessScavengeBotScript(bot, data) }
     scriptManager.addScript<RunnerData>(RuneRunnerBotScript::class) { bot, data -> RuneRunnerBotScript(bot, data) }
     scriptManager.addScript<CrafterData>(RuneCrafterBotScript::class) { bot, data -> RuneCrafterBotScript(bot, data) }
-    scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
+    scriptManager.addScript<CookFoodData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }
     scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }
     scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }

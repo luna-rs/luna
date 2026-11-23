@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot.brain;
 
+import api.bot.action.FoodSupplyAcquisition;
 import api.bot.script.BotScript;
 import api.bot.action.BotBankSpace;
 import engine.bot.coordinator.BankResourceCoordinator;
@@ -109,6 +110,10 @@ public class BotBrain {
         BotScript coverage = PkCoverage.idleScript(bot);
         if (coverage != null) {
             return owner -> owner.getScriptStack().push(coverage);
+        }
+        BotScript foodRestock = FoodSupplyAcquisition.idleScript(bot);
+        if (foodRestock != null) {
+            return owner -> owner.getScriptStack().push(foodRestock);
         }
         var map = BotActivityWeights.weights(bot);
         BotActivity activity = RandomUtils.weightedRoll(map);

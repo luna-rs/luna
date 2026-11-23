@@ -1,16 +1,6 @@
 package api.bot.action
 
-import api.attr.Attr
-import io.luna.game.model.mob.Skill
-import game.skill.cooking.cookFood.Food as RawFood
-import game.bot.scripts.skills.CookFoodBotScript
-import api.bot.zone.SubZone
-import api.bot.zone.ProductionZones
-import api.attr.setValue
-import api.attr.getValue
 import api.bot.script.BotScript.ActionSafety
-import api.bot.action.trading.BotFoodDemand
-import game.bot.scripts.trading.TradeBotScript
 import api.bot.action.trading.BotTradeIntentions
 import api.predef.ext.get
 import engine.controllers.Controllers.inWilderness
@@ -32,7 +22,6 @@ import io.luna.game.model.mob.bot.brain.BotPkPreference
 import io.luna.game.model.mob.combat.Weapon
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Funds a concrete PK kit from existing gold, then uses ordinary wanted-item purchases.
@@ -43,149 +32,10 @@ import kotlin.time.Duration.Companion.seconds
 internal class PkSupplyAcquisition(private val bot: Bot, private val handler: BotActionHandler) {
     private val selection = PkLoadoutSelection(bot)
 
-    companion object {
-        private val directRetryAt = Attr.map<Int, Long>()
-        private var Bot.foodlessSince by Attr.long().persist("pk_foodless_since")
-        private var Bot.nextFoodCookingAt by Attr.long().persist("pk_next_food_cooking_at")
-        private const val MEAL_BATCH = 8
-        private val FOOD_WAIT = 40.minutes
+    private val purchase = BotSupplyPurchase(bot, handler)
 
-        internal fun mayCookAfterWaiting(since: Long, nextAttempt: Long, now: Long): Boolean =
-            since > 0 && now >= since && now - since >= FOOD_WAIT.inWholeMilliseconds && now >= nextAttempt
-    }
-
-    /**
-     * A currently purchasable lot at a native shop or an active seller.
-     *
-     * @author lare96
-     */
-    private data class SupplyQuote(val item: Item, val unitPrice: Long, val coins: Long, val direct: Boolean)
-
-    /**
-     * Restocks a small number of interchangeable meals before a foodless bot attempts its equipment plan.
-     */
-    suspend fun obtainFood(allowed: () -> Boolean): Boolean {
-        if (hasFood()) return mealFound()
-        val now = System.currentTimeMillis()
-        if (bot.foodlessSince <= 0 || bot.foodlessSince > now) bot.foodlessSince = now
-        if (withTimeoutOrNull(2.minutes) { buyFood(allowed) } == true || hasFood()) return mealFound()
-        if (mayCookAfterWaiting(bot.foodlessSince, bot.nextFoodCookingAt, System.currentTimeMillis()) &&
-            allowed() && safe()) {
-            bot.nextFoodCookingAt = System.currentTimeMillis() + 5.minutes.inWholeMilliseconds
-            withTimeoutOrNull(3.minutes) { startCookingMeal(allowed) }
-        }
-        return false
-    }
-
-    private fun mealFound(): Boolean {
-        bot.foodlessSince = 0L
-        bot.nextFoodCookingAt = 0L
-        return true
-    }
-
-    /**
-     * Prepares one finite native cooking batch using spare raw food or a bounded purchase.
-     */
-    private suspend fun startCookingMeal(allowed: () -> Boolean) {
-        val cooking = bot.skill(Skill.COOKING)
-        fun eligible(raw: RawFood): Boolean = raw.lvl <= cooking.staticLevel && raw.lvl <= cooking.level &&
-            (Food.ID_TO_FOOD[raw.cooked]?.heal ?: 0) > 0 &&
-            BotTradeIntentions.productionLimit(bot, raw.raw) == null
-
-        val recipes = RawFood.entries.filter(::eligible)
-        fun ownedRecipe(): RawFood? = recipes.asSequence()
-            .filter { selection.owned(it.raw) > 0 }
-            .maxByOrNull { Food.ID_TO_FOOD.getValue(it.cooked).heal }
-        if (ownedRecipe() == null) {
-            val budget = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
-            val offers = TradeBotScript.carriedSupply(bot, recipes.mapTo(HashSet()) { it.raw }).groupBy { it.id }
-            val quotes = recipes.asSequence().flatMap { raw ->
-                listOfNotNull(shopQuote(raw.raw, 1), directQuote(raw.raw, 1, offers[raw.raw].orEmpty())).asSequence()
-            }.filter { it.coins in 1..budget }
-                .sortedBy { it.coins }.take(3).toList()
-            for (option in quotes) {
-                if (!allowed() || !safe() || hasFood()) return
-                val funds = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
-                val quantity = minOf(MEAL_BATCH.toLong(), funds / option.unitPrice).toInt()
-                val lot = (quantity downTo 1).firstNotNullOfOrNull { amount ->
-                    val id = option.item.id
-                    (if (option.direct) directQuote(id, amount, offers[id].orEmpty()) else shopQuote(id, amount))
-                        ?.takeIf { it.coins <= funds }
-                } ?: continue
-                buy(lot) { allowed() && !hasFood() }
-                if (ownedRecipe() != null) break
-            }
-        }
-        val raw = ownedRecipe() ?: return
-        if (!allowed() || !safe() || hasFood() || !handler.banking.travelToBankDepositAll() ||
-            !allowed() || !safe() || hasFood() || !eligible(raw)) return
-        val amount = minOf(MEAL_BATCH, bot.bank.computeAmountForId(raw.raw))
-        if (amount > 0) {
-            val zones = (ProductionZones.RANGES + SubZone.VARROCK_EAST_BANK + SubZone.AL_KHARID_BANK).toMutableList()
-            bot.scriptStack.pushHead(CookFoodBotScript(bot, raw, 5.minutes, zones, amount))
-        }
-    }
-
-    private suspend fun buyFood(allowed: () -> Boolean): Boolean {
-        BotTradeIntentions.requestFood(bot, 16, minimumHeal = 1)
-        val allowance = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
-        val food = BotFoodDemand.alternatives(bot)
-        val offers = TradeBotScript.carriedSupply(bot, food).groupBy { it.id }
-        val choices = food.asSequence().flatMap { id ->
-            listOfNotNull(shopQuote(id, 1), directQuote(id, 1, offers[id].orEmpty())).asSequence()
-        }.filter { it.coins in 1..allowance && it.unitPrice <= BotFoodDemand.priceCeiling(bot, it.item.id) }
-            .sortedWith(compareBy<SupplyQuote> { it.coins }.thenByDescending { it.direct })
-            .take(4).toList()
-        for (choice in choices) {
-            if (!allowed() || !safe()) return false
-            val id = choice.item.id
-            val budget = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
-            val ceiling = BotFoodDemand.priceCeiling(bot, id)
-            val amount = minOf(8L, BotFoodDemand.deficit(bot).toLong(), budget / choice.unitPrice).toInt()
-            val quote = (amount downTo 1).firstNotNullOfOrNull { quantity ->
-                (if (choice.direct) directQuote(id, quantity, offers[id].orEmpty()) else shopQuote(id, quantity))
-                    ?.takeIf { it.coins <= budget && it.unitPrice <= ceiling }
-            } ?: continue
-            buy(quote, allowed)
-            if (hasFood()) return true
-        }
-        return false
-    }
-
-    private fun hasFood(): Boolean = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +
-        bot.bank.filterNotNull()).any { Food.ID_TO_FOOD[it.unnotedItemDef.id()]?.heal?.let { heal -> heal > 0 } == true }
-
-    private fun shopQuote(id: Int, amount: Int): SupplyQuote? =
-        BotSupplySources.quote(bot, id, amount)?.takeIf { it.quantity >= amount }?.let {
-            // Reserve a coin per unit for rounding if a native visit splits the quoted purchase.
-            SupplyQuote(Item(id, amount), it.maximumUnitPrice, it.totalCoins + amount, false)
-        }
-
-    private fun directQuote(id: Int, amount: Int, offers: List<BotFoodDemand.Basket> =
-        TradeBotScript.carriedSupply(bot, setOf(id))): SupplyQuote? {
-        if ((bot.attributes()[directRetryAt.attr][id] ?: 0L) > System.currentTimeMillis()) return null
-        return offers.asSequence().filter { it.quantity >= amount && it.unitPrice in 1..Int.MAX_VALUE.toLong() }
-            .minByOrNull { it.unitPrice }?.let { SupplyQuote(Item(id, amount), it.unitPrice, it.unitPrice * amount, true) }
-    }
-
-    private suspend fun buy(quote: SupplyQuote, allowed: () -> Boolean) {
-        val item = quote.item
-        if (!allowed() || !safe() || quote.coins !in 1L..minOf(coins(), Int.MAX_VALUE.toLong())) return
-        val target = (selection.owned(item.id).toLong() + item.amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        if (quote.direct) {
-            val owner = bot.scriptStack.current() ?: return
-            val visit = 90.seconds
-            val deadline = System.currentTimeMillis() + visit.inWholeMilliseconds
-            val trade = TradeBotScript.buySpecific(bot, item.id, target,
-                deadline, quotedUnitPrice = quote.unitPrice,
-                tripPurchase = { !owner.isTerminated() && !owner.isFinished() && safe() }) ?: return
-            if (allowed() && handler.shop.obtainWantedItem(trade, visit))
-                bot.attributes()[directRetryAt.attr][item.id] = deadline + 30_000L
-        } else {
-            handler.shop.obtainWantedItems(mapOf(item.id to target), quote.coins.toInt(),
-                mapOf(item.id to quote.unitPrice))
-        }
-    }
+    suspend fun obtainFood(allowed: () -> Boolean): Boolean =
+        FoodSupplyAcquisition(bot, handler).obtainForPatrol(allowed)
 
     /**
      * Prices a complete basket from real owned stock, shops and active sellers.
@@ -218,7 +68,7 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
     }
 
     private fun missingCost(id: Int, missing: Int): Long =
-        minOf(shopCost(id, missing) ?: Long.MAX_VALUE, directQuote(id, missing)?.coins ?: Long.MAX_VALUE)
+        minOf(shopCost(id, missing) ?: Long.MAX_VALUE, purchase.directQuote(id, missing)?.coins ?: Long.MAX_VALUE)
 
     /**
      * Combat equipment and consumables remain reserved even when they are absent from today's selected switches.
@@ -251,7 +101,7 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
             val native = required.filter { (id, target) ->
                 val missing = target - selection.owned(id)
                 missing > 0 && shopCost(id, missing)?.let {
-                    it <= (directQuote(id, missing)?.coins ?: Long.MAX_VALUE)
+                    it <= (purchase.directQuote(id, missing)?.coins ?: Long.MAX_VALUE)
                 } == true
             }
             val shopCost = quoteMissing(native)
@@ -262,7 +112,7 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
                 if (!allowed() || !safe()) return@withTimeoutOrNull false
                 val missing = amount - selection.owned(id)
                 if (missing <= 0) continue
-                directQuote(id, missing)?.let { buy(it, allowed) }
+                purchase.directQuote(id, missing)?.let { purchase.buy(it, allowed) }
                 if (!allowed() || !safe()) return@withTimeoutOrNull false
                 if (selection.owned(id) < amount && !handler.shop.obtainWantedItem(id, amount))
                     return@withTimeoutOrNull false

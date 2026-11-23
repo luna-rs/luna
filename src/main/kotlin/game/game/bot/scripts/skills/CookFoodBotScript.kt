@@ -4,6 +4,7 @@ import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.InventoryBotScript
 import api.bot.action.BotPieMaintenance
+import api.bot.action.FoodSupplyAcquisition
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.productionBatch
 import engine.bot.speech.BotConversationPool.ConversationSpeech
@@ -66,7 +67,8 @@ class CookFoodBotScript(
     override val verifiedProductionWithdrawals = true
     override val trainingSkill = SKILL_COOKING
     override val ownedSuppliesOnly get() = mealBatch > 0
-    private var mealLoaded = false
+    private var mealsRemaining = mealBatch
+    private var mealRawAtLastCheck = 0
 
 
     companion object {
@@ -83,13 +85,16 @@ class CookFoodBotScript(
              */
             var food: Food? = null
             internal var mealBatch: Int = 0
-            internal var mealLoaded: Boolean = false
+            internal var mealsRemaining: Int = 0
+            internal var legacyMealLoaded: Boolean = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 food = data.get("food")?.takeUnless { it.isJsonNull }?.asString?.let { Food.valueOf(it) }
-                mealBatch = data.get("mealBatch")?.asInt?.coerceIn(0, 8) ?: 0
-                mealLoaded = data.get("mealLoaded")?.asBoolean ?: false
+                mealBatch = data.get("mealBatch")?.asInt?.coerceIn(0, FoodSupplyAcquisition.TARGET) ?: 0
+                legacyMealLoaded = data.get("mealsRemaining") == null && data.get("mealLoaded")?.asBoolean == true
+                mealsRemaining = data.get("mealsRemaining")?.asInt?.coerceIn(0, mealBatch)
+                    ?: if (legacyMealLoaded) 0 else mealBatch
             }
 
             override fun save(data: JsonObject) {
@@ -97,7 +102,7 @@ class CookFoodBotScript(
                 if (food != null) data.addProperty("food", food!!.name) else data.remove("food")
                 if (mealBatch > 0) {
                     data.addProperty("mealBatch", mealBatch)
-                    data.addProperty("mealLoaded", mealLoaded)
+                    data.addProperty("mealsRemaining", mealsRemaining)
                 }
             }
         }
@@ -113,7 +118,9 @@ class CookFoodBotScript(
     constructor(bot: Bot, data: ZonedBotScriptData) :
         this(bot, (data as? CookFoodData)?.food, data.duration, data.zones, (data as? CookFoodData)?.mealBatch ?: 0) {
         if (data is InventoryScriptData) restoreInventoryState(data)
-        mealLoaded = (data as? CookFoodData)?.mealLoaded ?: false
+        if (data is CookFoodData) {
+            mealsRemaining = if (data.legacyMealLoaded) carriedMealRaw().coerceAtMost(mealBatch) else data.mealsRemaining
+        }
     }
 
     /**
@@ -144,17 +151,37 @@ class CookFoodBotScript(
         return super.selectWorkZone()
     }
 
+    override suspend fun beforeInventoryInit(): Boolean {
+        if (mealBatch == 0 || unfinishedMealPortions(carriedMealRaw()) > 0) return true
+        handler.banking.travelToBankDepositAll()
+        return false
+    }
+
     override fun bankWithdraw(): List<Item> {
+        if (mealBatch > 0) {
+            val food = selectedFood ?: return emptyList()
+            val amount = minOf(mealsRemaining, bot.bank.computeAmountForId(food.raw),
+                bot.inventory.computeRemainingSize())
+            if (amount <= 0) {
+                stop()
+                return emptyList()
+            }
+            return listOf(Item(food.raw, amount))
+        }
         val selected = withdraw().firstOrNull() ?: return emptyList()
-        if (mealBatch > 0) return listOf(selected)
         return bot.productionBatch(listOf(Item(selected.id)))
     }
 
     override suspend fun withdrawBankItems(items: List<Item>): Boolean {
         val loaded = super.withdrawBankItems(items)
-        if (mealBatch > 0 && loaded && items.isNotEmpty()) mealLoaded = true
+        if (mealBatch > 0 && loaded) mealRawAtLastCheck = carriedMealRaw()
         return loaded
     }
+
+    private fun carriedMealRaw(): Int = selectedFood?.let { bot.inventory.computeAmountForId(it.raw) } ?: 0
+
+    private fun unfinishedMealPortions(carriedRaw: Int): Int =
+        (mealsRemaining - (mealRawAtLastCheck - carriedRaw).coerceAtLeast(0)).coerceAtLeast(0)
 
     override fun withdraw(): List<Item> {
         cooking = null
@@ -174,8 +201,8 @@ class CookFoodBotScript(
         val food = cooking
         if (food != null) {
             val amount = when {
-                mealLoaded -> bot.inventory.computeAmountForId(food.raw).coerceAtMost(mealBatch)
-                mealBatch > 0 -> bot.itemTracker.count(food.raw).coerceAtMost(mealBatch)
+                mealBatch > 0 -> maxOf(bot.inventory.computeAmountForId(food.raw),
+                    minOf(mealsRemaining, bot.itemTracker.count(food.raw))).coerceAtMost(28)
                 else -> bot.itemTracker.count(food.raw).coerceAtMost(28)
             }
             if (amount > 0) return listOf(Item(food.raw, amount))
@@ -224,10 +251,14 @@ class CookFoodBotScript(
     }
 
     override suspend fun afterProductionSettled() {
-        if (mealBatch > 0 && mealLoaded) {
-            if (selectedFood?.let { bot.inventory.contains(it.raw) } != true &&
-                bot.actions.first(CookFoodActionItem::class.java) == null)
-                stop()
+        if (mealBatch > 0) {
+            val carriedRaw = carriedMealRaw()
+            mealsRemaining = unfinishedMealPortions(carriedRaw)
+            mealRawAtLastCheck = carriedRaw
+            if (mealsRemaining > 0 || carriedRaw > 0 ||
+                bot.actions.first(CookFoodActionItem::class.java) != null) return
+            if (isActionSafe()) handler.banking.travelToBankDepositAll()
+            stop()
             return
         }
         if (cooking?.let { it.raw in bot.inventory } == true ||
@@ -247,7 +278,7 @@ class CookFoodBotScript(
         saveInventoryState(it)
         it.food = selectedFood
         it.mealBatch = mealBatch
-        it.mealLoaded = mealLoaded
+        it.mealsRemaining = unfinishedMealPortions(carriedMealRaw())
     }
 
     override suspend fun finish() {

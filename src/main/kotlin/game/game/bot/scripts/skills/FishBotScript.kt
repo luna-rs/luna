@@ -3,6 +3,8 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotPotionSupport
 import api.bot.action.BotPotionTrip
+import api.bot.action.FoodSupplyAcquisition
+import api.bot.script.ProfitGatheringGoal
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScriptData
 import api.bot.social.SocialBotScript
@@ -22,6 +24,8 @@ import game.skill.fishing.catchFish.Fish
 import game.skill.fishing.catchFish.CatchFishAction
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
+import game.skill.cooking.cookFood.Food as RawFood
+import game.player.item.consume.food.Food as CookedFood
 import game.skill.fishing.fishingSpot.FishingSpotHandler
 import game.content.sailing.Entrana
 import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
@@ -73,7 +77,8 @@ class FishBotScript(
     /**
      * A bounded karambwanji-gathering detour which resumes vessel fishing with the remaining session time.
      */
-    val gatherKarambwanBait: Boolean = false
+    val gatherKarambwanBait: Boolean = false,
+    private val reserveCatchTarget: Int = 0
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.fishing), SocialBotScript {
 
     override fun wildernessNotingItems(): Set<Int> = selectedTool.fish.mapTo(HashSet()) { it.id }
@@ -146,17 +151,20 @@ class FishBotScript(
             var tool = Tool.SMALL_NET
 
             var gatherKarambwanBait = false
+            var reserveCatchTarget = 0
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 tool = Tool.valueOf(data.get("tool").asString)
                 gatherKarambwanBait = data.get("gatherKarambwanBait")?.asBoolean ?: false
+                reserveCatchTarget = data.get("reserveCatchTarget")?.asInt?.coerceIn(0, FoodSupplyAcquisition.TARGET) ?: 0
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("tool", tool.name)
                 data.addProperty("gatherKarambwanBait", gatherKarambwanBait)
+                if (reserveCatchTarget > 0) data.addProperty("reserveCatchTarget", reserveCatchTarget)
             }
         }
     }
@@ -164,7 +172,8 @@ class FishBotScript(
     /**
      * Restores a Fishing script from saved script data.
      */
-    constructor(bot: Bot, data: FishData) : this(bot, data.tool, data.duration, data.zones, data.gatherKarambwanBait)
+    constructor(bot: Bot, data: FishData) :
+        this(bot, data.tool, data.duration, data.zones, data.gatherKarambwanBait, data.reserveCatchTarget)
 
     /**
      * All NPC ids that can be fished using [selectedTool].
@@ -238,7 +247,7 @@ class FishBotScript(
             (selectedTool != Tool.LAVA_EEL_FISHING_ROD || bot.itemTracker.contains(toolId))
     }
 
-    private fun usefulFishingPotion(): Boolean = !gatherKarambwanBait && bot.fishing.staticLevel < 99 &&
+    private fun usefulFishingPotion(): Boolean = !gatherKarambwanBait && reserveCatchTarget == 0 && bot.fishing.staticLevel < 99 &&
         duration >= 2.minutes && selectedTool.fish.any { it.level <= bot.fishing.staticLevel + 3 }
 
     override fun prepareOptionalSuppliesAtStart(): Boolean = usefulFishingPotion() &&
@@ -256,7 +265,7 @@ class FishBotScript(
         if (baitId != null && baitId !in bot.itemTracker) {
             bot.log("We do not have the required bait to use this tool.")
             stop()
-            if (profitGathering != null) return
+            if (profitGathering != null || reserveCatchTarget > 0) return
             if (selectedTool == Tool.KARAMBWAN_VESSEL) {
                 queueBaitGathering()
                 return
@@ -280,11 +289,29 @@ class FishBotScript(
     }
 
     override suspend fun beforeZoneWork(): Boolean {
+        if (reserveCatchTarget > 0) {
+            val cooking = minOf(bot.cooking.staticLevel, bot.cooking.level)
+            val catches = selectedTool.fish.asSequence().map { it.id }.toSet()
+            val stock = RawFood.entries.asSequence().filter {
+                it.raw in catches && it.lvl <= cooking && (CookedFood.ID_TO_FOOD[it.cooked]?.heal ?: 0) > 0 &&
+                    BotTradeIntentions.productionLimit(bot, it.raw) == null
+            }.sumOf { ProfitGatheringGoal.physical(bot, it.raw) }
+            if (stock >= reserveCatchTarget) {
+                bot.actions.first(CatchFishAction::class.java)?.interrupt()
+                stop()
+                return true
+            }
+        }
         if (caveFishing && !GiantMoleTrip.lightCarried(bot) && !GiantMoleTrip.ensureLight(bot)) forceBanking = true
         if (caveFishing && !bot.swampCavesRoped && 954 !in bot.inventory) forceBanking = true
         if (baitId != null && baitId !in bot.inventory &&
             !(selectedTool == Tool.KARAMBWAN_VESSEL && selectedTool.id in bot.inventory)) forceBanking = true
         return false
+    }
+
+    override fun selectWorkZone(): SubZone? {
+        if (reserveCatchTarget > 0) zones.sortBy { bot.position.computeLongestDistance(it.inside) }
+        return super.selectWorkZone()
     }
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
@@ -374,6 +401,7 @@ class FishBotScript(
         data.zones = originalZones.toMutableList()
         data.tool = selectedTool
         data.gatherKarambwanBait = gatherKarambwanBait
+        data.reserveCatchTarget = reserveCatchTarget
         return data
     }
 
@@ -400,6 +428,7 @@ class FishBotScript(
     }
 
     override suspend fun completed() {
+        if (reserveCatchTarget > 0) return
         if (gatherKarambwanBait) {
             queueVesselFishing()
             return
