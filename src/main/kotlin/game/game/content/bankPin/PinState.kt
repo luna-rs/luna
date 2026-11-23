@@ -21,11 +21,7 @@ enum class PinState(val status: String) {
      * A new PIN is waiting out the recovery delay.
      */
     PENDING("PIN coming soon") {
-        override fun messages(plr: Player): List<String> {
-            val days = BankPin.daysUntil(plr.bankPinPendingAt)
-            return listOf("You have requested that a PIN be set on your bank account. This will take effect in " +
-                                  "$days ${if (days == 1L) "day" else "days"}.", WARNING)
-        }
+        override fun messages(plr: Player) = listOf(BankPin.pendingNotice(plr).joinToString(" "), WARNING)
     },
 
     /**
