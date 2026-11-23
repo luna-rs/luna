@@ -1,0 +1,36 @@
+LUNA 1,500-BOT BENCHMARK REPRODUCTION
+
+Run from the repository root on Linux with Python 3, a JDK 21 installation,
+and the OpenRS2 cache 657 ZIP for RuneScape revision 377. Set JAVA_HOME and
+LUNA_CACHE_ARCHIVE to the absolute paths of the JDK directory and archive. The cache
+installation step verifies the SHA-256 before extracting the cache files.
+
+The two workloads run sequentially in fresh data directories. Each uses a
+15-minute warm-up at full population and a one-hour measurement. The runner
+saves each world under its benchmark output for local inspection. The published
+evidence includes telemetry and logs, with game saves and cache data omitted.
+
+    artifact="$PWD/data/benchmarks/benchmark-2026-11-23-live-bots"
+    work="$(mktemp -d)"
+    git worktree add --detach "$work/source" f5ae37757edddc3fa9e47996d9a3cdd231e29289
+    (cd "$artifact/patches" && sha256sum -c sha256.txt)
+    git -C "$work/source" apply "$artifact/patches/instrumentation.patch"
+    cp "$artifact/config/luna.jsonc" "$work/source/data/luna.jsonc"
+    PYTHONPATH="$PWD/scripts/performance" python3 -c \
+        'from pathlib import Path; from prepare import install_cache; import sys; install_cache(Path(sys.argv[1]), Path(sys.argv[2]))' \
+        "$work/source/data" "$LUNA_CACHE_ARCHIVE"
+    (cd "$work/source" && ./gradlew --no-daemon --console=plain installDist)
+    python3 "$artifact/run_pair.py" "$work/source" "$work/results"
+    python3 "$artifact/summarize.py" "$work/results" > "$work/summary.json"
+
+To regenerate the summary from the published run files, invoke summarize.py
+without an output directory argument. The analyzer uses the same tick, CPU,
+memory, and GC statistics as scripts/performance/results.py. A single workload
+can be replayed by passing live or wandering after the output directory.
+
+To regenerate the chart from the published summaries, install Matplotlib and run
+
+    python3 "$artifact/plot.py" "$artifact"
+
+Cache source
+https://archive.openrs2.org/caches/runescape/657

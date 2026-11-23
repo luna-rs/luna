@@ -34163,5 +34163,69 @@
         "table": 1
       }
     ]
+  },
+  {
+    "ids": [
+      2069, // Cave goblin miner
+      2070, // Cave goblin miner
+      2071, // Cave goblin miner
+      2072, // Cave goblin miner
+      2075, // Cave goblin miner
+      2076, // Cave goblin miner
+      2077, // Cave goblin miner
+      2078 // Cave goblin miner
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 5014, // Mining helmet
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.15625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "6",
+        "noted": false,
+        "rarity": 0.15625,
+        "table": 1
+      },
+      {
+        "id": 440, // Iron ore
+        "quantity": "7",
+        "noted": false,
+        "rarity": 0.15625,
+        "table": 1
+      },
+      {
+        "id": 590, // Tinderbox
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.15625,
+        "table": 1
+      },
+      {
+        "id": 440, // Iron ore
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.1171875,
+        "table": 1
+      },
+      {
+        "id": 442, // Silver ore
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      }
+    ]
   }
 ]

@@ -9,6 +9,7 @@ import game.skill.agility.AgilityStep
 import game.skill.agility.AgilitySound
 import game.skill.agility.AgilityWalk
 import game.player.Sound
+import game.skill.firemaking.lightSource.SwampWater
 import io.luna.game.action.DeathInterruptible
 import io.luna.game.model.EntityState
 import io.luna.game.model.LocalGraphic
@@ -391,7 +392,10 @@ internal object ShortcutMoves {
             onto,
             AgilityStep(stone, 1, jump = true),
             AgilityStep(stone, 1, animation = STUMBLE, jump = true, message = "You slip over on the slimy stone."),
-            AgilityStep(water, 1, walkingAnimation = swim, jump = true, begin = { fallInto(plr, water) }),
+            AgilityStep(water, 1, walkingAnimation = swim, jump = true, begin = {
+                fallInto(plr, water)
+                SwampWater.fallIn(plr)
+            }),
             AgilityStep(to, 3, walkingAnimation = swim, jump = true)), message, valid = { active(plr) }),
             DeathInterruptible, ShortcutFall {
             init {

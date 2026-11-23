@@ -3,6 +3,7 @@ package engine.bot.speech
 import api.attr.Attr
 import api.attr.getValue
 import com.google.gson.JsonElement
+import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.speech.BotSpeechPool
 import io.luna.game.model.mob.bot.speech.BotSpeechStack
@@ -25,7 +26,7 @@ object BotConversationPool : BotSpeechPool<BotConversationPool.ConversationSpeec
      * @author lare96
      */
     enum class ConversationSpeech {
-        IDLE, HOME, ALCHEMY, FISHING, WOODCUTTING, COOKING, FLETCHING, CRAFTING, SMITHING, CASTLE_WARS
+        IDLE, HOME, ALCHEMY, FISHING, WOODCUTTING, COOKING, FLETCHING, CRAFTING, SMITHING, CASTLE_WARS, BANK
     }
 
     /**
@@ -54,6 +55,7 @@ object BotConversationPool : BotSpeechPool<BotConversationPool.ConversationSpeec
     private const val RECENT_EXCHANGES = 12
     private const val RECENT_LINES = 64
     private const val CANDIDATE_LIMIT = 48
+    private const val LEVEL_TOKEN = "{level}"
 
     /**
      * Chance of preferring activity dialogue when the current script supplies a relevant topic.
@@ -61,7 +63,7 @@ object BotConversationPool : BotSpeechPool<BotConversationPool.ConversationSpeec
     const val CONTEXT_CHANCE = 0.85
 
     /**
-     * Validated native-codec lines. Each conversation keeps both speakers and fits the runner's bounded turn count.
+     * Validated exchanges, with skill-level tokens retained until the speakers are known.
      */
     internal var conversations: List<List<String>> = emptyList()
         private set
@@ -80,7 +82,14 @@ object BotConversationPool : BotSpeechPool<BotConversationPool.ConversationSpeec
                 conversation.asJsonObject.getAsJsonArray("lines")
             }
             val raw = turns.map { it.asString }
-            val lines = raw.map { BotSpeechStack.normalizeChat(it) }
+            val hasLevel = raw.any { LEVEL_TOKEN in it }
+            if (hasLevel) {
+                val topic = contexts.singleOrNull()
+                require(topic == ConversationSpeech.WOODCUTTING || topic == ConversationSpeech.FISHING) {
+                    "A level token needs a single Woodcutting or Fishing topic."
+                }
+            }
+            val lines = raw.map { if (LEVEL_TOKEN in it) it else BotSpeechStack.normalizeChat(it) }
             if (lines.size in 2..24 && lines.size % 2 == 0 && raw.all { it.length <= 80 } &&
                 lines.all { it.isNotBlank() }) {
                 loaded.getOrPut(lines) { mutableSetOf() }.addAll(contexts)
@@ -98,18 +107,26 @@ object BotConversationPool : BotSpeechPool<BotConversationPool.ConversationSpeec
      * Chooses whole exchanges with bounded sampling. Contextual lines describe the first speaker's actual activity.
      * General conversations provide variety and a fallback when a small activity pool was heard recently.
      */
-    fun select(first: Bot, second: Bot, topic: ConversationSpeech = ConversationSpeech.IDLE): List<String>? =
-        select(topic, first.recentConversation, second.recentConversation)
+    fun select(first: Bot, second: Bot, topic: ConversationSpeech = ConversationSpeech.IDLE): List<String>? {
+        val skill = when (topic) {
+            ConversationSpeech.WOODCUTTING -> Skill.WOODCUTTING
+            ConversationSpeech.FISHING -> Skill.FISHING
+            else -> null
+        }
+        val levels = if (skill == null) emptyList() else listOf(first.skill(skill).staticLevel, second.skill(skill).staticLevel)
+        return select(topic, first.recentConversation, second.recentConversation, levels = levels)
+    }
 
     internal fun select(topic: ConversationSpeech, first: History, second: History,
-                        random: Random = Random.Default): List<String>? {
+                        random: Random = Random.Default, levels: List<Int> = emptyList()): List<String>? {
         val contextual = topics[topic].orEmpty()
         val general = topics[ConversationSpeech.IDLE].orEmpty()
         val choices = if (topic != ConversationSpeech.IDLE && contextual.isNotEmpty() &&
             (general.isEmpty() || random.nextDouble() < CONTEXT_CHANCE)) contextual else general
-        var selected = choose(choices.ifEmpty { contextual }, first, second, random) ?: return null
+        var selected = choose(choices.ifEmpty { contextual }, first, second, random, levels)
+            ?: choose(general, first, second, random, levels) ?: return null
         if (first.score(selected) >= 10_000 || second.score(selected) >= 10_000) {
-            val fallback = choose(general, first, second, random)
+            val fallback = choose(general, first, second, random, levels)
             if (fallback != null && first.score(fallback) + second.score(fallback) <
                 first.score(selected) + second.score(selected)) selected = fallback
         }
@@ -122,13 +139,20 @@ object BotConversationPool : BotSpeechPool<BotConversationPool.ConversationSpeec
      * Visits at most 48 distinct entries, retaining the least recently heard exchange and avoiding repeated lines.
      */
     private fun choose(choices: List<List<String>>, first: History, second: History,
-                       random: Random): List<String>? {
+                       random: Random, levels: List<Int>): List<String>? {
         if (choices.isEmpty()) return null
         val start = random.nextInt(choices.size)
         var best: List<String>? = null
         var score = Int.MAX_VALUE
         repeat(minOf(CANDIDATE_LIMIT, choices.size)) { offset ->
-            val candidate = choices[(start + offset) % choices.size]
+            val exchange = choices[(start + offset) % choices.size]
+            val candidate = if (exchange.any { LEVEL_TOKEN in it }) {
+                if (levels.size != 2) return@repeat
+                exchange.mapIndexed { index, line ->
+                    if (LEVEL_TOKEN !in line) line
+                    else BotSpeechStack.normalizeChat(line.replace(LEVEL_TOKEN, levels[index % 2].toString()))
+                }
+            } else exchange
             val candidateScore = first.score(candidate) + second.score(candidate)
             if (candidateScore < score) {
                 best = candidate

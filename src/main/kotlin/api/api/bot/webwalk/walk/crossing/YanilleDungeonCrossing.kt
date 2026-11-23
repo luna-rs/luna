@@ -25,8 +25,16 @@ object YanilleDungeonCrossing : CrossingHandler {
 
     const val ID = "yanille_dungeon"
     val LEVELS = setOf(40, 49, 57, 67)
-    private val antipoisons = listOf(Potion.ANTIDOTE_PLUS_PLUS, Potion.ANTIDOTE_PLUS,
-        Potion.SUPER_ANTIPOISON, Potion.ANTIPOISON_POTION).flatMap { it.doses.reversed() }
+
+    // Route generation reads the crossing flags before item definitions are loaded.
+    private val antipoisons by lazy {
+        listOf(
+            Potion.ANTIDOTE_PLUS_PLUS,
+            Potion.ANTIDOTE_PLUS,
+            Potion.SUPER_ANTIPOISON,
+            Potion.ANTIPOISON_POTION
+        ).flatMap { it.doses.reversed() }
+    }
 
     fun flag(level: Int) = "yanille_agility_$level"
 

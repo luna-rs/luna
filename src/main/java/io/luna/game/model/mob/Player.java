@@ -520,20 +520,18 @@ public class Player extends Mob {
         String name = item.getItemDef().getName();
         int freeSlots = inventory.computeRemainingSize();
         if (item.getItemDef().isStackable()) {
-            int amount = inventory.computeAmountForId(item.getId());
-            if ((amount == 0 && freeSlots > 0) || (amount + item.getAmount() > 0)) {
-                inventory.add(item);
-                sendMessage(name + "(x" + item.getAmount() + ")" + " has been added into your inventory.");
+            if (inventory.hasSpaceFor(item) && inventory.add(item)) {
+                sendMessage(name + "(x" + item.getAmount() + ") has been added into your inventory.");
                 return;
             }
         } else {
             int leftover = item.getAmount() - freeSlots;
             if (leftover > 0) {
-                inventory.add(item.withAmount(freeSlots)); // Add what we can fit.
-                sendMessage(name + "(x" + item.getAmount() + ")" + " has been added into your inventory.");
-                item = item.withAmount(leftover); // Add the rest to the bank or on the ground.
-            } else {
-                inventory.add(item);
+                if (freeSlots > 0 && inventory.add(item.withAmount(freeSlots))) {
+                    sendMessage(name + "(x" + freeSlots + ") has been added into your inventory.");
+                    item = item.withAmount(leftover);
+                }
+            } else if (inventory.add(item)) {
                 return;
             }
         }

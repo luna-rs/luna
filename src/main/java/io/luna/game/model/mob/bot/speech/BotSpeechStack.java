@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.bot.speech;
 
+import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.attr.Attribute;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool.GeneralSpeech;
 import io.luna.util.StringUtils;
@@ -34,11 +36,10 @@ public final class BotSpeechStack {
     private static final int MAX_DELAY_TICKS = 250;
 
     /**
-     * Approximate amount of general speech requests to push per hour under ideal (1.0 social) conditions.
-     * <p>
-     * Increasing this increases the rate of spontaneous filler messages.
+     * Runtime-only pause shared by bots visible to the same human player.
      */
-    private static final int FILLER_PER_HOUR = 60;
+    private static final Attribute<Long> FILLER_AUDIENCE_QUIET_UNTIL = new Attribute<>(Long.class, () -> 0L);
+    private static final int FILLER_AFTER_CHAT_TICKS = 50;
 
     /**
      * Maximum number of {@link BotSpeech} requests queued before throttling.
@@ -140,8 +141,8 @@ public final class BotSpeechStack {
      */
     private long tick;
     private long nextFillerTick;
+    private long fillerQuietUntilTick;
     private double fillerSocial = -1;
-    private BotSpeech pendingFiller;
     private final RandomGenerator random;
 
     /**
@@ -210,12 +211,13 @@ public final class BotSpeechStack {
     }
 
     /**
-     * Claims conversational speech without changing existing mute flags or discarding ordinary queued speech.
+     * Claims conversational speech and drops pending filler while retaining contextual requests and mute flags.
      */
     public boolean reserveConversation(Object owner, BooleanSupplier valid) {
         if (owner == null || valid == null || disableAll || conversationOwner != null) return false;
         conversationOwner = owner;
         conversationValid = valid;
+        cancelFiller();
         return true;
     }
 
@@ -268,6 +270,7 @@ public final class BotSpeechStack {
     public void acknowledgeSpeech(String text) {
         acknowledgeConversation(text);
         publicDelivered++;
+        fillerQuietUntilTick = tick + FILLER_AFTER_CHAT_TICKS;
         if (previous.size() >= MAX_LENGTH) previous.removeFirst();
         previous.addLast(normalizeChat(text));
     }
@@ -305,8 +308,12 @@ public final class BotSpeechStack {
      * @param bot The bot this speech stack is for.
      */
     public BotSpeechStack(Bot bot) {
+        this(bot, ThreadLocalRandom.current());
+    }
+
+    BotSpeechStack(Bot bot, RandomGenerator random) {
         this.bot = bot;
-        random = ThreadLocalRandom.current();
+        this.random = random;
         buffer = new ArrayDeque<>(MAX_LENGTH);
         previous = new ArrayDeque<>(MAX_LENGTH);
     }
@@ -361,9 +368,12 @@ public final class BotSpeechStack {
             }
             speech.delay--;
         } else if (speech.delay == 0) {
-            transmit(speech);
+            if (queued.producer() == Producer.GENERAL) {
+                sendFiller(speech);
+            } else {
+                transmit(speech);
+            }
             buffer.remove(queued);
-            if (speech == pendingFiller) pendingFiller = null;
         }
     }
 
@@ -411,7 +421,6 @@ public final class BotSpeechStack {
             // If buffer is full drop last request in the stack to make room.
             QueuedSpeech evicted = buffer.removeLast();
             counters(evicted.producer()).evicted++;
-            if (evicted.speech() == pendingFiller) pendingFiller = null;
             headEvictions++;
         }
         buffer.addFirst(new QueuedSpeech(delay(speech), tick, Producer.CONTEXTUAL));
@@ -443,12 +452,12 @@ public final class BotSpeechStack {
      */
     public void pushFiller() {
         refreshFillerRate();
-        if (fillerSocial <= 0 || tick < nextFillerTick) return;
+        if (fillerSocial <= 0 || tick < Math.max(nextFillerTick, fillerQuietUntilTick)) return;
         // Consume each due opportunity once even when policy, capacity or the current corpus rejects it.
         scheduleFiller();
         generalCounters.attempted++;
         if (disableAll || isGeneralDisabled() || conversationOwner != null || bot.getLocalHumans().isEmpty() ||
-                pendingFiller != null || buffer.size() >= MAX_LENGTH) {
+                !buffer.isEmpty()) {
             generalCounters.dropped++;
             return;
         }
@@ -457,8 +466,9 @@ public final class BotSpeechStack {
             generalCounters.dropped++;
             return;
         }
-        pendingFiller = new BotSpeech(phrase);
-        buffer.addLast(new QueuedSpeech(delay(pendingFiller), tick, Producer.GENERAL));
+        int typingTicks = 3 + phrase.length() / 8 + random.nextInt(2, 10);
+        BotSpeech speech = new BotSpeech(phrase, typingTicks);
+        buffer.addLast(new QueuedSpeech(speech, tick, Producer.GENERAL));
         generalCounters.accepted++;
         maximumDepth = Math.max(maximumDepth, buffer.size());
     }
@@ -489,7 +499,6 @@ public final class BotSpeechStack {
     public void clear() {
         for (QueuedSpeech queued : buffer) counters(queued.producer()).canceled++;
         buffer.clear();
-        pendingFiller = null;
     }
 
     /**
@@ -520,7 +529,6 @@ public final class BotSpeechStack {
             if (tick - queued.enqueueTick() >= limit) {
                 iterator.remove();
                 counters(queued.producer()).expired++;
-                if (queued.speech() == pendingFiller) pendingFiller = null;
             }
         }
     }
@@ -536,7 +544,31 @@ public final class BotSpeechStack {
                 generalCounters.canceled++;
             }
         }
-        pendingFiller = null;
+    }
+
+    /**
+     * Starts the next personal pause from the send attempt. A filler turn that collides with a recent filler line
+     * in the same audience is discarded so it cannot bunch up behind that line.
+     */
+    private void sendFiller(BotSpeech speech) {
+        scheduleFiller();
+        if (tick < fillerQuietUntilTick) {
+            generalCounters.canceled++;
+            return;
+        }
+        long now = bot.getWorld().getCurrentTick();
+        for (Player listener : bot.getLocalHumans()) {
+            if (now < listener.attributes().get(FILLER_AUDIENCE_QUIET_UNTIL)) {
+                generalCounters.canceled++;
+                return;
+            }
+        }
+        if (transmit(speech)) {
+            long quietUntil = now + random.nextInt(14, 31);
+            for (Player listener : bot.getLocalHumans()) {
+                listener.attributes().set(FILLER_AUDIENCE_QUIET_UNTIL, quietUntil);
+            }
+        }
     }
 
     /**
@@ -561,15 +593,15 @@ public final class BotSpeechStack {
     }
 
     /**
-     * Schedules one jittered opportunity around the nominal personality-weighted rate.
+     * Leaves natural gaps between filler lines, with occasional longer quiet stretches.
      */
     private void scheduleFiller() {
         if (fillerSocial <= 0) {
             nextFillerTick = Long.MAX_VALUE;
             return;
         }
-        long interval = Math.max(1L,
-                Math.round(6000.0 / (FILLER_PER_HOUR * fillerSocial) * random.nextDouble(0.5, 1.5)));
+        int baseTicks = random.nextInt(4) == 0 ? random.nextInt(300, 501) : random.nextInt(100, 226);
+        long interval = Math.round(baseTicks / fillerSocial);
         nextFillerTick = interval > Long.MAX_VALUE - tick ? Long.MAX_VALUE : tick + interval;
     }
 
