@@ -2,6 +2,7 @@ package engine.obj
 
 import api.predef.*
 import io.luna.game.model.Position
+import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 
@@ -32,10 +33,11 @@ object StairDestination {
      * @param stairs The stairs.
      * @param from The climber's position.
      * @param up `true` to climb up, `false` to climb down.
+     * @param plr The climber, for stairs that lead elsewhere without a light, or `null` to treat them as carrying one.
      * @return The destination, or `null` if the stairs can't be climbed that way.
      */
-    fun destination(stairs: GameObject, from: Position, up: Boolean): Position? {
-        val known = KnownStairs.forStairs(stairs)
+    fun destination(stairs: GameObject, from: Position, up: Boolean, plr: Player? = null): Position? {
+        val known = KnownStairs.forStairs(stairs, plr)
         if (known != null) {
             // Landings that depend on where the player stands use their own tile, like the original game.
             return (if (up) known.up else known.down)?.from(beside(stairs, from))
