@@ -15,7 +15,17 @@ object Cooking {
      * These are valid cooking sources, but usually have a higher burn chance than ranges.
      */
     val FIRES = setOf(
-        2732
+        2732,
+        3769,
+        3775,
+        4265,
+        4266,
+        5249,
+        5499,
+        5631,
+        5632,
+        5981,
+        10433
     )
 
     /**
@@ -33,7 +43,12 @@ object Cooking {
         2859,
         3039,
         4172,
-        8750
+        5275,
+        8750,
+        9682,
+        12102,
+        12269,
+        14919
     )
 
     /**

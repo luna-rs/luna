@@ -36,8 +36,9 @@ fun openOther(plr: Player, food: IncompleteFood, removeIds: MutableSet<Int>) {
     })
 }
 
-// Register each ingredient recipe; multiple recipes may produce the same item.
-IncompleteFood.entries.forEach {
+// Register each ingredient recipe; multiple recipes may produce the same item. Pineapples are cut by the fruit
+// cutting menu, which offers rings beside chunks.
+IncompleteFood.entries.filter { it != IncompleteFood.PINEAPPLE_RING }.forEach {
     for (id in it.otherIngredients) {
         useItem(it.baseIngredient).onItem(id) {
             val itemSet = mutableSetOf(usedItemId, targetItemId)
