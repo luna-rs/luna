@@ -574,5 +574,17 @@
   {
     "id": 6062, // Bolts(s)
     "severity": 15
+  },
+  {
+    "id": 6593, // White dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 6595, // White dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 6597, // White dagger(s)
+    "severity": 30
   }
 ]
