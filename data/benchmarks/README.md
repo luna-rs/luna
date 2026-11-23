@@ -7,30 +7,43 @@ were 600.23 ms apart. [Autonomous run summary](benchmark-2026-11-23-live-bots/li
 
 ![Mean, 99th-percentile, and slowest tick processing times for the two 1,500-bot runs against the 600 ms budget](benchmark-2026-11-23-live-bots/comparison.png)
 
-## Performance compared with wandering
+## How the current runs compare with benchmark history
 
-| Metric | 1,500 autonomous bots | 1,500 wandering bots | 800 wandering bots, Nov. 21 |
-| --- | ---: | ---: | ---: |
-| Completed world ticks | 6,001 | 6,001 | 6,001 |
-| Mean tick work | 109.17 ms | 39.36 ms | 36.08 ms |
-| p95 tick work | 160.24 ms | 53.46 ms | 44.68 ms |
-| p99 tick work | 191.12 ms | 80.14 ms | 72.87 ms |
-| Slowest tick | 450.91 ms | 207.66 ms | 127.59 ms |
-| Ticks over 600 ms | 0 | 0 | 0 |
-| Tick starts spaced over 900 ms | 0 | 0 | 0 |
-| Mean process CPU | 114.77% | 11.31% | 7.82% |
-| Mean resident memory | 4.53 GiB | 3.99 GiB | 4.79 GiB |
-| Total GC pause time | 25.02 s | 3.36 s | 3.07 s |
+All five one-hour runs recorded zero ticks over 600 ms and zero gaps over 900 ms between tick starts.
+[Historical benchmarks](HISTORY.md)
 
-Autonomy made mean tick work **2.77×** as expensive and used **10.15×** the process CPU of the matched
-wandering run. Even with that extra work, Luna had about **409 ms of processing headroom at p99**.
-That makes a strong case for Luna as a server for bot-populated worlds at this scale on comparable
-hardware. [Matched wandering run](benchmark-2026-11-23-live-bots/wandering/summary.json)
+| Metric | Mar. 26 wandering | Oct. 21 wandering | Nov. 21 wandering | Nov. 23 wandering | Nov. 23 autonomous |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Bots online | 800 | 800 | 800 | 1,500 | 1,500 |
+| Registered NPCs | 52 | 11,674 | 11,722 | 11,722 | 11,722–11,762 |
+| Completed world ticks | 6,000 | 6,000 | 6,001 | 6,001 | 6,001 |
+| Mean tick work | 7.31 ms | 30.97 ms | 36.08 ms | 39.36 ms | 109.17 ms |
+| p95 tick work | 9.50 ms | 38.23 ms | 44.68 ms | 53.46 ms | 160.24 ms |
+| p99 tick work | 21.94 ms | 51.16 ms | 72.87 ms | 80.14 ms | 191.12 ms |
+| Slowest tick | 48.06 ms | 160.51 ms | 127.59 ms | 207.66 ms | 450.91 ms |
+| Mean process CPU | 194.07% | 6.68% | 7.82% | 11.31% | 114.77% |
+| Mean resident memory | 5.8 GiB | 4.5 GiB | 4.8 GiB | 4.0 GiB | 4.5 GiB |
+| Total GC pause time | 80.24 s | 1.37 s | 3.07 s | 3.36 s | 25.02 s |
+| Evidence | [Summary](benchmark-2026-03-26-run-20261122T030608176775Z/summary.json) | [Summary](benchmark-2026-10-21/summary.json) | [Summary](benchmark-2026-11-21-run-20261121T235914749522Z/summary.json) | [Summary](benchmark-2026-11-23-live-bots/wandering/summary.json) | [Summary](benchmark-2026-11-23-live-bots/live/summary.json) |
 
-Tick work measures time inside the scheduled game loop. Tick spacing measures time between consecutive
-starts. Process CPU includes background workers and garbage collection, with 100% equal to one occupied
-core. The November 21 run used 800 bots, an earlier revision, and development mode.
-[November 21 run](benchmark-2026-11-21-run-20261121T235914749522Z/) · [Historical benchmarks](HISTORY.md)
+The November 23 wandering run handled **87.5% more bots** than November 21 with the same NPC count.
+Mean tick work rose by **9.1%** and p99 rose by **10.0%**. The later run used production mode and a
+newer revision. [November 21 run](benchmark-2026-11-21-run-20261121T235914749522Z/) ·
+[November 23 run](benchmark-2026-11-23-live-bots/wandering/summary.json)
+
+March paired the fastest ticks with the highest process CPU and the most time spent in GC pauses.
+That snapshot ran on Java 11 with 52 NPCs. October and November ran on Java 21 with over 11,600 NPCs.
+Those historical comparisons span changes in world content, pathfinding, and the runtime.
+[Snapshot history](HISTORY.md#how-performance-changed)
+
+The autonomous run's p99 was **2.62×** the most recent 800-bot result. In the matched 1,500-bot runs,
+autonomy took **2.77×** as much mean tick work and **10.15×** as much process CPU as wandering.
+It still had about **409 ms of processing headroom at p99**, a strong result for running a bot-populated
+Luna world at this scale on comparable hardware. [Autonomous run](benchmark-2026-11-23-live-bots/live/summary.json)
+
+Tick work measures time inside the scheduled game loop. The p99 is the time within which at least
+99% of measured ticks finished. Process CPU includes background workers and garbage collection, with
+100% equal to one occupied core.
 
 ## What the bots did
 
