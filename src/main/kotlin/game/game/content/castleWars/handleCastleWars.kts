@@ -105,7 +105,7 @@ npc1(1526) {
         "Collect my tickets.", { CastleWars.game.claimTickets(it); it.overlays.closeWindows() },
         "I'm ready to play.", { it.overlays.closeWindows() }).open()
 }
-npc2(1526) { CastleWarsRewards.open(plr) }
+npc3(1526) { CastleWarsRewards.open(plr) }
 on(WidgetItemFirstClickEvent::class).filter { widgetId == 12392 || widgetId == 13294 }.then {
     if (plr.overlays.getOverlay(CastleWarsRewardInterface::class.java) != null) {
         CastleWarsRewards.prices[itemId]?.let { plr.sendMessage("This item exchanges for $it Castle Wars tickets.") }

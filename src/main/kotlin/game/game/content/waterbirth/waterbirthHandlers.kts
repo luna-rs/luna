@@ -10,7 +10,7 @@ import io.luna.game.model.mob.Mob
 on(ServerLaunchEvent::class) { Waterbirth.start(world) }
 for (route in Jarvald.Route.entries) for (id in route.crew) {
     npc1(id) { Jarvald.talk(plr, targetNpc) }
-    npc3(id) { Jarvald.sail(plr, targetNpc) }
+    npc2(id) { Jarvald.sail(plr, targetNpc) }
 }
 for (gate in Waterbirth.Gate.entries) object1(gate.id) { Waterbirth.operate(plr, gameObject) }
 for (support in Waterbirth.Support.entries) {

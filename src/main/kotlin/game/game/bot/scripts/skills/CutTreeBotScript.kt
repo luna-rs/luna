@@ -201,7 +201,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         if (!handler.webWalkTo(HardwoodGrove.GABOOTY)) return false
         val gabooty = world.locator.findNpcs(HardwoodGrove.GABOOTY, 8) { it.id in 2519..2521 }.firstOrNull()
             ?: return false
-        if (!handler.interactions.interact(4, gabooty)) return false
+        if (!handler.interactions.interact(2, gabooty)) return false
         if (!waitFor(5.seconds) { bot.overlays.getOverlay(ShopInterface::class.java)?.shop?.name == HardwoodGrove.COOPERATIVE })
             return false
         val shop = bot.overlays.getOverlay(ShopInterface::class.java) ?: return false

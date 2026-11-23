@@ -17,8 +17,8 @@ for (id in 9038..9039) {
 for (id in 2528..2530) npc1(id) { HardwoodGrove.talkToMurcaily(plr, targetNpc) }
 for (id in 2519..2521) {
     npc1(id) { HardwoodGrove.talkToGabooty(plr, targetNpc) }
-    npc3(id) { HardwoodGrove.openShop(plr, targetNpc, HardwoodGrove.COOPERATIVE) }
-    npc4(id) { HardwoodGrove.openShop(plr, targetNpc, HardwoodGrove.DRINKS) }
+    npc2(id) { HardwoodGrove.openShop(plr, targetNpc, HardwoodGrove.COOPERATIVE) }
+    npc3(id) { HardwoodGrove.openShop(plr, targetNpc, HardwoodGrove.DRINKS) }
 }
 
 val gabootyShopArea = SimpleBoxArea.of(HardwoodGrove.GABOOTY, 5)
@@ -26,7 +26,7 @@ val gabootyShopArea = SimpleBoxArea.of(HardwoodGrove.GABOOTY, 5)
 // The 377 cache supplies the item values. Stock counts and restocking use Luna's local shop policy.
 ShopHandler.create(HardwoodGrove.COOPERATIVE) {
     botAccess {
-        (2519..2521).forEach { npcSeller(4, it, area = gabootyShopArea) }
+        (2519..2521).forEach { npcSeller(2, it, area = gabootyShopArea) }
     }
     currency = Currency.TRADING_STICKS
     buy = BuyPolicy.EXISTING
@@ -48,7 +48,7 @@ ShopHandler.create(HardwoodGrove.COOPERATIVE) {
 }
 ShopHandler.create(HardwoodGrove.DRINKS) {
     botAccess {
-        (2519..2521).forEach { npcSeller(5, it, area = gabootyShopArea) }
+        (2519..2521).forEach { npcSeller(4, it, area = gabootyShopArea) }
     }
     currency = Currency.TRADING_STICKS
     buy = BuyPolicy.EXISTING

@@ -18,11 +18,11 @@ import io.luna.game.model.item.shop.Shop
 
 npc1(905) { MageArenaDialogue.kolodion(plr) }
 npc1(904) { MageArenaDialogue.guardian(plr) }
-npc3(904) { MageArenaDialogue.staffShop(plr) }
+npc2(904) { MageArenaDialogue.staffShop(plr) }
 npc1(902) { MageArenaDialogue.gundai(plr) }
 npc2(902) { plr.bank.open() }
 npc1(903) { MageArenaDialogue.lundail(plr) }
-npc3(903) { plr.overlays.open(io.luna.game.model.item.shop.ShopInterface(world, "Lundail's Arena-side Rune Shop.")) }
+npc2(903) { plr.overlays.open(io.luna.game.model.item.shop.ShopInterface(world, "Lundail's Arena-side Rune Shop.")) }
 on(LogoutEvent::class) { MageArena.clear(plr) }
 
 for (god in MageArena.God.entries) object1(god.statue) { MageArena.pray(plr, god) }
@@ -38,14 +38,14 @@ object1(2880) {
 // Titles and pricing are from 377 NPC params. Counts are a Luna stock policy: the pinned source has no 377 inv list.
 ShopHandler.create("Lundail's Arena-side Rune Shop.") {
     botAccess {
-        npcSeller(4, 903, area = SimpleBoxArea.of(2529, 4704, 2547, 4727))
+        npcSeller(2, 903, area = SimpleBoxArea.of(2529, 4704, 2547, 4727))
     }
     stockPricing = Shop.StockPricing(0.6, 0.03)
     sell { 556 x 1000; 555 x 1000; 557 x 1000; 554 x 1000; 558 x 1000; 559 x 1000; 562 x 100; 561 x 100; 560 x 100; 563 x 100; 565 x 100 }
 }
 ShopHandler.create("Mage Arena Staffs.") {
     botAccess {
-        npcSeller(4, 904, area = SimpleBoxArea.of(2496, 4678, 2522, 4727))
+        npcSeller(2, 904, area = SimpleBoxArea.of(2496, 4678, 2522, 4727))
     }
     buy = BuyPolicy.NONE
     stockPricing = Shop.StockPricing(0.0, 0.02)
