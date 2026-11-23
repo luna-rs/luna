@@ -3,6 +3,7 @@ package game.content.bankPin
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
+import game.player.Sound
 import io.luna.game.model.mob.Player
 import java.util.concurrent.TimeUnit
 
@@ -35,6 +36,11 @@ var Player.bankPinRecoveryDays by Attr.int { BankPin.LONG_DELAY }.persist("bank_
  * If the player has entered their PIN since logging in.
  */
 var Player.bankPinEntered by Attr.boolean()
+
+/**
+ * If the player has been reminded of their pending PIN at a bank since logging in.
+ */
+var Player.bankPinReminded by Attr.boolean()
 
 /**
  * Wrong PINs entered in a row.
@@ -99,21 +105,49 @@ object BankPin {
     }
 
     /**
+     * [days] as "1 day" or "N days".
+     */
+    fun dayText(days: Long) = "$days ${if (days == 1L) "day" else "days"}"
+
+    /**
      * The keypad line warning of a forgotten PIN's deletion, or an empty string.
      */
     fun deletionWarning(plr: Player): String {
         if (plr.bankPinDeleteAt == 0L) {
             return ""
         }
-        val days = daysUntil(plr.bankPinDeleteAt)
-        return "YOUR PIN WILL BE DELETED IN $days ${if (days == 1L) "DAY" else "DAYS"}"
+        return "YOUR PIN WILL BE DELETED IN ${dayText(daysUntil(plr.bankPinDeleteAt)).uppercase()}"
     }
 
     /**
-     * The bank's open check: a player with an active PIN gets the keypad until they enter it.
+     * The two sentences saying a new PIN is waiting to take effect.
+     */
+    fun pendingNotice(plr: Player) = listOf("You have requested that a PIN be set on your bank account.",
+                                            "This will take effect in ${dayText(daysUntil(plr.bankPinPendingAt))}.")
+
+    /**
+     * Reminds the player in the chat box of a PIN waiting to take effect, if there is one.
+     */
+    fun remindPending(plr: Player) {
+        if (state(plr) == PinState.PENDING) {
+            pendingNotice(plr).forEach { plr.sendMessage(it) }
+        }
+    }
+
+    /**
+     * The bank's open check: a player with an active PIN gets the keypad until they enter it. A player with a PIN
+     * waiting to take effect is reminded of it the first time they bank in a session.
      */
     fun mayOpenBank(plr: Player): Boolean {
-        if (plr.isBot || state(plr) != PinState.ACTIVE || plr.bankPinEntered) {
+        if (plr.isBot) {
+            return true
+        }
+        val state = state(plr)
+        if (state == PinState.PENDING && !plr.bankPinReminded) {
+            plr.bankPinReminded = true
+            remindPending(plr)
+        }
+        if (state != PinState.ACTIVE || plr.bankPinEntered) {
             return true
         }
         openKeypad(plr, PinPurpose.BANK)
@@ -127,8 +161,16 @@ object BankPin {
         if (state(plr) == PinState.ACTIVE && !plr.bankPinEntered) {
             openKeypad(plr, PinPurpose.SETTINGS)
         } else {
-            plr.overlays.open(PinSettingsInterface())
+            showSettings(plr)
         }
+    }
+
+    /**
+     * Opens the settings window and plays its sound.
+     */
+    private fun showSettings(plr: Player) {
+        plr.overlays.open(PinSettingsInterface())
+        plr.playSound(Sound.PIN_PENDING)
     }
 
     /**
@@ -170,6 +212,7 @@ object BankPin {
     private fun checkPin(plr: Player, pin: String, purpose: PinPurpose) {
         if (pin != plr.bankPin) {
             plr.overlays.closeWindows()
+            plr.playSound(Sound.PIN_CANCEL)
             plr.bankPinWrongTries++
             val tier = plr.bankPinWrongTries.coerceAtMost(LOCK_SECONDS.lastIndex)
             val lock = TimeUnit.SECONDS.toMillis(LOCK_SECONDS[tier])
@@ -189,7 +232,7 @@ object BankPin {
         plr.overlays.closeWindows()
         when (purpose) {
             PinPurpose.BANK -> plr.bank.open()
-            else -> plr.overlays.open(PinSettingsInterface())
+            else -> showSettings(plr)
         }
     }
 
@@ -223,8 +266,7 @@ object BankPin {
             plr.bankPinDeleteAt = System.currentTimeMillis() +
                     TimeUnit.DAYS.toMillis(plr.bankPinRecoveryDays.toLong())
         }
-        val days = daysUntil(plr.bankPinDeleteAt)
-        plr.sendMessage("Your PIN will be deleted in $days ${if (days == 1L) "day" else "days"}.")
+        plr.sendMessage("Your PIN will be deleted in ${dayText(daysUntil(plr.bankPinDeleteAt))}.")
     }
 
     /**
