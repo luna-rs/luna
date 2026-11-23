@@ -294,6 +294,290 @@
     "lines": ["think im gonna pick a lvl and stick to it", "gl with that one"]
   },
   {
+    "topics": ["IDLE"],
+    "lines": ["what made u log on today?", "felt like getting a couple lvls in"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["u usually play this time?", "when ive got a bit of time free"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do u ever add people just to say hi later?", "yeah if we keep running into each other"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i keep losing track of ppl i add", "give em a shout next time theyre on"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["im terrible at remembering names", "same, esp when theres numbers at the end"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["whats ur fav part of this game?", "bumping into ppl i know"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["it takes me ages to pick a place to train", "i try somewhere i already know the way to"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["sometimes i like a quiet training spot", "easier to keep an eye on chat that way"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do u log in where u train or at a bank?", "i usually leave myself near a bank"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["is it busier on weekends?", "seems like more mates are on then"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["whats the best way to pass the time while training?", "put some music on or talk a bit"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["u got any music worth putting on?", "try the in game stuff, some of its good"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do u pick the music or let it change?", "i leave it on auto most of the time"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i like having the music on low", "ye its less quiet that way"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["ever type a sentence in the wrong chat?", "yeah then wonder why no one answered lol"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i type too slow to keep up when its busy", "by the time i hit enter everyones moved on"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["how fast can u type?", "not fast if im trying to click too"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["it takes me ages to type with one hand", "same lol i stop clicking for a sec"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do you use the full item names?", "only if ppl dont know what i mean"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["how do u tell if people are afk?", "give em a sec before asking again"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["have you got a good name for a new account?", "try something you wont mind typing a lot"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["u ever think of making another account?", "maybe to try something diff"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i quite like the first few levels", "ye they go by quick"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what would u train on a new acc?", "something cheap while i save up"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what would u do with a spare hour?", "get some supplies then see what i feel like"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["should i do one skill all day?", "i get bored if i dont change it up"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["ever spend half ur time just planning?", "yup, easiest way to get nothing done"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i had three things i wanted to do today", "even one of em counts"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what did u want to do when u first joined?", "get enough gp to buy my own gear"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i like seeing a round number in the skills tab", "ye 50 looks better than 49"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["is it worth going for even lvls?", "if it gives u a reason to train em"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["which stat do you look at first?", "whatever im training usually"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what takes longer, making gp or getting lvls?", "depends how much u have to spend"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["can never tell what to do with my first 100k", "keep a bit aside for supplies"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["ever buy an upgrade and forget the lvl for it?", "lol gives you a reason to train i guess"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i should try making my own supplies", "saves gp if youve already got the stuff"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do you sell things you made yourself?", "sometimes, if ive got too many"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["which gear should i get a spare of?", "whatever you use all the time"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["u prefer cheap gear or the best u can buy?", "cheap until i really need the good stuff"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["are expensive capes worth it?", "if u like wearing it sure"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["why do people keep every little drop?", "never know when something will be useful"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["you think its worth picking up small coin drops?", "adds up if u do it all the time"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["how do u decide what to leave behind?", "keep whichever stuff would be hard to get again"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["should i bank coins before going somewhere new?", "i would if i didnt need to spend em there"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i wish my bank was easier to look through", "put the things you need most near the top"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do u bank stuff by skill or by item?", "by skill if i remember to sort it"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what do you carry if youre just wandering?", "food if i dont know where im going"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i had to learn the roads by walking them", "ye maps only help when u know where u are"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["any way to get better at finding places?", "start from a town u know and follow the road"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["why do i always go the long way round", "at least next trip youll know"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i like getting somewhere without a tele sometimes", "you see bits of the map you'd miss"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do you use run right away?", "i save a bit if ive got a long way to go"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i should learn a few more teles", "one to a town u use a lot is a good start"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what do u do if ur short on laws?", "walk if its close enough"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["somehow my runes always end up all over my bank", "put em together before the next trip"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["how do i know if a spell is worth using?", "see how much the runes cost first"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what skill costs the most to get going?", "depends which supplies you can get yourself"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i can get materials but never feel like using them", "do a small batch first and see how it goes"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["is it worth selling stuff between lvls?", "only if u need the gp before the next one"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["always got something half done", "pick the easiest one to finish"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["how do u decide a quest is worth doing?", "check what it lets you do afterwards"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["u read what people say in quests?", "some of it, depends if i know where to go"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["would you do a quest just to get to a new spot?", "sure if i was going back there a lot"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what do u do if a quest takes too long?", "leave it for a day ive got more time"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["would u train a skill just for a quest req?", "yeah if im only a lvl or two off"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["i like finding little shops i havent been to", "always worth seeing what they've got"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do u visit the same shop for supplies?", "if i can get the usual stuff there"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["could u get by without ever trading?", "probably but it would take me ages"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["do u keep track of what you spent on a lvl?", "nah id rather not know :P"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["what should i do after i lvl?", "take a little break if youve earned it"]
+  },
+  {
+    "topics": ["IDLE"],
+    "lines": ["its nice just talking sometimes", "ye gives my hand a rest lol"]
+  },
+  {
     "topics": [
       "HOME"
     ],
@@ -1519,6 +1803,246 @@
     "lines": ["i like having fish ready for the next trip", "same, easier than buying em every time"]
   },
   {
+    "topics": ["FISHING"],
+    "lines": ["what did u get fishing to?", "{level} so far", "im at {level}", "keep at it"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["fishing lvl atm?", "{level}", "thats decent", "ta"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["my fish lvl is {level}", "{level} here. gl"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["fish going slow for u too?", "feels slower when i watch every catch"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["how do you keep from checking xp all the time?", "i check at the end of the bag"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["you checking fish or cooking xp?", "fishing now, cooking can wait"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["do you set a fish goal by lvl or by inv?", "inv if im not close to a lvl"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["how many times would u come back for another inv?", "depends if i still need food"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["what do u do while waiting on a bite?", "read chat till the next one"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["do u go quiet when u fish?", "yeah till ive got something to say"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["any point trying to count catches as u go?", "i lose count after the first few"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["i think fishing makes me type slower", "got one hand on the mouse all the time"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["ever get halfway through typing and forget to fish?", "only when the spot moves lol"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["u mind if i come fish next to u?", "course not"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["can we both use the same spot?", "yeah it doesnt run out from sharing"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["u got space there to click the spot?", "yep, can stand beside me too"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["how do u click when the dock is packed?", "right click and look for the option u want"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["been a while since i tried a new spot", "i only bother if i know what tool to bring"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["do all the spots catch the same stuff?", "nah depends where u go and what u use"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["which option should i use for trout?", "fly fish with a rod and feathers"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["can i fish without buying bait?", "small net doesnt use bait"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["do nets catch anything good early on?", "shrimp are handy when ur starting"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["does it matter what rod i get?", "fly rod for feathers, regular rod for bait"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["what's the point of fishing with feathers?", "trout and salmon are good xp"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["which fish would u bring for a long trip?", "something good enough that i dont need loads"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["how many feathers should i take out?", "enough for a few loads if youve got em"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["any clue what lvl lobs need?", "40 fishing"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["is 40 good enough to catch lobs fast?", "u can catch em, just a bit slow at first"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["would u do trout or lobs for levels?", "trout if i wanted quicker catches"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["what's better when you're low on coins?", "use a net if u dont wanna pay for bait"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["you ever go back to catching shrimp?", "sure if its for someone just starting"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["is it worth taking spare bait?", "yeah, takes the same slot anyway"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["is it faster to buy feathers or get em myself?", "buy if ur saving time, collect if ur saving gp"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["when do u switch to a different fish?", "when i get the lvl or get bored"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["does higher fishing make much diff?", "takes less waiting on the same fish"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["do u need to bank every catch to make gp?", "no, but find a way to keep the ones worth selling"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["what do u do with fish u dont want?", "give em away if someone wants em"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["can u cook trout straight away?", "yeah if youve got the cooking lvl and a fire"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["do u bring a tinderbox when fishing?", "only if i want to cook there"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["fire or range for a big pile of fish?", "range if its close to bank"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["do you fish with room for an axe?", "only if im planning on making a fire"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["would u bring logs all the way here?", "easier if theres a tree i can cut"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["is burning some fish worth worrying about?", "not much when ur catching em yourself"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["is it faster to cook as u fish or do it later?", "later if u can bank nearby"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["should i save lobs even if i burn em?", "save some till ur cooking is higher"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["whats a good fish to start cooking on?", "shrimp are cheap to get"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["how do u decide where to bank fish?", "wherever i can get back from quickly"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["ever find the walk longer than the fishing?", "feels like that if the bank is miles away"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["are lobs worth the boat trip?", "if youve got the fare and want a load of em"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["whats worth bringing for karamja?", "lob pot or harpoon, and remember the fare"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["can u sell the fish on karamja?", "the general store'll take em"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["if a shop's paying rubbish what do u do?", "bank a load and try selling to ppl"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["u ever end up with a whole pile of fish in bank?", "yeah i leave a load there for training"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["can never tell how much food to keep", "keep a couple trips worth then sell the rest"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["how do u price raw fish?", "ask what people are buying each for"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["u buy fish even when u can catch it?", "sometimes i only want the cooking xp"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["what would u do with a spare load of trout?", "cook em unless i needed the gp"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["fish xp never looks like much one at a time", "leave it a few loads then have a look"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["always tempting to stop after a good catch", "see how the next one goes"]
+  },
+  {
+    "topics": ["FISHING"],
+    "lines": ["next fishing lvl will do for me", "nice, gl getting it"]
+  },
+  {
     "topics": ["WOODCUTTING"],
     "lines": ["wc lvl?", "{level} u?", "{level}", "nice"]
   },
@@ -1673,6 +2197,250 @@
   {
     "topics": ["WOODCUTTING"],
     "lines": ["what'd you do with a bank full of logs?", "sell half, keep the rest for xp"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["your wc lvl?", "{level} now", "im {level}", "fair enough"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["what's your wc up to?", "{level}. what about u?", "{level} atm", "gl with the next one"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["im at {level} wc", "{level} here, keep at it"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["anyone mind if i chop beside u?", "course not, go ahead"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["you got room for one more axe here?", "ye come cut"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["i'll leave a gap so u can click the tree", "cheers"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["can you see the next tree from there?", "might be one just past this one"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["where do u click when ppl are on the tree?", "i click a bit higher up"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["hard to see the tree with everyone there", "right click and look for chop down"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["does it matter which side u cut on?", "just stand somewhere u can click it"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["wish i could tell how long a tree will last", "i just have a second one picked out"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["hate wasting a walk when the tree goes", "yeah, i try to wait close to a few of em"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["sometimes i dont notice till im chopping air", "same, esp if im reading chat"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["ever get another log just as you start typing?", "lol i only notice when the inv fills"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["i swear i check that xp too often", "wait till u go bank, might look better then"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do you look at xp or the number of logs?", "logs for a trip, xp for a lvl"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u tell people when u get a wc lvl?", "if its a good one :)"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["u going for a round number in wc?", "i usually go for the next axe"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["how long do you stick with one tree type?", "till it feels too slow"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u change spots when u can cut a new tree?", "usually give it a go, can always come back"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["would u cut a slower tree for gp?", "when i need the money"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["are willows worth picking up for fm?", "yeah good if u need a pile to burn"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["whats good about oaks?", "easy to get a load without walking all over"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["normal logs take a lot of clicking", "the tree just lasts for the one log"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["why do ppl stay at the same willows?", "easy to cut and near a bank at some spots"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["when can i start yews?", "60 wc"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["worth cutting yews as soon as u get 60?", "they might feel slow for a bit"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["magic logs or yews for money?", "yews are easier to get a whole load of"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["whats the fastest axe i should get?", "the best one you can use and afford"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do i need to wield the axe?", "nope, inv works"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u ever carry a spare axe?", "only if theres a reason i might lose mine"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["did u buy a new axe every time u got the lvl?", "nah skipped a couple upgrades"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["what wc do u need for addy axe?", "31"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["does rune axe need 40 attack to cut?", "attack is for wielding, 41 wc to chop with it"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["i keep wanting a new axe", "make sure u can use it first lol"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["you reckon bronze is worth keeping?", "maybe as a spare if its all youve got"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u cut a full bag every time?", "depends how far i gotta walk back"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u bank a half load if the trees are busy?", "only if i was going that way anyway"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["whats worth more, bank trips or another tree?", "for logs i like short bank trips"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["if i save these logs what can i do with em?", "burn or fletch depending what ones"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["ever fletch your own logs?", "sometimes if i need the xp"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["could use more fm levels", "logs are the easy bit to get"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["are all logs worth selling?", "some are easier to use yourself"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["if i keep cutting ill never get round to burning em", "burn a few loads when u get bored"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u bother counting logs in the bank?", "only if im trying to hit a number"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["is it better to sell a few logs or a big pile?", "easier to find a buyer if youve got a decent pile"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["what logs would u keep for later?", "whichever ones im going to use first"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["watching the axe swing gets old", "give chat a look between clicks"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u go quiet when ur cutting?", "sometimes i forget im in chat"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["wc's easier with company", "yep, got something to read while we wait"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["nobody types for ages then everyone does", "usually when the tree goes lol"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["how many loads till u take a break?", "when i stop wanting to click another tree"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["how do you keep yourself from getting bored?", "set a little wc goal"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["u mind if i keep chopping a bit?", "why would i mind? go ahead"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["going to see how much xp i can get", "gl, dont stare at the counter all day"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["do u ever change trees just for a change?", "yeah when ive had enough of the same spot"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["i like getting something for the xp", "logs are handy even if u dont sell em"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["u reckon this is an alright skill to start with?", "sure, only need an axe and trees"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["what's the best time to type while cutting?", "right after a click if the tree is still up"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["what should i train with wc?", "firemaking if youve got logs to spare"]
+  },
+  {
+    "topics": ["WOODCUTTING"],
+    "lines": ["does it help to cut near other trees?", "yep, less walking when one goes down"]
   },
   {
     "topics": [
@@ -2705,5 +3473,241 @@
   {
     "topics": ["BANK"],
     "lines": ["where do ppl sell their fish?", "try a bank when its busy"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["ever try reading all the prices at once?", "nah i pick one thing to look for"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["how do u catch what someone's selling?", "look for the item name as it goes by"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["too many ppl typing when its busy", "move a bit closer to whoever u want"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["what does 30 ea mean again?", "30 coins per item"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["how do u tell who's buying what?", "look for buying or selling at the start"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["does everyone use short item names here?", "mostly, it saves typing the same thing"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["what does ess stand for in trade chat?", "essence, ask which kind"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["whats a kite when people sell armour?", "a kiteshield"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["when ppl say full rune whats included?", "usually helm body legs and shield. ask to be sure"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["is it hard to find the right ammy?", "easier if u say which one"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["what does no haggling mean lol?", "they wont change their price"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["would u offer lower if no one else is buying?", "can ask once and see"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["how many times u ask for a price?", "give someone a chance to answer first"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["who sets what an item goes for?", "whatever a buyer and seller agree to"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["i dont know how long to wait for a seller", "depends how badly u need it"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["nice when someone has exactly what u need", "saves walking round asking everyone"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["should i wait till its busier to sell?", "might get more offers if u do"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["ever take the first offer?", "if its a price im alright with"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["can u find cheaper stuff in a shop?", "sometimes. worth checking on the way"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["how can u tell if an item is worth the trouble selling?", "see if ppl actually ask for it"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["do u ever sell gear to upgrade?", "sometimes if i wont use it again"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["worth keeping my old shield?", "keep it if u need a spare"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["is it worth buying trim when ur skint?", "id get the useful bits first"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["do u buy armour one piece at a time?", "depends what the set goes for"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["my gp lasts longer when i only look", "same till someone has something i want"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["should i get a weapon or armour next?", "weapon if ur old one takes forever to kill things"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["what do u reckon i should buy for skilling?", "supplies for whatever ur gonna train"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["any point getting a tool before u have the lvl?", "only if its cheap and ur nearly there"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["worth buying an axe and a pick together?", "if u need both, sure"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["do u keep basic gear for quests?", "yeah never know what theyll ask u to wear"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["i always end up looking at stuff i cant use yet", "gives u an idea what to save up for"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["what if i only have a little gp?", "stick to the stuff u know youll use"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["could do with sorting the junk from my bank", "sell it if u havent used it in ages"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["do u keep coins next to ur gear in bank?", "i like having them where i can find em"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["how do u decide what to take out first?", "check what u need for the trip"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["u ever get to the bank and forget why?", "yeah that usually means i needed food"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["i keep too many bits from quests", "same, some of it might be useful later"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["which runes do u keep handy in bank?", "the tele ones if ive got em"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["wheres a decent place to buy supplies?", "try where people bank the stuff they gather"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["ever sell stuff straight after training?", "at the bank if someones buying"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["u buy logs or cut ur own?", "cut em if ive got time"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["any reason to buy raw fish instead of cooked?", "if you want the cooking xp"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["is it worth buying runes in small amounts?", "sure if thats all u can afford"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["do u ask for a whole load or price each?", "price each, then work out what i want"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["can i buy a little first and come back?", "sure if the seller's going to be here"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["how u split stuff when its noted?", "pick the amount you want to offer"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["what do u check on the trade screen?", "amount and item, then check em again"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["u ever see someone change the amount at the end?", "yeah thats why i read the second screen"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["who do u ask if the price sounds wrong?", "someone who buys the item a lot"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["would u wait here long just to find one thing?", "if i couldnt get it anywhere else"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["got any plans once ur done here?", "depends what supplies i can get"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["i always end up standing here longer than i mean to", "easy when theres people to talk to"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["taking a break from clicking stuff for a bit", "yeah, nice to just chat sometimes"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["hard to tell who i'm trying to trade when its busy", "right click and check the name"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["hi mate u buying or just looking?", "just looking for now"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["oh hi, didnt see u there", "hey :)"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["u know a better spot to read chat?", "try the edge where fewer ppl are standing"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["why do i always come with no spare gp?", "probably because of the last thing u bought"]
+  },
+  {
+    "topics": ["BANK"],
+    "lines": ["when do u stop looking for a deal?", "when i would rather go do something else"]
   }
 ]
