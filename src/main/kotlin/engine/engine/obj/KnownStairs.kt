@@ -1,7 +1,9 @@
 package engine.obj
 
 import api.predef.*
+import game.skill.firemaking.lightSource.LightSource
 import io.luna.game.model.Position
+import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -29,15 +31,22 @@ object KnownStairs {
     /**
      * Where stairs lead: [up] when climbing up and [down] when climbing down, or the same landing for both when their
      * "Climb" option doesn't ask. [message] is sent after climbing. [choices] replace the usual up and down options
-     * the "Climb" option asks with.
+     * the "Climb" option asks with. [unlit] replaces all of these for a player who carries no light, and [box] is
+     * shown in a message box after climbing.
      */
     class Stairs(val up: Landing?, val down: Landing?, val message: String? = null,
-                 val choices: Pair<String, String>? = null)
+                 val choices: Pair<String, String>? = null, val unlit: Stairs? = null,
+                 val box: List<String>? = null)
 
     /**
-     * Returns where [stairs] lead, or `null` if that isn't known.
+     * Returns where [stairs] lead [plr], or `null` if that isn't known. Without [plr], stairs lead where they do for a
+     * player with a light.
      */
-    fun forStairs(stairs: GameObject): Stairs? = ALL[stairs.position] ?: rotated(stairs)
+    fun forStairs(stairs: GameObject, plr: Player? = null): Stairs? {
+        val known = ALL[stairs.position] ?: rotated(stairs)
+        val unlit = known?.unlit
+        return if (unlit != null && plr != null && LightSource.brightness(plr) == 0) unlit else known
+    }
 
     /**
      * Stairs whose landing depends only on which way they face: tile offsets from the stairs for each rotation
@@ -88,6 +97,10 @@ object KnownStairs {
         Position(x, y, z) to Stairs(up, down, choices = choices)
 
     private fun either(x: Int, y: Int, z: Int, landing: Landing) = Position(x, y, z) to Stairs(landing, landing)
+
+    private fun dark(x: Int, y: Int, z: Int, lit: Landing, unlit: Landing, vararg box: String) =
+        Position(x, y, z) to Stairs(up = null, down = lit,
+                                    unlit = Stairs(up = null, down = unlit, box = box.toList()))
 
     /**
      * The known stairs by position.
@@ -443,10 +456,11 @@ object KnownStairs {
         up(2698, 3496, 0, tile(2698, 3495, 1)),
         down(2698, 3496, 1, tile(2697, 3496, 0)),
 
-        // Temple of Ikov.
+        // Temple of Ikov: without a light, the stairs down lead to a dark copy of the room below.
         up(2638, 9740, 0, tile(2654, 9809, 0)),
         up(2638, 9763, 0, tile(2654, 9809, 0)),
-        down(2650, 9804, 0, tile(2641, 9764, 0)),
+        dark(2650, 9804, 0, tile(2641, 9764, 0), tile(2641, 9741, 0),
+             "It's a bit dark down here!", "You decide not to venture far."),
 
         // Tutorial Island Quest Guide's house.
         up(3082, 3124, 0, tile(3084, 3124, 1)),

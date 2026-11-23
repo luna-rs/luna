@@ -15,13 +15,15 @@ import io.luna.game.model.`object`.GameObject
  * @param up `true` to climb up, `false` to climb down.
  */
 fun climb(plr: Player, stairs: GameObject, up: Boolean) {
-    val destination = StairDestination.destination(stairs, plr.position, up)
+    val known = KnownStairs.forStairs(stairs, plr)
+    val destination = StairDestination.destination(stairs, plr.position, up, plr)
     if (destination == null) {
         plr.sendMessage("Nothing interesting happens.")
         return
     }
     plr.move(destination)
-    KnownStairs.forStairs(stairs)?.message?.let { plr.sendMessage(it) }
+    known?.message?.let { plr.sendMessage(it) }
+    known?.box?.let { plr.newDialogue().text(*it.toTypedArray()).open() }
 }
 
 /**
@@ -31,11 +33,11 @@ fun climb(plr: Player, stairs: GameObject, up: Boolean) {
  * @param stairs The stairs being used.
  */
 fun climbEither(plr: Player, stairs: GameObject) {
-    val up = StairDestination.destination(stairs, plr.position, true)
-    val down = StairDestination.destination(stairs, plr.position, false)
+    val up = StairDestination.destination(stairs, plr.position, true, plr)
+    val down = StairDestination.destination(stairs, plr.position, false, plr)
     when {
         up != null && down != null && up != down -> {
-            val choices = KnownStairs.forStairs(stairs)?.choices
+            val choices = KnownStairs.forStairs(stairs, plr)?.choices
             val (climbUp, climbDown) = choices ?: Pair("Climb up the stairs.", "Climb down the stairs.")
             val dialogue = plr.newDialogue().options(climbUp, { climb(plr, stairs, true) },
                                                      climbDown, { climb(plr, stairs, false) })
