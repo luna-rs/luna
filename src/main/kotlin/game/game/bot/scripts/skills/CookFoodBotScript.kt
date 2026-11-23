@@ -59,11 +59,14 @@ class CookFoodBotScript(
     val selectedFood: Food? = null,
 
     duration: Duration,
-    zones: MutableList<SubZone>
+    zones: MutableList<SubZone>,
+    private val mealBatch: Int = 0
 ) : InventoryBotScript(bot, duration, zones) {
     override val ambientProductionTopic = ConversationSpeech.COOKING
     override val verifiedProductionWithdrawals = true
     override val trainingSkill = SKILL_COOKING
+    override val ownedSuppliesOnly get() = mealBatch > 0
+    private var mealLoaded = false
 
 
     companion object {
@@ -75,17 +78,27 @@ class CookFoodBotScript(
          * @author lare96
          */
         class CookFoodData : InventoryScriptData() {
-            /** Explicit configured recipe, or null when available stock determines the recipe. */
+            /**
+             * Explicit configured recipe, or null when available stock determines the recipe.
+             */
             var food: Food? = null
+            internal var mealBatch: Int = 0
+            internal var mealLoaded: Boolean = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 food = data.get("food")?.takeUnless { it.isJsonNull }?.asString?.let { Food.valueOf(it) }
+                mealBatch = data.get("mealBatch")?.asInt?.coerceIn(0, 8) ?: 0
+                mealLoaded = data.get("mealLoaded")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 if (food != null) data.addProperty("food", food!!.name) else data.remove("food")
+                if (mealBatch > 0) {
+                    data.addProperty("mealBatch", mealBatch)
+                    data.addProperty("mealLoaded", mealLoaded)
+                }
             }
         }
 
@@ -98,8 +111,9 @@ class CookFoodBotScript(
      * Keeping the zoned-data constructor lets the existing central registration accept both data classes.
      */
     constructor(bot: Bot, data: ZonedBotScriptData) :
-        this(bot, (data as? CookFoodData)?.food, data.duration, data.zones) {
+        this(bot, (data as? CookFoodData)?.food, data.duration, data.zones, (data as? CookFoodData)?.mealBatch ?: 0) {
         if (data is InventoryScriptData) restoreInventoryState(data)
+        mealLoaded = (data as? CookFoodData)?.mealLoaded ?: false
     }
 
     /**
@@ -117,16 +131,29 @@ class CookFoodBotScript(
      */
     private var cooking: Food? = null
 
-    override suspend fun equipment(): BotGearLocator {
+    override suspend fun equipment(): BotGearLocator? {
+        if (mealBatch > 0) return null
         val purpose = if (randBoolean() || bot.personality.isSocial) setOf(BotGearPurpose.SHOW_OFF)
         else setOf(BotGearPurpose.SKILLING)
         // Replace with Cooking gauntlets.
         return BotGearSelector.find(bot, purpose).replace(HANDS, 775).buildLocator()
     }
 
+    override fun selectWorkZone(): SubZone? {
+        if (mealBatch > 0) zones.sortBy { bot.position.computeLongestDistance(it.inside) }
+        return super.selectWorkZone()
+    }
+
     override fun bankWithdraw(): List<Item> {
         val selected = withdraw().firstOrNull() ?: return emptyList()
+        if (mealBatch > 0) return listOf(selected)
         return bot.productionBatch(listOf(Item(selected.id)))
+    }
+
+    override suspend fun withdrawBankItems(items: List<Item>): Boolean {
+        val loaded = super.withdrawBankItems(items)
+        if (mealBatch > 0 && loaded && items.isNotEmpty()) mealLoaded = true
+        return loaded
     }
 
     override fun withdraw(): List<Item> {
@@ -146,7 +173,11 @@ class CookFoodBotScript(
 
         val food = cooking
         if (food != null) {
-            val amount = bot.itemTracker.count(food.raw).coerceAtMost(28)
+            val amount = when {
+                mealLoaded -> bot.inventory.computeAmountForId(food.raw).coerceAtMost(mealBatch)
+                mealBatch > 0 -> bot.itemTracker.count(food.raw).coerceAtMost(mealBatch)
+                else -> bot.itemTracker.count(food.raw).coerceAtMost(28)
+            }
             if (amount > 0) return listOf(Item(food.raw, amount))
         }
 
@@ -193,6 +224,12 @@ class CookFoodBotScript(
     }
 
     override suspend fun afterProductionSettled() {
+        if (mealBatch > 0 && mealLoaded) {
+            if (selectedFood?.let { bot.inventory.contains(it.raw) } != true &&
+                bot.actions.first(CookFoodActionItem::class.java) == null)
+                stop()
+            return
+        }
         if (cooking?.let { it.raw in bot.inventory } == true ||
             bot.actions.first(CookFoodActionItem::class.java) != null) return
         BotPieMaintenance.recycleCarried(bot) { !isPaused() && !isTerminated() }
@@ -209,6 +246,8 @@ class CookFoodBotScript(
     override fun snapshot(): CookFoodData = CookFoodData().also {
         saveInventoryState(it)
         it.food = selectedFood
+        it.mealBatch = mealBatch
+        it.mealLoaded = mealLoaded
     }
 
     override suspend fun finish() {

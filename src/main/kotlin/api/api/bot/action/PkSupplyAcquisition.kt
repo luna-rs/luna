@@ -1,6 +1,13 @@
 package api.bot.action
 
 import api.attr.Attr
+import io.luna.game.model.mob.Skill
+import game.skill.cooking.cookFood.Food as RawFood
+import game.bot.scripts.skills.CookFoodBotScript
+import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
+import api.attr.setValue
+import api.attr.getValue
 import api.bot.script.BotScript.ActionSafety
 import api.bot.action.trading.BotFoodDemand
 import game.bot.scripts.trading.TradeBotScript
@@ -38,6 +45,13 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
 
     companion object {
         private val directRetryAt = Attr.map<Int, Long>()
+        private var Bot.foodlessSince by Attr.long().persist("pk_foodless_since")
+        private var Bot.nextFoodCookingAt by Attr.long().persist("pk_next_food_cooking_at")
+        private const val MEAL_BATCH = 8
+        private val FOOD_WAIT = 40.minutes
+
+        internal fun mayCookAfterWaiting(since: Long, nextAttempt: Long, now: Long): Boolean =
+            since > 0 && now >= since && now - since >= FOOD_WAIT.inWholeMilliseconds && now >= nextAttempt
     }
 
     /**
@@ -51,8 +65,65 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
      * Restocks a small number of interchangeable meals before a foodless bot attempts its equipment plan.
      */
     suspend fun obtainFood(allowed: () -> Boolean): Boolean {
-        if (hasFood()) return true
-        return withTimeoutOrNull(2.minutes) { buyFood(allowed) } == true
+        if (hasFood()) return mealFound()
+        val now = System.currentTimeMillis()
+        if (bot.foodlessSince <= 0 || bot.foodlessSince > now) bot.foodlessSince = now
+        if (withTimeoutOrNull(2.minutes) { buyFood(allowed) } == true || hasFood()) return mealFound()
+        if (mayCookAfterWaiting(bot.foodlessSince, bot.nextFoodCookingAt, System.currentTimeMillis()) &&
+            allowed() && safe()) {
+            bot.nextFoodCookingAt = System.currentTimeMillis() + 5.minutes.inWholeMilliseconds
+            withTimeoutOrNull(3.minutes) { startCookingMeal(allowed) }
+        }
+        return false
+    }
+
+    private fun mealFound(): Boolean {
+        bot.foodlessSince = 0L
+        bot.nextFoodCookingAt = 0L
+        return true
+    }
+
+    /**
+     * Prepares one finite native cooking batch using spare raw food or a bounded purchase.
+     */
+    private suspend fun startCookingMeal(allowed: () -> Boolean) {
+        val cooking = bot.skill(Skill.COOKING)
+        fun eligible(raw: RawFood): Boolean = raw.lvl <= cooking.staticLevel && raw.lvl <= cooking.level &&
+            (Food.ID_TO_FOOD[raw.cooked]?.heal ?: 0) > 0 &&
+            BotTradeIntentions.productionLimit(bot, raw.raw) == null
+
+        val recipes = RawFood.entries.filter(::eligible)
+        fun ownedRecipe(): RawFood? = recipes.asSequence()
+            .filter { selection.owned(it.raw) > 0 }
+            .maxByOrNull { Food.ID_TO_FOOD.getValue(it.cooked).heal }
+        if (ownedRecipe() == null) {
+            val budget = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
+            val offers = TradeBotScript.carriedSupply(bot, recipes.mapTo(HashSet()) { it.raw }).groupBy { it.id }
+            val quotes = recipes.asSequence().flatMap { raw ->
+                listOfNotNull(shopQuote(raw.raw, 1), directQuote(raw.raw, 1, offers[raw.raw].orEmpty())).asSequence()
+            }.filter { it.coins in 1..budget }
+                .sortedBy { it.coins }.take(3).toList()
+            for (option in quotes) {
+                if (!allowed() || !safe() || hasFood()) return
+                val funds = minOf(coins(), BotFoodDemand.allowance(bot).toLong())
+                val quantity = minOf(MEAL_BATCH.toLong(), funds / option.unitPrice).toInt()
+                val lot = (quantity downTo 1).firstNotNullOfOrNull { amount ->
+                    val id = option.item.id
+                    (if (option.direct) directQuote(id, amount, offers[id].orEmpty()) else shopQuote(id, amount))
+                        ?.takeIf { it.coins <= funds }
+                } ?: continue
+                buy(lot) { allowed() && !hasFood() }
+                if (ownedRecipe() != null) break
+            }
+        }
+        val raw = ownedRecipe() ?: return
+        if (!allowed() || !safe() || hasFood() || !handler.banking.travelToBankDepositAll() ||
+            !allowed() || !safe() || hasFood() || !eligible(raw)) return
+        val amount = minOf(MEAL_BATCH, bot.bank.computeAmountForId(raw.raw))
+        if (amount > 0) {
+            val zones = (ProductionZones.RANGES + SubZone.VARROCK_EAST_BANK + SubZone.AL_KHARID_BANK).toMutableList()
+            bot.scriptStack.pushHead(CookFoodBotScript(bot, raw, 5.minutes, zones, amount))
+        }
     }
 
     private suspend fun buyFood(allowed: () -> Boolean): Boolean {
