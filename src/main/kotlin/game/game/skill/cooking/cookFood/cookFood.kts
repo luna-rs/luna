@@ -16,6 +16,10 @@ import io.luna.game.model.`object`.GameObject
  */
 fun open(msg: ItemOnObjectEvent, obj: GameObject, food: Food?, usingFire: Boolean) {
     if (food != null) {
+        if (!food.cooksOn(obj.id)) {
+            msg.plr.sendMessage(if (food == Food.BAKED_POTATO) "This has to be cooked on a range." else food.source.refusal)
+            return
+        }
         val interfaces = msg.plr.overlays
         interfaces.open(CookingInterface(food, usingFire, obj))
     }
