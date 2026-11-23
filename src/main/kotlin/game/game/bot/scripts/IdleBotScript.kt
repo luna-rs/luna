@@ -132,9 +132,14 @@ open class IdleBotScript(bot: Bot, private val destination: SubZone, private val
     override fun canContinueConversation(): Boolean = arrived && inside() &&
         System.currentTimeMillis() < deadline + 120_000L
 
-    override fun ambientConversationTopic(): ConversationSpeech? =
-        if (javaClass != IdleBotScript::class.java || ended()) null
-        else if (homeVisit()) ConversationSpeech.HOME else ConversationSpeech.IDLE
+    override fun ambientConversationTopic(): ConversationSpeech? {
+        if (javaClass != IdleBotScript::class.java || ended()) return null
+        return when (destination) {
+            SubZone.HOME -> ConversationSpeech.HOME
+            SubZone.VARROCK_MARKETPLACE, SubZone.FALADOR_PARK_MARKETPLACE -> ConversationSpeech.BANK
+            else -> ConversationSpeech.IDLE
+        }
+    }
 
     override fun paused() {
         BotSocialInteractions.cancel(bot)
