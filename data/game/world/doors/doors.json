@@ -33,5 +33,17 @@
   { "closed": 6112, "open": 6113 },
   { "closed": 6114, "open": 6115 },
   { "closed": 6975, "open": 6976 },
-  { "closed": 6977, "open": 6978 }
+  { "closed": 6977, "open": 6978 },
+  { "closed": 2997, "open": 2998 },
+  { "closed": 3763, "open": 3764, "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE" },
+  { "closed": 3776, "open": 3777 },
+  { "closed": 4247, "open": 4248 },
+  { "closed": 4696, "open": 4697 },
+  { "closed": 10260, "open": 10261 },
+  { "closed": 10325, "open": 10327 },
+  { "closed": 11616, "open": 11617 },
+  { "closed": 12444, "open": 12445 },
+  { "closed": 13001, "open": 13002 },
+  { "closed": 14749, "open": 14750 },
+  { "closed": 14923, "open": 14924 }
 ]

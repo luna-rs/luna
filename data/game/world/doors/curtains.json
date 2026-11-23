@@ -1,4 +1,6 @@
 [
   { "closed": 1528, "open": 1529 },
-  { "closed": 4250, "open": 4251, "open_sound": "CURTAIN_OPEN", "close_sound": "CURTAIN_OPEN", "duration": 200 }
+  { "closed": 4250, "open": 4251, "open_sound": "CURTAIN_OPEN", "close_sound": "CURTAIN_OPEN", "duration": 200 },
+  { "closed": 5887, "open": 5888, "open_sound": "CURTAIN_OPEN", "close_sound": "CURTAIN_OPEN" },
+  { "closed": 5889, "open": 5890, "open_sound": "CURTAIN_OPEN", "close_sound": "CURTAIN_OPEN" }
 ]
