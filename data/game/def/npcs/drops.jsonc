@@ -8515,7 +8515,7 @@
         "table": 1
       },
       {
-        "id": 595, // Torch
+        "id": 596, // Torch
         "quantity": "1",
         "noted": false,
         "rarity": 0.125,
@@ -8833,7 +8833,7 @@
         "table": 4
       },
       {
-        "id": 595, // Torch
+        "id": 596, // Torch
         "quantity": "1",
         "noted": false,
         "rarity": 0.0859375,
@@ -23783,7 +23783,7 @@
         "table": 1
       },
       {
-        "id": 595, // Torch
+        "id": 596, // Torch
         "quantity": "1",
         "noted": false,
         "rarity": 0.0891089108910891,
