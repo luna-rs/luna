@@ -17,6 +17,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.OptionalInt;
+import java.util.function.Predicate;
 
 /**
  * An {@link ItemContainer} implementation representing a {@link Player}'s bank.
@@ -164,6 +165,21 @@ public final class Bank extends ItemContainer {
     private final Player player;
 
     /**
+     * Decides whether a player's bank may open now. Content such as the Bank PIN replaces it, and opens its own
+     * interface instead when it refuses.
+     */
+    private static Predicate<Player> openCheck = player -> true;
+
+    /**
+     * Sets the check every bank opening has to pass.
+     *
+     * @param check The new check.
+     */
+    public static void setOpenCheck(Predicate<Player> check) {
+        openCheck = check;
+    }
+
+    /**
      * The player's inventory.
      */
     private final Inventory inventory;
@@ -215,9 +231,10 @@ public final class Bank extends ItemContainer {
      *     <li>refreshes both inventory overlay and bank item grid</li>
      *     <li>opens the overlay</li>
      * </ul>
+     * Nothing opens if the player fails the open check set by {@link #setOpenCheck(Predicate)}.
      */
     public void open() {
-        if (!isOpen()) {
+        if (!isOpen() && openCheck.test(player)) {
             stopEvents();
             try {
                 player.getVarpManager().setAndSendValue(PersistentVarp.WITHDRAW_AS_NOTE, 0);
