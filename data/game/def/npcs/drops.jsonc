@@ -1197,7 +1197,8 @@
       1953, // Ice wolf
       1954, // Ice wolf
       1955, // Ice wolf
-      1956 // Ice wolf
+      1956, // Ice wolf
+      1330 // Wolf
     ],
     "rare": null,
     "drops": [
@@ -12339,7 +12340,9 @@
   },
   {
     "ids": [
-      1200 // Tyras guard
+      1200, // Tyras guard
+      1203, // Tyras guard
+      1204 // Tyras guard
     ],
     "rare": "GEM",
     "drops": [
@@ -12872,7 +12875,14 @@
       1563, // Ice Troll
       1564, // Ice Troll
       1565, // Ice Troll
-      1566 // Ice Troll
+      1566, // Ice Troll
+      1936, // Ice Troll
+      1937, // Ice Troll
+      1938, // Ice Troll
+      1939, // Ice Troll
+      1940, // Ice Troll
+      1941, // Ice Troll
+      1942 // Ice Troll
     ],
     "rare": "RARE",
     "drops": [
@@ -13029,6 +13039,2628 @@
         "noted": false,
         "rarity": 0.0390625,
         "table": 2
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "30",
+        "noted": false,
+        "rarity": 0.2265625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "136",
+        "noted": false,
+        "rarity": 0.1953125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "200",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "20",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1373, // Rune battleaxe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      2456, // Dagannoth
+      2887 // Dagannoth
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 3799, // Gloves
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3767, // Fremennik shirt
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3761, // Fremennik cloak
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 828, // Mithril javelin
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 886, // Steel arrow
+        "quantity": "10-15",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 6143, // Spined boots
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6149, // Spined gloves
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3758, // Fremennik shield
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 3748, // Fremennik helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 3757, // Fremennik blade
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 3751, // Berserker helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 3749, // Archer helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 3755, // Farseer helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 3753, // Warrior helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01171875,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0087890625,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0068359375,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00537109375,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00390625,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0029296875,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00244140625,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001953125,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00146484375,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00146484375,
+        "table": 1
+      },
+      {
+        "id": 5296, // Toadflax seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001548165137614679,
+        "table": 1
+      },
+      {
+        "id": 5297, // Irit seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0010607798165137615,
+        "table": 1
+      },
+      {
+        "id": 5281, // Belladonna seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0010249426605504588,
+        "table": 1
+      },
+      {
+        "id": 5106, // Poison ivy seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0007382454128440367,
+        "table": 1
+      },
+      {
+        "id": 5298, // Avantoe seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0007239105504587156,
+        "table": 1
+      },
+      {
+        "id": 5280, // Cactus seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0006880733944954129,
+        "table": 1
+      },
+      {
+        "id": 5299, // Kwuarm seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.000494552752293578,
+        "table": 1
+      },
+      {
+        "id": 5300, // Snapdragon seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00032970183486238534,
+        "table": 1
+      },
+      {
+        "id": 5301, // Cadantine seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00022935779816513763,
+        "table": 1
+      },
+      {
+        "id": 5302, // Lantadyme seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00016485091743119267,
+        "table": 1
+      },
+      {
+        "id": 5303, // Dwarf weed seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00010034403669724771,
+        "table": 1
+      },
+      {
+        "id": 5304, // Torstol seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 6.450688073394496e-05,
+        "table": 1
+      },
+      {
+        "id": 1438, // Air talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005580357142857143,
+        "table": 1
+      },
+      {
+        "id": 1446, // Body talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005580357142857143,
+        "table": 1
+      },
+      {
+        "id": 1440, // Earth talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005580357142857143,
+        "table": 1
+      },
+      {
+        "id": 1442, // Fire talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005580357142857143,
+        "table": 1
+      },
+      {
+        "id": 1448, // Mind talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005580357142857143,
+        "table": 1
+      },
+      {
+        "id": 1444, // Water talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005580357142857143,
+        "table": 1
+      },
+      {
+        "id": 1454, // Cosmic talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002232142857142857,
+        "table": 1
+      },
+      {
+        "id": 1452, // Chaos talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0016741071428571428,
+        "table": 1
+      },
+      {
+        "id": 1462, // Nature talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0016741071428571428,
+        "table": 1
+      },
+      {
+        "id": 405, // Casket
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 411, // Oyster pearl
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 401, // Seaweed
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.234375,
+        "table": 1
+      },
+      {
+        "id": 403, // Edible seaweed
+        "quantity": "1-5",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 363, // Raw bass
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "23-38",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 6171, // Flattened hide
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6173, // Stretched hide
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6169, // Circular hide
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3801, // Keg of beer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 2801, // Clue scroll
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      2455, // Dagannoth
+      2888 // Dagannoth
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 3799, // Gloves
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3767, // Fremennik shirt
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3761, // Fremennik cloak
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 1353, // Steel axe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 828, // Mithril javelin
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 886, // Steel arrow
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 3758, // Fremennik shield
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 3748, // Fremennik helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 3757, // Fremennik blade
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3751, // Berserker helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 3749, // Archer helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 3755, // Farseer helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 3753, // Warrior helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 555, // Water rune
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 565, // Blood rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005859375,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00439453125,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00341796875,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002685546875,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001953125,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00146484375,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001220703125,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0009765625,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.000732421875,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.000732421875,
+        "table": 1
+      },
+      {
+        "id": 5296, // Toadflax seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001548165137614679,
+        "table": 1
+      },
+      {
+        "id": 5297, // Irit seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0010607798165137615,
+        "table": 1
+      },
+      {
+        "id": 5281, // Belladonna seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0010249426605504588,
+        "table": 1
+      },
+      {
+        "id": 5106, // Poison ivy seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0007382454128440367,
+        "table": 1
+      },
+      {
+        "id": 5298, // Avantoe seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0007239105504587156,
+        "table": 1
+      },
+      {
+        "id": 5280, // Cactus seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0006880733944954129,
+        "table": 1
+      },
+      {
+        "id": 5299, // Kwuarm seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.000494552752293578,
+        "table": 1
+      },
+      {
+        "id": 5300, // Snapdragon seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00032970183486238534,
+        "table": 1
+      },
+      {
+        "id": 5301, // Cadantine seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00022935779816513763,
+        "table": 1
+      },
+      {
+        "id": 5302, // Lantadyme seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00016485091743119267,
+        "table": 1
+      },
+      {
+        "id": 5303, // Dwarf weed seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00010034403669724771,
+        "table": 1
+      },
+      {
+        "id": 5304, // Torstol seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 6.450688073394496e-05,
+        "table": 1
+      },
+      {
+        "id": 1438, // Air talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004464285714285714,
+        "table": 1
+      },
+      {
+        "id": 1446, // Body talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004464285714285714,
+        "table": 1
+      },
+      {
+        "id": 1440, // Earth talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004464285714285714,
+        "table": 1
+      },
+      {
+        "id": 1442, // Fire talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004464285714285714,
+        "table": 1
+      },
+      {
+        "id": 1448, // Mind talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004464285714285714,
+        "table": 1
+      },
+      {
+        "id": 1444, // Water talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004464285714285714,
+        "table": 1
+      },
+      {
+        "id": 1454, // Cosmic talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0017857142857142857,
+        "table": 1
+      },
+      {
+        "id": 1452, // Chaos talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0013392857142857143,
+        "table": 1
+      },
+      {
+        "id": 1462, // Nature talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0013392857142857143,
+        "table": 1
+      },
+      {
+        "id": 6155, // Dagannoth hide
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 590, // Tinderbox
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 377, // Raw lobster
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 411, // Oyster pearl
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0546875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "26",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "38",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "47",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "81",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 3801, // Keg of beer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 2801, // Clue scroll
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      2457, // Wallasalki
+      2884 // Wallasalki
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 6153, // Skeletal gloves
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6147, // Skeletal boots
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 556, // Air rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 558, // Mind rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 555, // Water rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 557, // Earth rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 565, // Blood rune
+        "quantity": "1-5",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 886, // Steel arrow
+        "quantity": "1-10",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01953125,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0146484375,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.010986328125,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008544921875,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0067138671875,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0048828125,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.003662109375,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0030517578125,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00244140625,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0018310546875,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0018310546875,
+        "table": 1
+      },
+      {
+        "id": 5296, // Toadflax seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001548165137614679,
+        "table": 1
+      },
+      {
+        "id": 5297, // Irit seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0010607798165137615,
+        "table": 1
+      },
+      {
+        "id": 5281, // Belladonna seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0010249426605504588,
+        "table": 1
+      },
+      {
+        "id": 5106, // Poison ivy seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0007382454128440367,
+        "table": 1
+      },
+      {
+        "id": 5298, // Avantoe seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0007239105504587156,
+        "table": 1
+      },
+      {
+        "id": 5280, // Cactus seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0006880733944954129,
+        "table": 1
+      },
+      {
+        "id": 5299, // Kwuarm seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.000494552752293578,
+        "table": 1
+      },
+      {
+        "id": 5300, // Snapdragon seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00032970183486238534,
+        "table": 1
+      },
+      {
+        "id": 5301, // Cadantine seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00022935779816513763,
+        "table": 1
+      },
+      {
+        "id": 5302, // Lantadyme seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00016485091743119267,
+        "table": 1
+      },
+      {
+        "id": 5303, // Dwarf weed seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00010034403669724771,
+        "table": 1
+      },
+      {
+        "id": 5304, // Torstol seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 6.450688073394496e-05,
+        "table": 1
+      },
+      {
+        "id": 1438, // Air talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008928571428571428,
+        "table": 1
+      },
+      {
+        "id": 1446, // Body talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008928571428571428,
+        "table": 1
+      },
+      {
+        "id": 1440, // Earth talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008928571428571428,
+        "table": 1
+      },
+      {
+        "id": 1442, // Fire talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008928571428571428,
+        "table": 1
+      },
+      {
+        "id": 1448, // Mind talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008928571428571428,
+        "table": 1
+      },
+      {
+        "id": 1444, // Water talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008928571428571428,
+        "table": 1
+      },
+      {
+        "id": 1454, // Cosmic talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0035714285714285713,
+        "table": 1
+      },
+      {
+        "id": 1452, // Chaos talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0026785714285714286,
+        "table": 1
+      },
+      {
+        "id": 1462, // Nature talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0026785714285714286,
+        "table": 1
+      },
+      {
+        "id": 1436, // Rune essence
+        "quantity": "3-7",
+        "noted": true,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 6167, // Fibula piece
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6165, // Ribcage piece
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6163, // Skull piece
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 345, // Raw herring
+        "quantity": "1-2",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 2801, // Clue scroll
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1318 // Warrior
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 1337, // Bronze warhammer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 1335, // Iron warhammer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 1339, // Steel warhammer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1341, // Black warhammer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 3748, // Fremennik helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 3757, // Fremennik blade
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 3758, // Fremennik shield
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00390625,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0029296875,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002197265625,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001708984375,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0013427734375,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0009765625,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.000732421875,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0006103515625,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00048828125,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0003662109375,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0003662109375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.328125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "17",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "22",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "17",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 1929, // Bucket of water
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 948, // Bear fur
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 3801, // Keg of beer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 436, // Copper ore
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 438, // Tin ore
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 440, // Iron ore
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 327, // Raw sardine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1917, // Beer
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1891, // Cake
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 1592, // Ring mould
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 2801, // Clue scroll
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      2783 // Dark Beast
+    ],
+    "rare": "RARE",
+    "drops": [
+      {
+        "id": 532, // Big bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "52-3000",
+        "noted": false,
+        "rarity": 0.25,
+        "table": 1
+      },
+      {
+        "id": 1313, // Black 2h sword
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.05,
+        "table": 1
+      },
+      {
+        "id": 1367, // Black battleaxe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.05,
+        "table": 1
+      },
+      {
+        "id": 1361, // Black axe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03,
+        "table": 1
+      },
+      {
+        "id": 1183, // Adamant sq shield
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.05,
+        "table": 1
+      },
+      {
+        "id": 1319, // Rune 2h sword
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015,
+        "table": 1
+      },
+      {
+        "id": 1373, // Rune battleaxe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015,
+        "table": 1
+      },
+      {
+        "id": 1113, // Rune chainbody
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03,
+        "table": 1
+      },
+      {
+        "id": 1163, // Rune full helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.02,
+        "table": 1
+      },
+      {
+        "id": 1185, // Rune sq shield
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 1
+      },
+      {
+        "id": 2363, // Runite bar
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 1
+      },
+      {
+        "id": 886, // Steel arrow
+        "quantity": "150",
+        "noted": false,
+        "rarity": 0.005,
+        "table": 1
+      },
+      {
+        "id": 892, // Rune arrow
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.015,
+        "table": 1
+      },
+      {
+        "id": 1456, // Death talisman
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03,
+        "table": 1
+      },
+      {
+        "id": 121, // Attack potion(3)
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03,
+        "table": 1
+      },
+      {
+        "id": 565, // Blood rune
+        "quantity": "7",
+        "noted": false,
+        "rarity": 0.05,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "67",
+        "noted": false,
+        "rarity": 0.03,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "3-5",
+        "noted": false,
+        "rarity": 0.03,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "45",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 1
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.07,
+        "table": 1
+      },
+      {
+        "id": 556, // Air rune
+        "quantity": "47",
+        "noted": false,
+        "rarity": 0.07,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1994, // Jackal
+      1993, // Crocodile
+      1239, // Bedabin Nomad Fighter
+      1874 // Desert snake
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1223 // Vampire
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 3325, // Vampire dust
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.15,
+        "table": 2
+      },
+      {
+        "id": 557, // Earth rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.08,
+        "table": 2
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.06,
+        "table": 2
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.05,
+        "table": 2
+      },
+      {
+        "id": 565, // Blood rune
+        "quantity": "1-2",
+        "noted": false,
+        "rarity": 0.03,
+        "table": 2
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.02,
+        "table": 2
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.02,
+        "table": 2
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015,
+        "table": 2
+      },
+      {
+        "id": 5292, // Marrentill seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 2
+      },
+      {
+        "id": 5293, // Tarromin seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 2
+      },
+      {
+        "id": 5311, // Wildblood seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 2
+      },
+      {
+        "id": 5323, // Strawberry seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 2
+      },
+      {
+        "id": 5104, // Jangerberry seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005,
+        "table": 2
+      },
+      {
+        "id": 1361, // Black axe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 2
+      },
+      {
+        "id": 985, // Half of a key
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005,
+        "table": 2
+      },
+      {
+        "id": 987, // Half of a key
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005,
+        "table": 2
+      },
+      {
+        "id": 2801, // Clue scroll
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01,
+        "table": 2
+      }
+    ]
+  },
+  {
+    "ids": [
+      1973 // Giant skeleton
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 532, // Big bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.025380710659898477,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01904761904761905,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.014285714285714287,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.011111111111111112,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008726003490401396,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.006349206349206349,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00475963826749167,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0039666798889329636,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0031735956839098697,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00238038562247084,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00238038562247084,
+        "table": 1
+      },
+      {
+        "id": 1141, // Steel med helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 1281, // Steel sword
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 1325, // Steel scimitar
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1353, // Steel axe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 884, // Iron arrow
+        "quantity": "24",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 556, // Air rune
+        "quantity": "30",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 555, // Water rune
+        "quantity": "18",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "8",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 564, // Cosmic rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.1953125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "20",
+        "noted": false,
+        "rarity": 0.1875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "50",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "90",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 2351, // Iron bar
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1976 // Shadow Hound
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      3851 // Skeleton Mage
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 592, // Ashes
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 1013, // Pink skirt
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 558, // Mind rune
+        "quantity": "7-9",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "3-4",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2-3",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.0859375,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.02342834830144475,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.017582417582417582,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.013186813186813187,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.010256410256410256,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.008054772452678213,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005860805860805862,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004393512246915388,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.003661550666707351,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002929472938993726,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0021972790361269295,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0021972790361269295,
+        "table": 1
+      },
+      {
+        "id": 1625, // Uncut opal
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 1933, // Pot of flour
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 2351, // Iron bar
+        "quantity": "1-2",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "22-53",
+        "noted": false,
+        "rarity": 0.2578125,
+        "table": 1
+      },
+      {
+        "id": 532, // Big bones
+        "quantity": "3-4",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1184, // Elf warrior
+      2359, // Elf warrior
+      2360 // Elf warrior
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 555, // Water rune
+        "quantity": "70",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.02734375,
+        "table": 1
+      },
+      {
+        "id": 554, // Fire rune
+        "quantity": "37",
+        "noted": false,
+        "rarity": 0.01953125,
+        "table": 1
+      },
+      {
+        "id": 1099, // Green d'hide chaps
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 1135, // Green d'hide body
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01953125,
+        "table": 1
+      },
+      {
+        "id": 1243, // Mithril spear
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 1197, // Mithril kiteshield
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1161, // Adamant full helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1213, // Rune dagger
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 365, // Bass
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 385, // Shark
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 449, // Adamantite ore
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.02830925419757907,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.021245421245421246,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015934065934065933,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.012393162393162394,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.009732850046986173,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.007081807081807083,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005308827298356094,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004424373722271382,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0035397798012840854,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002655045501986706,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002655045501986706,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "20-220",
+        "noted": false,
+        "rarity": 0.5,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1183, // Elf warrior
+      2361, // Elf warrior
+      2362 // Elf warrior
+    ],
+    "rare": "GEM",
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 555, // Water rune
+        "quantity": "70",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.02734375,
+        "table": 1
+      },
+      {
+        "id": 554, // Fire rune
+        "quantity": "37",
+        "noted": false,
+        "rarity": 0.01953125,
+        "table": 1
+      },
+      {
+        "id": 1099, // Green d'hide chaps
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 1135, // Green d'hide body
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.01953125,
+        "table": 1
+      },
+      {
+        "id": 1243, // Mithril spear
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 1197, // Mithril kiteshield
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1161, // Adamant full helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1213, // Rune dagger
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 365, // Bass
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 385, // Shark
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 449, // Adamantite ore
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.02830925419757907,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.021245421245421246,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015934065934065933,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.012393162393162394,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.009732850046986173,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.007081807081807083,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005308827298356094,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004424373722271382,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0035397798012840854,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002655045501986706,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002655045501986706,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "20-180",
+        "noted": false,
+        "rarity": 0.5,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1198 // Dire Wolf
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 2859, // Wolf bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1459 // Monkey Guard
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 3181, // Monkey bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1460 // Monkey Guard
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 3182, // Monkey bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
       }
     ]
   },
@@ -28398,7 +31030,9 @@
       2685, // Hobgoblin
       2686, // Hobgoblin
       2687, // Hobgoblin
-      2688 // Hobgoblin
+      2688, // Hobgoblin
+      2245, // Khazard trooper
+      2246 // Khazard trooper
     ],
     "drops": [
       {
@@ -30258,7 +32892,9 @@
   // Undead One - scripts/quests/quest_zombiequeen/scripts/undead_one.rs2
   {
     "ids": [
-      502 // Undead One
+      502, // Undead One
+      504, // Undead One
+      505 // Undead One
     ],
     "drops": [
       {
