@@ -30,6 +30,7 @@ ShopHandler.create("Funch's Fine Groceries") {
         "Pot of cream" x 5
         "Bucket of milk" x 5
         "Knife" x 5
+        "Cocktail guide" x 5
         "Cocktail glass" x 20
     }
 

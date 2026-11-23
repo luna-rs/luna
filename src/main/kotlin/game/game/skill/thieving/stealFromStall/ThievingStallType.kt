@@ -169,7 +169,7 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
     GEM(stalls = setOf(2562 to 634,
                        6162 to 6984),
         level = 75,
-        xp = 16.0,
+        xp = 160.0,
         respawnTicks = 180,
         drops = DropTableHandler.createSimple {
             "Uncut sapphire" x 1 chance (105 of 128)

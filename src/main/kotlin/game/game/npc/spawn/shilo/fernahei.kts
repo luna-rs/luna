@@ -15,7 +15,13 @@ ShopHandler.create("Fishing shop") {
     // TODO Once Shilo Village is added, let in bots that have finished the quest.
 
     sell {
+        "Fishing rod" x 5
+        "Fly fishing rod" x 5
+        "Fishing bait" x 200
         "Feather" x 10_000
+        "Raw trout" x 0
+        "Raw pike" x 0
+        "Raw salmon" x 0
     }
 
     open {

@@ -45,6 +45,7 @@ ShopHandler.create("Barkers' Haberdashery") {
         2934 x 50 // Purple boots
 
         1007 x 50 // Red cape
+        1019 x 50 // Black cape
         1021 x 50 // Blue cape
         1023 x 50 // Yellow cape
         1027 x 50 // Green cape
