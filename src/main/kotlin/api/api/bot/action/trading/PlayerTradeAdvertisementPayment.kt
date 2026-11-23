@@ -32,8 +32,8 @@ object PlayerTradeAdvertisementPayment {
      * substitute for missing gold; the ordinary exact-price and lot-rounding rules remain shared.
      */
     fun cashPlan(offer: PlayerTradeAdvertisement, quote: Quote, maximumUnitPrice: Long, wanted: Int,
-                 coins: Int, spendingLimit: Long = Long.MAX_VALUE): Plan? =
-        plan(offer, quote, maximumUnitPrice, Profile(), wanted, mapOf(COINS to coins), mapOf(COINS to 1L), spendingLimit)
+                 coins: Int): Plan? =
+        plan(offer, quote, maximumUnitPrice, Profile(), wanted, mapOf(COINS to coins), mapOf(COINS to 1L))
 
     /**
      * One eligible carried payment commodity, using normalized ids and a fixed positive guide value.
@@ -54,7 +54,7 @@ object PlayerTradeAdvertisementPayment {
      * @param wanted Remaining demand, also capped by any separately tracked remaining advertised stock.
      * @param paymentStock Actual transferable quantities, normalized to unnoted ids and limited to spendable stock.
      * @param paymentPrices Positive guide values captured for this trade. Coins always have value one.
-     * @param spendingLimit A hard value limit, such as the visit's remaining curiosity allowance.
+     * @param spendingLimit Optional value ceiling for composing a barter payment.
      */
     fun plan(offer: PlayerTradeAdvertisement, quote: Quote, maximumUnitPrice: Long, profile: Profile,
              wanted: Int, paymentStock: Map<Int, Int>, paymentPrices: Map<Int, Long>,

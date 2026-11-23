@@ -2,7 +2,6 @@ package api.bot.action.trading
 
 import api.bot.isRealBot
 import api.bot.action.trading.PlayerTradeAdvertisementPayment.Plan
-import api.bot.action.trading.PlayerTradeAdvertisementPolicy.Profile
 import api.bot.action.trading.PlayerTradeAdvertisementPolicy.Quote
 import api.bot.script.BotScript
 import api.predef.rand
@@ -59,7 +58,7 @@ internal class PlayerTradeAdvertisementMarket(
      *
      * @author lare96
      */
-    data class Pricing(val itemId: Int, val maximumUnitPrice: Long, val quote: Quote, val profile: Profile)
+    data class Pricing(val itemId: Int, val maximumUnitPrice: Long, val quote: Quote, val unexpected: Boolean = false)
 
     /**
      * A current plan and its original advertisement. Inspection resolves one commodity before any payment is made.
@@ -73,18 +72,17 @@ internal class PlayerTradeAdvertisementMarket(
                       var pricing: Pricing?,
                       var plan: Plan?,
                       val allowance: Map<Int, Int>,
-                      val paymentPrices: Map<Int, Long>,
                       val inspection: Boolean,
-                      var unexpected: Boolean,
                       var counterSent: Boolean = false,
                       val continuation: Boolean = false) {
+        val unexpected: Boolean get() = pricing?.unexpected == true
+
         var response: PlayerTradeAdvertisementRegistry.Response? = null
         var quantityNotified = false
         var lastNotifiedQuantity: Int? = null
         var quantityShrinkNotified = false
         var communicated = false
         var completed = false
-        val receivedPrices = HashMap<Int, Long>()
     }
 
     /**

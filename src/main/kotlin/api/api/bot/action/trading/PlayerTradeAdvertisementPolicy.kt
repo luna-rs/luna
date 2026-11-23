@@ -5,6 +5,7 @@ import api.bot.action.trading.PlayerTradeAdvertisement.PriceBasis
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import kotlin.math.roundToLong
 
 /**
  * Computes marketplace curiosity and opening purchase quotes from captured personality and explicit random samples.
@@ -71,6 +72,18 @@ object PlayerTradeAdvertisementPolicy {
                 (profile.intelligence.coerceIn(0.0, 1.0) - 0.5) * 0.10 -
                 (profile.kindness.coerceIn(0.0, 1.0) - 0.5) * 0.10
         return (baseline + adjustment).coerceIn(0.0, 1.0)
+    }
+
+    /**
+     * Discounts surplus player stock by ten to forty percent of its guide value. Confident, less accommodating
+     * bots with a stronger merchanting affinity bid lower, with whole coins rounded in the player's favor.
+     */
+    internal fun surplusBid(guide: Long, profile: Profile): Long {
+        val bargaining = (2 * profile.merchantingInterest.coerceIn(0.0, 1.0) +
+                profile.confidence.coerceIn(0.0, 1.0) + (1.0 - profile.kindness.coerceIn(0.0, 1.0))) / 4
+        val rate = BigDecimal.valueOf(9_000L - (3_000 * bargaining).roundToLong(), 4)
+        return BigDecimal.valueOf(guide.coerceAtLeast(1)).multiply(rate)
+            .setScale(0, RoundingMode.CEILING).longValueExact()
     }
 
     /**
