@@ -3,6 +3,7 @@ package io.luna.game.model.item;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import engine.bot.gear.BotItemTracker;
+import game.content.quests.QuestGates;
 import game.player.Sound;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
@@ -593,6 +594,10 @@ public final class Equipment extends ItemContainer {
         }
 
         int equipIndex = equipDef.getIndex();
+
+        if (!QuestGates.canEquip(player, inventoryItem.getId(), true)) {
+            return false;
+        }
 
         Optional<Requirement> failedReq = equipDef.getFailedRequirement(player);
         if (failedReq.isPresent()) {

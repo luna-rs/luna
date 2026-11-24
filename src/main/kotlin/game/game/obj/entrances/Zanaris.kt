@@ -1,6 +1,7 @@
 package game.obj.entrances
 
 import game.content.lostCity.LostCity
+import game.content.quests.QuestGates
 import game.obj.doors.DoorPassageAction
 import game.obj.doors.DoorType
 import game.skill.magic.teleportSpells.TeleportAction
@@ -37,6 +38,11 @@ object Zanaris {
     }
 
     /**
+     * Whether stepping into the shed takes [plr] to Zanaris. With quest gates on, only a wielded Dramen staff does.
+     */
+    fun canEnter(plr: Player): Boolean = !QuestGates.enabled() || plr.equipment[Equipment.WEAPON]?.id == STAFF
+
+    /**
      * Uses the native return ring without requiring a staff or casting a teleport spell.
      */
     fun returnToSwamp(plr: Player, ring: GameObject) {
@@ -67,7 +73,7 @@ object Zanaris {
         override fun checkAccess(entering: Boolean): Boolean = true
 
         override fun onPassage(entering: Boolean) {
-            if (!entering) {
+            if (!entering && canEnter(mob)) {
                 mob.submitAction(ShedTeleport(mob))
             }
         }

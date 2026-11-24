@@ -1,5 +1,6 @@
 package api.bot.webwalk.generate
 
+import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.walk.crossing.ZanarisCrossing
 import game.obj.entrances.Zanaris
 import io.luna.game.model.Position
@@ -12,7 +13,7 @@ import io.luna.game.model.Position
 object ZanarisCrossingSpec {
 
     val ENTRY = CrossingSpec(ZanarisCrossing.ID, setOf(Zanaris.DOOR),
-        bidirectional = false, cost = 8,
+        requirements = Requirements(flags = setOf(ZanarisCrossing.ENTRY_READY)), bidirectional = false, cost = 8,
         placements = listOf(CrossingPlacement(Zanaris.DOOR, Position(3202, 3169),
             Zanaris.SHED_OUTSIDE, Zanaris.LANDING)))
 

@@ -138,6 +138,11 @@
     // The cooldown, in seconds, between tele-other requests sent to the same player.
     "tele_other_throttle_seconds": 30
   },
+  "quests": {
+    // Whether quest-gated content needs its quest. When false, quest-gated items, areas and NPC services are open to
+    // everyone. Quests that Luna does not have yet never gate anything.
+    "gated": false
+  },
   "bots": {
     // The baseline number of bots the world should try to keep online.
     "base_online_count": 500,
