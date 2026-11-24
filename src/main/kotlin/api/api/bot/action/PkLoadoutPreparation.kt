@@ -35,6 +35,8 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     private val selection = PkLoadoutSelection(bot)
 
     companion object {
+        const val FOOD_TARGET = 16
+
         private val boosts by lazy {
             listOf(listOf(Potion.SUPER_STRENGTH, Potion.STRENGTH_POTION),
                 listOf(Potion.SUPER_ATTACK, Potion.ATTACK_POTION), listOf(Potion.SUPER_DEFENCE, Potion.DEFENCE_POTION))
@@ -284,7 +286,9 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             val firstFood = foods.firstOrNull { add(it) }
             if (firstFood == null) return null
             var foodCount = 1
-            for (id in foods) while (foodCount < 16 && (quantities[id] ?: 0) < stock.getValue(id) && add(id)) foodCount++
+            for (id in foods) {
+                while (foodCount < FOOD_TARGET && (quantities[id] ?: 0) < stock.getValue(id) && add(id)) foodCount++
+            }
 
             escapeItems.firstOrNull { it in quantities || add(it) }
 
@@ -387,7 +391,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     private fun requestMissingFood() {
         if ((bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull()).none {
                 Food.ID_TO_FOOD[it.unnotedItemDef.id()]?.heal?.let { it > 0 } == true
-            }) BotTradeIntentions.requestFood(bot, 16, minimumHeal = 1)
+            }) BotTradeIntentions.requestFood(bot, FOOD_TARGET, minimumHeal = 1)
     }
 
     /**

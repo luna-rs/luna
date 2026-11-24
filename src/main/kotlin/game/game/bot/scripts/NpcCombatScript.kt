@@ -11,6 +11,7 @@ import api.bot.boss.BossOutingTravel
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotCombatMagic
+import api.bot.action.BotLootActionHandler
 import api.bot.action.BotPyramidTravel
 import api.bot.action.MagicOnlyCombat
 import api.bot.action.MagicSupplyPreparation
@@ -59,6 +60,7 @@ import api.bot.webwalk.walk.crossing.RopeEntranceCrossing
 import game.combat.npcHooks.giantMole.GiantMole.burrowing
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.EntityState
+import io.luna.game.model.item.shop.Currency
 import game.skill.fishing.catchFish.Fish
 import game.skill.herblore.identifyHerb.Herb
 import game.skill.magic.Magic
@@ -1522,7 +1524,8 @@ open class NpcCombatScript(bot: Bot,
      * Determines if the bot should pick up [item] after a kill.
      */
     protected open fun isLoot(item: GroundItem): Boolean {
-        return TreasureTrailBotScript.wantsClue(bot, item.id) || item is DeathGroundItem || item.id in ALL_LOOT_ITEMS.value
+        return item.id == Currency.COINS.id || item is DeathGroundItem || handler.loot.isRecoveryOrWanted(item) ||
+            TreasureTrailBotScript.wantsClue(bot, item.id) || item.id in ALL_LOOT_ITEMS.value
     }
 
     /**
@@ -1531,7 +1534,7 @@ open class NpcCombatScript(bot: Bot,
     protected open fun buryLootedBones(): Boolean = true
 
     /**
-     * Collects eligible drops in shared recovery, wanted-item and guide-value order, checking actual capacity per drop.
+     * Collects training loot using the monster-combat priorities, checking actual capacity per drop.
      * Supply checks still run between attempts; an item that will not fit cannot hide a later compatible stack.
      */
     protected suspend fun lootItems() {
@@ -1545,7 +1548,7 @@ open class NpcCombatScript(bot: Bot,
             forceBanking = true
         }
         val groundItems = world.locator.findViewableItems(bot) { isLoot(it) && it.isVisibleTo(bot) }
-        for (item in handler.loot.ordered(groundItems)) {
+        for (item in handler.loot.ordered(groundItems, BotLootActionHandler.Purpose.NPC_COMBAT)) {
             if (!isActionSafe() || forceBanking || !assignmentActive()) return
             if (!isLoot(item)) continue
             if (!handler.loot.canPickup(item)) continue
