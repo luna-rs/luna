@@ -2,6 +2,7 @@ package engine.obj
 
 import api.predef.*
 import game.content.brimhavenArena.BrimhavenArena
+import game.content.dragonSlayer.DragonSlayerShip
 import game.content.miningGuild.MiningGuild
 import io.luna.game.action.impl.ClimbAction
 import io.luna.game.event.impl.ObjectClickEvent
@@ -52,6 +53,16 @@ fun climb(plr: Player, ladder: GameObject, up: Boolean) {
         return
     }
     if (ladder.position == SpecialLadder.AGILITY_ARENA_DOWN.ladder && !BrimhavenArena.checkAccess(plr)) {
+        return
+    }
+    if (ladder.position == DragonSlayerShip.deckLadder && DragonSlayerShip.needsRepairs(plr)) {
+        fun enter(player: Player, position: Position) {
+            if (player.z != ladder.position.z || !player.position.isWithinDistance(ladder.position, 2)) return
+            player.submitAction(ClimbAction(player, position, Direction.between(player.position, ladder.position),
+                "You climb down the ladder."))
+        }
+        plr.newDialogue().options(DragonSlayerShip.REPAIR_HOLD_OPTION, { enter(it, DragonSlayerShip.repairHold) },
+            DragonSlayerShip.NED_HOLD_OPTION, { enter(it, DragonSlayerShip.nedHold) }).open()
         return
     }
     val destination = LadderDestination.destination(ladder, plr.position, up)

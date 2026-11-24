@@ -12,6 +12,7 @@ import io.luna.game.model.World;
 import io.luna.game.model.collision.CollisionMatrix;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -143,8 +144,7 @@ public final class ChunkRepository implements Iterable<Entity> {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof ChunkRepository) {
-            ChunkRepository other = (ChunkRepository) obj;
+        if (obj instanceof ChunkRepository other) {
             return chunk.equals(other.chunk);
         }
         return false;
@@ -161,7 +161,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @return An iterator over all entities in this chunk.
      */
     @Override
-    public Iterator<Entity> iterator() {
+    public @NonNull Iterator<Entity> iterator() {
         return entities.values().stream().flatMap(Collection::stream).iterator();
     }
 
@@ -213,7 +213,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void add(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        if (entitySet.add(entity) && entity.getType() == EntityType.PLAYER && entitySet.size() == 1) {
+        if (entitySet != null && entitySet.add(entity) && entity.getType() == EntityType.PLAYER && entitySet.size() == 1) {
             world.getChunks().updatePlayerCoverage(chunk, 1);
         }
     }
@@ -228,7 +228,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void remove(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        if (entitySet.remove(entity) && entity.getType() == EntityType.PLAYER && entitySet.isEmpty()) {
+        if (entitySet != null && entitySet.remove(entity) && entity.getType() == EntityType.PLAYER && entitySet.isEmpty()) {
             world.getChunks().updatePlayerCoverage(chunk, -1);
         }
     }
@@ -291,9 +291,8 @@ public final class ChunkRepository implements Iterable<Entity> {
                 persistentUpdates.put(entity, request);
             }
 
-            if (request.getUpdatable() instanceof LocalEntity) {
+            if (request.getUpdatable() instanceof LocalEntity entity) {
                 // End life-cycle for local entities after their update has been processed.
-                LocalEntity entity = (LocalEntity) request.getUpdatable();
                 entity.setState(EntityState.INACTIVE);
             }
 

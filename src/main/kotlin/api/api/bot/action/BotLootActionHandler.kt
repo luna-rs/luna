@@ -1,11 +1,14 @@
 package api.bot.action
 
 import api.bot.Suspendable.waitFor
+import api.bot.action.eating.CarriedFood
 import api.bot.script.BotScript.ActionSafety
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.ext.rebalanceWantedItems
+import game.player.item.consume.food.Food
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.GroundItem
+import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration.Companion.seconds
 
@@ -20,26 +23,63 @@ import kotlin.time.Duration.Companion.seconds
  */
 class BotLootActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
+    companion object {
+        const val VALUABLE_LOOT_VALUE = 5000L
+    }
+
+    /**
+     * Ground-loot priorities for ordinary pickups, player fights, and monster training.
+     *
+     * @author lare96
+     */
+    enum class Purpose {
+        GENERAL, PLAYER_COMBAT, NPC_COMBAT
+    }
+
+    /**
+     * An eligible drop and the scores calculated for this selection.
+     *
+     * @author lare96
+     */
+    private data class Candidate(val item: GroundItem, val priority: Int, val value: Long)
+
     /**
      * Uses the world's total guide value, including stack quantity and native noted-item pricing.
      */
     fun value(item: GroundItem): Long = bot.world.economy.getTotalPrice(item.toItem()).coerceAtLeast(0)
 
     /**
-     * Keeps personal death recovery first and wanted supplies second, then orders each group by descending total value.
-     * Equal-value drops prefer the nearer tile. Values are quoted once for this synchronous selection only.
-     * Items that cannot currently fit remain in the list because a caller may make space before attempting them.
+     * Keeps personal recovery first. After player fights, a bot without healing food seeks food before other supplies
+     * and prioritizes coins and valuable gear ahead of spare consumables. Monster training favors stackable loot
+     * alongside valuable individual drops. Items can remain eligible when a caller can make room for them.
      */
-    fun ordered(items: Iterable<GroundItem>): List<GroundItem> {
-        val values = items.associateWith(::value)
-        return values.keys.sortedWith(compareBy<GroundItem> {
-            when {
-                it in bot.deathItems -> 0
-                bot.preferences.needsWantedItem(it.id) -> 1
-                else -> 2
+    @JvmOverloads
+    fun ordered(items: Iterable<GroundItem>, purpose: Purpose = Purpose.GENERAL): List<GroundItem> {
+        val needsFood = purpose == Purpose.PLAYER_COMBAT && CarriedFood.of(bot).none { it.food.heal > 0 }
+        val recovery = bot.deathItems
+        val position = bot.position
+        return items.distinct().map { item ->
+            val guideValue = value(item)
+            val priority = when {
+                item in recovery -> 0
+                needsFood && (Food.ID_TO_FOOD[item.id]?.heal ?: 0) > 0 -> 1
+                bot.preferences.needsWantedItem(item.id) -> 2
+                purpose == Purpose.PLAYER_COMBAT ->
+                    if (item.id == Currency.COINS.id || guideValue > VALUABLE_LOOT_VALUE) 3 else 4
+                purpose == Purpose.NPC_COMBAT ->
+                    if (guideValue > VALUABLE_LOOT_VALUE || item.toItem().itemDef.isStackable) 3 else 4
+                else -> 3
             }
-        }.thenByDescending { values.getValue(it) }.thenBy { bot.position.computeLongestDistance(it.position) })
+            Candidate(item, priority, guideValue)
+        }.sortedWith(compareBy<Candidate> { it.priority }.thenByDescending { it.value }
+            .thenBy { position.computeLongestDistance(it.item.position) }).map { it.item }
     }
+
+    /**
+     * Keeps these drops eligible even when they fall below a combat script's ordinary item or value filter.
+     */
+    fun isRecoveryOrWanted(item: GroundItem): Boolean =
+        item in bot.deathItems || bot.preferences.needsWantedItem(item.id)
 
     /**
      * Rechecks native capacity, visibility and the owning activity's loot restrictions without changing any items.

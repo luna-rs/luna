@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.mob.Player;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -120,7 +121,7 @@ public final class ChunkUpdatableView implements Iterable<Player> {
     }
 
     @Override
-    public Iterator<Player> iterator() {
+    public @NonNull Iterator<Player> iterator() {
         return allowedViewers.iterator();
     }
 

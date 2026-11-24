@@ -5,6 +5,7 @@ import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.BotLootActionHandler
 import api.bot.action.BotPotionActionHandler
 import api.bot.action.BotPotionSupport
 import api.bot.action.PkPotionUse
@@ -37,8 +38,10 @@ import game.player.item.consume.food.Food
 import game.player.item.consume.food.Food.Companion.lastEat
 import game.player.item.consume.potion.Potion
 import io.luna.Luna
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -92,6 +95,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private var nextFinisherAt = 0L
     private var acknowledgedExchange = false
     private var clanCall: Player? = null
+    private var collectingVictoryLoot = false
 
     private val tacticalWithdrawal = if (bot.isBot && !bot.isConnectedPlayer) pkSession?.let { session ->
         PkTacticalWithdrawal(bot, combatPolicy, ::ownsTacticalTurn,
@@ -394,15 +398,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             if (focus is Player && bot.combat.inCombat()) activatePlayerPrayer()
             return runAway()
         }
+        if (lootPlayerVictory()) return true
         if (focus is Npc && WineTheftLesson.attempt(bot) {
                 isRunning() && !running && targetAllowed() && focusAlive() && isActionSafe()
             }) return false
         if (usesPkSwitching) {
-            if (!focus.isAlive && lootOnVictory) {
-                waitFor(5.seconds) { focus.health > 0 || focus.state != io.luna.game.model.EntityState.ACTIVE }
-                if (isActionSafe()) lootItems()
-                return true
-            }
             reassessClanFocus()
             if (!focus.isAlive || !focus.isViewableFrom(bot)) return true
             if (stopStalledPkFight()) return !running
@@ -417,7 +417,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 if (isTerminated()) return true
             }
             targetEnemy()
-            if (isTerminated() || !focus.isAlive) return true
+            if (isTerminated() || lootPlayerVictory() || !focus.isAlive) return true
             talk()
             drinkPotion()
             activatePrayer()
@@ -437,6 +437,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         targetEnemy()
         delay(600.milliseconds, 1200.milliseconds)
 
+        if (lootPlayerVictory()) return true
         if (!bot.combat.inCombat()) {
             return true
         }
@@ -561,7 +562,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             return
         }
 
-        lootItems()
+        if (!hasPlayerVictory()) lootItems()
     }
 
     /**
@@ -1074,49 +1075,73 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
     }
 
+    private fun hasPlayerVictory(): Boolean =
+        focus is Player && !focus.isAlive && (pkSession != null || lootOnVictory)
+
+    private fun canLootAfterVictory(): Boolean =
+        ownsTacticalTurn() && !running && pkSession?.allowsHuntingAt(bot.position) != false &&
+            combatPolicy.opponent()?.isViewableFrom(bot) != true
+
+    /**
+     * Gives the fight's recovery and restocking sequence priority over the general loot reflex.
+     */
+    internal fun handlesVictoryLoot(): Boolean =
+        !bot.isEventBot && !running && isRunning() && !isTerminated() &&
+            (collectingVictoryLoot || hasPlayerVictory())
+
+    /**
+     * Gives native player death processing time to place loot before recovering and collecting it.
+     */
+    private suspend fun lootPlayerVictory(): Boolean {
+        if (!hasPlayerVictory()) return false
+        if (!bot.isEventBot && canLootAfterVictory()) {
+            val defeated = focus
+            collectingVictoryLoot = true
+            try {
+                if (defeated.state == EntityState.ACTIVE) {
+                    waitFor(5.seconds) {
+                        !canLootAfterVictory() || defeated.isAlive || defeated.state != EntityState.ACTIVE
+                    }
+                }
+                if (canLootAfterVictory()) lootItems(afterVictory = true)
+            } finally {
+                collectingVictoryLoot = false
+            }
+        }
+        return true
+    }
+
     /**
      * Loots nearby food, potions, coins, and valuable items.
      *
-     * Personal recovery and wanted supplies retain shared priority; other candidates use total economy guide value.
-     * Actual capacity is rechecked per item, so existing stacks remain collectable after the last free slot is used.
+     * Player fights use combat supplies and guide value to choose an order. Monster fights use the monster-training
+     * order. Actual capacity is rechecked per item so existing stacks stay collectable after the last free slot.
      */
-    private suspend fun lootItems() {
+    private suspend fun lootItems(afterVictory: Boolean = false) {
         if (bot.isEventBot) return
-        // TODO@1.0 Move looting into its own dynamic system. What a bot wants to loot should depend on its current
-        //  intent. PK bots may prefer food and valuables, while PvM bots may prefer stackables, resources, and alchables.
         val local = world.locator.findViewableItems(bot) {
             it.isWithinDistance(bot, 10) &&
-                    (Food.ID_TO_FOOD.containsKey(it.id) ||
-                            isValuable(it.id) ||
+                    (handler.loot.isRecoveryOrWanted(it) ||
+                            Food.ID_TO_FOOD[it.id]?.let { food -> !afterVictory || food.heal > 0 } == true ||
+                            it.id == Currency.COINS.id ||
                             Potion.DOSE_TO_POTION.containsKey(it.id) ||
-                            handler.loot.value(it) > 5000)
+                            handler.loot.value(it) > BotLootActionHandler.VALUABLE_LOOT_VALUE)
         }
 
-        for (groundItem in handler.loot.ordered(local)) {
+        if (afterVictory) {
+            PkVictoryLoot(bot, handler).collect(local, ::canLootAfterVictory) {
+                pkSession?.allowsHuntingAt(it.position) != false
+            }
+            return
+        }
+        val purpose = if (focus is Player) BotLootActionHandler.Purpose.PLAYER_COMBAT
+                      else BotLootActionHandler.Purpose.NPC_COMBAT
+        for (groundItem in handler.loot.ordered(local, purpose)) {
             if (!isActionSafe()) return
             handler.loot.pickup(groundItem) {
                 isActionSafe() && pkSession?.allowsHuntingAt(bot.position) != false &&
                     pkSession?.allowsHuntingAt(groundItem.position) != false
             }
-        }
-    }
-
-    /**
-     * Checks whether an item should always be considered valuable by this combat script.
-     *
-     * This is currently a small hardcoded filter. More advanced bot logic should eventually use economy data,
-     * popularity, intrinsic value, fashion demand, resource scarcity, and the bot's current goals.
-     *
-     * @param id The item id to check.
-     * @return `true` if the item should be treated as valuable, otherwise `false`.
-     */
-    private fun isValuable(id: Int): Boolean {
-        // TODO@1.0 Move item valuation into a dynamic economy-aware system.
-        // tODO when doing a "search for item" script and shops are being checked, every shop should have an "anchor"
-        //  npc where applicable so the bot can find the npc (we can determine which zone the npc is in, if any, and travel there!)
-        return when (id) {
-            995 -> true
-            else -> false
         }
     }
 }

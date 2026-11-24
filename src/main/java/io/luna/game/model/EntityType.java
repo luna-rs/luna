@@ -20,74 +20,40 @@ public enum EntityType {
     /**
      * A ground item.
      */
-    ITEM(GroundItem.class),
+    ITEM,
 
     /**
      * A game object.
      */
-    OBJECT(GameObject.class),
+    OBJECT,
 
     /**
      * A player mob.
      */
-    PLAYER(Player.class),
+    PLAYER,
 
     /**
      * A non-player mob.
      */
-    NPC(Npc.class),
+    NPC,
 
     /**
      * A local non-registered projectile.
      */
-    PROJECTILE(LocalProjectile.class),
+    PROJECTILE,
 
     /**
      * A local non-registered graphic.
      */
-    GRAPHIC(LocalGraphic.class),
+    GRAPHIC,
 
     /**
      * A local non-registered sound.
      */
-    SOUND(LocalSound.class);
+    SOUND;
 
     /**
      * An immutable enum set of these values.
      */
     public static final Set<EntityType> ALL = Sets.immutableEnumSet(EnumSet.allOf(EntityType.class));
-
-    /**
-     * An immutable map of class types to matching entity types.
-     */
-    public static final ImmutableBiMap<Class<?>, EntityType> CLASS_TO_TYPE;
-
-    static {
-        ImmutableBiMap.Builder<Class<?>, EntityType> builder = ImmutableBiMap.builder();
-        for (EntityType type : values()) {
-            builder.put(type.classType, type);
-        }
-        CLASS_TO_TYPE = builder.build();
-    }
-
-    /**
-     * The class type.
-     */
-    private final Class<?> classType;
-
-    /**
-     * Creates a new {@link EntityType}.
-     *
-     * @param type The class type.
-     */
-    EntityType(Class<?> type) {
-        this.classType = type;
-    }
-
-    /**
-     * @return The class type.
-     */
-    public Class<?> getClassType() {
-        return classType;
-    }
 }

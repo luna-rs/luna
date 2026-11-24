@@ -2,6 +2,7 @@ package api.bot.script
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.luna.game.model.mob.Skill
 
 /**
  * A finite production goal whose purchase budget survives banking, child trades and saved sessions.
@@ -27,7 +28,8 @@ class ProductionPlan(
     val singlePurchaseBatch: Boolean = false,
     val refillVials: Boolean = false,
     val fixedTrainingBatch: Boolean = false,
-    val allowAcquisition: Boolean = true
+    val allowAcquisition: Boolean = true,
+    val barPurchase: Int? = null
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
         materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
@@ -63,7 +65,8 @@ class ProductionPlan(
     val remainingCoins: Long get() = (maximumCoins - spentCoins).coerceAtLeast(0L)
 
     init {
-        require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
+        val operationLimit = ProductionEconomics.operationLimit(goalSkill, training)
+        require(operations in 1..operationLimit)
         require(!refillVials || training && recipes.size == 2 && ratios.all { it == 1 } &&
             recipes.first().key.startsWith("unfinished:") && recipes.last().key.startsWith("potion:"))
         require(!fixedTrainingBatch || training && !refillVials)
@@ -73,13 +76,15 @@ class ProductionPlan(
         require(maximumUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
         require(recipes.size <= ProductionChainEconomics.MAX_STAGES && currentStageIndex in recipes.indices)
         require(ratios.size == recipes.size && (ratios.last() == 1 || fixedTrainingBatch))
-        require(ratios.all { it in 1..ProductionEconomics.MAX_OPERATIONS / operations })
+        require(ratios.all { it in 1..operationLimit / operations })
         stages = recipes.mapIndexed { index, native -> ProductionStage(native, ratios[index] * operations) }
         require(completedOperations in 0..currentStageOperations)
         require(recipes.all { native -> (native.materials.keys + native.tools).all { it in maximumUnitPrices } })
         require(attemptedMarketItems.size <= 64 && attemptedMarketItems.all { it in maximumUnitPrices })
         require(ProductionChainEconomics.aggregate(stages) != null)
         require(personalUsePrices.size <= 64 && personalUsePrices.all { (id, price) -> id >= 0 && price > 0L })
+        require(barPurchase == null || allowAcquisition && saleGuard == null && goalSkill == Skill.SMITHING &&
+            recipes.size == 1 && barPurchase in recipes.single().materials)
     }
 
     /**
@@ -111,10 +116,23 @@ class ProductionPlan(
      * spending limit and deadline.
      */
     internal fun limitVialRefillBatch(usable: Int) {
-        require(refillVials && currentStageIndex == 0 && completedOperations == 0 && usable in 1..operations)
+        require(refillVials)
+        limitUnstartedBatch(usable)
+    }
+
+    /**
+     * Commits only the whole Smithing operations covered by the bars actually obtained.
+     */
+    internal fun limitBarPurchaseBatch(usable: Int) {
+        require(barPurchase != null)
+        limitUnstartedBatch(usable)
+    }
+
+    private fun limitUnstartedBatch(usable: Int) {
+        require(currentStageIndex == 0 && completedOperations == 0 && usable in 1..operations)
         if (usable == operations) return
         operations = usable
-        stages = stages.map { it.copy(operations = usable) }
+        stages = stages.mapIndexed { index, stage -> stage.copy(operations = ratios[index] * usable) }
         targetCache = null
     }
 
@@ -173,6 +191,7 @@ class ProductionPlan(
         if (refillVials) data.addProperty("refill_vials", true)
         if (fixedTrainingBatch) data.addProperty("fixed_training_batch", true)
         if (!allowAcquisition) data.addProperty("allow_acquisition", false)
+        barPurchase?.let { data.addProperty("bar_purchase", it) }
         if (guardedOutputProduced > 0) data.addProperty("guarded_output", guardedOutputProduced)
         data.addProperty("completed", completedOperations)
         data.addProperty("maximum_coins", maximumCoins)
@@ -218,7 +237,7 @@ class ProductionPlan(
                 data.get("single_purchase_batch")?.asBoolean ?: false,
                 data.get("refill_vials")?.asBoolean ?: false,
                 data.get("fixed_training_batch")?.asBoolean ?: false,
-                data.get("allow_acquisition")?.asBoolean ?: true).also {
+                data.get("allow_acquisition")?.asBoolean ?: true, data.get("bar_purchase")?.asInt).also {
                 it.supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 it.shopAttempted = data.get("shop_attempted")?.asBoolean ?: false
                 it.guardedOutputProduced = data.get("guarded_output")?.asInt ?: 0

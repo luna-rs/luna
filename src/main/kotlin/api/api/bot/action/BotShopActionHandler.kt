@@ -88,7 +88,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     private class PurchaseBudget(var remainingCoins: Int, val maximumUnitPrices: Map<Int, Long>,
                                  val recordSpending: (Int) -> Unit,
                                  val productionLimits: Map<Int, BotTradeIntentions.ProductionPurchaseLimit>,
-                                 val foodIdentities: Map<Int, String>)
+                                 val foodIdentities: Map<Int, String>, val bankSupplies: Boolean = false)
 
     /**
      * Executes one price-protected GP purchase on the game thread through the native shop transaction.
@@ -397,7 +397,19 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     suspend fun obtainWantedItems(amounts: Map<Int, Int>, maximumCoins: Int,
                                   maximumUnitPrices: Map<Int, Long>,
-                                  recordSpending: (Int) -> Unit = {}): Set<Int> {
+                                  recordSpending: (Int) -> Unit = {}): Set<Int> =
+        obtainQuotedItems(amounts, maximumCoins, maximumUnitPrices, recordSpending, bankSupplies = false)
+
+    /**
+     * Buys under the production plan's limits, allowing a banked lot to span several inventories.
+     */
+    internal suspend fun obtainWantedItems(plan: ProductionPlan, bankSupplies: Boolean): Set<Int> =
+        obtainQuotedItems(plan.targets(), plan.remainingCoins.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+            plan.maximumUnitPrices, {}, bankSupplies)
+
+    private suspend fun obtainQuotedItems(amounts: Map<Int, Int>, maximumCoins: Int,
+                                          maximumUnitPrices: Map<Int, Long>, recordSpending: (Int) -> Unit,
+                                          bankSupplies: Boolean): Set<Int> {
         require(maximumCoins >= 0)
         require(maximumUnitPrices.values.all { it > 0L })
         val limits = amounts.keys.mapNotNull { id ->
@@ -406,7 +418,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         return obtainWantedItems(amounts,
             PurchaseBudget(maximumCoins, maximumUnitPrices.toMap(), recordSpending, limits,
                 amounts.keys.mapNotNull { id -> BotFoodDemand.identity(bot)?.takeIf { BotFoodDemand.handles(bot, id) }
-                    ?.let { id to it } }.toMap()))
+                    ?.let { id to it } }.toMap(), bankSupplies))
     }
 
     /**
@@ -435,7 +447,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         require(amounts.values.all { it > 0 })
         val targets = amounts.toMap()
         fun acquired() = targets.filter { (id, amount) ->
-            bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount
+            supplyCount(id, budget?.bankSupplies == true) >= amount
         }.keys
         val owner = if (budget == null) bot.scriptStack.current()?.takeUnless { it is TradeBotScript } else null
         val attempted = owner?.let { supplyAttempts.getOrPut(it) { hashMapOf() } }
@@ -510,6 +522,9 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Attempts one target while preserving the rest of the basket during banking.
      */
     private suspend fun acquireWantedItem(id: Int, amount: Int, basket: Set<Int>, budget: PurchaseBudget?): Boolean {
+        if (budget?.bankSupplies == true) {
+            return supplyCount(id, bankSupplies = true) >= amount || acquireQuotedItem(id, amount, basket, budget)
+        }
         fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
         if (carried() >= amount) return true
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
@@ -585,15 +600,20 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         return handler.banking.withdraw(Item(id, banked))
     }
 
+    private fun supplyCount(id: Int, bankSupplies: Boolean): Long =
+        if (bankSupplies) bot.totalItemAmount(id).toLong()
+        else bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
+
     /**
-     * Preserves the basket while staging only authorized GP, refreshing quotes after each suspension.
+     * Stages only authorized GP and banks a bulk lot when more shop inventory space is needed.
      * Native quoted purchases cannot race another queued shop click between price validation and payment.
      */
     private suspend fun acquireQuotedItem(id: Int, amount: Int, basket: Set<Int>, budget: PurchaseBudget): Boolean {
         val ceiling = budget.maximumUnitPrices[id] ?: return false
         val coins = Currency.COINS.id
         if (id == coins || budget.remainingCoins < 1) return false
-        fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
+        val keep = if (budget.bankSupplies) setOf(coins) else basket + coins
+        fun owned() = supplyCount(id, budget.bankSupplies)
         val shops = world.shops.values().filter {
             it.currency == Currency.COINS && it.npcSellers.isNotEmpty() && it.items.computeAmountForId(it.stockIdFor(id)) > 0
         }.mapNotNull { shop -> shopDistance(shop)?.let { shop to it } }
@@ -603,7 +623,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         bot.actions.interruptWeak()
         bot.overlays.closeWindows()
         for (shop in shops) {
-            while (carried() < amount && budget.remainingCoins > 0) {
+            while (owned() < amount && budget.remainingCoins > 0) {
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
                 val stockId = shop.stockIdFor(id)
                 if (shop.items.computeAmountForId(stockId) < 1) break
@@ -615,9 +635,9 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                     if (!handler.banking.travelToBankOpen() || !ActionSafety.NON_COMBAT.await(bot)) break
                     handler.banking.clickBankingMode(false)
                     if (!bot.inventory.hasSpaceForAll(listOf(Item(stockId), Item(coins))) &&
-                        !handler.banking.depositInventory(basket + coins)) break
+                        !handler.banking.depositInventory(keep)) break
                     if (!ActionSafety.NON_COMBAT.await(bot)) return false
-                    if (carried() >= amount) return true
+                    if (owned() >= amount) return true
                     val wallet = minOf(budget.remainingCoins.toLong(),
                         bot.inventory.computeAmountForId(coins).toLong() + bot.bank.computeAmountForId(coins))
                     val missing = (wallet - bot.inventory.computeAmountForId(coins)).coerceAtLeast(0L).toInt()
@@ -625,7 +645,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                 }
                 if (!ActionSafety.NON_COMBAT.await(bot)) return false
                 if (travelToShop(shop) == null) break
-                val before = carried()
+                val before = owned()
                 val production = BotTradeIntentions.productionLimit(bot, id)
                 val captured = budget.productionLimits[id]
                 if (captured != null && (production == null || production.expires != captured.expires ||
@@ -657,11 +677,11 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                 budget.remainingCoins = (budget.remainingCoins - spent).coerceAtLeast(0)
                 if (spent > 0) budget.recordSpending(spent)
                 if (!bought) break
-                if (stockId != id && !withdrawWantedStock(id, amount, basket)) break
-                if (carried() <= before) break
+                if (!budget.bankSupplies && stockId != id && !withdrawWantedStock(id, amount, basket)) break
+                if (owned() <= before) break
                 delay(1.seconds)
             }
-            if (carried() >= amount) return true
+            if (owned() >= amount) return true
         }
         return false
     }

@@ -337,14 +337,11 @@ public final class CollisionFlag {
      * @return The flags that block that movement.
      */
     static int blocks(EntityType type, int directionId) {
-        switch (type) {
-            case PROJECTILE:
-                return PROJECTILE_BLOCKS[directionId];
-            case NPC:
-                return MOB_BLOCKS[directionId] | NPC_BLOCKS;
-            default:
-                return MOB_BLOCKS[directionId];
-        }
+        return switch (type) {
+            case PROJECTILE -> PROJECTILE_BLOCKS[directionId];
+            case NPC -> MOB_BLOCKS[directionId] | NPC_BLOCKS;
+            default -> MOB_BLOCKS[directionId];
+        };
     }
 
     /**

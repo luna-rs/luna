@@ -2,42 +2,45 @@ package game.skill.cooking.cookFood
 
 import api.predef.*
 import api.predef.ext.*
+import game.skill.cooking.cookFood.Cooking.COOKING_OBJECTS
 import game.skill.cooking.cookFood.Cooking.FIRES
-import game.skill.cooking.cookFood.Cooking.RANGES
 import game.skill.cooking.cookFood.MakeWineActionItem.Companion.wineFermentTask
 import io.luna.game.event.impl.LoginEvent
-import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
+import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.`object`.GameObject
 
 /**
- * Opens the [CookingInterface] if the food is non-null.
+ * Opens the [CookingInterface] if the recipe accepts the cooking source.
  */
-fun open(msg: ItemOnObjectEvent, obj: GameObject, food: Food?, usingFire: Boolean) {
-    if (food != null) {
-        if (!food.cooksOn(obj.id)) {
-            msg.plr.sendMessage(if (food == Food.BAKED_POTATO) "This has to be cooked on a range." else food.source.refusal)
-            return
-        }
-        val interfaces = msg.plr.overlays
-        interfaces.open(CookingInterface(food, usingFire, obj))
+fun open(plr: Player, obj: GameObject, food: Food) {
+    if (!food.cooksOn(obj.id)) {
+        plr.sendMessage(if (food == Food.BAKED_POTATO) "This has to be cooked on a range." else food.source.refusal)
+        return
     }
+    plr.overlays.open(CookingInterface(food, obj.id in FIRES, obj))
 }
 
 /**
- * Starts the [CookFoodActionItem] if [CookingInterface] is open.
+ * Starts the [CookFoodActionItem] if the selected cooking source is still within reach.
  */
 fun cook(plr: Player, amount: Int? = null) {
-    val inter = plr.overlays[CookingInterface::class]
-    if (inter != null) {
-        val food = inter.food
-        val usingFire = inter.usingFire
-        val newAmt = amount ?: plr.inventory.computeAmountForId(food.raw)
-        // Close the menu now, so another click in the same tick finds it shut and starts nothing.
-        plr.overlays.closeWindows(false)
-        plr.submitAction(CookFoodActionItem(plr, inter.cookObj, food, usingFire, newAmt))
+    val inter = plr.overlays[CookingInterface::class] ?: return
+    // Close the menu now, so another click in the same tick finds it shut and starts nothing.
+    plr.overlays.closeWindows(false)
+
+    val cookObj = inter.cookObj
+    if (cookObj.state != EntityState.ACTIVE ||
+        !world.collisionManager.reached(plr, cookObj, InteractionPolicy.STANDARD_SIZE)) {
+        plr.sendMessage("I can't reach that!")
+        return
     }
+
+    val food = inter.food
+    val newAmt = amount ?: plr.inventory.computeAmountForId(food.raw)
+    plr.submitAction(CookFoodActionItem(plr, cookObj, food, inter.usingFire, newAmt))
 }
 
 /**
@@ -51,13 +54,11 @@ on(LoginEvent::class) {
 /**
  * Use raw food on fire and stove.
  */
-on(ItemOnObjectEvent::class)
-    .filter { FIRES.contains(objectId) }
-    .then { open(this, gameObject, Food.RAW_TO_FOOD[usedItemId], true) }
-
-on(ItemOnObjectEvent::class)
-    .filter { RANGES.contains(objectId) }
-    .then { open(this, gameObject, Food.RAW_TO_FOOD[usedItemId], false) }
+Food.RAW_TO_FOOD.forEach { (rawId, food) ->
+    COOKING_OBJECTS.forEach { sourceId ->
+        useItem(rawId).onObject(sourceId) { open(plr, gameObject, food) }
+    }
+}
 
 /**
  * Button clicks from the [CookingInterface].

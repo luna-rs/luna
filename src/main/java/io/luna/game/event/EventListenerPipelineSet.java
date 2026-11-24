@@ -53,7 +53,7 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     @SuppressWarnings("unchecked")
     public <E extends Event> EventListenerPipeline<E> get(Class<E> eventType) {
         EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(eventType.getSimpleName(),
-                key -> new EventListenerPipeline<>(eventType));
+                key -> new EventListenerPipeline<>());
         return (EventListenerPipeline<E>) pipeline;
     }
 

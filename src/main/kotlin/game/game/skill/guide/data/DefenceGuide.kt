@@ -15,7 +15,7 @@ val defenceGuide = skillGuide("Defence") {
         row(20, 1159, "Mithril armour")
         row(30, 1161, "Adamant armour")
         row(40, 1163, "Rune armour")
-        row(40, 1127, "Rune platebody, after Dragon Slayer")
+        row(40, 1127, "Rune platebody")
         row(45, 3751, "Fremennik helms")
         row(50, 6809, "Granite armour")
         row(60, 1149, "Dragon armour")

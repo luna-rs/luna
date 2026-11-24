@@ -6,6 +6,7 @@ import api.bot.script.ReflexBotScript
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
 import api.predef.ext.*
+import game.bot.scripts.combat.CombatBotScript
 import game.bot.scripts.skills.MineBotScript
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
@@ -162,6 +163,9 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
 
         // A locked or busy bot can't pick anything up yet.
         if (bot.health < 1 || !ActionSafety.COMBAT.allows(bot)) {
+            return false
+        }
+        if ((bot.scriptStack.current() as? CombatBotScript)?.handlesVictoryLoot() == true) {
             return false
         }
         if (!bot.inventory.isFull) {

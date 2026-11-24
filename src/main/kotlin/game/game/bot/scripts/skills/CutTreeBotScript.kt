@@ -3,9 +3,11 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
 import api.bot.webwalk.plan.BankAccess
+import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotGatheringTools
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
+import api.bot.script.ProductionPlan
 import api.bot.social.SocialBotScript
 import engine.bot.speech.BotConversationPool.ConversationSpeech
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -14,6 +16,7 @@ import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.BotProductionPlanner
 import engine.bot.coordinator.skill.FiremakingScriptFactory
 import engine.bot.coordinator.skill.FletchingScriptFactory
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.profitMode
@@ -31,6 +34,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import java.util.*
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -49,7 +53,9 @@ import kotlin.time.Duration.Companion.seconds
  * @param zones The candidate zones this script may operate in.
  * @author lare96
  */
-class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones: MutableList<SubZone>) :
+class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones: MutableList<SubZone>,
+                       private val logTrainingPlan: ProductionPlan? = null,
+                       private val logTrainingDuration: Duration = Duration.ZERO) :
     SkillingBotScript<GameObject>(bot, duration, zones, bot.woodcutting), SocialBotScript {
 
     override fun wildernessNotingItems(): Set<Int> =
@@ -100,17 +106,25 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
             var trees = emptySet<Tree>()
 
             /**
-             * The Firemaking preparation stock target; old Woodcutting snapshots remain ordinary sessions.
+             * The full native Firemaking or Fletching visit that will use these logs.
              */
+            var logTrainingPlan: ProductionPlan? = null
+            var logTrainingDuration = Duration.ZERO
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 trees = loadEnumSet("trees", data) { Tree.valueOf(it) }
+                logTrainingPlan = data.getAsJsonObject("log_training_plan")?.let(ProductionPlan::load)
+                logTrainingDuration = (data.get("log_training_millis")?.asLong ?: 0L).milliseconds
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 saveEnumSet("trees", data, trees)
+                logTrainingPlan?.let {
+                    data.add("log_training_plan", it.save())
+                    data.addProperty("log_training_millis", logTrainingDuration.inWholeMilliseconds)
+                }
             }
         }
     }
@@ -122,7 +136,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
      * @param data The saved Woodcutting script data to restore from.
      */
     constructor(bot: Bot, data: CutTreeData) :
-        this(bot, data.trees, data.duration, data.zones)
+        this(bot, data.trees, data.duration, data.zones, data.logTrainingPlan, data.logTrainingDuration)
 
     /**
      * The live tree object ids that match the configured [trees].
@@ -150,7 +164,8 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     private val hardwood = trees.any { it == Tree.TEAK || it == Tree.MAHOGANY }
 
     override fun requirements(): Boolean {
-        return treeIds.isNotEmpty() && (!hardwood || groveSuppliesOwned(bot) ||
+        return logTrainingPlan?.let(::logTrainingActive) != false &&
+            treeIds.isNotEmpty() && (!hardwood || groveSuppliesOwned(bot) ||
             SubZone.TAI_BWO_WANNAI_HARDWOOD_GROVE.area.contains(bot.position))
     }
 
@@ -173,6 +188,10 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     }
 
     override suspend fun beforeZoneWork(): Boolean {
+        if (logTrainingPlan != null && (!logTrainingActive(logTrainingPlan) || logTrainingReady(logTrainingPlan))) {
+            duration = Duration.ZERO
+            return true
+        }
         if (hardwood && !SubZone.TAI_BWO_WANNAI_HARDWOOD_GROVE.area.contains(bot.position) &&
             bot.inventory.computeAmountForId(HardwoodGrove.STICKS) < HardwoodGrove.FEE &&
             GROVE_GEMS.none { it in bot.inventory }) {
@@ -273,10 +292,37 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         data.duration = duration
         data.zones = originalZones.toMutableList()
         data.trees = trees
+        data.logTrainingPlan = logTrainingPlan
+        data.logTrainingDuration = logTrainingDuration
         return data
     }
 
+    private fun logTrainingActive(plan: ProductionPlan): Boolean =
+        plan.deadline > System.currentTimeMillis() && BotCombatActionHandler.wantsToTrain(bot, plan.goalSkill)
+
+    private fun logTrainingReady(plan: ProductionPlan): Boolean =
+        plan.recipe.materials.all { (id, amount) -> bot.itemTracker.count(id) >= amount * plan.operations }
+
+    override suspend fun finish() {
+        if (logTrainingPlan != null) bot.actions.first(CutTreeAction::class.java)?.interrupt()
+    }
+
     override suspend fun completed() {
+        if (logTrainingPlan != null) {
+            if (!logTrainingActive(logTrainingPlan)) return
+            if (logTrainingReady(logTrainingPlan)) {
+                BotProductionPlanner.continuePlan(bot, logTrainingPlan, logTrainingDuration)
+                    ?.let { bot.scriptStack.softPushHead(it) }
+            } else BotProductionPlanner.unavailable(bot, logTrainingPlan)
+            return
+        }
+        if (!bot.profitMode && bot.scriptStack.scripts.none { it is FiremakingBotScript }) {
+            val stocked = BotProductionPlanner.stockedFiremaking(bot)
+            if (stocked != null) {
+                bot.scriptStack.softPushHead(stocked)
+                return
+            }
+        }
         // Chance to burn the logs we chopped, more likely for bots that like Firemaking. Burning logs never makes
         // money, so bots chopping for profit keep them.
         val firemakingChance = if (SKILL_FIREMAKING in bot.preferences.skills) 0.5 else 0.2

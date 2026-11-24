@@ -99,8 +99,11 @@ abstract class SkillingScriptFactory(val skillId: Int) {
                 StarterLeatherBotScript.select(bot, level, getDuration(bot, skillId))?.let { return it }
             if (skillId == SKILL_COOKING && !training)
                 CookingScriptFactory.getOwnedMillingScript(bot)?.let { return it }
-            return BotProductionPlanner.select(bot, skillId, level, training, getDuration(bot, skillId))
-                ?: VoidBotScript(bot)
+            val duration = getDuration(bot, skillId)
+            return BotProductionPlanner.select(bot, skillId, level, training, duration)
+                ?: if (skillId == SKILL_FLETCHING && training)
+                    BotProductionPlanner.collectTrainingLogs(bot, skillId, level, duration) ?: VoidBotScript(bot)
+                else VoidBotScript(bot)
         }
         return if (training) {
             getTrainingScript(bot, level, zones)

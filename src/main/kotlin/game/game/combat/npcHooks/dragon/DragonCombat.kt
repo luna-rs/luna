@@ -101,8 +101,8 @@ object DragonCombat {
      * Supplies one mixed native attack without selecting an outcome or changing the mode during cooldown/pursuit.
      */
     internal fun attack(receiver: NpcAttackCombatHookReceiver, metal: Boolean,
-                        random: Random = ThreadLocalRandom.current()): CombatAttack<out Npc> = with(receiver) {
-        Attack(npc, other, metal, encounter(npc, other, metal), random)
+                        random: Random = ThreadLocalRandom.current(), elvarg: Boolean = false): CombatAttack<out Npc> = with(receiver) {
+        Attack(npc, other, metal, encounter(npc, other, metal), random, elvarg)
     }
 
     /**
@@ -113,8 +113,9 @@ object DragonCombat {
      * @author lare96
      */
     private class Attack(npc: Npc, victim: Mob, private val metal: Boolean,
-                         private val encounter: Encounter, private val random: Random) :
-        DragonFireCombatAttack(npc, victim, range = 5) {
+                         private val encounter: Encounter, private val random: Random, elvarg: Boolean) :
+        DragonFireCombatAttack(npc, victim, range = if (elvarg && encounter.mode == Mode.MELEE) 1 else 5,
+            elvarg = elvarg, distantElvargFire = elvarg && encounter.mode == Mode.FIRE) {
 
         /**
          * The current attack is captured during damage preparation; its next mode is committed by onAttack.
