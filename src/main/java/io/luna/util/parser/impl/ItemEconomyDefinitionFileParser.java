@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.ItemEconomyDefinition;
+import io.luna.game.model.item.economy.EconomySeedOverrides;
 import io.luna.game.model.mob.bot.brain.BotPkPreference;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
@@ -63,7 +64,7 @@ public final class ItemEconomyDefinitionFileParser extends JsonFileParser<ItemEc
         var definitions = eligible.build();
         ItemEconomyDefinition.ALL.storeAndLock(definitions);
         try {
-            io.luna.game.model.item.economy.EconomySeedOverrides.load();
+           EconomySeedOverrides.load();
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

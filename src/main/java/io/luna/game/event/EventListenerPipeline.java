@@ -38,11 +38,6 @@ public final class EventListenerPipeline<E extends Event> {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The concrete event type routed through this pipeline.
-     */
-    private final Class<E> eventType;
-
-    /**
      * The single high-priority listener for this event type.
      * <p>
      * This listener always executes first and is typically reserved for the event's primary or default behavior.
@@ -76,11 +71,8 @@ public final class EventListenerPipeline<E extends Event> {
 
     /**
      * Creates a new {@link EventListenerPipeline} for a specific event type.
-     *
-     * @param eventType The concrete event type routed through this pipeline.
      */
-    public EventListenerPipeline(Class<E> eventType) {
-        this.eventType = eventType;
+    public EventListenerPipeline() {
         matcher = EventMatcher.defaultMatcher();
     }
 

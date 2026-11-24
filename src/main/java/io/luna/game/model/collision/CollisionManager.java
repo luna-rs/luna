@@ -632,14 +632,22 @@ public final class CollisionManager {
         switch (policy.getType()) {
             case SIZE:
                 if (distance == 1) {
-                    if (target instanceof GroundItem) {
-                        // The 377 client retries ground-item routes with a 1-by-1 rectangle, without an object lookup.
-                        return matrices.reachedFacingEntity(start, (GroundItem) target, 1, 1, OptionalInt.empty());
-                    } else if (target instanceof Mob) {
-                        return reachedMob(source, (Mob) target, matrices);
-                    } else if (target instanceof GameObject) {
-                        // Check if we're right beside an object.
-                        return matrices.reachedObject(start, (GameObject) target);
+                    switch (target) {
+                        case GroundItem groundItem -> {
+                            // The 377 client retries ground-item routes with a 1-by-1 rectangle, without an object lookup.
+                            return matrices.reachedFacingEntity(start, groundItem, 1, 1, OptionalInt.empty());
+                            // The 377 client retries ground-item routes with a 1-by-1 rectangle, without an object lookup.
+                        }
+                        case Mob mob -> {
+                            return reachedMob(source, mob, matrices);
+                        }
+                        case GameObject gameObject -> {
+                            // Check if we're right beside an object.
+                            return matrices.reachedObject(start, gameObject);
+                            // Check if we're right beside an object.
+                        }
+                        default -> {
+                        }
                     }
                 } else if (target instanceof GameObject) {
                     // Check if we're within box distance of an object (based on its size).
