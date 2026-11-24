@@ -1274,7 +1274,8 @@ class TradeBotScript(bot: Bot,
             }
             saleTarget != null -> listOfNotNull(BotTradeManager.computeTargetedSaleItem(bot, strategy, saleTarget)
                 ?.takeIf { BotTradeManager.hasNativeSaleStock(bot, saleTarget, it.item.amount) })
-            !buying -> BotTradeManager.computeOfferItems(bot, strategy, purpose, nativeTrade = true)
+            !buying -> BotTradeManager.computeOfferItems(bot, strategy, purpose, nativeTrade = true,
+                routineSale = ordinaryVisit)
             else -> BotTradeManager.computeBudgetedOfferItems(bot, strategy, purpose)
                 .filter { purchaseTarget == null || it.item.id == COINS }
         }
