@@ -173,10 +173,7 @@ object BotProductionPlanner {
 
     private fun fullLogOperations(bot: Bot, recipe: ProductionRecipe, duration: Duration): Int {
         val load = batchCapacity(recipe, bot.inventory.capacity())
-        if (load <= 0) return 0
-        val ticks = if (recipe.skill == SKILL_FIREMAKING) 6.0 else processingTicks(recipe)
-        val capacity = (duration.inWholeMilliseconds / (600.0 * (ticks + 30.0 / load))).toInt()
-            .coerceIn(1, ProductionEconomics.MAX_OPERATIONS)
+        val capacity = workCapacity(recipe, load, duration.inWholeMilliseconds, ProductionEconomics.MAX_OPERATIONS)
         return minOf(capacity, ceil(trainingExperienceRemaining(bot, recipe.skill) / recipe.experience).toInt())
     }
 
@@ -325,6 +322,9 @@ object BotProductionPlanner {
         }
         val prices = HashMap<Int, Long>()
         val runecrafting = skill == SKILL_RUNECRAFTING
+        val bankedRunecrafting = runecrafting && training
+        val operationLimit = ProductionEconomics.operationLimit(skill, training)
+        val workMillis = minOf(duration.inWholeMilliseconds, deadlineLimit - now)
         val runeSources = HashMap<Int, RuneSupply?>()
         fun runeSource(id: Int): RuneSupply? {
             if (!runeSources.containsKey(id)) runeSources[id] = runeSupply(bot, id)
@@ -392,7 +392,8 @@ object BotProductionPlanner {
             } else ids.associateWith { id -> if (fixedTrainingBatch) 1L else ceiling(id) }.toMutableMap()
             val inventorySize = bot.inventory.capacity()
             val capacity = if (path.stages.size == 1) {
-                batchCapacity(recipe, inventorySize)
+                val load = batchCapacity(recipe, inventorySize)
+                if (bankedRunecrafting) workCapacity(recipe, load, workMillis, operationLimit) else load
             } else {
                 // A chain can bank between operations and stages. No single native operation can exceed one load.
                 if (path.stages.any { batchCapacity(it.recipe, inventorySize) == 0 }) 0
@@ -404,8 +405,8 @@ object BotProductionPlanner {
             }.keys.associateWith { goals.prices.getValue(it) }
             val useLimit = usePrices.keys.minOfOrNull { id ->
                 goals.quantities.getValue(id) / recipe.products.getValue(id)
-            } ?: ProductionEconomics.MAX_OPERATIONS
-            var requested = minOf(capacity, stockLimit ?: ProductionEconomics.MAX_OPERATIONS, useLimit)
+            } ?: operationLimit
+            var requested = minOf(capacity, stockLimit ?: operationLimit, useLimit)
             if (singlePurchaseBatch) requested = minOf(requested, 1)
             if (training && requested > 0) {
                 requested = ProductionRecipePaths.trainingOperationLimit(path.stages, requested,
@@ -450,7 +451,7 @@ object BotProductionPlanner {
             if (runecrafting) {
                 for ((id, amount) in recipe.materials) {
                     val available = (stock[id] ?: 0L) + (runeSource(id)?.quantity ?: 0L)
-                    requested = minOf(requested, (available / amount).coerceAtMost(100L).toInt())
+                    requested = minOf(requested, (available / amount).coerceAtMost(operationLimit.toLong()).toInt())
                 }
                 if (requested < 1) {
                     lastRejection = Reason.MATERIALS_UNAVAILABLE
@@ -573,7 +574,7 @@ object BotProductionPlanner {
             bot.personality.isDumb && randBoolean() -> preferred.last()
             else -> preferred.take(8).random()
         }
-        val deadline = minOf(deadlineLimit, now + minOf(duration.inWholeMilliseconds, 10 * 60_000L))
+        val deadline = now + if (bankedRunecrafting) workMillis else minOf(workMillis, 10 * 60_000L)
         val plan = ProductionPlan(chosen.path.stages.first().recipe, training, chosen.quote.operations,
             chosen.quote.maximumCoins, chosen.caps, deadline,
             continuationRecipes = chosen.path.stages.drop(1).map { it.recipe }, personalUsePrices = chosen.usePrices,
@@ -820,6 +821,12 @@ object BotProductionPlanner {
             SkillSet.experienceForLevel(level).toDouble()
         }
         return (target - bot.skill(skill).experience).coerceAtLeast(0.0)
+    }
+
+    private fun workCapacity(recipe: ProductionRecipe, load: Int, millis: Long, maximum: Int): Int {
+        if (load <= 0) return 0
+        val ticks = if (recipe.skill == SKILL_FIREMAKING) 6.0 else processingTicks(recipe)
+        return (millis / (600.0 * (ticks + 30.0 / load))).toInt().coerceIn(1, maximum)
     }
 
     private fun batchCapacity(recipe: ProductionRecipe, inventorySize: Int): Int {

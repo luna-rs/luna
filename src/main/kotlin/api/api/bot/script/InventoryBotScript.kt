@@ -757,22 +757,42 @@ abstract class InventoryBotScript(
         BotTradeIntentions.recordProductionPlan(bot, plan, this)
         val now = System.currentTimeMillis()
         if (plan.supplyDeadline == 0L) plan.supplyDeadline = minOf(plan.deadline, now + SUPPLY_TRIP_TIMEOUT.inWholeMilliseconds)
-        if (plan.targets().keys.any { id ->
+        suspend fun normalizeNotes(): Boolean {
+            val hasNotes = plan.targets().keys.any { id ->
                 val note = itemDef(id).notedId.orElse(-1)
                 note >= 0 && bot.inventory.contains(note)
-            }) {
-            val normalized = withTimeoutOrNull((minOf(plan.deadline, now + SUPPLY_TRIP_TIMEOUT.inWholeMilliseconds) - now).coerceAtLeast(1L)) {
+            }
+            if (!hasNotes) return true
+            val remaining = minOf(plan.deadline - System.currentTimeMillis(), SUPPLY_TRIP_TIMEOUT.inWholeMilliseconds)
+            val normalized = withTimeoutOrNull(remaining.coerceAtLeast(1L)) {
                 handler.banking.travelToBankDepositAll()
             } == true
-            if (!normalized || !awaitActionSafety()) { stopPlannedProduction(); return false }
+            if (normalized && awaitActionSafety()) return true
+            stopPlannedProduction()
+            return false
         }
+        if (!normalizeNotes()) return false
+        val bankedRunecrafting = plan.training && plan.recipe.skill == SKILL_RUNECRAFTING
         fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
         fun supplied() = if (plan.recipes.size > 1 || plan.fixedTrainingBatch) plan.targets().all { (id, amount) -> owned(id) >= amount }
             else plan.recipe.materials.all { (id, amount) -> owned(id) >= amount } &&
                 plan.recipe.tools.all { owned(it) > 0L }
-        if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
+        fun ready() = supplied() && BotProductionPlanner.remainsUseful(bot, plan)
+        fun needsRunecraftingSupplies() = bankedRunecrafting && System.currentTimeMillis() < plan.supplyDeadline &&
+            plan.targets().any { (id, target) -> owned(id) < target && id !in plan.attemptedMarketItems }
+        suspend fun buyFromShops(): Boolean {
+            if (!plan.fixedTrainingBatch) plan.shopAttempted = true
+            withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
+                if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
+                    handler.shop.obtainWantedItems(plan, bankSupplies = bankedRunecrafting)
+            }
+            plan.shopAttempted = true
+            return !bankedRunecrafting || normalizeNotes()
+        }
+        if (!needsRunecraftingSupplies() && ready()) return true
         onPlannedAcquisition(plan)
         if (!awaitActionSafety() || System.currentTimeMillis() >= plan.supplyDeadline) {
+            if (bankedRunecrafting && isActionSafe() && ready()) return true
             if (queueMissingPlannedPreparation(plan)) return false
             if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
                 BotProductionPlanner.unavailable(bot, plan)
@@ -788,14 +808,8 @@ abstract class InventoryBotScript(
                     it.maximumUnitPrice <= (plan.maximumUnitPrices[id] ?: 0L) &&
                         it.maximumUnitPrice <= plan.remainingCoins
                 } == true }) {
-            if (!plan.fixedTrainingBatch) plan.shopAttempted = true
-            withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
-                if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
-                    handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
-                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
-            }
-            plan.shopAttempted = true
-            if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
+            if (!buyFromShops()) return false
+            if (!needsRunecraftingSupplies() && ready()) return true
         }
         for ((id, target) in plan.targets()) {
             if (owned(id) >= target || !plan.attemptedMarketItems.add(id)) continue
@@ -803,15 +817,10 @@ abstract class InventoryBotScript(
             if (handler.shop.obtainWantedItem(plan, id, target, duration)) return false
         }
         if (!plan.shopAttempted && System.currentTimeMillis() < plan.supplyDeadline) {
-            if (!plan.fixedTrainingBatch) plan.shopAttempted = true
-            withTimeoutOrNull((plan.supplyDeadline - System.currentTimeMillis()).coerceAtLeast(1L)) {
-                if (awaitActionSafety() && BotProductionPlanner.remainsUseful(bot, plan))
-                    handler.shop.obtainWantedItems(plan.targets(), plan.remainingCoins
-                        .coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), plan.maximumUnitPrices)
-            }
-            plan.shopAttempted = true
-            if (supplied() && BotProductionPlanner.remainsUseful(bot, plan)) return true
+            if (!buyFromShops()) return false
+            if (ready()) return true
         }
+        if (bankedRunecrafting && isActionSafe() && ready()) return true
         if (queueMissingPlannedPreparation(plan)) return false
         if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
             BotProductionPlanner.unavailable(bot, plan)

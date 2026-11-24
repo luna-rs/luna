@@ -63,7 +63,8 @@ class ProductionPlan(
     val remainingCoins: Long get() = (maximumCoins - spentCoins).coerceAtLeast(0L)
 
     init {
-        require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
+        val operationLimit = ProductionEconomics.operationLimit(goalSkill, training)
+        require(operations in 1..operationLimit)
         require(!refillVials || training && recipes.size == 2 && ratios.all { it == 1 } &&
             recipes.first().key.startsWith("unfinished:") && recipes.last().key.startsWith("potion:"))
         require(!fixedTrainingBatch || training && !refillVials)
@@ -73,7 +74,7 @@ class ProductionPlan(
         require(maximumUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
         require(recipes.size <= ProductionChainEconomics.MAX_STAGES && currentStageIndex in recipes.indices)
         require(ratios.size == recipes.size && (ratios.last() == 1 || fixedTrainingBatch))
-        require(ratios.all { it in 1..ProductionEconomics.MAX_OPERATIONS / operations })
+        require(ratios.all { it in 1..operationLimit / operations })
         stages = recipes.mapIndexed { index, native -> ProductionStage(native, ratios[index] * operations) }
         require(completedOperations in 0..currentStageOperations)
         require(recipes.all { native -> (native.materials.keys + native.tools).all { it in maximumUnitPrices } })
