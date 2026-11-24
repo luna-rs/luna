@@ -35,26 +35,26 @@ fun ask(plr: Player) {
                  "What does a Sherpa do?", {
                      it.newDialogue()
                          .player("What does a Sherpa do?")
-                         .npc(TENZING, "We are expert guides that take adventurers, such as yourself, on " +
-                                       "mountaineering expeditions.")
+                         .npc(TENZING, "We are expert guides that take adventurers, such as",
+                              "yourself, on mountaineering expeditions.")
                          .then { plr -> askAgain(plr) }
                          .open()
                  },
                  "How did you find out about the secret way?", {
                      it.newDialogue()
                          .player("How did you find out about the secret way?")
-                         .npc(TENZING, "I used to take adventurers up Death Plateau and further north before the " +
-                                       "trolls came. I know these mountains well.")
+                         .npc(TENZING, "I used to take adventurers up Death Plateau and",
+                              "further north before the trolls came. I know these", "mountains well.")
                          .then { plr -> askAgain(plr) }
                          .open()
                  },
                  "Nice place you have here.", {
                      it.newDialogue()
                          .player("Nice place you have here.")
-                         .npc(TENZING, "Thanks, I built it myself! I'm usually self sufficient but I can't earn any " +
-                                       "money with the trolls camped on Death Plateau.")
-                         .player("Now that the Imperial Guard know about the secret way they will be able to " +
-                                 "destroy the trolls!")
+                         .npc(TENZING, "Thanks, I built it myself! I'm usually self sufficient but",
+                              "I can't earn any money with the trolls camped on", "Death Plateau.")
+                         .player("Now that the Imperial Guard know about the secret",
+                                 "way they will be able to destroy the trolls!")
                          .npc(TENZING, "Let us hope so traveller!")
                          .then { plr -> askAgain(plr) }
                          .open()

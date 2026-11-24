@@ -70,13 +70,16 @@ public final class DialogueQueueBuilder {
     }
 
     /**
-     * Shortcut to {@link PlayerDialogue#PlayerDialogue(Expression, String...)}.
+     * Shortcut to {@link PlayerDialogue#PlayerDialogue(Expression, String...)}. Text too wide for the box is
+     * wrapped, continuing in more boxes when needed.
      *
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder player(Expression expression, String... text) {
         checkLocked();
-        dialogues.add(new PlayerDialogue(expression, text));
+        for (String[] lines : DialogueUtils.chatBoxes(text)) {
+            dialogues.add(new PlayerDialogue(expression, lines));
+        }
         return this;
     }
 
@@ -91,24 +94,30 @@ public final class DialogueQueueBuilder {
     }
 
     /**
-     * Shortcut to {@link NpcDialogue#NpcDialogue(int, int, String...)}.
+     * Shortcut to {@link NpcDialogue#NpcDialogue(int, int, String...)}. Text too wide for the box is wrapped,
+     * continuing in more boxes when needed.
      *
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder npc(int npcId, int expression, String... text) {
         checkLocked();
-        dialogues.add(new NpcDialogue(npcId, expression, text));
+        for (String[] lines : DialogueUtils.chatBoxes(text)) {
+            dialogues.add(new NpcDialogue(npcId, expression, lines));
+        }
         return this;
     }
 
     /**
-     * Shortcut to {@link NpcDialogue#NpcDialogue(int, Expression, String...)}.
+     * Shortcut to {@link NpcDialogue#NpcDialogue(int, Expression, String...)}. Text too wide for the box is
+     * wrapped, continuing in more boxes when needed.
      *
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder npc(int npcId, Expression expression, String... text) {
         checkLocked();
-        dialogues.add(new NpcDialogue(npcId, expression, text));
+        for (String[] lines : DialogueUtils.chatBoxes(text)) {
+            dialogues.add(new NpcDialogue(npcId, expression, lines));
+        }
         return this;
     }
 
@@ -123,13 +132,16 @@ public final class DialogueQueueBuilder {
     }
 
     /**
-     * Shortcut to {@link TextDialogue#TextDialogue(String...)}.
+     * Shortcut to {@link TextDialogue#TextDialogue(String...)}. Text too wide for the box is wrapped, continuing in
+     * more boxes when needed.
      *
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder text(String... text) {
         checkLocked();
-        dialogues.add(new TextDialogue(text));
+        for (String[] lines : DialogueUtils.textBoxes(text)) {
+            dialogues.add(new TextDialogue(lines));
+        }
         return this;
     }
 

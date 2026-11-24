@@ -141,7 +141,7 @@ internal class BotShopVisits(private val bot: Bot, private val handler: BotActio
                         val accepted = when (page) {
                             is NpcDialogue -> page.npcId == npc.id && reply != null && bot.output.sendContinueDialogue()
                             is OptionDialogue -> !selectedReply && reply != null && handler.widgets.clickDialogueOption(reply)
-                            is PlayerDialogue -> selectedReply && page.lines == listOf(reply) && bot.output.sendContinueDialogue()
+                            is PlayerDialogue -> selectedReply && page.lines.joinToString(" ") == reply && bot.output.sendContinueDialogue()
                             else -> false
                         }
                         handledPage = page
