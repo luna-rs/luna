@@ -277,6 +277,31 @@
     "ammo": []
   },
   {
+    "type": "OGRE_ARROW",
+    "strength": 22,
+    "start_graphic": {
+      "id": 243,
+      "height": 50,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 242,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      2883 // Ogre bow
+    ],
+    "ammo": [
+      2866 // Ogre arrow
+    ]
+  },
+  {
     "type": "BOLTS",
     "strength": 10,
     "start_graphic": {

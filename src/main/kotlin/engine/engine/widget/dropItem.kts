@@ -2,6 +2,7 @@ package engine.widget
 
 import api.predef.*
 import engine.item.developerItem.DeveloperItemHandler
+import game.content.chompyHunting.ChompyHunting
 import game.content.mageArena.MageArena
 import game.item.degradable.DegradableDropWarningDialogue
 import game.item.degradable.DegradableEquipmentHandler
@@ -38,6 +39,7 @@ on(DropItemEvent::class, EventPriority.HIGH) {
         plr.overlays.closeWindows()
         return@on
     }
+    if (ChompyHunting.releaseToad(plr, index)) return@on
     if (MageArena.dropCape(plr, index)) {
         plr.overlays.closeWindows()
     } else if(DegradableEquipmentHandler.isDropRestricted(item.id)) {
