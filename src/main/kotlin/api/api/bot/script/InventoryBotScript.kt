@@ -777,7 +777,15 @@ abstract class InventoryBotScript(
         fun supplied() = if (plan.recipes.size > 1 || plan.fixedTrainingBatch) plan.targets().all { (id, amount) -> owned(id) >= amount }
             else plan.recipe.materials.all { (id, amount) -> owned(id) >= amount } &&
                 plan.recipe.tools.all { owned(it) > 0L }
-        fun ready() = supplied() && BotProductionPlanner.remainsUseful(bot, plan)
+        fun ready(): Boolean {
+            if (!supplied()) return false
+            if (plan.barPurchase != null && plan.completedOperations == 0) {
+                val usable = plan.recipe.materials.minOf { (id, amount) -> owned(id) / amount }
+                    .coerceAtMost(plan.operations.toLong()).toInt()
+                plan.limitBarPurchaseBatch(usable)
+            }
+            return BotProductionPlanner.remainsUseful(bot, plan)
+        }
         fun needsRunecraftingSupplies() = bankedRunecrafting && System.currentTimeMillis() < plan.supplyDeadline &&
             plan.targets().any { (id, target) -> owned(id) < target && id !in plan.attemptedMarketItems }
         suspend fun buyFromShops(): Boolean {
