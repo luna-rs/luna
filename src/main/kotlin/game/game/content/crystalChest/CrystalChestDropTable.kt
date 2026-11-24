@@ -144,7 +144,7 @@ object CrystalChestDropTable : DropTable() {
             val plr = mob.asPlr()
 
             // Determine which drop table will be rolled using a rational table.
-            val nodeTable = ProbabilityTable(mutableListOf(
+            val nodeTable = ProbabilityTable(listOf(
                 (34 of 128) to SPINACH_ROLL_TABLE,
                 (12 of 128) to RUNE_TABLE,
                 (12 of 128) to GEM_TABLE,
@@ -154,11 +154,8 @@ object CrystalChestDropTable : DropTable() {
                 (10 of 128) to COAL_TABLE,
                 (8 of 128) to RAW_SWORDFISH_TABLE,
                 (2 of 128) to ADAMANT_SQ_SHIELD_TABLE,
-                (1 of 128) to RUNE_LEGS_OR_SKIRT_TABLE(plr)).apply {
-                if (!plr.equipment.contains(2572)) { // Create nothing slots if we don't have ROW.
-                    add((17 of 128) to DropTableHandler.createList { nothing(1 of 7) })
-                }
-            })
+                (1 of 128) to RUNE_LEGS_OR_SKIRT_TABLE(plr),
+                (17 of 128) to DropTableHandler.createList { nothing(1 of 7) }))
 
             // Pick the drop table.
             val rollTable = nodeTable.roll()
