@@ -2,6 +2,7 @@ package engine.bot.coordinator.skill
 
 import api.attr.Attr
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.SUPPLY_TRIP_TIMEOUT
 import api.bot.action.BotSupplySources
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.trading.BotFoodDemand
@@ -13,6 +14,11 @@ import api.bot.script.*
 import api.predef.*
 import api.predef.ext.totalItemAmount
 import game.bot.scripts.skills.HerbloreVialRefill
+import game.bot.scripts.skills.CutTreeBotScript
+import game.skill.woodcutting.Woodcutting
+import game.skill.woodcutting.cutTree.Axe
+import game.skill.woodcutting.cutTree.Tree
+import io.luna.Luna
 import game.skill.herblore.makeUnfPotion.UnfPotion
 import engine.bot.economy.BotProductionUses
 import engine.bot.economy.BotProductionMetrics
@@ -28,6 +34,7 @@ import io.luna.game.model.mob.bot.Bot
 import java.util.IdentityHashMap
 import kotlin.math.ceil
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Selects finite production goals before testing whether their materials are already owned.
@@ -91,6 +98,106 @@ object BotProductionPlanner {
      * Tests a static skill index without allocating candidate scripts.
      */
     fun supports(skill: Int): Boolean = skill in ProductionCatalogue.bySkill
+
+    /**
+     * Stocks a full training visit from native Woodcutting when the bot cannot buy logs and still has none to use.
+     * The gathering script carries the exact recipe and resumes it only once the whole lot is owned.
+     */
+    internal fun collectTrainingLogs(bot: Bot, skill: Int, level: Int, duration: Duration,
+                                     failed: ProductionPlan? = null): CutTreeBotScript? {
+        if (skill != SKILL_FIREMAKING && skill != SKILL_FLETCHING) return null
+        if (failed != null && (!failed.training || failed.recipes.size != 1 || trainingLogId(failed.recipe) == null))
+            return null
+        if (duration <= Duration.ZERO || !BotCombatActionHandler.wantsToTrain(bot, skill) ||
+            !BotCombatActionHandler.mayGainExperience(bot, SKILL_WOODCUTTING)) return null
+        val recipes = logRecipes(bot, skill, level).map { it.second }
+        if (recipes.any { owned(bot, it.materials.keys.single()) > 0L }) return null
+        val woodcuttingLevel = minOf(bot.woodcutting.level, bot.woodcutting.staticLevel)
+        val axes = Axe.entries.filter { it.level <= woodcuttingLevel && owned(bot, it.id) > 0L }
+            .ifEmpty { listOf(Axe.BRONZE) }
+        val deferred = bot.attributes()[unavailableRecipes.attr]
+        val now = System.currentTimeMillis()
+        val ordered = recipes.sortedWith(compareByDescending<ProductionRecipe> { it.key == failed?.recipe?.key }
+            .thenByDescending { it.experience })
+        for (recipe in ordered) {
+            if (deferred[recipe.key]?.after?.let { it > now } == true) continue
+            val tree = Tree.entries.firstOrNull { it.logId in recipe.materials && it.level <= woodcuttingLevel }
+                ?: continue
+            if ((tree == Tree.TEAK || tree == Tree.MAHOGANY) && !CutTreeBotScript.groveSuppliesOwned(bot)) continue
+            val zones = WoodcuttingScriptFactory.routes[tree].orEmpty().filter {
+                it.entryBlocker(bot) == null && bot.recentEscape?.avoids(it) != true
+            }
+            if (zones.isEmpty()) continue
+            val operations = fullLogOperations(bot, recipe, duration)
+            if (operations < 1) continue
+            val chance = axes.minOf { Woodcutting.successRate(woodcuttingLevel, tree, it) }
+            if (chance <= 0.0) continue
+            val ticks = Luna.settings().skills().woodcuttingSpeed() / chance + 3.0
+            val gathering = SUPPLY_TRIP_TIMEOUT + ceil(operations * ticks * 1_200.0).toLong().milliseconds
+            val plan = logWorkPlan(bot, recipe, operations, duration + gathering, failed) ?: continue
+            return CutTreeBotScript(bot, setOf(tree), gathering, zones.toMutableList(), plan, duration)
+                .also { it.trainingGoal = skill }
+        }
+        return null
+    }
+
+    /**
+     * Gives Woodcutting a ready Firemaking follow-up when a single abundant log type covers the full visit.
+     */
+    internal fun stockedFiremaking(bot: Bot, duration: Duration =
+        SkillingScriptFactory.getDuration(bot, SKILL_FIREMAKING)): InventoryBotScript? {
+        if (duration <= Duration.ZERO || !BotCombatActionHandler.wantsToTrain(bot, SKILL_FIREMAKING)) return null
+        for ((entry, recipe) in logRecipes(bot, SKILL_FIREMAKING, bot.firemaking.staticLevel).asReversed()) {
+            val log = trainingLogId(recipe) ?: continue
+            if (log != Tree.WILLOW.logId && log != Tree.MAPLE.logId) continue
+            val operations = fullLogOperations(bot, recipe, duration)
+            if (operations < 1 || owned(bot, log) < operations) continue
+            val plan = logWorkPlan(bot, recipe, operations, duration, null, ownedLogs = true) ?: continue
+            return entry.create(bot, duration).planProduction(plan)
+        }
+        return null
+    }
+
+    private fun trainingLogId(recipe: ProductionRecipe): Int? =
+        if (recipe.key.startsWith("burn:") || recipe.key.startsWith("cut-log:")) recipe.materials.keys.single()
+        else null
+
+    private fun logRecipes(bot: Bot, skill: Int, level: Int): List<Pair<ProductionCatalogue.Entry, ProductionRecipe>> {
+        if (skill != SKILL_FIREMAKING && skill != SKILL_FLETCHING) return emptyList()
+        return ProductionCatalogue.bySkill[skill].orEmpty().mapNotNull { entry ->
+            val recipe = entry.describe(bot)?.takeIf { trainingLogId(it) != null &&
+                it.level <= minOf(level, bot.skill(skill).level) } ?: return@mapNotNull null
+            entry to recipe
+        }
+    }
+
+    private fun fullLogOperations(bot: Bot, recipe: ProductionRecipe, duration: Duration): Int {
+        val load = batchCapacity(recipe, bot.inventory.capacity())
+        if (load <= 0) return 0
+        val ticks = if (recipe.skill == SKILL_FIREMAKING) 6.0 else processingTicks(recipe)
+        val capacity = (duration.inWholeMilliseconds / (600.0 * (ticks + 30.0 / load))).toInt()
+            .coerceIn(1, ProductionEconomics.MAX_OPERATIONS)
+        return minOf(capacity, ceil(trainingExperienceRemaining(bot, recipe.skill) / recipe.experience).toInt())
+    }
+
+    private fun logWorkPlan(bot: Bot, recipe: ProductionRecipe, operations: Int, duration: Duration,
+                            previous: ProductionPlan?, ownedLogs: Boolean = false): ProductionPlan? {
+        val toolPrices = recipe.tools.filter { owned(bot, it) < 1L }.associateWith {
+            BotSupplySources.quote(bot, it, 1)?.maximumUnitPrice ?: return null
+        }
+        val coins = BotTradeManager.transferableAmount(bot, 995).toLong()
+        val available = (coins * BotTradeIntentions.budgetFraction(bot, BotTradePurpose.BUY)).toLong()
+        val toolCost = toolPrices.values.sum()
+        if (toolCost > minOf(available, previous?.remainingCoins ?: available)) return null
+        val normalizeNotes = ownedLogs && recipe.materials.keys.any {
+            bot.inventory.computeAmountForId(it).toLong() + bot.bank.computeAmountForId(it) < operations
+        }
+        val acquire = toolPrices.isNotEmpty() || normalizeNotes
+        val ceilings = (recipe.materials.keys + recipe.tools).associateWith { toolPrices[it] ?: 1L }
+        return ProductionPlan(recipe, true, operations, toolCost, ceilings,
+            System.currentTimeMillis() + duration.inWholeMilliseconds,
+            fixedTrainingBatch = acquire, allowAcquisition = acquire)
+    }
 
     /**
      * Chooses a bounded, affordable native batch or a fully funded short native production chain.
@@ -159,6 +266,13 @@ object BotProductionPlanner {
             else entry to native
         }
         if (candidates.isEmpty()) return rejected(lastRejection)
+        val trainingSupplies = ProductionTrainingSupplies(bot)
+        val logIds = if (training) candidates.mapNotNull { (_, recipe) -> trainingLogId(recipe) }.toSet()
+            else emptySet()
+        val ownedLogs = logIds.filterTo(HashSet()) { owned(bot, it) > 0L }
+        val logSources = if (ownedLogs.isEmpty()) logIds.mapNotNull { id ->
+            trainingSupplies.firstSource(id)?.let { id to it }
+        }.toMap() else emptyMap()
         val goals = if (merchantOutput == null) usefulGoals(bot, ::count, ::describe)
             else UseGoals(emptyMap(), emptyMap(), emptyMap())
 
@@ -172,6 +286,7 @@ object BotProductionPlanner {
         val allowOtherSkills = merchantOutput != null && !training
         val pipelines = buildList {
             if (finalFood == null) for ((entry, recipe) in candidates) {
+                if (ownedLogs.isNotEmpty() && trainingLogId(recipe)?.let { it !in ownedLogs } == true) continue
                 val paths = if (directOnly || singlePurchaseBatch) listOf(listOf(ProductionStage(recipe, 1)))
                 else ProductionRecipePaths.forRecipe(recipe, ::describe, allowOtherSkills,
                     trainingPrerequisites = training && ProductionTrainingPrerequisites.input(recipe) != null) {
@@ -230,6 +345,7 @@ object BotProductionPlanner {
                 .map { it.price to it.item.amount }.toList()
         }
         fun ceiling(id: Int): Long = prices.getOrPut(id) {
+            logSources[id]?.let { return@getOrPut it.unitPrice }
             if (runecrafting) runeSource(id)?.let { return@getOrPut it.unitPrice }
             if (merchantOutput != null) {
                 val possible = listOfNotNull(source(id)?.maximumUnitPrice, direct(id).minOfOrNull { it.first })
@@ -259,7 +375,6 @@ object BotProductionPlanner {
         val water = UnfPotion.VIAL_OF_WATER
         val emptyVial = HerbloreVialRefill.EMPTY_VIAL
         val vialShops by lazy { BotSupplySources.generalStores(bot, emptyVial, bot.inventory.capacity()) }
-        val trainingSupplies = ProductionTrainingSupplies(bot)
         val scored = pipelines.mapNotNull { path ->
             val native = path.stages.first().recipe
             val recipe = path.economy
@@ -436,10 +551,15 @@ object BotProductionPlanner {
         }
         val compared = scored.filterNot { it.fixedTrainingBatch } + scored.filter { it.fixedTrainingBatch }
             .groupBy { it.path.stages.last().recipe.key }.values.map { choices -> choices.maxBy { it.score } }
-        val preferred = if (merchantOutput != null) compared else {
-            val suppliedPaths = compared.filter { it.stocked }.groupBy { it.path.stages.last().recipe.key }
-            val executable = if (compared.any { it.refillVials })
-                compared.filter { it.stocked || it.refillVials } else compared
+        fun soldLog(candidate: Candidate): Boolean =
+            trainingLogId(candidate.path.stages.first().recipe) in logSources
+        val available = if (compared.any(::soldLog)) compared.filter {
+            trainingLogId(it.path.stages.first().recipe) == null || soldLog(it)
+        } else compared
+        val preferred = if (merchantOutput != null) available else {
+            val suppliedPaths = available.filter { it.stocked }.groupBy { it.path.stages.last().recipe.key }
+            val executable = if (available.any { it.refillVials })
+                available.filter { it.stocked || it.refillVials } else available
             executable.filterNot { candidate ->
                 !candidate.fixedTrainingBatch && ProductionRecipePaths.hasSuppliedSuffix(candidate.path.stages,
                     suppliedPaths[candidate.path.stages.last().recipe.key].orEmpty().map { it.path.stages })

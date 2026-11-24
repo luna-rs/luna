@@ -28,7 +28,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
      * Dedicated native routes for each supported resource. Hardwood sessions retain the grove's paid admission
      * and only select it with owned trading sticks or gems accepted by Gabooty.
      */
-    private val routes = mapOf(
+    internal val routes = mapOf(
         NORMAL to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES,
             SubZone.LUMBRIDGE_WOODLAND),
         OAK to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES,

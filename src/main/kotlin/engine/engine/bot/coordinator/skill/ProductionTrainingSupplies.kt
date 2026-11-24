@@ -27,6 +27,8 @@ internal class ProductionTrainingSupplies(private val bot: Bot) {
         }
     }.sortedWith(compareBy<VisitQuote> { it.unitPrice }.thenBy { it.distance }) }
 
+    internal fun firstSource(id: Int): VisitQuote? = sources(id).firstOrNull()
+
     /**
      * Bounds the native work to supplies already owned or currently offered. Reusable tools are bought once.
      */

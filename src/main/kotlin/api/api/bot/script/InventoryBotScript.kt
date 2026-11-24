@@ -820,8 +820,17 @@ abstract class InventoryBotScript(
         return false
     }
 
-    private fun queueMissingPlannedPreparation(plan: ProductionPlan): Boolean =
-        isActionSafe() && plan.deadline > System.currentTimeMillis() && prepareMissingPlannedSupplies(plan)
+    private fun queueMissingPlannedPreparation(plan: ProductionPlan): Boolean {
+        if (!isActionSafe() || plan.deadline <= System.currentTimeMillis()) return false
+        val collection = BotProductionPlanner.collectTrainingLogs(bot, plan.goalSkill,
+            bot.skill(plan.goalSkill).staticLevel, remainingDuration(), plan)
+        if (collection != null) {
+            bot.scriptStack.softPushHead(collection)
+            stopPlannedProduction(Reason.MATERIALS_UNAVAILABLE)
+            return true
+        }
+        return prepareMissingPlannedSupplies(plan)
+    }
 
     /**
      * Queues one native prerequisite using owned supplies when bounded shopping cannot complete this same goal.

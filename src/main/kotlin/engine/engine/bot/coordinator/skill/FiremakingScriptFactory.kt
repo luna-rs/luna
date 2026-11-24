@@ -36,7 +36,9 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
      * Continues an existing Firemaking session within the time it has left.
      */
     fun getTrainingScript(bot: Bot, level: Int, duration: Duration): BotScript {
-        return BotProductionPlanner.select(bot, skillId, level, true, duration) ?: VoidBotScript(bot)
+        return BotProductionPlanner.select(bot, skillId, level, true, duration)
+            ?: BotProductionPlanner.collectTrainingLogs(bot, skillId, level, duration)
+            ?: VoidBotScript(bot)
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript = VoidBotScript(bot)
