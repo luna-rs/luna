@@ -119,6 +119,7 @@ object GeneralProfitCoordinator : BotCoordinator {
         }
         candidates += { MakeCrystalKeyBotScript(bot, duration).takeIf { it.isEligible() } }
         candidates += { TradeMolePartsBotScript(bot, duration).takeIf { it.isEligible() } }
+        candidates += { HerbloreSecondaryActivities.profit(bot, duration) }
         for (container in OpenContainerBotScript.Container.entries) {
             candidates += { OpenContainerBotScript(bot, container, duration).takeIf { it.isEligible() } }
         }
