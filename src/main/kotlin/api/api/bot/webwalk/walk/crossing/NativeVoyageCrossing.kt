@@ -64,7 +64,7 @@ object NativeVoyageCrossing : CrossingHandler {
                         } else {
                             val question = bot.overlays.getOverlay(NpcDialogue::class.java)
                             if (question != null) {
-                                if (question.npcId != route.npcId || question.text != listOf(route.question)) {
+                                if (question.npcId != route.npcId || question.text.joinToString(" ") != route.question) {
                                     return@withTimeoutOrNull false
                                 }
                                 ownedPage = question

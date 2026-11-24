@@ -5,6 +5,8 @@ import io.luna.game.model.mob.Player;
 import io.luna.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -29,6 +31,21 @@ public final class DialogueUtils {
      * The widest a line of chat head text can be, in pixels.
      */
     private static final int CHAT_LINE_WIDTH = 380;
+
+    /**
+     * The widest a line of text box text (no head) can be, in pixels.
+     */
+    private static final int TEXT_LINE_WIDTH = 470;
+
+    /**
+     * The most lines a chat head box holds.
+     */
+    private static final int CHAT_BOX_LINES = 4;
+
+    /**
+     * The most lines a text box holds.
+     */
+    private static final int TEXT_BOX_LINES = 5;
 
     /**
      * An immutable list of "Make item" model widgets.
@@ -247,17 +264,77 @@ public final class DialogueUtils {
 
     /**
      * Splits {@code text} into chat head lines the way the game does, starting a new line whenever the next word
-     * wouldn't fit. Only needed where the text isn't known ahead of time, such as text that includes a name.
+     * wouldn't fit. {@link DialogueQueueBuilder} already does this for its NPC, player and text dialogues, so this
+     * is only needed where the lines themselves are wanted.
      *
      * @param text The text to split.
      * @return The lines.
      */
     public static String[] splitChatLines(String text) {
+        return splitChatLines(text, CHAT_LINE_WIDTH);
+    }
+
+    /**
+     * Fits chat head lines into as many boxes as they need. See {@link #fitBoxes(String[], int, int)}.
+     *
+     * @param text The lines.
+     * @return The lines of each box.
+     */
+    public static List<String[]> chatBoxes(String... text) {
+        return fitBoxes(text, CHAT_LINE_WIDTH, CHAT_BOX_LINES);
+    }
+
+    /**
+     * Fits text box lines into as many boxes as they need. See {@link #fitBoxes(String[], int, int)}.
+     *
+     * @param text The lines.
+     * @return The lines of each box.
+     */
+    public static List<String[]> textBoxes(String... text) {
+        return fitBoxes(text, TEXT_LINE_WIDTH, TEXT_BOX_LINES);
+    }
+
+    /**
+     * Fits dialogue lines into boxes. Lines that all fit are kept as given. If any line is too wide, the lines are
+     * joined and split again as one paragraph. Lines beyond {@code maxLines} continue in the next box.
+     *
+     * @param text The lines.
+     * @param maxWidth The widest a line can be, in pixels.
+     * @param maxLines The most lines a box holds.
+     * @return The lines of each box.
+     */
+    private static List<String[]> fitBoxes(String[] text, int maxWidth, int maxLines) {
+        String[] lines = text;
+        for (String line : text) {
+            if (computeChatWidth(line) > maxWidth) {
+                lines = splitChatLines(String.join(" ", text), maxWidth);
+                break;
+            }
+        }
+        if (lines.length <= maxLines) {
+            return Collections.singletonList(lines);
+        }
+        List<String[]> boxes = new ArrayList<>();
+        for (int index = 0; index < lines.length; index += maxLines) {
+            boxes.add(Arrays.copyOfRange(lines, index, Math.min(lines.length, index + maxLines)));
+        }
+        return boxes;
+    }
+
+    /**
+     * Splits {@code text} into lines no wider than {@code maxWidth}, starting a new line whenever the next word
+     * wouldn't fit.
+     *
+     * @param text The text to split.
+     * @param maxWidth The widest a line can be, in pixels.
+     * @return The lines.
+     */
+    private static String[] splitChatLines(String text, int maxWidth) {
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
         for (String word : text.split(" ")) {
             String longer = line.length() == 0 ? word : line + " " + word;
-            if (line.length() == 0 || computeChatWidth(longer) <= CHAT_LINE_WIDTH) {
+            if (line.length() == 0 || computeChatWidth(longer) <= maxWidth) {
                 line = new StringBuilder(longer);
             } else {
                 lines.add(line.toString());
@@ -269,7 +346,8 @@ public final class DialogueUtils {
     }
 
     /**
-     * Computes how wide {@code text} is in the chat head font, in pixels.
+     * Computes how wide {@code text} is in the chat head font, in pixels. Color tags such as {@code @red@} take no
+     * space.
      *
      * @param text The text.
      * @return The width.
@@ -277,6 +355,10 @@ public final class DialogueUtils {
     private static int computeChatWidth(String text) {
         int width = 0;
         for (int index = 0; index < text.length(); index++) {
+            if (text.charAt(index) == '@' && index + 4 < text.length() && text.charAt(index + 4) == '@') {
+                index += 4;
+                continue;
+            }
             int character = text.charAt(index) - 32;
             width += character >= 0 && character < CHAT_CHARACTER_WIDTHS.length ? CHAT_CHARACTER_WIDTHS[character] : 3;
         }

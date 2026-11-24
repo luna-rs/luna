@@ -71,7 +71,7 @@ object BotNpcDialogues {
         fun safe() = ActionSafety.NON_COMBAT.allows(bot) && allowed()
         fun speech(current: DialogueInterface): Boolean = when (current) {
             is NpcDialogue -> current.npcId == speakerId
-            is PlayerDialogue -> lastResponse != null && current.lines == listOf(lastResponse)
+            is PlayerDialogue -> lastResponse != null && current.lines.joinToString(" ") == lastResponse
             else -> false
         }
         fun recognized(current: DialogueInterface): Boolean = when (current) {
