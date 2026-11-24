@@ -64,6 +64,11 @@ public enum AmmoType {
     CRYSTAL_ARROW,
 
     /**
+     * Ogre arrows.
+     */
+    OGRE_ARROW,
+
+    /**
      * Generic bolts.
      */
     BOLTS,
