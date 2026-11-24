@@ -53,10 +53,10 @@ fun seekExcalibur(plr: Player) {
     plr.newDialogue()
         .player(Expression.CONFUSED, "I seek the sword Excalibur.")
         .npc(LADY_OF_THE_LAKE, "Aye, I have that artefact in my possession.")
-        .npc(LADY_OF_THE_LAKE, "'Tis very valuable, and not an artefact to be given away lightly.")
-        .npc(LADY_OF_THE_LAKE, "I would want to give it away only to one who is worthy and good.")
-        .npc(LADY_OF_THE_LAKE, "...But you have already proved thyself to be worthy of wielding it once already. I " +
-                               "shall return it to you if you can prove yourself to still be worthy.")
+        .npc(LADY_OF_THE_LAKE, "'Tis very valuable, and not an artefact to be given", "away lightly.")
+        .npc(LADY_OF_THE_LAKE, "I would want to give it away only to one who is worthy", "and good.")
+        .npc(LADY_OF_THE_LAKE, "...But you have already proved thyself to be worthy of",
+             "wielding it once already. I shall return it to you if you", "can prove yourself to still be worthy.")
         .player(Expression.QUIZZICAL, "...And how can I do that?")
         .npc(LADY_OF_THE_LAKE, "Why, by proving yourself to be above material goods.")
         .player(Expression.QUIZZICAL, "...And how can I do that?")
@@ -70,8 +70,8 @@ fun seekExcalibur(plr: Player) {
             } else if (!owns(it, EXCALIBUR) && QuestRewards.give(it, EXCALIBUR, EXCALIBUR_PRICE)) {
                 it.newDialogue()
                     .player(Expression.HAPPY, "Ok, here you go.")
-                    .npc(LADY_OF_THE_LAKE, Expression.HAPPY, "You are still worthy to wield Excalibur! And thanks " +
-                                                             "for the cash! I felt like getting a new haircut!")
+                    .npc(LADY_OF_THE_LAKE, Expression.HAPPY, "You are still worthy to wield Excalibur! And thanks for",
+                         "the cash! I felt like getting a new haircut!")
                     .open()
             }
         }
