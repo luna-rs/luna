@@ -34,7 +34,7 @@ public final class ContextMenuOptionMessageWriter extends GameMessageWriter {
         ByteMessage msg = ByteMessage.message(157, MessageType.VAR, buffer);
         msg.put(option.getIndex(), ValueType.NEGATE);
         msg.putString(option.getName());
-        msg.put(option.isPinned() ? 1 : 0, ValueType.ADD);
+        msg.put(option.isPinned() ? 1 : 0);
         return msg;
     }
 }
