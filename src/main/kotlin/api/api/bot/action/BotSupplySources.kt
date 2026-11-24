@@ -124,7 +124,7 @@ object BotSupplySources {
      *
      * @author lare96
      */
-    internal data class VisitQuote(val quantity: Int, val unitPrice: Long, val distance: Long)
+    internal data class VisitQuote(val quantity: Int, val unitPrice: Long, val distance: Long, val shop: Shop? = null)
 
     /**
      * Quotes sources separately so a production plan can price the trips it actually needs.
@@ -136,7 +136,7 @@ object BotSupplySources {
             if (shop.currency != Currency.COINS || shop.npcSellers.isEmpty()) return@mapNotNull null
             val quote = nativeQuote(shop, id, minOf(maximumQuantity, MAX_QUANTITY)) ?: return@mapNotNull null
             val distance = bot.actionHandler.shop.shopDistance(shop) ?: return@mapNotNull null
-            VisitQuote(quote.quantity, quote.maximumUnitPrice, distance)
+            VisitQuote(quote.quantity, quote.maximumUnitPrice, distance, shop)
         }
     }
 

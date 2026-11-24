@@ -11,6 +11,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.totalItemAmount
 import com.google.gson.JsonObject
+import engine.spawn.PersistentGroundItem
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.def.ItemDefinition
@@ -29,10 +30,12 @@ import kotlin.time.Duration.Companion.minutes
  * Collection never creates supplies, drops belongings for space, or attacks an NPC. Reaching the stock goal requests
  * a bank visit before completion. Cowhide preparation uses this runner when the permanent build disallows combat.
  * Cowhide visits stop when the bot reaches the early-combat cutoff, including after a saved script is restored.
+ * Limited world-spawn outings can start with existing inventory space.
  *
  * @property itemId The unnoted resource to collect.
  * @property stockTarget The total owned quantity at which collection ends.
  * @property sellOnCompletion Advertise collected surplus when this is a profit outing.
+ * @property persistentOnly Restrict pickups to world spawns.
  * @author lare96
  */
 class CollectGroundItemBotScript(
@@ -41,7 +44,8 @@ class CollectGroundItemBotScript(
     val stockTarget: Int,
     duration: Duration,
     zones: MutableList<SubZone>,
-    val sellOnCompletion: Boolean = false
+    val sellOnCompletion: Boolean = false,
+    private val persistentOnly: Boolean = false
 ) : TargetingZonedBotScript<GroundItem>(bot, duration, zones) {
 
     /**
@@ -64,12 +68,14 @@ class CollectGroundItemBotScript(
          * Whether this outing should offer its collected item at a marketplace when complete.
          */
         var sellOnCompletion = false
+        var persistentOnly = false
 
         override fun load(data: JsonObject) {
             super.load(data)
             itemId = data.get("item_id")?.asInt ?: -1
             stockTarget = data.get("stock_target")?.asInt ?: 0
             sellOnCompletion = data.get("sell_on_completion")?.asBoolean ?: false
+            persistentOnly = data.get("persistentOnly")?.asBoolean ?: false
         }
 
         override fun save(data: JsonObject) {
@@ -77,6 +83,7 @@ class CollectGroundItemBotScript(
             data.addProperty("item_id", itemId)
             data.addProperty("stock_target", stockTarget)
             data.addProperty("sell_on_completion", sellOnCompletion)
+            if (persistentOnly) data.addProperty("persistentOnly", true)
         }
     }
 
@@ -84,7 +91,7 @@ class CollectGroundItemBotScript(
      * Restores the same owned-stock goal and candidate fields after persistence.
      */
     constructor(bot: Bot, data: CollectionData) : this(bot, data.itemId, data.stockTarget, data.duration,
-        data.zones, data.sellOnCompletion)
+        data.zones, data.sellOnCompletion, data.persistentOnly)
 
     override val targetSearchTimeout = 2.minutes
 
@@ -106,7 +113,14 @@ class CollectGroundItemBotScript(
 
     override suspend fun equipment() = null
 
-    override fun allowsLoot(item: GroundItem): Boolean = item.id == itemId && !goalReached()
+    override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean =
+        !initial || !persistentOnly || bot.inventory.isFull || goalReached()
+
+    private fun matches(item: GroundItem): Boolean =
+        item.id == itemId && (!persistentOnly || item is PersistentGroundItem)
+
+    override fun allowsLoot(item: GroundItem): Boolean =
+        matches(item) && !goalReached()
 
     override suspend fun beforeZoneWork(): Boolean {
         if (!goalReached()) return false
@@ -130,7 +144,7 @@ class CollectGroundItemBotScript(
         val zone = activeZone ?: return mutableListOf()
         if (goalReached()) return mutableListOf()
         return world.locator.findItems(searchBase, searchRadius) {
-            it.id == itemId && it.state == EntityState.ACTIVE && it.position in zone.area && it.isVisibleTo(bot)
+            matches(it) && it.state == EntityState.ACTIVE && it.position in zone.area && it.isVisibleTo(bot)
         }
     }
 
@@ -139,13 +153,14 @@ class CollectGroundItemBotScript(
             if (goalReached()) forceBanking = true
             return false
         }
-        return newFocus.id == itemId && newFocus.position in activeZone!!.area && handler.loot.canPickup(newFocus)
+        return matches(newFocus) && newFocus.position in activeZone!!.area && handler.loot.canPickup(newFocus)
     }
 
     override suspend fun interactWithTarget(option: Int, target: GroundItem): Boolean {
         val zone = activeZone ?: return false
         return handler.loot.pickup(target) {
-            isActionSafe() && activeZone == zone && !goalReached() && target.position in zone.area
+            isActionSafe() && activeZone == zone && allowsLoot(target) && profitGatheringReady() &&
+                target.position in zone.area
         }
     }
 
@@ -168,6 +183,7 @@ class CollectGroundItemBotScript(
         it.itemId = itemId
         it.stockTarget = stockTarget
         it.sellOnCompletion = sellOnCompletion
+        it.persistentOnly = persistentOnly
         it.duration = duration
         it.zones = originalZones.toMutableList()
     }
