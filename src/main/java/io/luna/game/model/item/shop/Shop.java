@@ -277,7 +277,7 @@ public final class Shop {
     public void sendSellValue(Player player, int index) {
         Item item = player.getInventory().get(index);
         if (item != null && computeCanSell(item)) {
-            int value = computeSellValue(item.getId(), 1);
+            int value = computeSellValue(computeStockId(item.getId()), 1);
             String itemName = item.getItemDef().getName();
             String currencyName = currency.computeName(value);
 
@@ -440,12 +440,13 @@ public final class Shop {
         }
 
         Item sellItem = inventoryItem.withAmount(sellAmount);
-        if (!items.hasSpaceFor(sellItem)) {
+        Item stockItem = new Item(computeStockId(sellItem.getId()), sellAmount);
+        if (!items.hasSpaceFor(stockItem)) {
             player.sendMessage("This shop is currently full.");
             return false;
         }
 
-        int totalValue = Math.max(1, computeSellValue(sellItem.getId(), sellAmount));
+        int totalValue = Math.max(1, computeSellValue(stockItem.getId(), sellAmount));
         Item currencyItem = new Item(currency.getId(), totalValue);
         if (!inventory.hasSpaceFor(currencyItem)) {
             inventory.onCapacityExceeded();
@@ -453,7 +454,7 @@ public final class Shop {
         }
 
         if (inventory.removeFromIndex(index, sellItem) && inventory.add(currencyItem)) {
-            return items.add(sellItem);
+            return items.add(stockItem);
         }
         return false;
     }
@@ -681,7 +682,7 @@ public final class Shop {
      * <ul>
      *     <li>A currency identifier.</li>
      *     <li>Not tradeable according to {@link ItemDefinition#isTradeable()}.</li>
-     *     <li>Disallowed by {@link #buyPolicy}.</li>
+     *     <li>Disallowed by {@link #buyPolicy}. {@link BuyPolicy#EXISTING} also accepts notes of stocked items.</li>
      * </ul>
      *
      * @param id The item id being checked.
@@ -695,10 +696,30 @@ public final class Shop {
                 case NONE:
                     return false;
                 case EXISTING:
-                    return items.contains(id);
+                    return items.contains(computeStockId(id));
             }
         }
         return false;
+    }
+
+    /**
+     * Returns the id a sold item is stocked under: the unnoted id when an {@link BuyPolicy#EXISTING} shop is sold a
+     * note of an item it stocks, otherwise {@code id}.
+     *
+     * @param id The item id being sold.
+     * @return The id the shop stocks it under.
+     */
+    private int computeStockId(int id) {
+        if (buyPolicy == BuyPolicy.EXISTING) {
+            ItemDefinition def = ItemDefinition.ALL.retrieve(id);
+            if (def.isNoted()) {
+                int unnotedId = def.getUnnotedId().getAsInt();
+                if (items.contains(unnotedId)) {
+                    return unnotedId;
+                }
+            }
+        }
+        return id;
     }
 
     /**
