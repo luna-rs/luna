@@ -41,6 +41,11 @@ object BlastFurnace {
     const val ACCESS_MILLIS = 600_000L
 
     /**
+     * Time left on paid access when the player is warned. A chosen value.
+     */
+    const val ACCESS_WARNING_MILLIS = 60_000L
+
+    /**
      * Smithing XP each helper gains per bar made for another player, from the later wiki's manual-operation rate.
      */
     const val HELPER_XP = 1.0
@@ -126,6 +131,7 @@ object BlastFurnace {
         var pedals: Player? = null
         val players = linkedSetOf<Player>()
         val helped = linkedMapOf<Player, Int>()
+        val warned = WeakHashMap<Player, Long>()
         var started = false
         var stove = 9085
     }
@@ -239,7 +245,7 @@ object BlastFurnace {
             player.sendMessage("You need a spade to collect some coke.")
             return false
         }
-        player.animation(Animation(830))
+        player.animation(Animation(2441))
         return true
     }
 
@@ -256,6 +262,9 @@ object BlastFurnace {
             player.sendMessage("Collect some coke on a spade first.")
             return false
         }
+        // The follow-through is a separate sequence that starts once the shovelling one ends.
+        player.animation(Animation(2442))
+        player.lock(2) { if (present(player)) player.animation(Animation(2443)) }
         machine.fuel = minOf(200, machine.fuel + 60)
         machine.helped[player] = machine.ticks
         updateStove(player.world)
@@ -276,6 +285,7 @@ object BlastFurnace {
             return false
         }
         stock(player).hot = false
+        player.animation(Animation(2450))
         publish(player)
         return true
     }
@@ -293,7 +303,7 @@ object BlastFurnace {
             player.sendMessage("You need a hammer to repair the machinery.")
             return false
         }
-        player.animation(Animation(897))
+        player.animation(Animation(898))
         player.lock(3)
         replace(player.world, damage, false)
         machine.damage = null
@@ -410,8 +420,29 @@ object BlastFurnace {
                 }
             }
         }
-        if (machine.ticks % 5 == 0) publishAll(machine)
+        if (machine.ticks % 5 == 0) {
+            publishAll(machine)
+            checkAccess(machine)
+        }
         updateStove(world)
+    }
+
+    /**
+     * Warns each present paying player once per payment shortly before access ends, and again when it ends.
+     */
+    private fun checkAccess(machine: Machine) {
+        val now = System.currentTimeMillis()
+        for (player in machine.players) {
+            val paidUntil = stock(player).paidUntil
+            if (paidUntil == 0L || player.smithing.staticLevel >= 60) continue
+            val left = paidUntil - now
+            if (left <= 0) {
+                stock(player).paidUntil = 0L
+                player.sendMessage("Your time to use the furnace has run out. Pay the foreman to use it again.")
+            } else if (left <= ACCESS_WARNING_MILLIS && machine.warned.put(player, paidUntil) != paidUntil) {
+                player.sendMessage("You have about one minute left to use the furnace.")
+            }
+        }
     }
 
     internal fun smelt(player: Player): Boolean {
