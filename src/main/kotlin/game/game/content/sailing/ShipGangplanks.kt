@@ -1,5 +1,6 @@
 package game.content.sailing
 
+import game.content.dragonSlayer.DragonSlayerShip
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
@@ -21,6 +22,7 @@ object ShipGangplanks {
         2087 to "You must speak to the Customs Officer before it will set sail.", // Brimhaven
         2412 to null, // Port Sarim, to Entrana
         2414 to null, // Entrana
+        DragonSlayerShip.BOARD_PLANK to null,
         14304 to "Speak to the Squire to sail to the Void Knights' outpost.",
         14306 to "Speak to the Squire to sail to Port Sarim."
     )
@@ -28,7 +30,7 @@ object ShipGangplanks {
     /**
      * Gangplanks on deck that lead ashore.
      */
-    val LEAVING_PLANKS = setOf(2082, 2084, 2086, 2088, 2413, 2415, 14305, 14307)
+    val LEAVING_PLANKS = setOf(2082, 2084, 2086, 2088, 2413, 2415, 14305, 14307, DragonSlayerShip.LEAVE_PLANK)
 
     /**
      * The Entrana ships' gangplanks, which don't say "You board the ship."
@@ -38,14 +40,16 @@ object ShipGangplanks {
     /**
      * The step, along x and y, that goes from the dock onto the deck over [plank].
      */
-    private fun towardsDeck(plank: GameObject): Pair<Int, Int> =
+    private fun towardsDeck(plank: GameObject): Pair<Int, Int> {
+        if (plank.id == DragonSlayerShip.BOARD_PLANK || plank.id == DragonSlayerShip.LEAVE_PLANK) return 0 to 1
         // A plank's direction points from the deck to the dock.
-        when (plank.direction) {
+        return when (plank.direction) {
             ObjectDirection.WEST -> 1 to 0
             ObjectDirection.EAST -> -1 to 0
             ObjectDirection.NORTH -> 0 to -1
             ObjectDirection.SOUTH -> 0 to 1
         }
+    }
 
     /**
      * The tile a player crossing [plank] from plane [z] is first moved to, which is the dock end of the gangplank. They go

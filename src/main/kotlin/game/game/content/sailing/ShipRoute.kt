@@ -1,5 +1,6 @@
 package game.content.sailing
 
+import game.content.dragonSlayer.DragonSlayerShip
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 
@@ -70,6 +71,14 @@ enum class ShipRoute(val place: String,
                           ticks = 15,
                           departure = Position(2834, 3334),
                           crew = Sailing.ENTRANA_MONKS,
+                          fare = 0,
+                          search = ShipSearch.NONE),
+    PORT_SARIM_TO_CRANDOR(place = "Crandor",
+                          destination = DragonSlayerShip.crandor,
+                          journey = 3,
+                          ticks = 12,
+                          departure = DragonSlayerShip.nedHold,
+                          crew = setOf(DragonSlayerShip.NED_ON_SHIP),
                           fare = 0,
                           search = ShipSearch.NONE);
 

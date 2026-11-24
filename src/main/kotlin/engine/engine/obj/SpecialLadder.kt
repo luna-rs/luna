@@ -50,7 +50,7 @@ enum class SpecialLadder(val ladder: Position, val destination: Position) {
     ENTRANA_DUNGEON(ladder = Position(2820, 3374), destination = Position(2822, 9774)),
 
     // Lady Lumbridge at Port Sarim (Dragon Slayer).
-    LADY_LUMBRIDGE_DOWN(ladder = Position(3049, 3208, 1), destination = Position(3047, 9640, 1)),
+    LADY_LUMBRIDGE_DOWN(ladder = Position(3049, 3208, 1), destination = Position(3047, 9640, 3)),
     LADY_LUMBRIDGE_UP_1(ladder = Position(3049, 9640, 1), destination = Position(3047, 3207, 1)),
     LADY_LUMBRIDGE_UP_2(ladder = Position(3049, 9640, 2), destination = Position(3047, 3207, 1)),
     LADY_LUMBRIDGE_UP_3(ladder = Position(3049, 9640, 3), destination = Position(3047, 3207, 1)),
