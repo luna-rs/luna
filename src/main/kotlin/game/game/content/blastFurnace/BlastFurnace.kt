@@ -13,6 +13,7 @@ import io.luna.game.model.World
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.varp.Varp
@@ -41,6 +42,11 @@ object BlastFurnace {
     const val ACCESS_MILLIS = 600_000L
 
     /**
+     * Time left on paid access when the player is warned. A chosen value.
+     */
+    const val ACCESS_WARNING_MILLIS = 60_000L
+
+    /**
      * Smithing XP each helper gains per bar made for another player, from the later wiki's manual-operation rate.
      */
     const val HELPER_XP = 1.0
@@ -57,6 +63,12 @@ object BlastFurnace {
      * net loss is about 0.27 per tick at level 30 and 0.16 at level 99. Pedalling continues at zero energy.
      */
     const val PEDAL_DRAIN = 0.4
+
+    /**
+     * Temperatures that smelt: the green band of the gauge dial, which Jagex 2006 calls "just right". In the 377
+     * client the needle reaches the green edge at 50 and the red edge at 66.
+     */
+    val SMELTING_HEAT = 50..66
     const val SPADE = 952
     const val COKE_SPADE = 6448
     const val HAMMER = 2347
@@ -126,6 +138,7 @@ object BlastFurnace {
         var pedals: Player? = null
         val players = linkedSetOf<Player>()
         val helped = linkedMapOf<Player, Int>()
+        val warned = WeakHashMap<Player, Long>()
         var started = false
         var stove = 9085
     }
@@ -171,9 +184,19 @@ object BlastFurnace {
         if (it.id == 453) Item(it.id, it.amount / 2) else it
     }
 
-    fun pay(player: Player, now: Long = System.currentTimeMillis()): Boolean {
-        if (!present(player) || !player.position.isWithinDistance(FOREMAN, 4)) return false
-        if (hasAccess(player, now)) return true
+    /**
+     * Measures reach from the [foreman] himself, who wanders away from his spawn tile.
+     */
+    fun pay(player: Player, foreman: Npc, now: Long = System.currentTimeMillis()): Boolean {
+        if (!present(player) || !player.position.isWithinDistance(foreman.position, 4)) return false
+        if (player.smithing.staticLevel >= 60) {
+            player.sendMessage("You can use the furnace for free at level 60 Smithing.")
+            return true
+        }
+        if (hasAccess(player, now)) {
+            player.sendMessage("You have already paid to use the furnace.")
+            return true
+        }
         if (!player.inventory.remove(Item(995, FEE))) {
             player.sendMessage("You need $FEE coins to use the furnace below level 60 Smithing.")
             return false
@@ -239,7 +262,7 @@ object BlastFurnace {
             player.sendMessage("You need a spade to collect some coke.")
             return false
         }
-        player.animation(Animation(830))
+        player.animation(Animation(2441))
         return true
     }
 
@@ -251,11 +274,17 @@ object BlastFurnace {
             return false
         }
         val machine = machine(player.world)
-        if (machine.fuel >= 200) return false
+        if (machine.fuel >= 200) {
+            player.sendMessage("The stove is already full.")
+            return false
+        }
         if (!player.inventory.replace(COKE_SPADE, SPADE)) {
             player.sendMessage("Collect some coke on a spade first.")
             return false
         }
+        // The follow-through is a separate sequence that starts once the shovelling one ends.
+        player.animation(Animation(2442))
+        player.lock(2) { if (present(player)) player.animation(Animation(2443)) }
         machine.fuel = minOf(200, machine.fuel + 60)
         machine.helped[player] = machine.ticks
         updateStove(player.world)
@@ -269,13 +298,18 @@ object BlastFurnace {
     }
 
     fun cool(player: Player): Boolean {
-        if (!allowed(player, DISPENSER, fee = true) || !hot(player)) return false
+        if (!allowed(player, DISPENSER, fee = true)) return false
+        if (!hot(player)) {
+            player.sendMessage("Your bars are not hot.")
+            return false
+        }
         player.actions.interruptWeak()
         if (!player.inventory.replace(WATER, BUCKET)) {
             player.sendMessage("You need a bucket of water to cool the bars.")
             return false
         }
         stock(player).hot = false
+        player.animation(Animation(2450))
         publish(player)
         return true
     }
@@ -293,7 +327,7 @@ object BlastFurnace {
             player.sendMessage("You need a hammer to repair the machinery.")
             return false
         }
-        player.animation(Animation(897))
+        player.animation(Animation(898))
         player.lock(3)
         replace(player.world, damage, false)
         machine.damage = null
@@ -351,7 +385,14 @@ object BlastFurnace {
         val machine = machine(player.world)
         if (role == BlastFurnaceWorkAction.Role.PUMP) {
             machine.pump = player
-            if (machine.fuel == 0 || machine.damage?.pipe == true) return false
+            if (machine.fuel == 0) {
+                player.sendMessage("The stove needs refuelling before you can pump.")
+                return false
+            }
+            if (machine.damage?.pipe == true) {
+                player.sendMessage("The pipes are broken and need repairing.")
+                return false
+            }
             if (machine.temperature >= 100) {
                 player.damage(5)
                 player.sendMessage("The furnace is dangerously hot!")
@@ -361,7 +402,10 @@ object BlastFurnace {
             player.strength.addExperience(2.0)
         } else {
             machine.pedals = player
-            if (machine.damage?.pipe == false) return false
+            if (machine.damage?.pipe == false) {
+                player.sendMessage("The conveyor belt is broken and needs repairing.")
+                return false
+            }
             var transferred = 0
             for (participant in machine.players.toList()) {
                 if (!present(participant)) continue
@@ -372,7 +416,8 @@ object BlastFurnace {
                     transferred += count
                 }
             }
-            if (transferred == 0) return false
+            // An empty belt keeps the pedaller on the pedals for the next load, with no XP, drain or wear.
+            if (transferred == 0) return true
             player.agility.addExperience(1.0)
             player.increaseRunEnergy(-PEDAL_DRAIN)
         }
@@ -402,7 +447,7 @@ object BlastFurnace {
         machine.helped.keys.removeIf { !present(it) }
         machine.ticks++
         if (machine.ticks % 5 == 0 && machine.temperature > 0) machine.temperature--
-        if (machine.ticks % 2 == 0 && machine.fuel > 0 && machine.temperature in 60..90 && machine.damage?.pipe != true) {
+        if (machine.ticks % 2 == 0 && machine.fuel > 0 && machine.temperature in SMELTING_HEAT && machine.damage?.pipe != true) {
             for (player in machine.players.toList()) {
                 if (hasAccess(player) && smelt(player)) {
                     machine.fuel--
@@ -410,8 +455,29 @@ object BlastFurnace {
                 }
             }
         }
-        if (machine.ticks % 5 == 0) publishAll(machine)
+        if (machine.ticks % 5 == 0) {
+            publishAll(machine)
+            checkAccess(machine)
+        }
         updateStove(world)
+    }
+
+    /**
+     * Warns each present paying player once per payment shortly before access ends, and again when it ends.
+     */
+    private fun checkAccess(machine: Machine) {
+        val now = System.currentTimeMillis()
+        for (player in machine.players) {
+            val paidUntil = stock(player).paidUntil
+            if (paidUntil == 0L || player.smithing.staticLevel >= 60) continue
+            val left = paidUntil - now
+            if (left <= 0) {
+                stock(player).paidUntil = 0L
+                player.sendMessage("Your time to use the furnace has run out. Pay the foreman to use it again.")
+            } else if (left <= ACCESS_WARNING_MILLIS && machine.warned.put(player, paidUntil) != paidUntil) {
+                player.sendMessage("You have about one minute left to use the furnace.")
+            }
+        }
     }
 
     internal fun smelt(player: Player): Boolean {
@@ -496,6 +562,7 @@ object BlastFurnace {
             .sumOf { oreCount(player, it.oreRequired.first.id) * (ingredients(it).firstOrNull { ore -> ore.id == 453 }?.amount ?: 0) }
         set(BlastFurnaceVarbit.COAL_REQUIRED, maxOf(0, coalNeeded - oreCount(player, 453)))
         parents.forEach { (id, value) -> player.sendVarp(Varp(id, value)) }
+        BlastFurnaceGauge.update(player)
     }
 
     private fun publishAll(machine: Machine) = machine.players.filter(::present).forEach(::publish)

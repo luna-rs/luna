@@ -123,7 +123,7 @@ object Sailing {
     /**
      * Sails [plr] along [route], sending [message] as they board.
      */
-    fun sail(plr: Player, route: ShipRoute, message: String) {
+    fun sail(plr: Player, route: ShipRoute, message: String, onArrival: (Player) -> Unit = {}) {
         plr.lock()
         val tabs = HIDDEN_TABS.associateWith { plr.tabs.get(it) }
         plr.sendVarp(Varp(JOURNEY_VARP, route.journey))
@@ -138,6 +138,7 @@ object Sailing {
                 }
                 plr.move(route.destination) // Also closes the ship journey interface.
                 plr.unlock()
+                onArrival(plr)
                 plr.newDialogue().text("The ship arrives at ${route.place}.").open()
             }
         }

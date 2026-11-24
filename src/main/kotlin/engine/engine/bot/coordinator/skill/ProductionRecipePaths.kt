@@ -139,7 +139,7 @@ internal object ProductionRecipePaths {
     fun trainingOperationLimit(path: List<ProductionStage>, requested: Int,
                                remainingExperience: Double): Int {
         if (path.isEmpty() || requested < 1 || !remainingExperience.isFinite() || remainingExperience <= 0.0) return 0
-        val maximum = requested.coerceAtMost(ProductionEconomics.MAX_OPERATIONS)
+        val maximum = requested.coerceAtMost(ProductionEconomics.operationLimit(path.last().recipe.skill, training = true))
         if (path.size == 1 && path.single().operations == 1) return maximum
         val final = path.last().recipe
         val perBatch = trainingExperience(path)

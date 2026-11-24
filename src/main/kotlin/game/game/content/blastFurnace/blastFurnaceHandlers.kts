@@ -8,7 +8,8 @@ on(LoginEvent::class) { BlastFurnace.restore(plr) }
 
 npc1(2553) {
     if (!BlastFurnace.present(plr)) return@npc1
-    plr.newDialogue().options("Pay ${BlastFurnace.FEE} coins for ten minutes.", { BlastFurnace.pay(it) },
+    val foreman = targetNpc
+    plr.newDialogue().options("Pay ${BlastFurnace.FEE} coins for ten minutes.", { BlastFurnace.pay(it, foreman) },
         "Show me the furnace plan.", { it.overlays.open(StandardInterface(14578)) },
         "No, thank you.", {}).title("Blast Furnace access (free at 60 Smithing)").open()
 }
@@ -20,7 +21,7 @@ object1(9097) { BlastFurnace.operate(plr, BlastFurnaceWorkAction.Role.PEDALS) }
 object1(9089) {
     if (BlastFurnace.present(plr)) {
         BlastFurnace.publish(plr)
-        plr.overlays.open(StandardInterface(14594))
+        plr.overlays.open(BlastFurnaceGauge())
     }
 }
 object1(9143) { BlastFurnace.fillBucket(plr, gameObject) }

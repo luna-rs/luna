@@ -89,7 +89,7 @@ object QuestDoors {
         2427 to 2428, 2429 to 2428, 2430 to 2428, 2431 to 2428,
         // TODO The Grand Tree: the shipyard password.
         2438 to 2438, 2439 to 2439,
-        // TODO Dragon Slayer: the maze keys, the magic door and Elvarg's gate.
+        // Dragon Slayer records key uses and offerings separately from ordinary passage.
         2586 to 1535, 2595 to 1535, 2596 to 9464, 2597 to 9465, 2598 to 9466, 2599 to 9467, 2600 to 9468,
         2601 to 9469, 2602 to 1535, 2606 to 1588, 2607 to 1563, 2608 to 1562,
         // TODO Heroes' Quest: the gang hideouts and Scarface Pete's keys.

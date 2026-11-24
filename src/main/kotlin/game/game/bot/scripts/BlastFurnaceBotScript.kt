@@ -96,11 +96,11 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
         private const val WATCH_LIMIT_TICKS = 30L
 
         /**
-         * Shortest and longest pumping burst, in ticks, for a pumper with no gauge reader. A chosen range wide
-         * enough that a burst sometimes overheats the furnace.
+         * Shortest and longest pumping burst, in ticks, for a pumper nobody is watching. A chosen range: from the
+         * pump call, the longest burst carries the heat just past the green band, so a burst sometimes overheats.
          */
-        private const val BURST_MIN_TICKS = 4
-        private const val BURST_MAX_TICKS = 8
+        private const val BURST_MIN_TICKS = 2
+        private const val BURST_MAX_TICKS = 4
         private var Bot.nextAttempt by Attr.long()
 
         private fun defer(bot: Bot) { bot.nextAttempt = System.currentTimeMillis() + 15 * 60_000L }
@@ -542,16 +542,22 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
     }
 
     /**
-     * Pumps on a fresh "pump" call until the reader calls stop. A pumper with no reader pumps one short burst and
-     * then checks the gauge itself, so a long burst can overheat the furnace.
+     * Pumps on a fresh "pump" call until the reader calls stop. A pumper nobody has read the gauge for since it
+     * started pumps one short burst and then checks the gauge itself, so a long burst can overheat the furnace.
      */
     private suspend fun pump(): Boolean {
-        val start = world.currentTick
+        val clicked = world.currentTick
         val burst = rand(BURST_MIN_TICKS, BURST_MAX_TICKS)
-        val result = click(BlastFurnace.PUMP, 9090) && waitFor(3.seconds) { operating() } && waitFor(20.seconds) {
-            !valid() || !operating() || BlastFurnace.damage(bot) != null ||
-                BlastFurnaceCrew.call(bot)?.let { it.tick > start && it.call != Call.PUMP } == true ||
-                !BlastFurnaceCrew.readerNearby(bot) && world.currentTick - start >= burst
+        var result = click(BlastFurnace.PUMP, 9090) && waitFor(3.seconds) { operating() }
+        if (result) {
+            // The burst counts from the first pumping tick, not the click, since the walk to the pump can be long.
+            val start = world.currentTick
+            result = waitFor(20.seconds) {
+                val latest = BlastFurnaceCrew.call(bot)
+                !valid() || !operating() || BlastFurnace.damage(bot) != null ||
+                    latest != null && latest.tick > clicked && latest.call != Call.PUMP ||
+                    (latest == null || latest.tick <= start) && world.currentTick - start >= burst
+            }
         }
         pumpedUntil = world.currentTick
         stepOff()

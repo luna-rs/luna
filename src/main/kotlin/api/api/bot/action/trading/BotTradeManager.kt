@@ -1,6 +1,7 @@
 package api.bot.action.trading
 
 import api.attr.Attr
+import api.bot.action.BotBankSpace
 import api.bot.action.trading.BotTradeSpeechPool.BotTradeSpeech
 import api.predef.*
 import api.predef.ext.*
@@ -13,6 +14,7 @@ import io.luna.game.model.def.WantedItemDefinition.WantedItemPriority
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.economy.WorldEconomy
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivityWeights
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatColor
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatEffect
 import io.luna.util.NumberUtils
@@ -164,10 +166,11 @@ object BotTradeManager {
      * @param priceStrategy The pricing strategy used for non-coin items.
      * @param purpose The buying or selling purpose of the trade.
      * @param nativeTrade Whether direct sellers need a qualifying stack of each bulk commodity.
+     * @param routineSale Whether to size the surplus for an ordinary selling visit.
      * @return Candidate items for the bot's side of the trade.
      */
     fun computeOfferItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose,
-                          nativeTrade: Boolean = false): List<BotTradeItem> {
+                          nativeTrade: Boolean = false, routineSale: Boolean = false): List<BotTradeItem> {
         return when (purpose) {
             BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> {
                 // Buyers may pay with coins and eligible surplus stock, never retained equipment or supplies.
@@ -185,14 +188,34 @@ object BotTradeManager {
             // Sellers offer whatever they're selling.
             BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> {
                 val candidates = computeSellItems(bot, priceStrategy, purpose)
-                if (purpose == BotTradePurpose.MERCHANT_SELL || bot.preferences.isMerchant) {
+                val stock = if (purpose == BotTradePurpose.MERCHANT_SELL || bot.preferences.isMerchant) {
                     BotTradeSelection.merchantSales(candidates.map { quote ->
                         if (canSellAsStack(quote.item.itemDef)) quote
                         else BotTradeItem(Item(quote.item.id, 1), quote.price, quote.purpose, bot)
                     }, nativeTrade = nativeTrade)
                 } else if (nativeTrade) candidates.filter { hasNativeSaleStock(bot, it.item.id, it.item.amount) }
                 else candidates
+                if (routineSale) sizeRoutineSales(bot, stock) else stock
             }
+        }
+    }
+
+    /**
+     * Chooses how much surplus the seller takes to market. Selling a smaller lot still needs to leave
+     * a qualifying direct offer.
+     */
+    private fun sizeRoutineSales(bot: Bot, stock: List<BotTradeItem>): List<BotTradeItem> {
+        if (stock.isEmpty() || BotActivityWeights.needsStarterCoins(bot) ||
+            bot.bank.computeRemainingSize() <= BotBankSpace.START_FREE_SLOTS) return stock
+        if (BotMerchantCapital.active(bot)) {
+            val capital = BotMerchantCapital.snapshot(bot)
+            if (capital.cashRecovery || capital.stockHeavy) return stock
+        }
+        val fraction = BotTradeIntentions.budgetFraction(bot, BotTradePurpose.BUY)
+        return stock.map { quote ->
+            val amount = (quote.item.amount * fraction).toInt().coerceAtLeast(1)
+            if (amount == quote.item.amount || !hasNativeSaleStock(bot, quote.item.id, amount)) quote
+            else BotTradeItem(Item(quote.item.id, amount), quote.price, quote.purpose, bot)
         }
     }
 

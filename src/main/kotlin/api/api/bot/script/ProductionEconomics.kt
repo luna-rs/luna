@@ -1,5 +1,6 @@
 package api.bot.script
 
+import api.predef.SKILL_RUNECRAFTING
 import engine.bot.economy.BotProductionMetrics.Reason
 import kotlin.math.ceil
 
@@ -52,6 +53,11 @@ object ProductionEconomics {
      * A single plan cannot purchase an indefinite training or resale stockpile.
      */
     const val MAX_OPERATIONS = 100
+
+    private const val MAX_RUNECRAFTING_TRAINING_OPERATIONS = 1_000
+
+    internal fun operationLimit(skill: Int, training: Boolean): Int =
+        if (training && skill == SKILL_RUNECRAFTING) MAX_RUNECRAFTING_TRAINING_OPERATIONS else MAX_OPERATIONS
 
     /**
      * The affordable complete recipe basket and its immutable per-unit purchase ceilings.
@@ -116,9 +122,10 @@ object ProductionEconomics {
             } else if (output <= input) return reject(Reason.UNECONOMIC)
         }
 
-        var limit = requestedOperations.coerceAtMost(MAX_OPERATIONS)
+        val maximumOperations = operationLimit(recipe.skill, training)
+        var limit = requestedOperations.coerceAtMost(maximumOperations)
         if (training) limit = minOf(limit,
-            ceil(remainingExperience / recipe.experience).coerceIn(1.0, MAX_OPERATIONS.toDouble()).toInt())
+            ceil(remainingExperience / recipe.experience).coerceIn(1.0, maximumOperations.toDouble()).toInt())
         val toolCost = recipe.tools.fold(0L) { total, id ->
             saturatingAdd(total, if ((owned[id] ?: 0L) > 0L) 0L else inputUnitPrices.getValue(id))
         }

@@ -23,15 +23,15 @@ object BlastFurnaceCrew {
 
     /**
      * Below this reading the gauge reader calls for pumping. Chosen to leave a few degrees above the cold end of
-     * the 60 to 90 smelting band, since heat falls one degree every five ticks.
+     * the smelting band, since heat falls one degree every five ticks.
      */
-    const val PUMP_BELOW = 65
+    val PUMP_BELOW = BlastFurnace.SMELTING_HEAT.first + 4
 
     /**
-     * At or above this reading the gauge reader calls stop. Chosen well under 90 because each pumping tick adds four
-     * degrees, a reading takes a few ticks and the pumper only stops a tick or two after hearing the call.
+     * At or above this reading the gauge reader calls stop. Chosen two pumping ticks under the hot end of the
+     * smelting band, because each pumping tick adds four degrees and the pumper stops a tick or two after the call.
      */
-    const val STOP_AT = 70
+    val STOP_AT = BlastFurnace.SMELTING_HEAT.last - 8
 
     /**
      * Ticks a gauge call stays current before a reading is needed again. A chosen value.

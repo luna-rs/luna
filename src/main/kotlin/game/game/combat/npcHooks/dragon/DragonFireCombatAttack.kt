@@ -7,9 +7,11 @@ import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.CombatFormula
+import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
@@ -36,9 +38,13 @@ open class DragonFireCombatAttack(
     victim: Mob,
     private val maxHit: Int = 50,
     range: Int = 1,
+    private val elvarg: Boolean = false,
+    private val distantElvargFire: Boolean = false,
     private val commit: () -> Unit = {}
 ) : MagicCombatAttack<Npc>(
-    attacker, victim, DRAGON_FIRE_CAST_ANIMATION, DRAGON_FIRE_START_GRAPHIC, null, null,
+    attacker, victim, DRAGON_FIRE_CAST_ANIMATION, if (distantElvargFire) null else DRAGON_FIRE_START_GRAPHIC,
+    if (distantElvargFire) CombatSpell.FIRE_BLAST.def.projectile else null,
+    if (distantElvargFire) CombatSpell.FIRE_BLAST.def.endGraphic else null,
     null, null, 4, range
 ) {
     companion object {
@@ -83,6 +89,13 @@ open class DragonFireCombatAttack(
         val player = other as? Player
         val shield = player?.equipment?.shield?.id == DRAGON_FIRE_SHIELD
         val prayer = player?.combat?.prayers?.isActive(CombatPrayer.PROTECT_FROM_MAGIC) == true
+        val antifire = player?.status?.isAntiFire() == true
+        if (elvarg) {
+            message = if (shield) "Your shield absorbs most of the dragon fire!" else null
+            val protection = if (shield) 3 else 15
+            val maximum = (if (shield) 10 else 70) - (if (prayer) protection else 0) - (if (antifire) protection else 0)
+            return CombatDamageRequest.damageIgnoringPrayers(attacker, other, CombatDamageType.MAGIC, maximum).resolve()
+        }
         val accurate = !shield && !prayer && rand().nextDouble() <
             CombatFormula.calculatePhysicalDefendedMagicHitChance(attacker, other, EquipmentBonus.SLASH_DEFENCE)
         message = when {
@@ -91,7 +104,7 @@ open class DragonFireCombatAttack(
             accurate -> "You're horribly burnt by the dragon fire!"
             else -> "You manage to resist some of the dragon fire!"
         }
-        val maximum = maximumHit(shield, prayer, player?.status?.isAntiFire() == true, accurate, maxHit)
+        val maximum = maximumHit(shield, prayer, antifire, accurate, maxHit)
         return CombatDamageRequest.damageIgnoringPrayers(attacker, other, CombatDamageType.MAGIC, maximum).resolve()
     }
 
@@ -103,8 +116,12 @@ open class DragonFireCombatAttack(
     override fun attack() {
         if (victim is Player) {
             victim.overlays.closeWindows()
-            victim.playSound(Sound.DRAGONBREATH, 1)
+            victim.playSound(if (distantElvargFire) Sound.FIRE_WAVE_ALL else Sound.DRAGONBREATH, 1)
             message?.let { victim.sendMessage(it) }
+            if (elvarg) {
+                val prayer = victim.skill(Skill.PRAYER)
+                prayer.adjustLevel(-prayer.level / 10)
+            }
         }
         super.attack()
     }

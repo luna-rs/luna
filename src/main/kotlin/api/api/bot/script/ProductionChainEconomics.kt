@@ -7,7 +7,7 @@ package api.bot.script
  */
 data class ProductionStage(val recipe: ProductionRecipe, val operations: Int) {
     init {
-        require(operations in 1..ProductionEconomics.MAX_OPERATIONS)
+        require(operations in 1..ProductionEconomics.operationLimit(recipe.skill, training = true))
     }
 }
 

@@ -10100,7 +10100,7 @@
     },
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 240,
+    "hitpoints": 120,
     "maximum_hit": 20,
     "attack_speed": 7,
     "attack_animation": 80,

@@ -2,6 +2,7 @@ package game.content.sailing
 
 import api.predef.*
 import api.predef.ext.*
+import game.content.dragonSlayer.DragonSlayerShip
 import game.content.sailing.ShipGangplanks.BOARDING_PLANKS
 import game.content.sailing.ShipGangplanks.ENTRANA_PLANKS
 import game.content.sailing.ShipGangplanks.LEAVING_PLANKS
@@ -25,6 +26,7 @@ fun cross(plr: Player, plank: GameObject, aboard: Boolean) {
 
 for ((id, message) in BOARDING_PLANKS) {
     object1(id) {
+        if (id == DragonSlayerShip.BOARD_PLANK && plr.z != DragonSlayerShip.dock.z) return@object1
         cross(plr, gameObject, true)
         if (id !in ENTRANA_PLANKS) {
             plr.sendMessage("You board the ship.")

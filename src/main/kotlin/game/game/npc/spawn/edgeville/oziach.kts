@@ -7,6 +7,7 @@ package game.npc.spawn.edgeville
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
+import game.content.dragonSlayer.DragonSlayerDialogue
 import game.npc.spawn.GeneralStore
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
@@ -30,4 +31,4 @@ ShopHandler.create("Oziach's Armour") {
     }
 }
 
-npc1(747) { GeneralStore.open(plr, "Oziach's Armour") }
+npc1(747) { DragonSlayerDialogue.oziach(plr, targetNpc) { GeneralStore.open(it, "Oziach's Armour") } }
