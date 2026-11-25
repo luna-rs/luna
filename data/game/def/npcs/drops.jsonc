@@ -1429,8 +1429,7 @@
   {
     "ids": [
       3583, // Hobgoblin
-      122, // Hobgoblin
-      123 // Hobgoblin
+      122 // Hobgoblin
     ],
     "rare": "RARE",
     "drops": [
@@ -1442,255 +1441,10 @@
         "table": 1
       },
       {
-        "id": 554, // Fire rune
-        "quantity": "7",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 5282, // Mushroom spore
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0025940337224383916,
-        "table": 1
-      },
-      {
-        "id": 5296, // Toadflax seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0024154589371980675,
-        "table": 1
-      },
-      {
-        "id": 5281, // Belladonna seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.001610305958132045,
-        "table": 1
-      },
-      {
-        "id": 5297, // Irit seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.001610305958132045,
-        "table": 1
-      },
-      {
-        "id": 5106, // Poison ivy seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.001162925921618793,
-        "table": 1
-      },
-      {
-        "id": 5298, // Avantoe seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00107342206955775,
-        "table": 1
-      },
-      {
-        "id": 5280, // Cactus seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00107342206955775,
-        "table": 1
-      },
-      {
-        "id": 5299, // Kwuarm seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0008050881571532082,
-        "table": 1
-      },
-      {
-        "id": 5300, // Snapdragon seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0004472872031131189,
-        "table": 1
-      },
-      {
-        "id": 559, // Body rune
-        "quantity": "6",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 5301, // Cadantine seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0003578201595877912,
-        "table": 1
-      },
-      {
-        "id": 5302, // Lantadyme seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0002683699210992432,
-        "table": 1
-      },
-      {
-        "id": 5303, // Dwarf weed seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0001789132807328288,
-        "table": 1
-      },
-      {
-        "id": 5304, // Torstol seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 8.945584012452252e-05,
-        "table": 1
-      },
-      {
-        "id": 562, // Chaos rune
-        "quantity": "3",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 225, // Limpwurt root
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.1640625,
-        "table": 1
-      },
-      {
-        "id": 288, // Goblin mail
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0390625,
-        "table": 1
-      },
-      {
-        "id": 6802, // Champion scroll
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0002,
-        "table": 1
-      },
-      {
-        "id": 564, // Cosmic rune
-        "quantity": "2",
-        "noted": false,
-        "rarity": 0.0078125,
-        "table": 1
-      },
-      {
-        "id": 199, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.013679890560875513,
-        "table": 1
-      },
-      {
-        "id": 201, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.010256410256410256,
-        "table": 1
-      },
-      {
-        "id": 203, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.007692307692307693,
-        "table": 1
-      },
-      {
-        "id": 205, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.005980861244019139,
-        "table": 1
-      },
-      {
-        "id": 207, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.004699248120300752,
-        "table": 1
-      },
-      {
         "id": 1237, // Bronze spear
         "quantity": "1",
         "noted": false,
         "rarity": 0.0234375,
-        "table": 1
-      },
-      {
-        "id": 209, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.003417634996582365,
-        "table": 1
-      },
-      {
-        "id": 211, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.002563445270443476,
-        "table": 1
-      },
-      {
-        "id": 213, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0021362956633198035,
-        "table": 1
-      },
-      {
-        "id": 215, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0017091095539224065,
-        "table": 1
-      },
-      {
-        "id": 2485, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.001281722635221738,
-        "table": 1
-      },
-      {
-        "id": 217, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.001281722635221738,
-        "table": 1
-      },
-      {
-        "id": 5318, // Potato seed
-        "quantity": "4",
-        "noted": false,
-        "rarity": 0.05263157894736842,
-        "table": 1
-      },
-      {
-        "id": 5319, // Onion seed
-        "quantity": "4",
-        "noted": false,
-        "rarity": 0.04,
-        "table": 1
-      },
-      {
-        "id": 5324, // Cabbage seed
-        "quantity": "4",
-        "noted": false,
-        "rarity": 0.02631578947368421,
-        "table": 1
-      },
-      {
-        "id": 5322, // Tomato seed
-        "quantity": "3",
-        "noted": false,
-        "rarity": 0.012987012987012988,
         "table": 1
       },
       {
@@ -1701,31 +1455,220 @@
         "table": 1
       },
       {
-        "id": 5320, // Sweetcorn seed
-        "quantity": "3",
-        "noted": false,
-        "rarity": 0.0064516129032258064,
-        "table": 1
-      },
-      {
-        "id": 5323, // Strawberry seed
-        "quantity": "2",
-        "noted": false,
-        "rarity": 0.003215434083601286,
-        "table": 1
-      },
-      {
-        "id": 5321, // Watermelon seed
-        "quantity": "2",
-        "noted": false,
-        "rarity": 0.0015360983102918587,
-        "table": 1
-      },
-      {
         "id": 1207, // Steel dagger
         "quantity": "1",
         "noted": false,
         "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 1239, // Iron spear
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 1241, // Steel spear
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 1295, // Steel longsword
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 555, // Water rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 554, // Fire rune
+        "quantity": "7",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 559, // Body rune
+        "quantity": "6",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 564, // Cosmic rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 199, // Grimy guam leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.013679890560875513,
+        "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.010256410256410256,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.007692307692307693,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005980861244019139,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004699248120300752,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.003417634996582365,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002563445270443476,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0021362956633198035,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0017091095539224065,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001281722635221738,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001281722635221738,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "28",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "62",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 225, // Limpwurt root
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.171875,
+        "table": 1
+      },
+      {
+        "id": 288, // Goblin mail
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6802, // Champion scroll
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0002,
         "table": 1
       },
       {
@@ -1771,17 +1714,242 @@
         "table": 6
       },
       {
-        "id": 1239, // Iron spear
+        "id": 5323, // Strawberry seed
         "quantity": "1",
         "noted": false,
-        "rarity": 0.015625,
+        "rarity": 0.011723329425556858,
+        "table": 2
+      },
+      {
+        "id": 5321, // Watermelon seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005636978579481398,
+        "table": 2
+      },
+      {
+        "id": 5282, // Mushroom spore
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0025940337224383916,
+        "table": 7
+      },
+      {
+        "id": 5296, // Toadflax seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0024154589371980675,
+        "table": 7
+      },
+      {
+        "id": 5281, // Belladonna seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001610305958132045,
+        "table": 7
+      },
+      {
+        "id": 5297, // Irit seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001610305958132045,
+        "table": 7
+      },
+      {
+        "id": 5106, // Poison ivy seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001162925921618793,
+        "table": 7
+      },
+      {
+        "id": 5298, // Avantoe seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00107342206955775,
+        "table": 7
+      },
+      {
+        "id": 5280, // Cactus seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00107342206955775,
+        "table": 7
+      },
+      {
+        "id": 5299, // Kwuarm seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0008050881571532082,
+        "table": 7
+      },
+      {
+        "id": 5300, // Snapdragon seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0004472872031131189,
+        "table": 7
+      },
+      {
+        "id": 5301, // Cadantine seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0003578201595877912,
+        "table": 7
+      },
+      {
+        "id": 5302, // Lantadyme seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0002683699210992432,
+        "table": 7
+      },
+      {
+        "id": 5303, // Dwarf weed seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0001789132807328288,
+        "table": 7
+      },
+      {
+        "id": 5304, // Torstol seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 8.945584012452252e-05,
+        "table": 7
+      },
+      {
+        "id": 5318, // Potato seed
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.05263157894736842,
+        "table": 7
+      },
+      {
+        "id": 5319, // Onion seed
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.04,
+        "table": 7
+      },
+      {
+        "id": 5324, // Cabbage seed
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.02631578947368421,
+        "table": 7
+      },
+      {
+        "id": 5322, // Tomato seed
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.012987012987012988,
+        "table": 7
+      },
+      {
+        "id": 5320, // Sweetcorn seed
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0064516129032258064,
+        "table": 7
+      },
+      {
+        "id": 5323, // Strawberry seed
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.003215434083601286,
+        "table": 7
+      },
+      {
+        "id": 5321, // Watermelon seed
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0015360983102918587,
+        "table": 7
+      },
+      {
+        "id": 5100, // Limpwurt seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.012254901960784314,
+        "table": 7
+      },
+      {
+        "id": 5292, // Marrentill seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.011185682326621925,
+        "table": 7
+      },
+      {
+        "id": 5104, // Jangerberry seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00823045267489712,
+        "table": 7
+      },
+      {
+        "id": 5293, // Tarromin seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0076045627376425855,
+        "table": 7
+      },
+      {
+        "id": 5311, // Wildblood seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.007423904974016332,
+        "table": 7
+      },
+      {
+        "id": 5294, // Harralander seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00501002004008016,
+        "table": 7
+      },
+      {
+        "id": 5295, // Ranarr seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0034891835310537334,
+        "table": 7
+      },
+      {
+        "id": 5105, // Whiteberry seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0030413625304136255,
+        "table": 7
+      }
+    ]
+  },
+  {
+    "ids": [
+      123 // Hobgoblin
+    ],
+    "rare": "RARE",
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
         "table": 1
       },
       {
-        "id": 1241, // Steel spear
+        "id": 1279, // Iron sword
         "quantity": "1",
         "noted": false,
-        "rarity": 0.015625,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 1207, // Steel dagger
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
         "table": 1
       },
       {
@@ -1792,10 +1960,52 @@
         "table": 1
       },
       {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
         "id": 555, // Water rune
         "quantity": "2",
         "noted": false,
         "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 554, // Fire rune
+        "quantity": "7",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 559, // Body rune
+        "quantity": "6",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 564, // Cosmic rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0078125,
         "table": 1
       },
       {
@@ -1806,11 +2016,186 @@
         "table": 1
       },
       {
-        "id": 5100, // Limpwurt seed
+        "id": 199, // Grimy guam leaf
         "quantity": "1",
         "noted": false,
-        "rarity": 0.012254901960784314,
+        "rarity": 0.013679890560875513,
         "table": 1
+      },
+      {
+        "id": 201, // Grimy marrentill
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.010256410256410256,
+        "table": 1
+      },
+      {
+        "id": 203, // Grimy tarromin
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.007692307692307693,
+        "table": 1
+      },
+      {
+        "id": 205, // Grimy harralander
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.005980861244019139,
+        "table": 1
+      },
+      {
+        "id": 207, // Grimy ranarr weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.004699248120300752,
+        "table": 1
+      },
+      {
+        "id": 209, // Grimy irit leaf
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.003417634996582365,
+        "table": 1
+      },
+      {
+        "id": 211, // Grimy avantoe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.002563445270443476,
+        "table": 1
+      },
+      {
+        "id": 213, // Grimy kwuarm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0021362956633198035,
+        "table": 1
+      },
+      {
+        "id": 215, // Grimy cadantine
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0017091095539224065,
+        "table": 1
+      },
+      {
+        "id": 2485, // Grimy lantadyme
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001281722635221738,
+        "table": 1
+      },
+      {
+        "id": 217, // Grimy dwarf weed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001281722635221738,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.265625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "28",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "62",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 225, // Limpwurt root
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.1640625,
+        "table": 1
+      },
+      {
+        "id": 288, // Goblin mail
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 6802, // Champion scroll
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0002,
+        "table": 1
+      },
+      {
+        "id": 6306, // Trading sticks
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 6306, // Trading sticks
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 2
+      },
+      {
+        "id": 6306, // Trading sticks
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.125,
+        "table": 3
+      },
+      {
+        "id": 6306, // Trading sticks
+        "quantity": "28",
+        "noted": false,
+        "rarity": 0.125,
+        "table": 4
+      },
+      {
+        "id": 6306, // Trading sticks
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 5
+      },
+      {
+        "id": 6306, // Trading sticks
+        "quantity": "62",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 6
       },
       {
         "id": 5323, // Strawberry seed
@@ -1820,34 +2205,6 @@
         "table": 2
       },
       {
-        "id": 5292, // Marrentill seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.011185682326621925,
-        "table": 1
-      },
-      {
-        "id": 5104, // Jangerberry seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00823045267489712,
-        "table": 1
-      },
-      {
-        "id": 5293, // Tarromin seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0076045627376425855,
-        "table": 1
-      },
-      {
-        "id": 5311, // Wildblood seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.007423904974016332,
-        "table": 1
-      },
-      {
         "id": 5321, // Watermelon seed
         "quantity": "1",
         "noted": false,
@@ -1855,25 +2212,200 @@
         "table": 2
       },
       {
+        "id": 5282, // Mushroom spore
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0025940337224383916,
+        "table": 7
+      },
+      {
+        "id": 5296, // Toadflax seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0024154589371980675,
+        "table": 7
+      },
+      {
+        "id": 5281, // Belladonna seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001610305958132045,
+        "table": 7
+      },
+      {
+        "id": 5297, // Irit seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001610305958132045,
+        "table": 7
+      },
+      {
+        "id": 5106, // Poison ivy seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.001162925921618793,
+        "table": 7
+      },
+      {
+        "id": 5298, // Avantoe seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00107342206955775,
+        "table": 7
+      },
+      {
+        "id": 5280, // Cactus seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00107342206955775,
+        "table": 7
+      },
+      {
+        "id": 5299, // Kwuarm seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0008050881571532082,
+        "table": 7
+      },
+      {
+        "id": 5300, // Snapdragon seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0004472872031131189,
+        "table": 7
+      },
+      {
+        "id": 5301, // Cadantine seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0003578201595877912,
+        "table": 7
+      },
+      {
+        "id": 5302, // Lantadyme seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0002683699210992432,
+        "table": 7
+      },
+      {
+        "id": 5303, // Dwarf weed seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0001789132807328288,
+        "table": 7
+      },
+      {
+        "id": 5304, // Torstol seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 8.945584012452252e-05,
+        "table": 7
+      },
+      {
+        "id": 5318, // Potato seed
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.05263157894736842,
+        "table": 7
+      },
+      {
+        "id": 5319, // Onion seed
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.04,
+        "table": 7
+      },
+      {
+        "id": 5324, // Cabbage seed
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.02631578947368421,
+        "table": 7
+      },
+      {
+        "id": 5322, // Tomato seed
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.012987012987012988,
+        "table": 7
+      },
+      {
+        "id": 5320, // Sweetcorn seed
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0064516129032258064,
+        "table": 7
+      },
+      {
+        "id": 5323, // Strawberry seed
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.003215434083601286,
+        "table": 7
+      },
+      {
+        "id": 5321, // Watermelon seed
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0015360983102918587,
+        "table": 7
+      },
+      {
+        "id": 5100, // Limpwurt seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.012254901960784314,
+        "table": 7
+      },
+      {
+        "id": 5292, // Marrentill seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.011185682326621925,
+        "table": 7
+      },
+      {
+        "id": 5104, // Jangerberry seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.00823045267489712,
+        "table": 7
+      },
+      {
+        "id": 5293, // Tarromin seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0076045627376425855,
+        "table": 7
+      },
+      {
+        "id": 5311, // Wildblood seed
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.007423904974016332,
+        "table": 7
+      },
+      {
         "id": 5294, // Harralander seed
         "quantity": "1",
         "noted": false,
         "rarity": 0.00501002004008016,
-        "table": 1
+        "table": 7
       },
       {
         "id": 5295, // Ranarr seed
         "quantity": "1",
         "noted": false,
         "rarity": 0.0034891835310537334,
-        "table": 1
+        "table": 7
       },
       {
         "id": 5105, // Whiteberry seed
         "quantity": "1",
         "noted": false,
         "rarity": 0.0030413625304136255,
-        "table": 1
+        "table": 7
       }
     ]
   },
