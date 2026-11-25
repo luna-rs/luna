@@ -10,7 +10,7 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.magic.Magic
-import game.skill.magic.enchantJewellery.EnchantJewelleryAction.Companion.enchantJewelleryDelay
+import game.skill.magic.Magic.castDelay
 import game.skill.magic.enchantJewellery.EnchantJewelleryType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Spellbook
@@ -120,7 +120,7 @@ class EnchantJewelleryBotScript(
         return true
     }
 
-    override suspend fun finish() { bot.enchantJewelleryDelay.cancelQueuedTask() }
+    override suspend fun finish() { bot.castDelay.cancelQueuedTask() }
 
     override fun snapshot(): EnchantJewelleryData = EnchantJewelleryData().also {
         it.spell = type.name

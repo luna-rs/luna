@@ -1,10 +1,10 @@
 package game.skill.magic.enchantJewellery
 
-import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
 import game.content.randomEvents.RandomEvents
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -18,15 +18,7 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  * @author lare96
  */
 class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private val type: EnchantJewelleryType) :
-    QueuedAction<Player>(plr, plr.enchantJewelleryDelay, 3) {
-
-    companion object {
-
-        /**
-         * The time source attribute for this action.
-         */
-        val Player.enchantJewelleryDelay by Attr.timeSource()
-    }
+    QueuedAction<Player>(plr, plr.castDelay, 3) {
 
     override fun execute() {
         val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)

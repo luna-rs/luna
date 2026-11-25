@@ -1,6 +1,5 @@
 package game.skill.magic.lowHighAlch
 
-import api.attr.Attr
 import api.bot.isRealBot
 import api.predef.*
 import api.predef.ext.*
@@ -8,6 +7,7 @@ import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import game.bot.scripts.skills.AlchemyBotScript
 import engine.bot.economy.BotProductionMetrics
 import io.luna.game.action.impl.QueuedAction
@@ -24,15 +24,7 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  * @author lare96
  */
 class AlchemyAction(plr: Player, private val type: AlchemyType, private val inventoryIndex: Int) :
-    QueuedAction<Player>(plr, plr.alchemyDelay, 5) {
-
-    companion object {
-
-        /**
-         * The time source attribute for alchemy.
-         */
-        val Player.alchemyDelay by Attr.timeSource()
-    }
+    QueuedAction<Player>(plr, plr.castDelay, 5) {
 
     override fun execute() {
         val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)
