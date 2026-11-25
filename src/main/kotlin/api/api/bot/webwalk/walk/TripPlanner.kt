@@ -92,7 +92,8 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
         val toBank = planner.planToNearestBank(start, carried, intelligence, random, refine = false)
             ?: return direct("with what the bot carries, and no bank to reach")
         val stand = toBank.destination ?: start
-        val bank = banks.firstOrNull { it.stand == stand } ?: return direct("with what the bot carries")
+        val bank = banks.firstOrNull { it.stand == stand && carried.canUseBank(it) }
+            ?: return direct("with what the bot carries")
 
         var candidate: TripPlan.ViaBank? = null
         var tooBig: Spend? = null

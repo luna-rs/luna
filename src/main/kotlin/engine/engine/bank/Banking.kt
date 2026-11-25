@@ -52,14 +52,32 @@ object Banking {
      */
     fun loadBankingObjects() {
         for (definition in GameObjectDefinition.ALL) {
-            val name = definition.name
-            val actions = definition.actions
-            if ((name.equals("Bank booth") || name.equals("Bank chest")) &&
-                (actions.contains("Open") || actions.contains("Use") || actions.contains("Use-quickly"))
-            ) {
+            if (bankingDefinition(definition.id()) != null) {
                 loadObjects += definition.id()
             }
         }
+    }
+
+    /**
+     * The definition that makes object [id] a bank: its own, or for an object the client swaps by varbit (such as
+     * a booth repaired in a quest), the bank booth it turns into. Clicks on those arrive under the original id.
+     */
+    fun bankingDefinition(id: Int): GameObjectDefinition? {
+        val definition = GameObjectDefinition.ALL.get(id).orElse(null) ?: return null
+        val children = definition.varpDef?.childIdList.orEmpty()
+            .filter { it != -1 }
+            .mapNotNull { GameObjectDefinition.ALL.get(it).orElse(null) }
+        return (listOf(definition) + children).firstOrNull { isBankObject(it) }
+    }
+
+    /**
+     * Whether [definition] is a bank booth or bank chest that can be used.
+     */
+    private fun isBankObject(definition: GameObjectDefinition): Boolean {
+        val name = definition.name
+        val actions = definition.actions
+        return (name.equals("Bank booth", ignoreCase = true) || name.equals("Bank chest")) &&
+            (actions.contains("Open") || actions.contains("Use") || actions.contains("Use-quickly"))
     }
 
     /**

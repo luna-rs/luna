@@ -16,11 +16,18 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // TODO Heroes' Quest: read its completion once the quest exists.
     HEROES_QUEST(null),
 
+    // TODO In Aid of the Myreque: read its completion once the quest exists.
+    IN_AID_OF_THE_MYREQUE(null),
+
     // TODO Legends' Quest: read its completion once the quest exists.
     LEGENDS_QUEST(null),
 
     // TODO Mourning's End Part I: read whether it has been started once the quest exists.
     MOURNINGS_END_PART_I(null),
+
+    // TODO Recipe for Disaster: read its completion once the quest exists. Each subquest opens more of the
+    // Culinaromancer's chest, and the whole quest opens all of it.
+    RECIPE_FOR_DISASTER(null),
 
     // TODO Regicide: read its completion once the quest exists.
     REGICIDE(null),

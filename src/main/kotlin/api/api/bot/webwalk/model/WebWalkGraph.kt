@@ -1,5 +1,6 @@
 package api.bot.webwalk.model
 
+import engine.bank.QuestBank
 import engine.controllers.WildernessLocatableController
 import io.luna.game.model.Position
 
@@ -282,7 +283,13 @@ data class BankDefinition(val id: String,
                           val booth: Position,
                           val stand: Position,
                           val links: List<BankLink> = emptyList(),
-                          val npcId: Int? = null)
+                          val npcId: Int? = null) {
+
+    /**
+     * The quest-gated object at this anchor, if this destination represents one.
+     */
+    val questBank: QuestBank? = if (npcId == null) QuestBank.at(booth) else null
+}
 
 /**
  * The immutable web-walker graph, which is safe to share between threads.

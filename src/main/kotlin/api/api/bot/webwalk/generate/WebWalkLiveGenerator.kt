@@ -35,6 +35,7 @@ import game.obj.entrances.Entrance
 import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportSpell
 import engine.bank.Banking
+import engine.bank.QuestBank
 import engine.obj.Hatch
 import engine.obj.LadderDestination
 import engine.obj.LadderType
@@ -332,17 +333,23 @@ object WebWalkLiveGenerator {
     private fun bankSeeds(report: GenerationReport): List<BankSeed> {
         val seeds = ArrayList<BankSeed>()
         val anchors = HashSet<Position>()
+        fun add(id: String, booth: Position, questBank: QuestBank? = null) {
+            if (!anchors.add(booth)) return
+            val bankObject = world.locator.findObjectsOnTile(booth) {
+                if (questBank == null) it.id in Banking.bankingObjects else it.id == questBank.objectId
+            }.firstOrNull()
+            bankSeed(id, booth, report, canStand = { tile ->
+                LadderDestination.canLand(tile) && (bankObject == null ||
+                    world.collisionManager.reached(tile, bankObject, InteractionPolicy.STANDARD_SIZE))
+            }, objectId = questBank?.objectId)?.let { seeds += it }
+        }
+
+        for (bank in QuestBank.entries) {
+            add(bank.flag, bank.anchor, bank)
+        }
         for (zone in Zone.entries) {
             zone.bankAnchors.forEachIndexed { index, booth ->
-                if (!anchors.add(booth)) {
-                    return@forEachIndexed
-                }
-                val id = "${zone.name.lowercase()}_$index"
-                val bankObject = world.locator.findObjectsOnTile(booth) { it.id in Banking.bankingObjects }.firstOrNull()
-                bankSeed(id, booth, report, canStand = { tile ->
-                    LadderDestination.canLand(tile) && (bankObject == null ||
-                        world.collisionManager.reached(tile, bankObject, InteractionPolicy.STANDARD_SIZE))
-                })?.let { seeds += it }
+                add("${zone.name.lowercase()}_$index", booth)
             }
         }
         return seeds
@@ -360,22 +367,29 @@ object WebWalkLiveGenerator {
      * @param canStand Whether a candidate has floor and can be walked onto.
      * @param bankerIds The registered native second-click banking NPC ids.
      * @param world The world to inspect.
+     * @param objectId The required object id for a scripted bank, if any.
      * @return An immutable seed, or `null` when this anchor cannot currently be used.
      */
     internal fun bankSeed(id: String, anchor: Position, report: GenerationReport,
                           canStand: (Position) -> Boolean = LadderDestination::canLand,
                           bankerIds: Set<Int> = Banking.bankingNpcs,
-                          world: World = api.predef.world): BankSeed? {
-        val bankObject = world.locator.findObjectsOnTile(anchor) { it.id in Banking.bankingObjects }.isNotEmpty()
-        val bankers = if (bankObject) emptyList() else world.npcs.filter {
+                          world: World = api.predef.world,
+                          objectId: Int? = null): BankSeed? {
+        val bankObject = world.locator.findObjectsOnTile(anchor) {
+            if (objectId == null) it.id in Banking.bankingObjects else it.id == objectId
+        }.isNotEmpty()
+        val bankers = if (bankObject || objectId != null) emptyList() else world.npcs.filter {
             it.basePosition == anchor && it.position == anchor && it.id in bankerIds &&
                     it.state == EntityState.ACTIVE && it.isAlive
         }
         val banker = bankers.firstOrNull { BankWithdrawal.isBanker(it, bankerIds) }
         val what = "bank $id at ${DoorObstacles.describe(anchor)}"
         if (!bankObject && banker == null) {
-            val reason = if (bankers.isEmpty()) "no bank object or active registered banker at this anchor" else
-                "registered banker has no direct Bank action"
+            val reason = when {
+                objectId != null -> "no bank object $objectId at this anchor"
+                bankers.isEmpty() -> "no bank object or active registered banker at this anchor"
+                else -> "registered banker has no direct Bank action"
+            }
             report.skipped += "$what: $reason"
             return null
         }

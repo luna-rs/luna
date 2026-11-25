@@ -32,6 +32,7 @@ import api.bot.webwalk.walk.crossing.YanilleDungeonCrossing
 import api.bot.webwalk.walk.crossing.ZanarisCrossing
 import api.bot.webwalk.walk.crossing.NativeAgilityShortcutCrossing
 import api.bot.webwalk.generate.NativeAgilityShortcutSpec
+import engine.bank.QuestBank
 import game.item.greegree.Greegree
 import game.skill.agility.GnomeStrongholdRocks
 import game.obj.entrances.BrimhavenDungeonAccess
@@ -140,7 +141,9 @@ object BotConditions {
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->
                     SubZone.ESSENCE_MINE.area.contains(bot) && EssenceMine.returnWizard(bot) == wizard
-                } }
+                } } + QuestBank.entries.associate { bank ->
+                    bank.flag to { bot: Bot -> bank.passes(bot) }
+                }
 
     /**
      * The names of every condition flag.

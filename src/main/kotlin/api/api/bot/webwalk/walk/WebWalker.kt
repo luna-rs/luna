@@ -389,7 +389,7 @@ object WebWalker {
                                      fallback: Boolean = true): WebWalkResult {
         require(attempts >= 1) { "attempts must be at least 1, was $attempts" }
         missingData()?.let { return WebWalkResult(false, it) }
-        graph.banks.firstOrNull { isWithin(bot.position, it.stand, radius) }?.let {
+        graph.banks.firstOrNull { isWithin(bot.position, it.stand, radius) && it.questBank?.passes(bot) != false }?.let {
             return WebWalkResult(true, "Already at a bank.", bank = it)
         }
         return withAttempts(bot, attempts, fallback = fallback, radius = radius) {
@@ -485,6 +485,9 @@ object WebWalker {
                                    trip: TripPlan.ViaBank,
                                    destination: Position,
                                    radius: Int): WebWalkResult {
+        if (trip.bank.questBank?.passes(bot) == false) {
+            return walkCarried(bot, destination, radius, "the bank is unavailable")
+        }
         bot.log("WebWalk: going by the bank ${trip.bank.id} (${trip.access}), ${compare(trip)}.")
         val toBank = follow(bot, trip.toBank, trip.bank.stand, 0)
         if (toBank.failure == WebWalkFailure.INTERRUPTED) return toBank
@@ -580,11 +583,15 @@ object WebWalker {
         } ?: return WebWalkResult(false, "No trip from ${bot.position} to a bank.", failure = WebWalkFailure.NO_ROUTE)
 
         val end = plan.destination ?: bot.position
-        val bank = graph.banks.firstOrNull { it.stand == end }
+        val bank = graph.banks.firstOrNull { it.stand == end && it.questBank?.passes(bot) != false }
             ?: return WebWalkResult(false,
-                                    "The trip to a bank ends at $end, which is not a bank.",
+                                    "No accessible bank at $end.",
                                     plan)
-        return follow(bot, plan, bank.stand, radius).copy(bank = bank)
+        val result = follow(bot, plan, bank.stand, radius)
+        if (result.success && bank.questBank?.passes(bot) == false) {
+            return WebWalkResult(false, "The bank at $end is unavailable.", plan)
+        }
+        return result.copy(bank = bank)
     }
 
     /**
