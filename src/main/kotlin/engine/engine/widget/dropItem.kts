@@ -4,6 +4,7 @@ import api.predef.*
 import engine.item.developerItem.DeveloperItemHandler
 import game.content.chompyHunting.ChompyHunting
 import game.content.mageArena.MageArena
+import game.content.petCats.PetCats
 import game.item.degradable.DegradableDropWarningDialogue
 import game.item.degradable.DegradableEquipmentHandler
 import game.player.Sound
@@ -40,6 +41,7 @@ on(DropItemEvent::class, EventPriority.HIGH) {
         return@on
     }
     if (ChompyHunting.releaseToad(plr, index)) return@on
+    if (PetCats.release(plr, index)) return@on
     if (MageArena.dropCape(plr, index)) {
         plr.overlays.closeWindows()
     } else if(DegradableEquipmentHandler.isDropRestricted(item.id)) {
