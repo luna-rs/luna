@@ -94,6 +94,13 @@ internal object ProductionCatalogue {
                     if (armor.hides == null) emptySet() else setOf(1733)),
                     { bot, duration -> CraftArmorBotScript(bot, armor, duration) }))
             }
+            CommissionArmourBotScript.RECIPES.values.forEach { commission ->
+                val native = recipe("commission:${commission.product}", SKILL_CRAFTING, 1,
+                    commission.materials, commission.product, 0.0).copy(coinCost = commission.coins.toLong())
+                add(Entry(SKILL_CRAFTING, { bot -> native.takeIf { commission.isAvailable(bot) } },
+                    { bot, duration -> CommissionArmourBotScript(bot, commission, duration) },
+                    native.products.keys, native.materials.keys, profitOnly = true))
+            }
             Hide.entries.forEach { hide ->
                 add(fixed(recipe("tan:${hide.name}", SKILL_CRAFTING, 1,
                     listOf(Item(hide.hide)), hide.tan, 0.0).copy(coinCost = hide.cost.toLong()),

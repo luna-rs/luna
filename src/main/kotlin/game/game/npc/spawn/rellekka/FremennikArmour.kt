@@ -8,8 +8,12 @@ import io.luna.game.model.mob.dialogue.Expression
 
 /**
  * A piece of Fremennik armour, made from dagannoth hides, one part from Waterbirth Island and coins.
+ *
+ * @author lare96
  */
-class FremennikArmourPiece(val product: Int, val hides: Int, val part: Int, val coins: Int)
+class FremennikArmourPiece(val product: Int, val hides: Int, val part: Int, val coins: Int) {
+    fun optionText(): String = "${itemName(product)} (${"%,d".format(coins)} coins)"
+}
 
 /**
  * The Rellekka craftsmen who turn Waterbirth Island drops into Fremennik armour for Fremenniks.
@@ -54,7 +58,7 @@ enum class FremennikArmour(val npc: Int, val armour: String, val pieces: List<Fr
                 return
             }
             val options = maker.pieces.map { piece ->
-                DialogueOption("${itemName(piece.product)} (${"%,d".format(piece.coins)} coins)") { make(it, maker, piece) }
+                DialogueOption(piece.optionText()) { make(it, maker, piece) }
             } + DialogueOption("Nothing, thanks.") { }
             plr.newDialogue()
                 .npc(maker.npc, Expression.HAPPY, "I can make ${maker.armour} armour from dagannoth",
@@ -67,6 +71,7 @@ enum class FremennikArmour(val npc: Int, val armour: String, val pieces: List<Fr
          * Makes [piece] for [plr] if they carry its hides, part and coins.
          */
         private fun make(plr: Player, maker: FremennikArmour, piece: FremennikArmourPiece) {
+            if (!Fremennik.isFremennik(plr)) return
             val inventory = plr.inventory
             if (inventory.computeAmountForId(DAGANNOTH_HIDE) < piece.hides || !inventory.contains(piece.part) ||
                 inventory.computeAmountForId(COINS) < piece.coins) {

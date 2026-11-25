@@ -96,6 +96,8 @@ import game.bot.scripts.skills.CookFoodBotScript
 import game.bot.scripts.skills.CookFoodBotScript.Companion.CookFoodData
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
+import game.bot.scripts.skills.CommissionArmourBotScript
+import game.bot.scripts.skills.CommissionArmourBotScript.Companion.CommissionData
 import game.bot.scripts.skills.CraftRuneBotScript
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.CraftRuneData
 import game.bot.scripts.skills.MakePotteryBotScript
@@ -245,6 +247,9 @@ on(ServerLaunchEvent::class) {
     scriptManager.scriptMap["game.bot.scripts.skills.SpinFlaxBotScript"] =
         scriptManager.scriptMap.getValue(SpinTextileBotScript::class.qualifiedName!!)
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+    scriptManager.addScript<CommissionData>(CommissionArmourBotScript::class) { bot, data ->
+        CommissionArmourBotScript(bot, data)
+    }
     scriptManager.addScript<StarterLeatherBotScript.BatchData>(StarterLeatherBotScript::class) { bot, data ->
         StarterLeatherBotScript(bot, data)
     }

@@ -712,6 +712,14 @@ enum class SubZone(
         parent = { DRAYNOR }),
 
     /**
+     * The upper floor of the Wizards' Tower where the armoured wizard takes commissions.
+     */
+    WIZARDS_TOWER_ARMOUR(
+        inside = Position(3104, 3161, 1),
+        area = SimpleBoxArea.of(3100, 3156, 3113, 3166, 1),
+        parent = { DRAYNOR }),
+
+    /**
      * The home area, currently Varrock west bank. Intended for smithers, pickpockets, dumb cookers, and low -> average
      * intelligence firemakers.
      */
@@ -2619,6 +2627,14 @@ enum class SubZone(
     RELLEKKA_MARKET_STALLS(
         inside = Position(2640, 3676),
         area = SimpleBoxArea.of(2634, 3668, 2651, 3684),
+        parent = { RELLEKKA }),
+
+    /**
+     * The Rellekka streets and buildings where Skulgrimen, Sigli and Peer make armour.
+     */
+    RELLEKKA_ARMOUR_MAKERS(
+        inside = Position(2640, 3676),
+        area = SimpleBoxArea.of(2627, 3647, 2670, 3701, 0),
         parent = { RELLEKKA }),
 
     /**
