@@ -56,6 +56,12 @@ public final class BotPreference {
      * from the supplied personality when not explicitly configured.
      */
     public static final class Builder {
+
+        /**
+         * The maximum number of preferred skills kept when they are generated from the personality.
+         */
+        private static final int MAX_GENERATED_SKILLS = 5;
+
         private final BotPersonality personality;
         private final BotPersonalityManager personalityManager;
         private final Map<BotActivity, Double> activities = new HashMap<>();
@@ -210,7 +216,8 @@ public final class BotPreference {
          * Generates preferred skills from the personality unless explicit skills were added.
          * <p>
          * Personality traits may select overlapping skill IDs. If none are selected, two to four
-         * IDs are drawn without replacement from {@link Skill#IDS}.
+         * IDs are drawn without replacement from {@link Skill#IDS}. {@link #build()} trims a larger
+         * set to {@link #MAX_GENERATED_SKILLS}.
          *
          * @return A mutable set of preferred skill IDs.
          */
@@ -355,7 +362,9 @@ public final class BotPreference {
         /**
          * Builds a preference profile from the current builder state.
          * <p>
-         * Preferred skills and gear are generated only when their builder sets are empty.
+         * Preferred skills and gear are generated only when their builder sets are empty. Generated skills
+         * are trimmed at random to {@link #MAX_GENERATED_SKILLS} after the skiller and PK build filters, so
+         * strong personalities do not prefer nearly every skill.
          *
          * @return A new {@link BotPreference} instance.
          */
@@ -378,6 +387,11 @@ public final class BotPreference {
             if (skiller) preference.skills.removeIf(Skill::isCombatSkill);
             else if (preference.pk != null) preference.skills.removeIf(id ->
                     Skill.isCombatSkill(id) && preference.pk.build().targetLevel(id) == 1);
+            if (skills.isEmpty() && preference.skills.size() > MAX_GENERATED_SKILLS) {
+                List<Integer> kept = new ArrayList<>(preference.skills);
+                Collections.shuffle(kept);
+                preference.skills.retainAll(kept.subList(0, MAX_GENERATED_SKILLS));
+            }
             return preference;
         }
     }
