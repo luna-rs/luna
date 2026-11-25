@@ -221,7 +221,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         /**
          * How long the bot runs from a player in the Wilderness before it looks back at whether it is getting away.
          */
-        private val WILDERNESS_FLIGHT_LEG = 4.seconds
+        private val WILDERNESS_FLIGHT_LEG = 6.seconds
 
         /**
          * The share of its prayer points below which a bot fighting a player keeps only its cheapest prayers on.
@@ -430,6 +430,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             if (focus is Player && bot.combat.inCombat()) activatePlayerPrayer()
             return runAway()
         }
+        if (answerWildernessAttacker()) return false
         if (lootPlayerVictory()) return true
         if (focus is Npc && WineTheftLesson.attempt(bot) {
                 isRunning() && !running && targetAllowed() && focusAlive() && isActionSafe()
@@ -457,7 +458,6 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             delay(600.milliseconds)
             return isTerminated()
         }
-        if (pkSession == null && answerWildernessAttacker()) return false
         if (!combatPolicy.prepareTrainingStyle()) {
             bot.combat.target = null
             if (pkSession == null) {
@@ -809,13 +809,15 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     }
 
     /**
-     * Answers a player who starts attacking the bot in the Wilderness while it fights something else, the same way it
-     * would have answered them first ([WildernessDefence.respond]).
+     * Answers a player who starts attacking the bot in the Wilderness while it fights a monster or loots a kill, the
+     * same way it would have answered them first ([WildernessDefence.respond]). A PK fight still facing a live player
+     * keeps the patrol's own targeting.
      *
      * @return `true` if the bot now runs.
      */
     private fun answerWildernessAttacker(): Boolean {
         if (!allowPlayerRetargeting) return false
+        if (pkSession != null && focus is Player && focus.isAlive && focus.isViewableFrom(bot)) return false
         val pker = WildernessDefence.attackingPlayer(bot) ?: return false
         if (pker === focus || pker === answered) return false
         answered = pker
@@ -876,7 +878,12 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             return false
         }
         bot.combat.isDisabled = true
-        withTimeoutOrNull(WILDERNESS_FLIGHT_LEG) { handler.combat.fleeCombat() }
+        if (bot.walking.isEmpty) {
+            withTimeoutOrNull(WILDERNESS_FLIGHT_LEG) { handler.combat.fleeCombat() }
+        } else {
+            // Planning a long route takes time, so the bot keeps to the route it has until that walk ends.
+            delay(600.milliseconds)
+        }
         if (!bot.inWilderness()) {
             BotReactions.reactToEscape(bot)
             return true
