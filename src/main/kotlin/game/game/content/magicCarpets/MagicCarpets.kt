@@ -1,5 +1,6 @@
 package game.content.magicCarpets
 
+import game.content.rogueTrader.RogueTrader.carpetDiscount
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -21,6 +22,16 @@ object MagicCarpets {
      * What a flight costs for a player wearing an activated ring of Charos.
      */
     const val CHAROS_FARE = 100
+
+    /**
+     * What a flight costs once Ali Morrisane gives the Rogue Trader discount.
+     */
+    const val DISCOUNT_FARE = 100
+
+    /**
+     * What a flight costs with the Rogue Trader discount and an activated ring of Charos.
+     */
+    const val DISCOUNT_CHAROS_FARE = 75
 
     /**
      * The activated ring of Charos.
@@ -46,8 +57,12 @@ object MagicCarpets {
      * Returns what a flight costs [plr].
      */
     fun fare(plr: Player): Int {
-        // TODO Rogue Trader: once Ali Morrisane's discount is unlocked, a flight costs 100 coins, or 75 with the ring.
-        return if (plr.equipment.get(Equipment.RING)?.id == RING_OF_CHAROS_A) CHAROS_FARE else FARE
+        val charos = plr.equipment.get(Equipment.RING)?.id == RING_OF_CHAROS_A
+        return when {
+            plr.carpetDiscount -> if (charos) DISCOUNT_CHAROS_FARE else DISCOUNT_FARE
+            charos -> CHAROS_FARE
+            else -> FARE
+        }
     }
 
     /**

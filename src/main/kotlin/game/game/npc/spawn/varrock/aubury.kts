@@ -2,12 +2,14 @@ package game.npc.spawn.varrock
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
+import game.content.rogueTrader.Suppliers
 import game.skill.runecrafting.essenceMine.EssenceMine
 import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 
@@ -61,15 +63,15 @@ npc3(id = AUBURY_ID, interaction = { _, _ -> InteractionPolicy(InteractionType.S
  * The player can either open the rune shop, decline the shop, or ask Aubury to teleport them to the Rune Essence mine.
  */
 npc1(AUBURY_ID) {
-    plr.newDialogue()
-        .npc(targetNpc.id, "Do you want to buy some runes?")
-        .options(
-            "Yes please!",
-            {
+    val builder = plr.newDialogue().npc(targetNpc.id, "Do you want to buy some runes?")
+    if (Suppliers.auburyWaiting(plr)) {
+        Suppliers.auburyReminder(builder, plr)
+    }
+    val options = arrayListOf(
+            DialogueOption("Yes please!") {
                 plr.overlays.open(ShopInterface(world, SHOP_NAME))
             },
-            "Oh, it's a rune shop. No thank you, then.",
-            {
+            DialogueOption("Oh, it's a rune shop. No thank you, then.") {
                 plr.newDialogue()
                     .player("Oh, it's a rune shop. No thank you, then.")
                     .npc(
@@ -79,8 +81,7 @@ npc1(AUBURY_ID) {
                     )
                     .open()
             },
-            "Can you teleport me to the Rune Essence?",
-            {
+            DialogueOption("Can you teleport me to the Rune Essence?") {
                 plr.newDialogue()
                     .player("Can you teleport me to the Rune Essence?")
                     .npc(
@@ -92,6 +93,9 @@ npc1(AUBURY_ID) {
                         EssenceMine.teleport(targetNpc, plr)
                     }
                     .open()
-            }
-        ).open()
+            })
+    if (Suppliers.canPropose(plr)) {
+        options += DialogueOption(Suppliers.PROPOSAL) { Suppliers.propose(plr) }
+    }
+    builder.options(options).open()
 }

@@ -6,6 +6,7 @@
 package game.npc.spawn.alKharid
 
 import api.shop.dsl.ShopHandler
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -33,7 +34,8 @@ ShopHandler.create("Ali's Discount Wares") {
         1540 x 10 // Anti-dragon shield
     }
 
-    open {
-        npc1 += 1862
+    // Ali's Talk-to is his Rogue Trader dialogue, which offers this stock with "Okay.".
+    botAccess {
+        npcSeller(1, 1862, SimpleBoxArea.of(3297, 3204, 3311, 3218), dialogueOption = "Okay.")
     }
 }
