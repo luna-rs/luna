@@ -479,6 +479,20 @@ public class LocalProjectile extends LocalEntity {
     }
 
     /**
+     * Repositions the visual origin while preserving the target tracking, arrival cycle, and visibility.
+     *
+     * @param source The tile from which the client should draw the projectile.
+     * @return The projectile with its visual origin at that tile, if it forms a valid trajectory.
+     */
+    public LocalProjectile withSourcePosition(Position source) {
+        if (source.getZ() != position.getZ() || source.equals(position) || source.equals(destination)) {
+            return this;
+        }
+        return new LocalProjectile(context, id, source, destination, targetIndex, startHeight, endHeight,
+                ticksToStart, ticksToEnd, initialSlope, distanceFromSource, view);
+    }
+
+    /**
      * @return The arrival offset in 20ms client cycles, as encoded in the projectile packet.
      */
     public int getEndCycle() {

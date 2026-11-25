@@ -615,7 +615,7 @@ public abstract class Mob extends Entity {
      */
     public final void move(Position position) {
         setPosition(position);
-        walking.clear();
+        walking.resetAfterPlacement();
         interact(null);
         pendingPlacement = true;
         onMove(position);

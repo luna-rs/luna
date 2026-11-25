@@ -158,12 +158,17 @@ public final class CombatAction extends Action<Mob> {
         // Apply auto-retaliate if a valid aggressor was remembered.
         var switching = mob instanceof Bot bot && bot.getCombat().isEquipmentSwitching()
                 ? bot.getCombat().getEquipmentSwitch() : null;
-        if (switching == null && combat.getAutoRetaliateTarget() != null && (combat.isAutoRetaliate() ||
-                (mob instanceof Bot controller && (controller.isBot() || controller.isAutomationActive())))) {
-            if (combat.getAutoRetaliateTarget().isAlive()) {
-                combat.setTarget(combat.getAutoRetaliateTarget());
+        Mob retaliateTarget = combat.getAutoRetaliateTarget();
+        if (retaliateTarget != null) {
+            if (mob instanceof Player && mob.getWalking().isPlayerMoving()) {
+                combat.setAutoRetaliateTarget(null);
+            } else if (switching == null && (combat.isAutoRetaliate() ||
+                    (mob instanceof Bot controller && (controller.isBot() || controller.isAutomationActive())))) {
+                if (retaliateTarget.isAlive()) {
+                    combat.setTarget(retaliateTarget);
+                }
+                combat.setAutoRetaliateTarget(null);
             }
-            combat.setAutoRetaliateTarget(null);
         }
 
         // Stop combat if the current target is no longer valid.

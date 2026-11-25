@@ -178,7 +178,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public void retaliate(Mob enemy) {
-        if (equipmentSwitch == null) {
+        if (equipmentSwitch == null && !player.getWalking().isPlayerMoving()) {
             super.retaliate(enemy);
         }
     }

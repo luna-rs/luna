@@ -29,12 +29,14 @@ import api.bot.webwalk.walk.crossing.NativeAccessCrossing
 import api.bot.webwalk.walk.crossing.PyramidRockSlideCrossing
 import api.bot.webwalk.walk.crossing.ApeGateCrossing
 import api.bot.webwalk.walk.crossing.YanilleDungeonCrossing
+import api.bot.webwalk.walk.crossing.ZanarisCrossing
 import api.bot.webwalk.walk.crossing.NativeAgilityShortcutCrossing
 import api.bot.webwalk.generate.NativeAgilityShortcutSpec
 import game.item.greegree.Greegree
 import game.skill.agility.GnomeStrongholdRocks
 import game.obj.entrances.BrimhavenDungeonAccess
 import game.obj.entrances.IceQueenRockSlide
+import game.obj.entrances.Zanaris
 import game.skill.thieving.lockedDoor.ArdougneHouseDoorAction
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
@@ -106,6 +108,7 @@ object BotConditions {
                       ApeGateCrossing.GREEGREE_READY to { bot: Bot -> Greegree.held(bot) != null ||
                           Greegree.ITEMS.keys.any { bot.inventory.contains(it) } },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null },
+                      ZanarisCrossing.ENTRY_READY to { bot: Bot -> Zanaris.canEnter(bot) },
                       KharaziJungleCrossing.READY to { bot: Bot -> KharaziJungleCrossing.ready(bot) },
                       MoleCrossing.LIGHT_READY to { bot: Bot -> MoleCrossing.lightReady(bot) },
                       BrimhavenCrossing.PREPAID to { bot: Bot -> BrimhavenDungeonAccess.hasPaid(bot) },

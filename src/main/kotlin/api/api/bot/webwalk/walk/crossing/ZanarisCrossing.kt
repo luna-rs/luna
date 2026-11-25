@@ -15,6 +15,11 @@ object ZanarisCrossing : CrossingHandler {
 
     const val ID = "zanaris"
 
+    /**
+     * The bot would be taken through the swamp shed (see [Zanaris.canEnter]).
+     */
+    const val ENTRY_READY = "zanaris_entry_ready"
+
     override suspend fun cross(context: LegContext, leg: PlanLeg): String? {
         if (context.arrived(leg, 0)) return null
         val action = leg.action ?: return "the Zanaris crossing has no object"
