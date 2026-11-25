@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
+import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
@@ -39,6 +40,7 @@ import io.luna.game.model.`object`.GameObject
 import java.util.*
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -97,6 +99,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     private var frustrations = 0
     private var dropFailures = 0
     private var attemptedRock: GameObject? = null
+    /** Set when mining starts, until the bot has noticed that it stopped. */
+    private var noticePending = false
     private var attemptExperience = 0.0
     private var profitOreContext: ProfitOrePickupContext? = null
     private val coalTrucks = CoalTruckMining(bot, handler) { !isTerminated() && !isPaused() }
@@ -404,6 +408,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
                 bot.personality.intelligence, bot.personality.dexterity)
             if (!ignoresGas) {
                 MiningRandomEvents.cancelContinuation(bot, gas)
+                noticePending = false
                 return true
             }
         }
@@ -411,6 +416,14 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         BotConversations.tick(bot)
         if (bot.actions.first(MineOreAction::class.java) != null) return true
         finishMiningAttempt()
+        if (noticePending) {
+            noticePending = false
+            val reaction = behavior.reactionTicks()
+            if (reaction > 0) {
+                delay(600.milliseconds * reaction)
+                return true
+            }
+        }
         val coalMine = activeZone == SubZone.COAL_TRUCKS_MINE ||
                 activeZone == null && originalZones.firstOrNull() == SubZone.COAL_TRUCKS_MINE
         if (!powerMining && Ore.COAL in ores && coalMine && CoalTrucks.storedCoal(bot) >= CoalTrucks.CAPACITY)
@@ -508,6 +521,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
             behavior.settle()
             attemptedRock = target
             attemptExperience = experience
+            noticePending = true
             MiningArguments.consider(bot, target)
             if (bot.actions.first(MineOreAction::class.java) == null) finishMiningAttempt()
             if (behavior.style == Style.MEAN && (visibleMiners()[target.position] ?: 0) > 0)

@@ -19,8 +19,14 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // TODO Legends' Quest: read its completion once the quest exists.
     LEGENDS_QUEST(null),
 
+    // TODO Mourning's End Part I: read whether it has been started once the quest exists.
+    MOURNINGS_END_PART_I(null),
+
     // TODO Regicide: read its completion once the quest exists.
     REGICIDE(null),
+
+    // TODO Roving Elves: read its completion once the quest exists.
+    ROVING_ELVES(null),
 
     // TODO The Fremennik Trials: read its completion once the quest exists.
     FREMENNIK_TRIALS(null);
