@@ -8,6 +8,10 @@ import game.skill.mining.Ore
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonality
+import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.exp
+import kotlin.math.roundToInt
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -81,6 +85,27 @@ internal class MiningBehavior(personality: BotPersonality, preferred: Set<Ore>, 
     var radius = localRadius
         private set
 
+    /** Power miners watch their rock and click on at once. Other miners take a moment to notice it has gone. */
+    val watchesRock = style == Style.POWER_MINER
+
+    /**
+     * How many ticks pass before the bot notices that it has stopped mining. Most reactions take a second or two,
+     * some drag on, and now and then the bot was looking away. Dexterous bots are quicker and look away less.
+     *
+     * @param spread A standard normal roll for this reaction.
+     * @param lapse A roll from 0 to 1 for whether the bot was looking away.
+     * @param length A roll from 0 to 1 for how long it looked away.
+     * @return The ticks to wait, which is 0 for a bot that watches its rock.
+     */
+    fun reactionTicks(spread: Double = ThreadLocalRandom.current().nextGaussian(), lapse: Double = Random.nextDouble(),
+                      length: Double = Random.nextDouble()): Int {
+        if (watchesRock) return 0
+        val typical = 0.5 + 2.5 * (1.0 - dexterity)
+        var ticks = typical * exp(REACTION_SPREAD * spread)
+        if (lapse < 0.02 + 0.06 * (1.0 - dexterity)) ticks += 6 + 24 * length
+        return ticks.roundToInt().coerceIn(0, MAX_REACTION_TICKS)
+    }
+
     /** Lower scores win. Balanced miners prefer free fallback ore to a contested preferred rock. */
     fun score(ore: Ore, competitors: Int, distance: Int): Double? {
         val tier = tiers[ore] ?: return null
@@ -115,6 +140,11 @@ internal class MiningBehavior(personality: BotPersonality, preferred: Set<Ore>, 
 
     companion object {
         const val LOCAL_RADIUS = 6
+
+        /** How widely one reaction differs from the bot's typical one; reaction times have a long slow tail. */
+        const val REACTION_SPREAD = 0.7
+
+        const val MAX_REACTION_TICKS = 100
 
         /** Mining styles specialize the bot's saved traits without replacing its global activity template. */
         fun styleOf(personality: BotPersonality): Style = when {
