@@ -4,6 +4,8 @@ import api.bot.Suspendable.waitFor
 import api.bot.action.BotNpcDialogues
 import api.bot.script.DynamicBotScript
 import api.bot.script.productionRuneCosts
+import api.bot.webwalk.plan.BankAccess
+import api.bot.webwalk.walk.WebWalker
 import api.predef.*
 import engine.obj.StairDestination
 import game.content.mageTrainingArena.AlchemistsPlayground
@@ -18,6 +20,7 @@ import game.content.mageTrainingArena.MageTrainingArena.mtaStarted
 import game.content.mageTrainingArena.RewardsShop
 import game.content.mageTrainingArena.TelekineticTheatre
 import game.skill.magic.Magic
+import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellCost
 import game.skill.magic.SpellRequirement
 import game.skill.magic.bonesToItems.BonesToItemsType
@@ -48,7 +51,6 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
         private const val COINS = 995
         private const val GRAVEYARD_ENTRY_HP = 24
         private const val GRAVEYARD_EXIT_HP = 12
-        private const val WORK_SLOTS = 22
         private val GUARDIAN = Position(3363, 3304)
         private val REWARDS = Position(3362, 3318, 1)
         private val REWARD_SLOT = RewardsShop.STOCK.indexOfFirst { it.id == RewardsShop.BONES_TO_PEACHES }
@@ -77,7 +79,7 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
                 Visit(EnchantingChamber, type.level, type.spellId, type.requirements, 1, 36)
             }
             Points.GRAVEYARD -> listOf(BonesToItemsType.BANANAS).filter { bot.hitpoints.level >= GRAVEYARD_ENTRY_HP }
-                .map { Visit(CreatureGraveyard, it.level, it.spellId, it.requirements.drop(1), 1, 8) }
+                .map { Visit(CreatureGraveyard, it.level, it.spellId, it.requirements.filterIsInstance<RuneRequirement>(), 1, 8) }
         }
     }
 
@@ -155,11 +157,10 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
         val supplies = visit?.runes(bot).orEmpty()
         val bankedHat = MageTrainingArena.HATS.firstOrNull { bot.bank.contains(it) && !MageTrainingArena.hasHat(bot) }
         val supplied = supplies.all { amount(it.id) >= it.amount }
-        val slots = if (visit == null) 1 else WORK_SLOTS
-        val blocked = MageTrainingArena.carriesClue(bot) ||
+        val blocked = visit != null && MageTrainingArena.carriesClue(bot) ||
             visit?.room === AlchemistsPlayground && bot.inventory.contains(COINS) ||
             visit?.room === CreatureGraveyard && bot.inventory.containsAny(CreatureGraveyard.BANANA, CreatureGraveyard.PEACH)
-        if (bankedHat == null && supplied && !blocked && bot.inventory.computeRemainingSize() >= slots) return true
+        if (bankedHat == null && supplied && !blocked && hasWorkSpace(visit)) return true
         if (onRewardsFloor() && !stairs(false)) return false
         if (inHall() && !doorway(false)) return false
         val bank = handler.webWalkToNearestBank(attempts = 2, fallback = false) ?: return false
@@ -173,10 +174,22 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
                 val needed = item.amount - bot.inventory.computeAmountForId(item.id)
                 if (needed > 0 && !handler.banking.withdrawUnnoted(item.withAmount(needed))) return false
             }
-            return bot.inventory.computeRemainingSize() >= slots
+            return hasWorkSpace(visit)
         } finally {
             if (bot.bank.isOpen) bot.overlays.closeWindows()
         }
+    }
+
+    private fun hasWorkSpace(visit: Visit?): Boolean {
+        val roomSlots = when (visit?.room) {
+            AlchemistsPlayground -> 2
+            EnchantingChamber -> 4
+            CreatureGraveyard -> 20
+            TelekineticTheatre -> 1
+            else -> 0
+        }
+        val hatSlots = if (MageTrainingArena.hasHat(bot)) 0 else 1
+        return bot.inventory.computeRemainingSize() >= roomSlots + hatSlots
     }
 
     private fun inHall(): Boolean = bot.z == 0 && bot.position.x in 3353..3373 && bot.position.y in 3300..3323
@@ -186,7 +199,8 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
     private suspend fun enterHall(): Boolean {
         if (inHall()) return true
         if (onRewardsFloor()) return stairs(false)
-        return handler.webWalkTo(MageTrainingArena.OUTSIDE_DOORWAY, attempts = 2, fallback = false) && doorway(true)
+        return WebWalker.webWalk(bot, MageTrainingArena.OUTSIDE_DOORWAY, attempts = 2,
+            bank = BankAccess.NONE, fallback = false).success && doorway(true)
     }
 
     private suspend fun doorway(entering: Boolean): Boolean =
@@ -200,7 +214,8 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
             "How do you record the points I have earned?", "Yes please!", "Sorry, can I?")
         return BotNpcDialogues.respond(bot, guardian, listOf(option), timeout = 60.seconds,
             completed = { bot.mtaStarted && MageTrainingArena.hasHat(bot) }, playerSpeech = speech) {
-            handler.interactions.interactLocally(1, guardian)
+            handler.interactions.approachLocally(guardian, InteractionPolicy.STANDARD_SIZE) &&
+                output.sendNpcInteraction(1, guardian)
         }
     }
 
@@ -264,7 +279,7 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
                 shape.item
             }
             if (!castOn(visit, id)) return
-            if (amount(arena.ORB) >= 20 && !depositOrbs()) return
+            if ((amount(arena.ORB) >= 20 || bot.inventory.isFull) && !depositOrbs()) return
         }
         if (amount(arena.ORB) > 0) depositOrbs()
     }

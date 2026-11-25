@@ -22,25 +22,28 @@ object ArenaDialogues {
      * Talking to the Entrance Guardian.
      */
     fun entranceGuardian(plr: Player) {
-        val first = !plr.mtaStarted
-        plr.newDialogue().player("Hi.").npc(GUARD, "Greetings. What wisdom do you seek?").then {
-            if (first) {
-                it.newDialogue().options("I'm new to this place. Where am I?", ::introduction,
-                                         "None, I don't really care.", { p ->
-                    p.newDialogue().player("None, I don't really care.")
-                        .npc(GUARD, "You won't gain with that attitude.").open()
-                }).open()
-            } else entranceMenu(it)
-        }.open()
+        val dialogue = plr.newDialogue().player("Hi.").npc(GUARD, "Greetings. What wisdom do you seek?")
+        if (plr.mtaStarted) {
+            entranceOptions(dialogue)
+        } else {
+            dialogue.options("I'm new to this place. Where am I?", ::introduction, "None, I don't really care.", { p ->
+                p.newDialogue().player("None, I don't really care.")
+                    .npc(GUARD, "You won't gain with that attitude.").open()
+            })
+        }
+        dialogue.open()
     }
 
     private fun entranceMenu(plr: Player) {
-        plr.newDialogue().options(
+        entranceOptions(plr.newDialogue()).open()
+    }
+
+    private fun entranceOptions(dialogue: DialogueQueueBuilder): DialogueQueueBuilder =
+        dialogue.options(
             "Can you tell me about this place again?", ::history,
             "Can you explain the different portals?", { it.newDialogue().player("Can you explain the different portals?").then(::portals).open() },
             "About the progress hat...", ::aboutHat,
-            "Thanks, bye!", ::bye).open()
-    }
+            "Thanks, bye!", ::bye)
 
     private fun introduction(plr: Player) {
         plr.newDialogue()
