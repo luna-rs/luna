@@ -8,6 +8,7 @@ import engine.controllers.WildernessLocatableController.levelAt
 import game.bot.scripts.combat.CombatBotScript.InitialState
 import io.luna.Luna
 import io.luna.game.model.EntityState
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -44,14 +45,25 @@ object WildernessDefence {
      */
     @JvmStatic
     fun attackingPlayer(bot: Bot): Player? {
-        if (!bot.inWilderness()) return null
+        if (!bot.inWilderness() || !bot.combat.inCombat()) return null
         val combat = bot.actionHandler.combat
-        return listOfNotNull(bot.combat.lastAttackReceived?.attacker, bot.combat.lastCombatWith)
-            .filterIsInstance<Player>().firstOrNull {
-                it !== bot && it.isAlive && it.state == EntityState.ACTIVE && it.inWilderness() &&
-                    combat.canRetaliateAgainst(it)
-            }
+        fun attacking(player: Player) = player !== bot && player.isAlive && player.state == EntityState.ACTIVE &&
+            player.inWilderness() && (combat.canRetaliateAgainst(player) || castAt(bot, player))
+        val latest = listOfNotNull(bot.combat.lastAttackReceived?.attacker, bot.combat.lastCombatWith)
+            .filterIsInstance<Player>().firstOrNull(::attacking)
+        if (latest != null) return latest
+        // In multi-combat a monster's hits hide the player's from the bot's latest-attack history.
+        if (!bot.combat.lastCombatWith.let { it is Npc }) return null
+        return world.locator.findViewablePlayers(bot) { it.combat.target === bot && attacking(it) }.firstOrNull()
     }
+
+    /**
+     * Whether [player] just launched an attack at [bot] that hasn't landed yet. A manual spell drops the caster's
+     * target as it launches, so until the spell hits only the shared combat history shows the attack.
+     */
+    private fun castAt(bot: Bot, player: Player): Boolean =
+        bot.combat.inCombat() && player.combat.inCombat() && bot.combat.lastCombatWith === player &&
+            player.combat.lastCombatWith === bot && bot.combat.target !== player
 
     /**
      * The PK patrol that owns a fight against [attacker], or `null` when its hunting rules wouldn't let it chase them.

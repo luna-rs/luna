@@ -132,8 +132,10 @@ public final class BotReflex {
             return false;
         }
 
-        // Automatically respond to combat if we aren't already.
-        if (!bot.isEventBot() && !disableCombatReflex && bot.getCombat().inCombat() &&
+        // Automatically respond to combat if we aren't already. A player attacking the bot in the Wilderness is
+        // answered even while a walk or a training script has the reflex off.
+        Player pker = bot.isEventBot() ? null : WildernessDefence.attackingPlayer(bot);
+        if (!bot.isEventBot() && (!disableCombatReflex || pker != null) && bot.getCombat().inCombat() &&
                 !(bot.getScriptStack().current() instanceof CombatBotScript)) {
             if (bot.getScriptStack().current() != null && !bot.getScriptStack().current().getAllowsCombatResponse()) {
                 // Activities such as scavenging and Abyss trips own escape without creating an attacking child.
@@ -148,7 +150,6 @@ public final class BotReflex {
                 focus = bot.getActionHandler().getCombat().opponent();
             }
             // A player who attacks a bot in the Wilderness is answered first, even when it was fighting a monster.
-            Player pker = WildernessDefence.attackingPlayer(bot);
             if (pker != null) {
                 focus = pker;
             }
