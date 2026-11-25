@@ -211,8 +211,8 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
     /**
      * Builds a Fishing training script.
      *
-     * The selected tool is the best [Tool] the bot can use at its current Fishing level. If no valid tool can be
-     * found, the script falls back to [SMALL_NET].
+     * Tools are ranked by their Fishing requirements, with harpoon fishing ranked at level 50 once it can
+     * catch swordfish. If no valid tool can be found, the script falls back to [SMALL_NET].
      *
      * The selected tool is then used to choose an appropriate fishing zone.
      */
@@ -221,6 +221,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        val fishing = minOf(level, bot.fishing.level)
         val activities = BOT_TOOLS.filter { tool ->
             when (tool) {
                 LAVA_EEL_FISHING_ROD -> bot.itemTracker.contains(tool.id)
@@ -231,7 +232,9 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         }.map { tool ->
             BotSkillingActivity(tokens = setOf(tool), zones = getZones(bot, tool).toSet())
         }
-        val activity = getBestSkillingActivity(bot, level, { it.level }, activities)
+        val activity = getBestSkillingActivity(bot, fishing, { tool ->
+            if (tool == HARPOON && fishing >= Fish.SWORDFISH.level) Fish.SWORDFISH.level else tool.level
+        }, activities)
             ?: BotSkillingActivity(tokens = setOf(SMALL_NET), zones = getZones(bot, SMALL_NET).toSet())
 
         return FishBotScript(
