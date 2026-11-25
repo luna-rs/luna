@@ -1,12 +1,12 @@
 package game.skill.magic.bonesToItems
 
-import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
 import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
@@ -25,7 +25,7 @@ import io.luna.game.model.mob.block.Graphic
  * @author lare96
  */
 class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
-    QueuedAction<Player>(plr, plr.bonesToItemsDelay, 3) {
+    QueuedAction<Player>(plr, plr.castDelay, 3) {
 
     companion object {
 
@@ -33,11 +33,6 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
          * The item id of bones.
          */
         val BONES = 526
-
-        /**
-         * The attribute representing the time source for an action.
-         */
-        val Player.bonesToItemsDelay by Attr.timeSource()
     }
 
     override fun execute() {

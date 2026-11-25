@@ -1,12 +1,12 @@
 package game.skill.magic.superheatItem
 
-import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
 import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
 import game.skill.smithing.BarType
@@ -35,7 +35,7 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  *
  * @author lare96
  */
-class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Player>(plr, plr.superheatDelay, 5) {
+class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Player>(plr, plr.castDelay, 5) {
     companion object {
 
         /**
@@ -60,11 +60,6 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
             RuneRequirement(Rune.FIRE, 4),
             RuneRequirement(Rune.NATURE, 1)
         )
-
-        /**
-         * The time source attribute for superheating.
-         */
-        val Player.superheatDelay by Attr.timeSource()
     }
 
     override fun execute() {

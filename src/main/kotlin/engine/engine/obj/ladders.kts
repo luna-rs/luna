@@ -24,11 +24,6 @@ val LADDER_ACTIONS = listOf("Climb", "Climb-up", "Climb-down", "Climb-Down")
 val MINING_GUILD_LADDER = 2113
 
 /**
- * The ladder out of the Port Phasmatys brewery's cellar, whose name isn't capitalised.
- */
-val PHASMATYS_BREWERY_LADDER = 7433
-
-/**
  * The Barbarian Outpost agility course ladders, which barbarian_outpost.kts climbs instead.
  */
 val AGILITY_COURSE_LADDERS = setOf(Position(2532, 3545), Position(2532, 3545, 1))
@@ -120,7 +115,8 @@ on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
         // The cave monk, Castle Wars and Rogues' Den plugins own their ladder admission and travel.
         if (def.id() in setOf(2408, 4911, 4912, 6280, 6281, 7221)) continue
-        if (def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER) {
+        // The Port Phasmatys brewery and Lletya ladders are named "ladder".
+        if (def.name.equals("Ladder", ignoreCase = true)) {
             def.actions.forEachIndexed { index, name -> handleIndex(def.id(), index, name) }
         }
     }

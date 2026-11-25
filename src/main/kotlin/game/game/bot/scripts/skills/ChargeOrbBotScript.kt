@@ -10,9 +10,9 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import game.skill.magic.chargeOrb.ChargeOrbAction
 import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.UNPOWERED_ORB
-import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.chargeOrbDelay
 import game.skill.magic.chargeOrb.ChargeOrbType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Spellbook
@@ -121,7 +121,7 @@ class ChargeOrbBotScript(bot: Bot, val type: ChargeOrbType, duration: Duration, 
     }
 
     override suspend fun finish() {
-        bot.chargeOrbDelay.cancelQueuedTask()
+        bot.castDelay.cancelQueuedTask()
     }
 
     override fun snapshot(): ChargeOrbData = ChargeOrbData().also {

@@ -43,9 +43,10 @@ object DegradableEquipmentHandler {
     const val RING_OF_RECOIL_CHARGES = 40
 
     /**
-     * The starting charge count assigned to Crystal items managed by this handler.
+     * The charges each stage of a crystal bow or shield holds: 250 shots, or 250 damage taken, before it degrades to
+     * the next stage, so a new item lasts 2,500 across its ten stages.
      */
-    const val CRYSTAL_ITEMS_CHARGES = 2500
+    const val CRYSTAL_ITEMS_CHARGES = 250
 
     /**
      * The player's remaining Ring of Recoil capacity.
