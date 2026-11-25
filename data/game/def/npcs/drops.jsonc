@@ -823,6 +823,69 @@
         "table": 2
       },
       {
+        "id": 561, // Nature rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 886, // Steel arrow
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.140625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.1171875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.0546875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "16",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "25",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "33",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "48",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
         "id": 884, // Iron arrow
         "quantity": "1",
         "noted": false,
@@ -2165,6 +2228,55 @@
         "table": 2
       },
       {
+        "id": 560, // Death rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "1-4",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "120",
+        "noted": false,
+        "rarity": 0.3125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "40",
+        "noted": false,
+        "rarity": 0.2265625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "200",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.0546875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "450",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
         "id": 562, // Chaos rune
         "quantity": "12",
         "noted": false,
@@ -3139,6 +3251,55 @@
         "table": 1
       },
       {
+        "id": 892, // Rune arrow
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "196",
+        "noted": false,
+        "rarity": 0.3125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "66",
+        "noted": false,
+        "rarity": 0.2265625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "330",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "690",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
         "id": 1123, // Adamant platebody
         "quantity": "1",
         "noted": false,
@@ -3688,6 +3849,55 @@
         "table": 1
       },
       {
+        "id": 561, // Nature rune
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "44",
+        "noted": false,
+        "rarity": 0.2265625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "132",
+        "noted": false,
+        "rarity": 0.1953125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "200",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "11",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "440",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
         "id": 1213, // Rune dagger
         "quantity": "1",
         "noted": false,
@@ -3819,6 +4029,48 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 829, // Adamant javelin
+        "quantity": "30",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "25",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "196",
+        "noted": false,
+        "rarity": 0.3203125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "330",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "690",
+        "noted": false,
+        "rarity": 0.0078125,
         "table": 1
       },
       {
@@ -4262,6 +4514,69 @@
         "quantity": "10",
         "noted": false,
         "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "9",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "92",
+        "noted": false,
+        "rarity": 0.3125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "47",
+        "noted": false,
+        "rarity": 0.140625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "25",
+        "noted": false,
+        "rarity": 0.0859375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "150",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "350",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.015625,
         "table": 1
       },
       {
@@ -4730,6 +5045,41 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.05714285714285714,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "24",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.0234375,
         "table": 1
       },
       {
@@ -6221,6 +6571,76 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "28",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "62",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "6",
+        "noted": false,
+        "rarity": 0.015625,
         "table": 1
       },
       {
@@ -10191,6 +10611,62 @@
         "table": 1
       },
       {
+        "id": 560, // Death rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "35",
+        "noted": false,
+        "rarity": 0.1640625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.109375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "6",
+        "noted": false,
+        "rarity": 0.0859375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "58",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "80",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
         "id": 557, // Earth rune
         "quantity": "10",
         "noted": false,
@@ -10364,6 +10840,48 @@
         "quantity": "12",
         "noted": false,
         "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0546875,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "8",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "29",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "35",
+        "noted": false,
+        "rarity": 0.0078125,
         "table": 1
       },
       {
@@ -11525,6 +12043,41 @@
         "quantity": "1-2",
         "noted": false,
         "rarity": 0.08620689655172414,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.1171875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "29",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.0078125,
         "table": 1
       },
       {
@@ -17383,6 +17936,62 @@
         "table": 1
       },
       {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.265625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "28",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "62",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
         "id": 554, // Fire rune
         "quantity": "7",
         "noted": false,
@@ -18432,6 +19041,62 @@
         "quantity": "9",
         "noted": false,
         "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "35",
+        "noted": false,
+        "rarity": 0.203125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.1015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "53",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0546875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "80",
+        "noted": false,
+        "rarity": 0.015625,
         "table": 1
       },
       {
@@ -20383,6 +21048,41 @@
         "table": 1
       },
       {
+        "id": 561, // Nature rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.28125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
         "id": 199, // Herb
         "quantity": "1",
         "noted": false,
@@ -20531,6 +21231,41 @@
         "table": 1
       },
       {
+        "id": 561, // Nature rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.28125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
         "id": 199, // Herb
         "quantity": "1",
         "noted": false,
@@ -20648,6 +21383,41 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.0273224043715847,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.28125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
         "table": 1
       },
       {
@@ -20775,6 +21545,41 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.28125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "42",
+        "noted": false,
+        "rarity": 0.0234375,
         "table": 1
       },
       {
@@ -21712,6 +22517,69 @@
         "noted": false,
         "rarity": 0.0234375,
         "table": 4
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "48",
+        "noted": false,
+        "rarity": 0.1171875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.1171875,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "45-53",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "120",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "8",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
       },
       {
         "id": 555, // Water rune
@@ -23345,6 +24213,62 @@
         "table": 1
       },
       {
+        "id": 563, // Law rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "6",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 886, // Steel arrow
+        "quantity": "30",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "37",
+        "noted": false,
+        "rarity": 0.1484375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "119",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "300",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
         "id": 556, // Air rune
         "quantity": "18",
         "noted": false,
@@ -24241,6 +25165,69 @@
         "quantity": "15",
         "noted": false,
         "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 886, // Steel arrow
+        "quantity": "10",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "6",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "38",
+        "noted": false,
+        "rarity": 0.109375,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "52",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "8",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "88",
+        "noted": false,
+        "rarity": 0.015625,
         "table": 1
       },
       {
@@ -28394,6 +29381,34 @@
         "table": 2
       },
       {
+        "id": 561, // Nature rune
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "12",
+        "noted": false,
+        "rarity": 0.140625,
+        "table": 1
+      },
+      {
         "id": 565, // Blood rune
         "quantity": "2",
         "noted": false,
@@ -28822,6 +29837,34 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.014641288433382138,
+        "table": 1
+      },
+      {
+        "id": 561, // Nature rune
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.0546875,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.4609375,
         "table": 1
       },
       {
