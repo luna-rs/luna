@@ -14,6 +14,11 @@ object Smithing {
      */
     const val HAMMER = 2347
 
+    const val DRAGON_SHIELD_LEFT_HALF = 2366
+    const val DRAGON_SHIELD_RIGHT_HALF = 2368
+    const val DRAGON_SQUARE_SHIELD = 1187
+    const val DRAGON_SHIELD_LEVEL = 60
+
     /**
      * All anvil object IDs.
      */

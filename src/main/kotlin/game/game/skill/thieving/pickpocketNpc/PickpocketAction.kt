@@ -10,6 +10,7 @@ import game.content.randomEvents.RandomEvents
 import game.skill.thieving.Thieving
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
+import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -22,9 +23,14 @@ import io.luna.game.task.Task
  * @param mob The player attempting to pickpocket the NPC.
  * @param target The NPC being pickpocketed.
  * @param thievable The pickpocket definition used to determine level requirements, loot, experience, stun duration, and success chance.
+ * @param shown The definition the player sees for [target], which differs from its own for NPCs that change with quest
+ * progress.
  * @author lare96
  */
-class PickpocketAction(val mob: Player, val target: Npc, val thievable: ThievingNpcType) {
+class PickpocketAction(val mob: Player,
+                       val target: Npc,
+                       val thievable: ThievingNpcType,
+                       val shown: NpcDefinition = target.def()) {
 
     companion object {
 
@@ -42,8 +48,8 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
          * Starts a pickpocket attempt from a click: on the tick the click is handled once [DELAY] ticks have passed
          * since the last attempt, otherwise as soon as they have. Only the latest click waits.
          */
-        fun start(plr: Player, target: Npc, thievable: ThievingNpcType) {
-            val attempt = PickpocketAction(plr, target, thievable)
+        fun start(plr: Player, target: Npc, thievable: ThievingNpcType, shown: NpcDefinition = target.def()) {
+            val attempt = PickpocketAction(plr, target, thievable, shown)
             val source = plr.lastPickpocket
             if (source.ready(DELAY)) {
                 source.cancelQueuedTask()
@@ -66,7 +72,7 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
      * Makes the attempt: the attempt line now, the result on the next tick.
      */
     fun execute() {
-        val pocket = thievable.pocket(target)
+        val pocket = thievable.pocket(shown)
         if (mob.status.isStunned()) {
             // A click already on its way when the stun lands still reaches here.
             mob.sendMessage("You're stunned!")
@@ -96,7 +102,7 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
 
         world.scheduleOnce(1) {
             if (mob.state != EntityState.INACTIVE && target.state != EntityState.INACTIVE) {
-                if (Thieving.canPickpocket(mob, thievable)) {
+                if (!thievable.blackjackOnly && Thieving.canPickpocket(mob, thievable)) {
                     mob.sendMessage("You pick the $pocket's pocket.")
                     if (thievable == ThievingNpcType.MASTER_FARMER) {
                         loot.forEach { mob.sendMessage("You steal ${it.amount} ${seedName(it, it.amount > 1)}.") }
@@ -139,7 +145,7 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
      * fixed damage and is stunned for [ThievingNpcType.stunTicks].
      */
     private fun caught(pocket: String) {
-        target.speak(thievable.shout)
+        target.speak(thievable.shouts.random())
         mob.sendMessage("You fail to pick the $pocket's pocket.")
         target.interact(mob)
         target.animation(Animation(target.combat.getAttackAnimation(CombatDamageType.MELEE),
@@ -149,8 +155,9 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
             if (mob.state == EntityState.INACTIVE) {
                 return@scheduleOnce
             }
-            val defenceAnimation = mob.combat.getDefenceAnimation(CombatDamageType.MELEE, thievable.damage)
-            mob.damage(thievable.damage)
+            val damage = rand(thievable.damage..thievable.maxDamage)
+            val defenceAnimation = mob.combat.getDefenceAnimation(CombatDamageType.MELEE, damage)
+            mob.damage(damage)
             if (defenceAnimation > 0) {
                 mob.animation(Animation(defenceAnimation))
             }
