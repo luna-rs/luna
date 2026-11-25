@@ -65,6 +65,13 @@ public final class DestroyItemDialogue extends DialogueInterface {
     }
 
     /**
+     * @return The id of the item this dialogue destroys.
+     */
+    public int getItemId() {
+        return itemId;
+    }
+
+    /**
      * Destroys the item by removing it from the inventory.
      *
      * @param player The Player to destroy the item for.

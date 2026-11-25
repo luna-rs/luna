@@ -128549,11 +128549,11 @@
       "frequency": "NORMAL"
     }
   },
-  // Maze Guardian (id 3102) x2
+  // Telekinetic Guardian (id 3098) x2
   {
-    "id": 3102,
+    "id": 3098,
     "position": {
-      "x": 3354,
+      "x": 3358,
       "y": 9679,
       "z": 2
     },
@@ -128563,10 +128563,10 @@
     }
   },
   {
-    "id": 3102,
+    "id": 3098,
     "position": {
-      "x": 3357,
-      "y": 9707,
+      "x": 3355,
+      "y": 9701,
       "z": 2
     },
     "wander": {
