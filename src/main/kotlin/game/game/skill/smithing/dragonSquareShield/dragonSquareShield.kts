@@ -3,30 +3,14 @@ package game.skill.smithing.dragonSquareShield
 import api.predef.*
 import game.player.Sound
 import game.skill.smithing.Smithing
+import game.skill.smithing.Smithing.DRAGON_SHIELD_LEFT_HALF as LEFT_HALF
+import game.skill.smithing.Smithing.DRAGON_SHIELD_LEVEL as LEVEL
+import game.skill.smithing.Smithing.DRAGON_SHIELD_RIGHT_HALF as RIGHT_HALF
+import game.skill.smithing.Smithing.DRAGON_SQUARE_SHIELD
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-
-/**
- * The left half of the dragon square shield.
- */
-val LEFT_HALF = 2366
-
-/**
- * The right half of the dragon square shield.
- */
-val RIGHT_HALF = 2368
-
-/**
- * The repaired dragon square shield.
- */
-val DRAGON_SQ_SHIELD = 1187
-
-/**
- * The Smithing level needed to repair the shield.
- */
-val LEVEL = 60
 
 /**
  * Repairs the two shield halves at an anvil, after six ticks of hammering.
@@ -51,7 +35,7 @@ fun repair(plr: Player) {
 
                 override fun run(): Boolean {
                     if (mob.inventory.remove(Item(LEFT_HALF)) && mob.inventory.remove(Item(RIGHT_HALF))) {
-                        mob.inventory.add(Item(DRAGON_SQ_SHIELD))
+                        mob.inventory.add(Item(DRAGON_SQUARE_SHIELD))
                         mob.smithing.addExperience(75.0)
                         mob.newDialogue().text("Even for an experienced armourer it is not an easy task, but " +
                                                    "eventually it is ready. You have restored the dragon square " +
