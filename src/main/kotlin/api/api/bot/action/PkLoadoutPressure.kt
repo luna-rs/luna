@@ -115,7 +115,6 @@ internal fun pkRangedAmmo(bot: Bot, weapon: Int, ammoId: Int?, equippedOnly: Boo
     if (ammoless != null) {
         val item = ammoItem(Equipment.WEAPON, weapon) ?: return null
         val shots = when {
-            ammoless.type == AmmoType.CRYSTAL_ARROW && weapon == 4212 -> 0
             ammoless.type == AmmoType.CRYSTAL_ARROW -> (item as? DynamicItem)?.charges ?: CRYSTAL_ITEMS_CHARGES
             item.itemDef.isStackable -> item.amount
             else -> Int.MAX_VALUE
