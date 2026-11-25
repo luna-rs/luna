@@ -134,6 +134,7 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
             }
             if (bot.arenaRoom != null &&
                 (!clickObject(MageTrainingArena.EXIT_TELEPORT) || !waitFor(4.seconds) { bot.arenaRoom == null })) {
+                bot.log("Mage Training Arena: could not reach the exit from ${bot.position}.")
                 return@withTimeoutOrNull
             }
             if (readyToBuy()) buySpell()
@@ -246,20 +247,27 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
     }
 
     private suspend fun alchemy(visit: Visit) {
-        val arena = AlchemistsPlayground
         for (cast in 0 until visit.maxCasts) {
             if (!needs(Points.ALCHEMIST) || !visit.canCast(bot)) break
-            val cupboard = objects(48) { normalizedCupboard(it.id) in arena.CUPBOARDS }
-                .mapNotNull { obj -> arena.itemIn(normalizedCupboard(obj.id))?.let { obj to arena.coinValue(it) } }
-                .maxWithOrNull(compareBy({ it.second }, { -it.first.position.computeLongestDistance(bot.position) }))
-                ?.first ?: return
-            if (!handler.interactions.interactLocally(1, cupboard) ||
-                !waitFor(3.seconds) { arena.ITEMS.any(bot.inventory::contains) }) return
-            val id = arena.ITEMS.first(bot.inventory::contains)
-            if (!castOn(visit, id)) return
+            val id = takeCupboardItem() ?: break
+            if (!castOn(visit, id)) break
             if (amount(COINS) >= 100 && !depositAlchemy()) return
         }
         if (amount(COINS) > 0) depositAlchemy()
+    }
+
+    private suspend fun takeCupboardItem(): Int? {
+        val arena = AlchemistsPlayground
+        repeat(3) {
+            val cupboard = objects(48) { normalizedCupboard(it.id) in arena.CUPBOARDS }
+                .mapNotNull { obj -> arena.itemIn(normalizedCupboard(obj.id))?.let { obj to arena.coinValue(it) } }
+                .maxWithOrNull(compareBy({ it.second }, { -it.first.position.computeLongestDistance(bot.position) }))
+                ?.first ?: return null
+            if (click(cupboard) && waitFor(3.seconds) { arena.ITEMS.any(bot.inventory::contains) }) {
+                return arena.ITEMS.first(bot.inventory::contains)
+            }
+        }
+        return null
     }
 
     private fun normalizedCupboard(id: Int) = if (id % 2 == 0) id - 1 else id
@@ -341,5 +349,5 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
 internal suspend fun Bot.closeArenaDialogue(): Boolean {
     if (!output.sendCloseInterface()) return false
     val closeTick = world.currentTick
-    return waitFor(4.seconds) { world.currentTick > closeTick && !overlays.hasWindow() }
+    return waitFor(4.seconds) { world.currentTick >= closeTick + 2 && !overlays.hasWindow() }
 }

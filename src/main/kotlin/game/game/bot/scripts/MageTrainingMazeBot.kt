@@ -52,9 +52,17 @@ internal object MageTrainingMazeBot {
             val maze = TelekineticTheatre.MAZES.firstOrNull { it.contains(statue.position) } ?: return
             val path = solve(maze, statue.position) ?: return
             for (direction in path) {
-                if (bot.arenaRoom !== TelekineticTheatre || !allowed() || !pull(bot, maze, direction)) return
+                if (bot.arenaRoom !== TelekineticTheatre || !allowed()) return
+                if (!pull(bot, maze, direction)) {
+                    bot.log("Mage Training Arena: could not pull the statue ${direction.name.lowercase()}.")
+                    return
+                }
             }
-            if (index == 4 || !allowed() || !nextMaze(bot)) return
+            if (index == 4 || !allowed()) return
+            if (!nextMaze(bot)) {
+                bot.log("Mage Training Arena: could not start the next maze.")
+                return
+            }
         }
     }
 
