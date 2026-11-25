@@ -9,6 +9,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.content.mageTrainingArena.MageTrainingArena.bonesToPeachesUnlocked
 import game.skill.magic.Magic
 import game.skill.magic.Magic.castDelay
 import game.skill.magic.SpellCost
@@ -87,9 +88,11 @@ class BonesToFoodBotScript(
     private fun materials(): List<Item> = listOf(Item(BONES)) + bot.productionRuneCosts(type.requirements)
 
     /**
-     * Uses Luna's current player spell eligibility and owned stock; no unlock flags or free materials are invented.
+     * Uses Luna's current player spell eligibility and owned stock; no free materials are invented. Bones to Peaches
+     * also needs the spell bought from the Mage Training Arena.
      */
     fun isEligible(): Boolean = bot.spellbook == Spellbook.REGULAR && bot.magic.staticLevel >= type.level &&
+        (type != BonesToItemsType.PEACHES || bot.bonesToPeachesUnlocked) &&
         bot.itemTracker.count(type.id) < FOOD_TARGET && bot.ownsProductionSupplies(materials())
 
     /**
