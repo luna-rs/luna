@@ -295,6 +295,31 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         }
 
         /**
+         * Gathers one load of naturally dropped bones when a Prayer trainee has no usable stock or purchase.
+         */
+        internal fun prayerBoneGatheringScript(bot: Bot, duration: Duration): NpcDropGatheringScript? {
+            if (bot.preferences.isSkiller || CombatLoadout.find(bot, BotGearPurpose.MELEE) == null) return null
+            val readiness = combatReadiness(bot, BotGearPurpose.MELEE)
+            val giants = setOf(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, SubZone.TAVERLY_HILL_GIANTS,
+                SubZone.GNOME_STRONGHOLD_HILL_GIANTS, SubZone.SOUTHWEST_ARDOUGNE_HILL_GIANTS)
+            val starters = setOf(SubZone.LUMBRIDGE_CHICKEN_COOP, SubZone.NORTH_LUMBRIDGE_COW_FIELD,
+                SubZone.SOUTH_FALADOR_FARM_WEST_CHICKENS, SubZone.SOUTH_FALADOR_FARM_EAST_CHICKENS)
+            fun options(zones: Set<SubZone>) = camps.filter {
+                it.zone in zones && it.minimum <= readiness && it.zone.entryBlocker(bot) == null &&
+                    bot.recentEscape?.avoids(it.zone) != true && NpcCombatScript.campSuppliesOwned(bot, it.zone)
+            }.sortedBy { bot.position.computeLongestDistance(it.zone.inside) }.take(3)
+
+            val higher = if (bot.personality.isDextrous) options(giants) else emptyList()
+            val available = higher.ifEmpty { options(starters) }
+            if (available.isEmpty()) return null
+            val id = if (higher.isEmpty()) 526 else BIG_BONES
+            val names = HashMultimap.create<SubZone, String>()
+            available.forEach { names.putAll(it.zone, it.names) }
+            return NpcDropGatheringScript(bot, id, bot.totalItemAmount(id) + 28, minOf(duration, 20.minutes),
+                available.map { it.zone }.toMutableList(), names, sellOnCompletion = false)
+        }
+
+        /**
          * Keeps herb camps out of general combat and offers their focused gathering lifecycle only for profit.
          */
         internal fun herbGatheringScript(bot: Bot, training: Boolean, duration: Duration): HerbGatheringScript? =

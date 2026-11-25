@@ -56,7 +56,8 @@ internal object PrayerOuting {
     }
 
     fun select(bot: Bot, maximumTicks: Long, maxWorships: Int = MAX_WORSHIPS, shop: Boolean = true,
-               onlyRecipe: EctofuntusBone? = null, recover: Boolean = true): Batch? {
+               onlyRecipe: EctofuntusBone? = null, recover: Boolean = true,
+               preferWorship: Boolean = false, recoveryOnly: Boolean = false): Batch? {
         val position = bot.position
         val loaded = Ectofuntus.loadedBone(bot)
         val ground = loaded != null && Ectofuntus.isGround(bot)
@@ -75,6 +76,8 @@ internal object PrayerOuting {
             Ectofuntus.GHOSTSPEAK_IDS.firstOrNull { owned(it) > 0 } ?: return null else null
         val coins by lazy { owned(995).toLong() }
         val bank by lazy { banks.filter { it.z == position.z }.minByOrNull { it.computeLongestDistance(position) } }
+        val reserves = if (preferWorship) PrayerBoneStock.reserves(bot) else emptyMap()
+        fun rawStock(recipe: EctofuntusBone) = (owned(recipe.boneId) - (reserves[recipe.boneId] ?: 0)).coerceAtLeast(0)
         val pot = owned(Ectofuntus.POT)
         val bucket = owned(Ectofuntus.BUCKET)
         val slime = owned(Ectofuntus.SLIME)
@@ -96,6 +99,7 @@ internal object PrayerOuting {
             val load = if (recoverLoad) 1 else 0
             val meals = minOf((worships - load).coerceAtLeast(0), owned(recipe.bonemealId))
             val raw = (worships - load - meals).coerceAtLeast(0)
+            if (raw > rawStock(recipe)) return null
             val filled = minOf(worships, slime)
             val empty = worships - filled
             val supplies = buildList {
@@ -126,7 +130,7 @@ internal object PrayerOuting {
             val toBank = if (bankNeeded) position.computeLongestDistance(departure) + BANK_TICKS else 0
             val travel = if (!bankNeeded && carried(EctophialTeleport.FULL) > 0 && !atTemple(position)) 8
                          else surfaceTicks(departure, recoverLoad || worships == 0) ?: return null
-            if (travel > 190 && !recoverLoad && worships > 0) return null
+            if (!preferWorship && travel > 190 && !recoverLoad && worships > 0) return null
             val atGrinder = !bankNeeded && position.z == 1 && atTemple(position)
             val atPool = !bankNeeded && position.y > 9800 && atTemple(position)
             val grind = raw * (step(Step.LOAD) + step(Step.GRIND) + step(Step.COLLECT) + BETWEEN_GRINDER_STEPS) +
@@ -138,6 +142,9 @@ internal object PrayerOuting {
                 empty * step(Step.FILL) + (if (empty == 0 || atPool && grind == 0) 0 else SLIME_ROUND_TRIP) +
                 worships * step(Step.WORSHIP) + claims * CLAIM_TICKS
             if (ticks > maximumTicks) return null
+
+            if (preferWorship) return Batch(recipe, raw, meals, load, filled, empty, supplies, purchases,
+                cost, ceilings, ticks, 0.0, 0.0)
 
             // Burial can instead spend any one owned recipe that reaches the same target. If it exhausts this
             // recipe first, price the remaining bones and the trip or gathering work to replace them.
@@ -170,11 +177,16 @@ internal object PrayerOuting {
 
         var best: Batch? = null
         for (recipe in recipes) {
-            val limit = (owned(recipe.boneId).toLong() + owned(recipe.bonemealId) + if (loaded != null) 1 else 0)
+            if (recoveryOnly) break
+            val limit = (rawStock(recipe).toLong() + owned(recipe.bonemealId) + if (loaded != null) 1 else 0)
                 .coerceAtMost(maxWorships.toLong()).toInt()
             for (quantity in limit downTo 1) {
                 val batch = basket(recipe, quantity, loaded != null) ?: continue
-                if (batch.saving > (best?.saving ?: 0.0)) best = batch
+                if (preferWorship) {
+                    val current = best
+                    if (current == null || batch.experience > current.experience ||
+                        batch.experience == current.experience && batch.ticks < current.ticks) best = batch
+                } else if (batch.saving > (best?.saving ?: 0.0)) best = batch
             }
         }
         if (best != null || !recover) return best

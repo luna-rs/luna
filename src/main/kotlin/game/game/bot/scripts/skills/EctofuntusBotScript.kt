@@ -23,6 +23,7 @@ import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -44,7 +45,9 @@ class EctofuntusBotScript(
     private var prepared: Boolean = false,
     private var failures: Int = 0,
     private var maxWorships: Int = PrayerOuting.MAX_WORSHIPS,
-    private var recoverLoad: Boolean = true
+    private var recoverLoad: Boolean = true,
+    private val preferWorship: Boolean = false,
+    private val remainingLoads: Int = 1
 ) : BotScript(bot) {
     companion object {
         private var Bot.ectoRetryAt by Attr.long().persist("bot_ectofuntus_retry_at")
@@ -65,13 +68,27 @@ class EctofuntusBotScript(
         /**
          * Selects an economic real batch or recovers already committed native work.
          */
-        fun select(bot: Bot, duration: Duration): EctofuntusBotScript? {
-            val now = System.currentTimeMillis()
-            if (!permitted(bot) || bot.ectoRetryAt > now) return null
+        fun select(bot: Bot, duration: Duration, recipe: EctofuntusBone? = null,
+                   preferWorship: Boolean = false): EctofuntusBotScript? {
             val budget = duration.inWholeMilliseconds.coerceIn(300_000L, 1_200_000L)
-            val batch = PrayerOuting.select(bot, budget / 600) ?: return null
-            return EctofuntusBotScript(bot, batch.recipe, now + budget, maxWorships = batch.worships,
-                recoverLoad = batch.loaded > 0)
+            return selectVisit(bot, System.currentTimeMillis() + budget, recipe, preferWorship,
+                if (preferWorship) 3 else 1)
+        }
+
+        internal fun recover(bot: Bot, duration: Duration): EctofuntusBotScript? {
+            if (Ectofuntus.loadedBone(bot) == null && Ectofuntus.pendingTokens(bot) == 0) return null
+            val budget = duration.inWholeMilliseconds.coerceIn(300_000L, 1_200_000L)
+            return selectVisit(bot, System.currentTimeMillis() + budget, null, true, 1, recoveryOnly = true)
+        }
+
+        private fun selectVisit(bot: Bot, deadline: Long, recipe: EctofuntusBone?, preferWorship: Boolean,
+                                loads: Int, recoveryOnly: Boolean = false): EctofuntusBotScript? {
+            val now = System.currentTimeMillis()
+            if (!permitted(bot) || bot.ectoRetryAt > now || deadline <= now) return null
+            val batch = PrayerOuting.select(bot, (deadline - now) / 600, onlyRecipe = recipe,
+                preferWorship = preferWorship, recoveryOnly = recoveryOnly) ?: return null
+            return EctofuntusBotScript(bot, batch.recipe, deadline, maxWorships = batch.worships,
+                recoverLoad = batch.loaded > 0, preferWorship = preferWorship, remainingLoads = loads)
         }
 
         /**
@@ -99,6 +116,8 @@ class EctofuntusBotScript(
         var failures = 0
         var maxWorships = PrayerOuting.MAX_WORSHIPS
         var recoverLoad = true
+        var preferWorship = false
+        var remainingLoads = 1
 
         override fun load(data: JsonObject) {
             recipe = data.get("recipe").asString
@@ -108,6 +127,8 @@ class EctofuntusBotScript(
             maxWorships = data.get("max_worships")?.asInt?.coerceIn(0, PrayerOuting.MAX_WORSHIPS)
                 ?: PrayerOuting.MAX_WORSHIPS
             recoverLoad = data.get("recover_load")?.asBoolean ?: true
+            preferWorship = data.get("prefer_worship")?.asBoolean ?: false
+            remainingLoads = data.get("remaining_loads")?.asInt?.coerceIn(1, 3) ?: 1
         }
 
         override fun save(data: JsonObject) {
@@ -117,12 +138,14 @@ class EctofuntusBotScript(
             data.addProperty("failures", failures)
             data.addProperty("max_worships", maxWorships)
             data.addProperty("recover_load", recoverLoad)
+            data.addProperty("prefer_worship", preferWorship)
+            data.addProperty("remaining_loads", remainingLoads)
         }
     }
 
     constructor(bot: Bot, data: EctofuntusData) :
         this(bot, EctofuntusBone.valueOf(data.recipe), data.deadline, data.prepared, data.failures,
-            data.maxWorships, data.recoverLoad)
+            data.maxWorships, data.recoverLoad, data.preferWorship, data.remainingLoads)
 
     private var lastProgress = System.currentTimeMillis()
     private var previous: List<Any?>? = null
@@ -147,7 +170,7 @@ class EctofuntusBotScript(
      */
     private suspend fun prepareSupplies(): PrayerOuting.Batch? {
         fun plan(shop: Boolean) = PrayerOuting.select(bot, (deadline - System.currentTimeMillis()) / 600,
-            maxWorships = maxWorships, shop = shop, onlyRecipe = bone)
+            maxWorships = maxWorships, shop = shop, onlyRecipe = bone, preferWorship = preferWorship)
         val batch = plan(true) ?: return null
         if (batch.purchases.isEmpty()) return batch
         val targets = batch.supplies.filter { it.id in batch.purchases }.associate { it.id to it.amount }
@@ -307,8 +330,19 @@ class EctofuntusBotScript(
     }
 
     override suspend fun completed() {
-        if (failures > 0 || System.currentTimeMillis() >= deadline)
-            bot.ectoRetryAt = System.currentTimeMillis() + 300_000
+        val now = System.currentTimeMillis()
+        if (failures > 0 || now >= deadline) bot.ectoRetryAt = now + 300_000
+        if (!preferWorship || maxWorships == 0 || !valid() ||
+            !BotCombatActionHandler.wantsToTrain(bot, SKILL_PRAYER)) return
+        val next = if (failures == 0 && remainingLoads > 1) {
+            selectVisit(bot, deadline, bone, true, remainingLoads - 1)
+        } else if (failures > 0 && PrayerBoneStock.owned(bot, bone.boneId) > PrayerBoneStock.reserve(bot, bone.boneId)) {
+            BuryBoneBotScript(bot, bone.bone, (deadline - now).milliseconds, ownedOuting = true)
+        } else null
+        if (next != null) {
+            next.trainingGoal = trainingGoal
+            bot.scriptStack.softPushHead(next)
+        }
     }
 
     override fun snapshot() = EctofuntusData().also {
@@ -318,5 +352,7 @@ class EctofuntusBotScript(
         it.failures = failures
         it.maxWorships = maxWorships
         it.recoverLoad = recoverLoad
+        it.preferWorship = preferWorship
+        it.remainingLoads = remainingLoads
     }
 }

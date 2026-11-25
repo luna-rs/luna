@@ -76,6 +76,8 @@ import game.bot.scripts.skills.BuryBoneBotScript
 import game.bot.scripts.skills.BuryBoneBotScript.Companion.BoneData
 import game.bot.scripts.skills.EctofuntusBotScript
 import game.bot.scripts.skills.EctofuntusBotScript.EctofuntusData
+import game.bot.scripts.skills.PrayerPurchaseBotScript
+import game.bot.scripts.skills.PrayerPurchaseBotScript.PurchaseData
 import game.bot.scripts.skills.SuperheatItemBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript.Companion.SuperheatItemData
 import game.bot.scripts.skills.EnchantJewelleryBotScript
@@ -297,6 +299,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<AmmunitionData>(FletchAmmunitionBotScript::class) { bot, data -> FletchAmmunitionBotScript(bot, data) }
     scriptManager.addScript<OgreFletchingData>(OgreFletchingBotScript::class) { bot, data -> OgreFletchingBotScript(bot, data) }
     scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
+    scriptManager.addScript<PurchaseData>(PrayerPurchaseBotScript::class) { bot, data -> PrayerPurchaseBotScript(bot, data) }
     scriptManager.addScript<EctofuntusData>(EctofuntusBotScript::class) { bot, data -> EctofuntusBotScript(bot, data) }
     scriptManager.addScript<FarmingData>(FarmingBotScript::class) { bot, data -> FarmingBotScript(bot, data) }
     scriptManager.addScript<ReturnData>(FarmingReturnBotScript::class) { bot, data -> FarmingReturnBotScript(bot, data) }

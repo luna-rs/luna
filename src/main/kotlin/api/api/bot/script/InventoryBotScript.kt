@@ -469,10 +469,12 @@ abstract class InventoryBotScript(
      */
     protected open suspend fun beforeInventoryInit(): Boolean = true
 
+    protected open val preferNearbyWorkZone: Boolean get() = productionPlan?.fixedTrainingBatch == true
+
     override fun selectWorkZone(): SubZone? {
         // Zoned travel recovery can rebuild original candidates; exhausted work sites stay retired.
         zones.removeAll(failedProductionZones)
-        if (productionPlan?.fixedTrainingBatch == true)
+        if (preferNearbyWorkZone)
             return zones.minByOrNull { it.inside.computeLongestDistance(bot.position) }
         return super.selectWorkZone()
     }

@@ -1,5 +1,6 @@
 package api.bot.action.trading
 
+import game.bot.scripts.skills.PrayerBoneStock
 import api.bot.action.BotPotionTrip
 
 import api.attr.Attr
@@ -453,6 +454,7 @@ object BotTradeIntentions {
     fun retainedStock(bot: Bot, consumingOwner: Any? = null, consumingPlan: ProductionPlan? = null): Map<Int, Int> {
         val ownPlan = consumingPlan?.takeIf { bot.productionPlan === it && bot.productionOwner === consumingOwner }
         val retained = supplyPlans(bot, System.currentTimeMillis(), ownPlan).mapValuesTo(HashMap()) { it.value.target }
+        for ((id, amount) in PrayerBoneStock.reserves(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotGearDemand.retained(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotPotionDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotFoodDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
@@ -519,7 +521,7 @@ object BotTradeIntentions {
      * Rechecks newly requested supplies during a suspended sale without rebuilding every equipment layout.
      */
     fun supplyTarget(bot: Bot, id: Int): Int = maxOf(supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0,
-        BotPotionDemand.retainedStock(bot)[id] ?: 0, BotFoodDemand.retained(bot, id))
+        BotPotionDemand.retainedStock(bot)[id] ?: 0, BotFoodDemand.retained(bot, id), PrayerBoneStock.reserve(bot, id))
 
     /**
      * Reads one live sale reserve without copying or pruning the entire activity-supply map.
@@ -533,7 +535,7 @@ object BotTradeIntentions {
         var target = maxOf(BotGearDemand.retained(bot)[id] ?: 0, reusableReserve(bot, id), if (plan != null && plan.expires > now) plan.target else 0,
             BotPotionDemand.retainedStock(bot)[id] ?: 0, BotFoodDemand.retained(bot, id),
             activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
-            explicitSupplyPlan(bot, id)?.target ?: 0)
+            explicitSupplyPlan(bot, id)?.target ?: 0, PrayerBoneStock.reserve(bot, id))
         val allocated = bot.scriptStack.findActive(AlchemyBotScript::class.java)
             .orElse(null)?.allocatedStock()?.takeIf { it.id == id }?.amount ?: 0
         target = (target.toLong() + allocated).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()

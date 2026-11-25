@@ -21,8 +21,8 @@ import kotlin.time.Duration
  *
  * Every existing [Bone] recipe uses the same script and safe banked processing zones. Partial bank stock
  * is supported, up to twenty-eight bones per withdrawal. [InventoryBotScript] provides verified unnoted
- * banking, safety checks, progress detection, and independent persistent retry budgets. Missing startup
- * bones request a total stock target of 1,000. No bones are spawned, purchased, or looted by this script.
+ * banking, safety checks, progress detection, and independent persistent retry budgets. Owned outings
+ * withdraw and process each load while leaving the designated bone reserve in the bank.
  *
  * The player [BuryBoneAction] consumes one bone and awards its configured experience. Its shared cooldown
  * is checked before clicking, so normal cooldown deferrals do not count as failed production attempts.
@@ -47,8 +47,9 @@ class BuryBoneBotScript(
 ) : InventoryBotScript(bot, duration, zones) {
     override val trainingSkill = SKILL_PRAYER
     override val verifiedProductionWithdrawals = true
+    override val preferNearbyWorkZone get() = ownedOuting || super.preferNearbyWorkZone
     override val ownedSuppliesOnly get() = bankRelief || ownedOuting
-    override fun allowsLoot(item: io.luna.game.model.item.GroundItem): Boolean = !bankRelief && super.allowsLoot(item)
+    override fun allowsLoot(item: io.luna.game.model.item.GroundItem): Boolean = !bankRelief && !ownedOuting && super.allowsLoot(item)
 
     companion object {
         /**
@@ -92,17 +93,24 @@ class BuryBoneBotScript(
     fun isEligible(): Boolean = bot.ownsProductionSupplies(materials)
 
     /** Returns up to twenty-eight banked bones, or a smaller final batch. */
-    fun bankBatch(): List<Item> = bot.productionBatch(materials)
+    fun bankBatch(): List<Item> {
+        if (!ownedOuting) return bot.productionBatch(materials)
+        val available = bot.bank.computeNonDynamicAmountForId(bone.id) - PrayerBoneStock.reserve(bot, bone.id)
+        return if (available > 0) listOf(Item(bone.id, minOf(available, bot.inventory.capacity()))) else emptyList()
+    }
+
+    private fun availableForBurial() = !ownedOuting ||
+        PrayerBoneStock.owned(bot, bone.id) > PrayerBoneStock.reserve(bot, bone.id)
 
     override fun withdraw(): List<Item> {
-        if (bankRelief && !BankResourceCoordinator.canProcess(bot, SKILL_PRAYER, materials)) {
+        if (!availableForBurial() || bankRelief && !BankResourceCoordinator.canProcess(bot, SKILL_PRAYER, materials)) {
             stop()
             return emptyList()
         }
         return productionWithdraw(materials, requestMissing = !ownedSuppliesOnly)
     }
     override fun bankWithdraw(): List<Item> {
-        if (bankRelief && !BankResourceCoordinator.canProcess(bot, SKILL_PRAYER, materials)) {
+        if (!availableForBurial() || bankRelief && !BankResourceCoordinator.canProcess(bot, SKILL_PRAYER, materials)) {
             stop()
             return emptyList()
         }
@@ -110,7 +118,7 @@ class BuryBoneBotScript(
     }
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(bot.inventory.containsAll(materials))
     override suspend fun onExecuteInZone(): Boolean {
-        if (bankRelief && !BankResourceCoordinator.canProcess(bot, SKILL_PRAYER, materials)) {
+        if (!availableForBurial() || bankRelief && !BankResourceCoordinator.canProcess(bot, SKILL_PRAYER, materials)) {
             stop()
             return true
         }
