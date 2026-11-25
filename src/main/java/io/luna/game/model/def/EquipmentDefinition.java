@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.gson.JsonObject;
+import game.content.quests.QuestGates;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
@@ -241,13 +242,13 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * Returns {@code true} if the player meets all requirements to equip this item.
+     * Returns {@code true} if the player meets all requirements to equip this item, including its quest.
      *
      * @param player The player to check.
      * @return {@code true} if all requirements are met.
      */
     public boolean meetsAllRequirements(Player player) {
-        return getFailedRequirement(player).isEmpty();
+        return getFailedRequirement(player).isEmpty() && QuestGates.canEquip(player, id, false);
     }
 
     /**
