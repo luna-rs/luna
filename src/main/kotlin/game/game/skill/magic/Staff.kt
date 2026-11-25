@@ -1,5 +1,7 @@
 package game.skill.magic
 
+import io.luna.game.model.mob.combat.CombatSpell
+
 /**
  * An enumeration of staves that provide unlimited rune representation for one or more [Rune] types.
  *
@@ -49,6 +51,16 @@ enum class Staff(val ids: Set<Int>, val represents: Set<Rune>) {
          * The staff item ids that can autocast ancient spells.
          */
         val AUTOCAST_ANCIENTS = setOf(4675, 4710, 6914)
+
+        /**
+         * The Slayer's staff item id.
+         */
+        const val SLAYER_STAFF = 4170
+
+        /**
+         * The spells that only the Slayer's staff can autocast.
+         */
+        val AUTOCAST_SLAYER_STAFF = setOf(CombatSpell.CRUMBLE_UNDEAD, CombatSpell.MAGIC_DART)
 
         /**
          * An immutable mapping of all staff item ids to their corresponding [Staff] instance.

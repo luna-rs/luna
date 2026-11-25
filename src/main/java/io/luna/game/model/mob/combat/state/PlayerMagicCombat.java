@@ -260,8 +260,19 @@ public class PlayerMagicCombat {
      * @return Whether the spell is selectable for autocasting with the current spellbook and equipment.
      */
     public boolean canAutocast(CombatSpellDefinition spell) {
-        return spell != null && spell != NONE && spell.getButton() != -1 &&
+        return spell != null && spell != NONE && (spell.getButton() != -1 || canAutocastWithSlayerStaff(spell)) &&
                 spell.getSpellbook() == player.getSpellbook() && canUseAutocastStaff();
+    }
+
+    /**
+     * Checks whether the spell is one that only the Slayer's staff autocasts, and that staff is equipped.
+     *
+     * @param spell The proposed autocast spell.
+     * @return Whether the equipped Slayer's staff autocasts the spell.
+     */
+    private boolean canAutocastWithSlayerStaff(CombatSpellDefinition spell) {
+        return Staff.Companion.getAUTOCAST_SLAYER_STAFF().contains(spell.getSpell()) &&
+                player.getEquipment().computeIdForIndex(Equipment.WEAPON) == Staff.SLAYER_STAFF;
     }
 
     /**
