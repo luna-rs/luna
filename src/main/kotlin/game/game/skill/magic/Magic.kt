@@ -1,5 +1,6 @@
 package game.skill.magic
 
+import api.attr.Attr
 import api.predef.*
 import com.google.common.collect.HashMultiset
 import game.player.Sound
@@ -32,6 +33,12 @@ object Magic {
      * replaced.
      */
     private val LANDING_ANIMATION = Animation.CANCEL
+
+    /**
+     * The cooldown shared by alchemy, superheating, enchanting, bone conversion and orb charging, so only one of
+     * them runs at a time.
+     */
+    val Player.castDelay by Attr.timeSource()
 
     /**
      * Checks whether [plr] meets the requirements needed to cast a spell.

@@ -10,10 +10,10 @@ import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import game.skill.magic.SpellCost
 import game.skill.magic.bonesToItems.BonesToItemsAction
 import game.skill.magic.bonesToItems.BonesToItemsAction.Companion.BONES
-import game.skill.magic.bonesToItems.BonesToItemsAction.Companion.bonesToItemsDelay
 import game.skill.magic.bonesToItems.BonesToItemsType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Spellbook
@@ -124,7 +124,7 @@ class BonesToFoodBotScript(
         return true
     }
 
-    override suspend fun finish() { bot.bonesToItemsDelay.cancelQueuedTask() }
+    override suspend fun finish() { bot.castDelay.cancelQueuedTask() }
 
     override fun snapshot(): BonesToFoodData = BonesToFoodData().also {
         it.recipe = type.name
