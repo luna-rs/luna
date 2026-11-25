@@ -48,6 +48,7 @@ object AlchemistsPlayground : ArenaRoom("Alchemists' Playground", 10780, 21, 158
      * The eight cupboards in clockwise order: up the west wall, then down the east wall.
      */
     val CUPBOARDS = listOf(10783, 10785, 10787, 10789, 10791, 10793, 10795, 10797)
+    const val COLLECTOR = 10734
 
     /**
      * The coins an item can be worth; each item takes a different one.
@@ -140,6 +141,11 @@ object AlchemistsPlayground : ArenaRoom("Alchemists' Playground", 10780, 21, 158
         if (place == -1) return null
         return ITEMS.getOrNull(Math.floorMod(place - rotation, CUPBOARDS.size))
     }
+
+    /**
+     * Current coins awarded for an alchemy cast on a cupboard item.
+     */
+    internal fun coinValue(id: Int): Int = values[ITEMS.indexOf(id)]
 
     /**
      * Searching a cupboard.

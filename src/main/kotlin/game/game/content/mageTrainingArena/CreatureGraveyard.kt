@@ -37,6 +37,7 @@ object CreatureGraveyard : ArenaRoom("Creature Graveyard", 10781, 15, 15931, Pos
      * The bone piles, in the order of the bones they start on.
      */
     val PILES = listOf(10725, 10726, 10727, 10728)
+    const val CHUTE = 10735
 
     const val BANANA = 1963
     const val PEACH = 6883
@@ -49,7 +50,7 @@ object CreatureGraveyard : ArenaRoom("Creature Graveyard", 10781, 15, 15931, Pos
     /**
      * Fruit deposited for each point, and the runes a point can come with.
      */
-    private const val FRUIT_PER_POINT = 16
+    internal const val FRUIT_PER_POINT = 16
     private val REWARD_RUNES = listOf(555, 561, 560, 565)
 
     /**

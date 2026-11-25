@@ -67,17 +67,17 @@ AlchemistsPlayground.CUPBOARDS.forEach { id ->
     object1(id) { AlchemistsPlayground.search(plr, id) }
     object1(id + 1) { AlchemistsPlayground.search(plr, id) }
 }
-object1(10734) { AlchemistsPlayground.deposit(plr) }
+object1(AlchemistsPlayground.COLLECTOR) { AlchemistsPlayground.deposit(plr) }
 
 // The Enchanting Chamber.
 EnchantingChamber.Shape.values().forEach { shape -> object1(shape.pile) { EnchantingChamber.takeShape(plr, shape.pile) } }
-object1(10803) { EnchantingChamber.deposit(plr) }
+object1(EnchantingChamber.ORB_HOLE) { EnchantingChamber.deposit(plr) }
 
 // The Creature Graveyard.
 CreatureGraveyard.PILES.forEach { pile ->
     object1(pile) { if (plr.arenaRoom === CreatureGraveyard) CreatureGraveyard.grab(plr, pile, gameObject.position) }
 }
-object1(10735) { CreatureGraveyard.deposit(plr) }
+object1(CreatureGraveyard.CHUTE) { CreatureGraveyard.deposit(plr) }
 
 // Dying in a room is safe: the player keeps everything but what belongs to the room, and wakes in the entrance hall.
 DeathHookHandler.addPlayerHook(ArenaController::class.java) {

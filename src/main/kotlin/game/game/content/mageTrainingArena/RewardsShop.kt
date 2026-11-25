@@ -89,7 +89,7 @@ object RewardsShop {
      */
     private class ShopInterface : StandardInterface(INTERFACE)
 
-    private fun isOpen(plr: Player) = plr.overlays.has(ShopInterface::class.java)
+    internal fun isOpen(plr: Player) = plr.overlays.has(ShopInterface::class.java)
 
     /**
      * The shop's "Value" option.

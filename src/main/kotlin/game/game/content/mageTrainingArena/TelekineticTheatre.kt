@@ -65,6 +65,16 @@ object TelekineticTheatre : ArenaRoom("Telekinetic Theatre", 10778, 33, 15962, P
         fun contains(pos: Position) = pos.z == z && pos.x in minX..maxX && pos.y in minY..maxY
 
         /**
+         * The next square in a slide, if it stays inside the maze and crosses no wall.
+         */
+        internal fun slideStep(from: Position, direction: Direction): Position? {
+            val to = from.translate(direction.translateX, direction.translateY)
+            return to.takeIf {
+                contains(it) && world.collisionManager.traversable(from, EntityType.ITEM, direction)
+            }
+        }
+
+        /**
          * The way a statue moves when the spell is cast from [pos]: towards the side of the maze [pos] is on. A
          * corner, or anywhere not beside the maze, moves it nowhere.
          */
@@ -120,6 +130,11 @@ object TelekineticTheatre : ArenaRoom("Telekinetic Theatre", 10778, 33, 15962, P
     }
 
     private val attempts = HashMap<Player, Attempt>()
+
+    /**
+     * Returns the next statue that [plr] can act on once the current slide is finished.
+     */
+    internal fun stationaryStatue(plr: Player): GroundItem? = attempts[plr]?.takeUnless { it.moving }?.statue
 
     override val roomItems = setOf(STATUE)
 
@@ -341,9 +356,8 @@ object TelekineticTheatre : ArenaRoom("Telekinetic Theatre", 10778, 33, 15962, P
                 return@schedule
             }
             val from = statue.position
-            val to = from.translate(direction.translateX, direction.translateY)
-            if (!attempt.maze.contains(to) ||
-                !world.collisionManager.traversable(from, EntityType.ITEM, direction)) {
+            val to = attempt.maze.slideStep(from, direction)
+            if (to == null) {
                 attempt.moving = false
                 task.cancel()
                 if (from == attempt.maze.exit) solved(plr, attempt)

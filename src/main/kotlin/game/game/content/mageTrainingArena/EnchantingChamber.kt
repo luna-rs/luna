@@ -45,6 +45,7 @@ object EnchantingChamber : ArenaRoom("Enchanting Chamber", 10779, 7, 15917, Posi
 
     const val ORB = 6902
     const val DRAGONSTONE = 6903
+    const val ORB_HOLE = 10803
 
     private const val POINTS_LINE = 15921
 
@@ -77,7 +78,8 @@ object EnchantingChamber : ArenaRoom("Enchanting Chamber", 10779, 7, 15917, Posi
      */
     var Player.shapesEnchanted by Attr.int().persist("mta_shapes_enchanted")
 
-    private var bonus = Shape.values().random()
+    internal var bonus = Shape.values().random()
+        private set
     private var timer = 0
 
     /**
