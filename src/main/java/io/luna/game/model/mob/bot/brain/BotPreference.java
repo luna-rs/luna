@@ -56,6 +56,12 @@ public final class BotPreference {
      * from the supplied personality when not explicitly configured.
      */
     public static final class Builder {
+
+        /**
+         * The maximum number of preferred skills kept when they are generated from the personality.
+         */
+        private static final int MAX_GENERATED_SKILLS = 5;
+
         private final BotPersonality personality;
         private final BotPersonalityManager personalityManager;
         private final Map<BotActivity, Double> activities = new HashMap<>();
@@ -210,7 +216,8 @@ public final class BotPreference {
          * Generates preferred skills from the personality unless explicit skills were added.
          * <p>
          * Personality traits may select overlapping skill IDs. If none are selected, two to four
-         * IDs are drawn without replacement from {@link Skill#IDS}.
+         * IDs are drawn without replacement from {@link Skill#IDS}. {@link #build()} trims a larger
+         * set to {@link #MAX_GENERATED_SKILLS}.
          *
          * @return A mutable set of preferred skill IDs.
          */
@@ -355,7 +362,9 @@ public final class BotPreference {
         /**
          * Builds a preference profile from the current builder state.
          * <p>
-         * Preferred skills and gear are generated only when their builder sets are empty.
+         * Preferred skills and gear are generated only when their builder sets are empty. Generated skills
+         * are trimmed at random to {@link #MAX_GENERATED_SKILLS} after the skiller and PK build filters, so
+         * strong personalities do not prefer nearly every skill.
          *
          * @return A new {@link BotPreference} instance.
          */
@@ -378,6 +387,11 @@ public final class BotPreference {
             if (skiller) preference.skills.removeIf(Skill::isCombatSkill);
             else if (preference.pk != null) preference.skills.removeIf(id ->
                     Skill.isCombatSkill(id) && preference.pk.build().targetLevel(id) == 1);
+            if (skills.isEmpty() && preference.skills.size() > MAX_GENERATED_SKILLS) {
+                List<Integer> kept = new ArrayList<>(preference.skills);
+                Collections.shuffle(kept);
+                preference.skills.retainAll(kept.subList(0, MAX_GENERATED_SKILLS));
+            }
             return preference;
         }
     }
@@ -640,8 +654,9 @@ public final class BotPreference {
     /**
      * Loads saved preferences into the existing collections.
      * <p>
-     * Saved entries are merged without clearing current values. Wanted items lacking a minimum
-     * field are skipped; missing priority or tags use their respective default values. Unchanged
+     * Saved preferred skills and gear replace the current ones. Other saved entries are merged without
+     * clearing current values. Wanted items lacking a minimum field are skipped; missing priority or
+     * tags use their respective default values. Unchanged
      * definitions in legacy saves reuse the shared defaults. Explicit shopping requests are restored separately;
      * older saves without that field do not activate their catalogue entries.
      *
@@ -667,6 +682,8 @@ public final class BotPreference {
         }
 
         // Deserialize preferred skills and gear, wanted items, and feelings towards players.
+        // A returning bot is built with a throwaway personality, whose rolled favourites would pile up on each login.
+        skills.clear();
         object.getAsJsonArray("skills").forEach(it -> skills.add(it.getAsInt()));
         object.getAsJsonArray("wanted_items").forEach(it -> {
             JsonObject itemJson = it.getAsJsonObject();
@@ -696,6 +713,7 @@ public final class BotPreference {
                 }
             });
         }
+        gear.clear();
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
         object.getAsJsonArray("player_feelings").forEach(it -> {
             JsonObject feelingsJson = it.getAsJsonObject();
