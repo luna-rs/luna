@@ -38,6 +38,7 @@ public final class NavigationRequest {
         private Direction offsetDir;
         private boolean async;
         private boolean continuous;
+        private boolean playerFollow;
         private GamePathfinder<Position> pathfinder;
 
         private Builder(Mob mob) {
@@ -99,6 +100,14 @@ public final class NavigationRequest {
          */
         public Builder continuous(boolean continuous) {
             this.continuous = continuous;
+            return this;
+        }
+
+        /**
+         * Uses the previous walking tile for the player Follow menu action.
+         */
+        Builder playerFollow() {
+            playerFollow = true;
             return this;
         }
 
@@ -177,6 +186,11 @@ public final class NavigationRequest {
     private final boolean continuous;
 
     /**
+     * Whether this request uses player following's previous-tile movement.
+     */
+    private final boolean playerFollow;
+
+    /**
      * The pathfinder used to resolve the route for this request.
      */
     private final GamePathfinder<Position> pathfinder;
@@ -200,6 +214,7 @@ public final class NavigationRequest {
         policy = builder.policy;
         async = builder.async;
         continuous = builder.continuous;
+        playerFollow = builder.playerFollow;
         pathfinder = requireNonNullElse(builder.pathfinder, mob.getNavigator().getDefaultPathfinder());
         offsetDir = Optional.ofNullable(builder.offsetDir);
     }
@@ -215,6 +230,7 @@ public final class NavigationRequest {
         NavigationRequest that = (NavigationRequest) o;
         return async == that.async &&
                 continuous == that.continuous &&
+                playerFollow == that.playerFollow &&
                 Objects.equals(target, that.target) &&
                 Objects.equals(policy, that.policy) &&
                 Objects.equals(offsetDir, that.offsetDir);
@@ -222,7 +238,7 @@ public final class NavigationRequest {
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, policy, offsetDir, async, continuous);
+        return Objects.hash(target, policy, offsetDir, async, continuous, playerFollow);
     }
 
     /**
@@ -265,6 +281,13 @@ public final class NavigationRequest {
      */
     public boolean isContinuous() {
         return continuous;
+    }
+
+    /**
+     * @return Whether this request tracks a player's previous walking tile.
+     */
+    boolean isPlayerFollow() {
+        return playerFollow;
     }
 
     /**

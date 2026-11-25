@@ -123,7 +123,8 @@ public class WalkingNavigator {
             cancel();
         }
         active = request;
-        mob.submitAction(new NavigationAction(mob, request));
+        mob.submitAction(request.isPlayerFollow() ? new PlayerFollowAction(mob, request) :
+                new NavigationAction(mob, request));
         return request.getPending();
     }
 
@@ -219,6 +220,25 @@ public class WalkingNavigator {
      */
     public CompletableFuture<NavigationResult> follow(Mob mob) {
         return navigateBehind(mob, false, true);
+    }
+
+    /**
+     * Handles a player's Follow click by tracking the tile its target last walked off.
+     *
+     * @param target The player to follow.
+     * @return The pending navigation result.
+     */
+    public CompletableFuture<NavigationResult> followPlayer(Player target) {
+        if (!(mob instanceof Player) || mob == target || !mob.isAlive() || !target.isAlive() ||
+                !mob.getPosition().isViewable(target.getPosition())) {
+            return CompletableFuture.completedFuture(NavigationResult.DIDNT_REACH);
+        }
+        return submit(NavigationRequest.builder(mob)
+                .target(target)
+                .policy(InteractionPolicy.EQUAL_POSITION)
+                .continuous(true)
+                .playerFollow()
+                .build());
     }
 
     /**

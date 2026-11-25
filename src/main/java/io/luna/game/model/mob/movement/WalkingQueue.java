@@ -108,6 +108,15 @@ public final class WalkingQueue {
     private final Deque<Position> history = new ArrayDeque<>();
 
     /**
+     * The last individual step and the follow destination seen before it changed this tick.
+     * This trail survives replacements of the walking queue and remains valid during idle ticks.
+     */
+    private Position lastStepFrom;
+    private Position lastStepTo;
+    private Position followPositionBeforeWalking;
+    private long lastStepTick = -1;
+
+    /**
      * Creates a new {@link WalkingQueue} for the specified mob.
      *
      * @param mob The owning mob.
@@ -178,7 +187,7 @@ public final class WalkingQueue {
             incrementRunEnergy();
             return;
         }
-        history.add(nextStep.setZ(plane));
+        recordStep(currentStep, nextStep.setZ(plane));
         mob.setLastDirection(firstStepDir);
         mob.setWalkingDirection(firstStepDir);
         currentStep = nextStep;
@@ -212,7 +221,7 @@ public final class WalkingQueue {
             if (decrementRunEnergy()) {
                 if (exitInstance(destination)) return;
                 current.poll();
-                history.add(nextStep.setZ(plane));
+                recordStep(currentStep.setZ(plane), destination);
                 mob.setLastDirection(nextStepDir);
                 mob.setRunningDirection(nextStepDir);
                 currentStep = nextStep;
@@ -368,6 +377,42 @@ public final class WalkingQueue {
     }
 
     /**
+     * Replaces the route with up to one tick of direct steps toward the follow destination.
+     * If a diagonal is blocked, try its cardinal components against live collision.
+     *
+     * @return The last queued step, to identify any remaining steps when the action ends.
+     */
+    Position queueDirectSteps(Position destination) {
+        clear();
+        Position from = mob.getPosition();
+        int limit = running ? 2 : 1;
+        for (int i = 0; i < limit && !from.equals(destination); i++) {
+            Direction direction = directDirection(from, destination);
+            if (direction == Direction.NONE) {
+                break;
+            }
+            from = from.translate(1, direction);
+            current.addLast(from);
+        }
+        return current.peekLast();
+    }
+
+    private Direction directDirection(Position from, Position destination) {
+        Direction direction = Direction.between(from, destination);
+        if (allowsStep(from, direction)) {
+            return direction;
+        }
+        if (direction.isDiagonal()) {
+            for (Direction component : Direction.diagonalComponents(direction)) {
+                if (allowsStep(from, component)) {
+                    return component;
+                }
+            }
+        }
+        return Direction.NONE;
+    }
+
+    /**
      * Clears both the current and previous steps for this walking queue.
      * <p>
      * After calling this, the mob will remain stationary until new steps are queued.
@@ -376,6 +421,52 @@ public final class WalkingQueue {
         current.clear();
         history.clear();
         forced = false;
+    }
+
+    /**
+     * Clears both queued movement and the follow trail after placing the mob outside the walking queue.
+     */
+    public void resetAfterPlacement() {
+        clear();
+        lastStepFrom = null;
+        lastStepTo = null;
+        followPositionBeforeWalking = null;
+        lastStepTick = -1;
+    }
+
+    /**
+     * Preserves the pre-movement follow tile on the first successful step of the tick.
+     * A second running step updates the trail without changing the view seen by other players this tick.
+     */
+    private void recordStep(Position from, Position to) {
+        history.add(to);
+        if (mob instanceof Player) {
+            long tick = mob.getWorld().getCurrentTick();
+            if (lastStepTick != tick) {
+                followPositionBeforeWalking = previousStepFrom(from);
+                lastStepTick = tick;
+            }
+            lastStepFrom = from;
+            lastStepTo = to;
+        }
+    }
+
+    /**
+     * Returns the follow destination regardless of whether this player has already walked this tick.
+     */
+    Position getFollowPosition() {
+        Position position = mob.getPosition();
+        if (position.equals(lastStepTo) && lastStepTick == mob.getWorld().getCurrentTick()) {
+            return followPositionBeforeWalking;
+        }
+        return previousStepFrom(position);
+    }
+
+    /**
+     * A player without a walking trail is approached from one tile west.
+     */
+    private Position previousStepFrom(Position position) {
+        return position.equals(lastStepTo) ? lastStepFrom : position.translate(1, Direction.WEST);
     }
 
     /**
@@ -391,6 +482,15 @@ public final class WalkingQueue {
      */
     public void cancelSingleStep(Position step) {
         if (step != null && step == getSingleStep()) {
+            clear();
+        }
+    }
+
+    /**
+     * Cancels only the route whose last step is still the one owned by the finishing action.
+     */
+    void cancelPathEndingAt(Position step) {
+        if (step != null && current.peekLast() == step) {
             clear();
         }
     }
