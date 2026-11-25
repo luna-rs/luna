@@ -33,6 +33,7 @@ public final class MagicOnItemMessageReader extends GameMessageReader<MagicOnIte
 
     @Override
     public void handle(Player player, MagicOnItemEvent event) {
+        player.getOverlays().closeWindows();
         if (Luna.settings().game().betaMode()) {
             player.sendMessage("[MagicOnItemEvent]: spellId: " + event.getSpellId() + ", widget: " +
                     event.getTargetItemInterface() + ", index: " + event.getTargetItemIndex() + ", id: " + event.getTargetItemId());

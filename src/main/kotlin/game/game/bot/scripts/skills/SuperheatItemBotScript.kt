@@ -10,8 +10,8 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import game.skill.magic.superheatItem.SuperheatItemAction
-import game.skill.magic.superheatItem.SuperheatItemAction.Companion.superheatDelay
 import game.skill.smithing.BarType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Spellbook
@@ -116,7 +116,7 @@ class SuperheatItemBotScript(
         return true
     }
 
-    override suspend fun finish() { bot.superheatDelay.cancelQueuedTask() }
+    override suspend fun finish() { bot.castDelay.cancelQueuedTask() }
 
     override fun snapshot(): SuperheatItemData = SuperheatItemData().also {
         it.bar = barType.name
