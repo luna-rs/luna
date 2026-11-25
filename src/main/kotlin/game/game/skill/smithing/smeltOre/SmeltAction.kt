@@ -3,6 +3,7 @@ package game.skill.smithing.smeltOre
 import api.predef.*
 import api.predef.ext.*
 import game.content.randomEvents.RandomEvents
+import game.item.degradable.jewellery.RingOfForging
 import game.player.Animations
 import game.player.Sound
 import game.skill.smithing.BarType
@@ -44,14 +45,17 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
             mob.smithing.addExperience(xp)
             mob.sendMessage("You smelt the $oreMessage in the furnace.")
             mob.sendMessage("You retrieve a bar of ${barType.lowercaseName}.")
+            if (barType == BarType.IRON && RingOfForging.isWorn(mob)) {
+                RingOfForging.useCharge(mob)
+            }
         }
     }
 
     override fun add(): List<Item> {
         val barList = arrayListOf(Item(barType.id))
         if (barType == BarType.IRON) {
-            // Iron has 50% chance of actually getting an ore.
-            return if (rand().nextBoolean()) barList else emptyList()
+            // Iron has 50% chance of actually getting an ore. A worn ring of forging never fails.
+            return if (RingOfForging.isWorn(mob) || rand().nextBoolean()) barList else emptyList()
         }
         return barList
     }
