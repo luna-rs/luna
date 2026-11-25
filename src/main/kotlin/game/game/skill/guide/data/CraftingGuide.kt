@@ -101,6 +101,7 @@ val craftingGuide = skillGuide("Crafting") {
         row(70, 1681, "Diamond amulet")
         row(72, 1664, "Dragon necklace")
         row(80, 1683, "Dragonstone amulet")
+        row(82, 6577, "Onyx necklace")
         row(90, 6579, "Onyx amulet")
     }
     category("Battlestaves") {

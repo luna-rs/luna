@@ -56,7 +56,8 @@ npc1(SKULGRIMEN_ID) {
         // TODO The Fremennik Trials: greet the player by their Fremennik name.
         plr.newDialogue()
             .npc(targetNpc.id, Expression.HAPPY, "Hello again ${plr.username}. Come to see what's for sale?")
-            .then { it.overlays.open(ShopInterface(world, SHOP_NAME)) }
+            .options("Yes, show me your wares.", { it.overlays.open(ShopInterface(world, SHOP_NAME)) },
+                     "Can you make rock-shell armour?", { FremennikArmour.openMenu(it, FremennikArmour.ROCK_SHELL) })
             .open()
     } else {
         plr.newDialogue()
