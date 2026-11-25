@@ -16,6 +16,9 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // TODO Heroes' Quest: read its completion once the quest exists.
     HEROES_QUEST(null),
 
+    // TODO Jungle Potion: read its completion once the quest exists.
+    JUNGLE_POTION(null),
+
     // TODO Legends' Quest: read its completion once the quest exists.
     LEGENDS_QUEST(null),
 
