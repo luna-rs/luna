@@ -114,6 +114,7 @@ public final class WalkingQueue {
     private Position lastStepFrom;
     private Position lastStepTo;
     private Position followPositionBeforeWalking;
+    private Position movementStart;
     private long lastStepTick = -1;
 
     /**
@@ -431,6 +432,7 @@ public final class WalkingQueue {
         lastStepFrom = null;
         lastStepTo = null;
         followPositionBeforeWalking = null;
+        movementStart = null;
         lastStepTick = -1;
     }
 
@@ -444,6 +446,7 @@ public final class WalkingQueue {
             long tick = mob.getWorld().getCurrentTick();
             if (lastStepTick != tick) {
                 followPositionBeforeWalking = previousStepFrom(from);
+                movementStart = from;
                 lastStepTick = tick;
             }
             lastStepFrom = from;
@@ -460,6 +463,27 @@ public final class WalkingQueue {
             return followPositionBeforeWalking;
         }
         return previousStepFrom(position);
+    }
+
+    /**
+     * Returns the tile a player started walking from this tick, including before both steps of a run.
+     * A placement or a later position change invalidates the trail.
+     *
+     * @return The starting tile, or {@code null} if no walking steps apply to this player this tick.
+     */
+    public Position getMovementStartThisTick() {
+        return lastStepTick == mob.getWorld().getCurrentTick() && mob.getPosition().equals(lastStepTo)
+                ? movementStart : null;
+    }
+
+    /**
+     * Checks whether a player has movement queued or has already stepped this tick.
+     * Using both states keeps a final walking step from depending on mob processing order.
+     *
+     * @return Whether player movement is active this tick.
+     */
+    public boolean isPlayerMoving() {
+        return !isEmpty() || getMovementStartThisTick() != null;
     }
 
     /**
