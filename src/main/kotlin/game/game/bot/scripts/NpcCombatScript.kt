@@ -45,6 +45,7 @@ import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
 import game.bot.scripts.combat.WineTheftLesson
+import game.bot.scripts.combat.WildernessDefence
 import game.bot.scripts.skills.EctofuntusBotScript
 import game.combat.npcHooks.giantMole.GiantMole
 import game.combat.npcHooks.chaosElemental.ChaosElementalAttack
@@ -1751,6 +1752,12 @@ open class NpcCombatScript(bot: Bot,
             clearMagic()
             bot.reflex.isDisableCombatReflex = false
             stop()
+            return false
+        }
+        if (!magicOnly && WildernessDefence.attackingPlayer(bot) != null) {
+            // A player attacking the bot is answered by the combat reflex, the way a player turns from the monster.
+            bot.combat.target = null
+            bot.reflex.isDisableCombatReflex = false
             return false
         }
         val opponent = bot.combat.lastCombatWith
