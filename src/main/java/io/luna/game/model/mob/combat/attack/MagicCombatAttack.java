@@ -4,6 +4,7 @@ import api.combat.magic.CombatSpellHandler;
 import game.player.Sound;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.LocalSound;
+import io.luna.game.model.Position;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -230,6 +231,13 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             // Spellbook queues add one tick; custom NPC projectiles use duration / 30.
             // The action scheduler requires a positive delay for very short flights.
             projectileHitDelay = Math.max(1, projectile.getEndCycle() / 30 + (spellEffect == null ? 0 : 1));
+            if (spellEffect != null && attacker instanceof Player player) {
+                // Spellbook cast sequences hold the client's queued steps while the cast plays.
+                Position movementStart = player.getWalking().getMovementStartThisTick();
+                if (movementStart != null) {
+                    projectile = projectile.withSourcePosition(movementStart);
+                }
+            }
             projectile.display();
         }
     }
