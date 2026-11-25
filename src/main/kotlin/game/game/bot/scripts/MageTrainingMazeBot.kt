@@ -94,10 +94,11 @@ internal object MageTrainingMazeBot {
     private suspend fun nextMaze(bot: Bot): Boolean {
         val guardian = guardian(bot) ?: return false
         val policy = InteractionPolicy.STANDARD_LINE_OF_SIGHT
-        return BotNpcDialogues.respond(bot, guardian, listOf("Yes please!"),
+        BotNpcDialogues.respond(bot, guardian, listOf("Yes please!"),
             completed = { TelekineticTheatre.stationaryStatue(bot) != null }) {
             bot.actionHandler.interactions.approachLocally(guardian, policy) && bot.output.sendNpcInteraction(1, guardian)
         }
+        return TelekineticTheatre.stationaryStatue(bot) != null && bot.closeArenaDialogue()
     }
 
     private suspend fun walk(bot: Bot, position: Position): Boolean = withTimeoutOrNull(20.seconds) {

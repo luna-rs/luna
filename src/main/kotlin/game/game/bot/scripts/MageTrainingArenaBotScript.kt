@@ -118,6 +118,7 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
             if (!prepare(visit) || !enterHall() || !getHat()) return@withTimeoutOrNull
             enteredRoom = true
             if (!clickObject(visit.room.portal) || !waitFor(4.seconds) { bot.arenaRoom === visit.room }) {
+                bot.log("Mage Training Arena: could not enter the ${visit.room.title}.")
                 return@withTimeoutOrNull
             }
             withTimeoutOrNull(4.minutes) {
@@ -212,11 +213,12 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
         val option = if (bot.mtaStarted) "About the progress hat..." else "I'm new to this place. Where am I?"
         val speech = setOf("Hi.", "Who created it?", "Interesting. So what can I do here?",
             "How do you record the points I have earned?", "Yes please!", "Sorry, can I?")
-        return BotNpcDialogues.respond(bot, guardian, listOf(option), timeout = 60.seconds,
+        val received = BotNpcDialogues.respond(bot, guardian, listOf(option), timeout = 60.seconds,
             completed = { bot.mtaStarted && MageTrainingArena.hasHat(bot) }, playerSpeech = speech) {
             handler.interactions.approachLocally(guardian, InteractionPolicy.STANDARD_SIZE) &&
                 output.sendNpcInteraction(1, guardian)
         }
+        return received && bot.closeArenaDialogue()
     }
 
     private suspend fun stairs(up: Boolean): Boolean {
@@ -329,4 +331,15 @@ internal class MageTrainingArenaBotScript(bot: Bot) : DynamicBotScript(bot) {
             handler.interactions.approachLocally(target, InteractionPolicy.STANDARD_SIZE) &&
                 output.sendObjectInteraction(option, target)
         } == true
+}
+
+/**
+ * Clears the arena's follow-up dialogue before it can interrupt the next walking action.
+ *
+ * @author lare96
+ */
+internal suspend fun Bot.closeArenaDialogue(): Boolean {
+    if (!output.sendCloseInterface()) return false
+    val closeTick = world.currentTick
+    return waitFor(4.seconds) { world.currentTick > closeTick && !overlays.hasWindow() }
 }
