@@ -2,8 +2,7 @@ package game.content.culinaromancersChest
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
-import game.content.quests.Quest
-import game.content.quests.QuestGates
+import engine.bank.QuestBank.CULINAROMANCERS_CHEST
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Shop
@@ -13,7 +12,7 @@ import io.luna.game.model.mob.varp.Varbit
 /**
  * The chest in the Lumbridge Castle cellar. The client only shows it as the open chest once this varbit reaches 3.
  */
-val CHEST = 12308
+val CHEST = CULINAROMANCERS_CHEST.objectId
 val CHEST_VARBIT = 1850
 
 /**
@@ -27,14 +26,14 @@ val CHEST_COMPLETE = 5
 val ITEMS_SHOP = "Culinaromancer's Chest."
 
 on(LoginEvent::class) {
-    if (QuestGates.passes(plr, Quest.RECIPE_FOR_DISASTER)) {
+    if (CULINAROMANCERS_CHEST.passes(plr)) {
         plr.sendVarbit(Varbit(CHEST_VARBIT, CHEST_COMPLETE))
     }
 }
 
 // Bank.
 object1(CHEST) {
-    if (QuestGates.passes(plr, Quest.RECIPE_FOR_DISASTER)) {
+    if (CULINAROMANCERS_CHEST.passes(plr)) {
         plr.bank.open()
     }
 }
@@ -43,7 +42,7 @@ object1(CHEST) {
 
 // Buy-items.
 object3(CHEST) {
-    if (QuestGates.passes(plr, Quest.RECIPE_FOR_DISASTER)) {
+    if (CULINAROMANCERS_CHEST.passes(plr)) {
         plr.overlays.open(ShopInterface(world, ITEMS_SHOP))
     }
 }

@@ -13,6 +13,7 @@ import api.bot.script.recentEscape
 import api.predef.*
 import api.predef.ext.*
 import engine.bank.Banking
+import engine.bank.QuestBank
 import engine.controllers.Controllers.inWilderness
 import game.npc.spawn.wilderness.WildernessCapeNoting
 import game.player.item.consume.food.Food
@@ -553,15 +554,16 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     /**
      * Opens a bank that the bot is at, a booth or a banker, by interacting with it.
      *
-     * Returns immediately if the bank is already open. Object interactions retain their direct-open fallback after a
-     * safe interface timeout. NPCs require the native bank window and use their second-click banking handler;
-     * cache action positions do not correspond to bot interaction numbers.
+     * Returns immediately if the bank is already open. Regular booths retain their direct-open fallback after a safe
+     * interface timeout. Quest banks and NPCs require their native bank window.
      *
      * @param bank The booth or banker.
      * @return `true` if the bank opened, or an object's safe direct-open fallback was executed.
      */
     suspend fun open(bank: Entity): Boolean {
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
+        val questBank = (bank as? GameObject)?.let { QuestBank.forObject(it.id) }
+        if (questBank?.passes(bot) == false) return false
         if (bot.bank.isOpen) {
             return true
         }
@@ -569,20 +571,23 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
         bot.log("Opening bank.")
         val option = when (bank) {
-            is GameObject -> 2
+            is GameObject -> questBank?.option ?: 2
             // Native bankers register npc2; interaction 3 is attack, regardless of the cache action index.
             is Npc -> if (bankerAvailable(bank)) 2 else return false
             else -> throw IllegalStateException("Invalid bank entity type.")
         }
-        val interacted = handler.interactions.interact(option, bank)
+        val interacted = if (questBank == null) handler.interactions.interact(option, bank)
+            else handler.interactions.interact(option, bank) { questBank.passes(bot) }
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
         if (interacted) {
             if (bank is Npc && !bankerAvailable(bank, requireReach = true)) return false
             val opened = waitFor(3.seconds) {
-                bot.bank.isOpen || bank is Npc && !bankerAvailable(bank, requireReach = true)
+                bot.bank.isOpen || questBank?.passes(bot) == false ||
+                    bank is Npc && !bankerAvailable(bank, requireReach = true)
             }
             if (!ActionSafety.NON_COMBAT.await(bot)) return false
             if (bank is Npc) return bot.bank.isOpen && bankerAvailable(bank, requireReach = true)
+            if (questBank != null) return bot.bank.isOpen && questBank.passes(bot)
             if (!opened) {
                 bot.bank.open()
             }

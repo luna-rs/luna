@@ -1,8 +1,7 @@
 package game.content.burghDeRott
 
 import api.predef.*
-import game.content.quests.Quest
-import game.content.quests.QuestGates
+import engine.bank.QuestBank.BURGH_DE_ROTT
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.mob.varp.Varbit
 
@@ -18,9 +17,8 @@ val REPAIRED = mapOf(
 )
 
 // The booth and the furnace work through the bank and furnace handlers, which include objects the client swaps.
-// TODO In Aid of the Myreque: once the quest exists, the unrepaired booth's "Search" must not open the bank.
 on(LoginEvent::class) {
-    if (QuestGates.passes(plr, Quest.IN_AID_OF_THE_MYREQUE)) {
+    if (BURGH_DE_ROTT.passes(plr)) {
         for ((varbit, value) in REPAIRED) {
             plr.sendVarbit(Varbit(varbit, value))
         }

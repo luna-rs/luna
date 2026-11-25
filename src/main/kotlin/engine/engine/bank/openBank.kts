@@ -20,9 +20,11 @@ on(ServerLaunchEvent::class) {
     // Load all banking objects, make them open the bank.
     Banking.loadBankingObjects()
     for (id in Banking.bankingObjects) {
+        val questBank = QuestBank.forObject(id)
 
         // Add listeners for "Use"
         object1(id) {
+            if (questBank?.passes(plr) == false) return@object1
             val npc = world.locator.findViewableNpcs(plr) { Banking.bankingNpcs.contains(it.id) }.firstOrNull()
             if (npc != null) {
                 openDialogue(plr, npc.id)
@@ -34,7 +36,9 @@ on(ServerLaunchEvent::class) {
 
         // Add listeners for "Use-quickly"
         if (Banking.bankingDefinition(id)?.actions?.contains("Use-quickly") == true) {
-            object2(id) { plr.bank.open() }
+            object2(id) {
+                if (questBank?.passes(plr) != false) plr.bank.open()
+            }
         }
     }
 }

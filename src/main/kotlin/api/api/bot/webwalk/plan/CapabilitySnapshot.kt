@@ -1,5 +1,6 @@
 package api.bot.webwalk.plan
 
+import api.bot.webwalk.model.BankDefinition
 import api.bot.webwalk.model.Requirements
 
 /**
@@ -48,6 +49,11 @@ class CapabilitySnapshot(val skillLevels: Map<Int, Int> = emptyMap(),
      */
     val coins: Int
         get() = items[COINS] ?: 0
+
+    /**
+     * Whether the bot meets the quest gate for [bank], if it has one.
+     */
+    fun canUseBank(bank: BankDefinition): Boolean = bank.questBank?.flag?.let { it in flags } ?: true
 
     /**
      * Determines if the bot meets requirements.
