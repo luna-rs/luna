@@ -1,11 +1,11 @@
 package game.skill.magic.chargeOrb
 
-import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
 import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.skill.magic.Magic
+import game.skill.magic.Magic.castDelay
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
@@ -25,7 +25,7 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  *
  * @author lare96
  */
-class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Player>(plr, plr.chargeOrbDelay, 5) {
+class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Player>(plr, plr.castDelay, 5) {
 
     companion object {
 
@@ -33,11 +33,6 @@ class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Playe
          * The unpowered orb item id.
          */
         const val UNPOWERED_ORB = 567
-
-        /**
-         * The time source attribute for charging orbs.
-         */
-        val Player.chargeOrbDelay by Attr.timeSource()
     }
 
     override fun execute() {
