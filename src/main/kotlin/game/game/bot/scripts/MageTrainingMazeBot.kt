@@ -106,7 +106,7 @@ internal object MageTrainingMazeBot {
             completed = { TelekineticTheatre.stationaryStatue(bot) != null }) {
             bot.actionHandler.interactions.approachLocally(guardian, policy) && bot.output.sendNpcInteraction(1, guardian)
         }
-        return TelekineticTheatre.stationaryStatue(bot) != null && bot.closeArenaDialogue()
+        return waitFor(6.seconds) { TelekineticTheatre.stationaryStatue(bot) != null } && bot.closeArenaDialogue()
     }
 
     private suspend fun walk(bot: Bot, position: Position): Boolean = withTimeoutOrNull(20.seconds) {
