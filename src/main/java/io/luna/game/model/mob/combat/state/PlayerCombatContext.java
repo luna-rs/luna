@@ -8,6 +8,7 @@ import api.combat.specialAttack.dsl.SpecialAttackBuilderReceiver;
 import api.combat.specialAttack.dsl.SpecialAttackDataReceiver;
 import engine.combat.prayer.CombatPrayerSet;
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionType;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
@@ -180,6 +181,14 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     public void retaliate(Mob enemy) {
         if (equipmentSwitch == null && !player.getWalking().isPlayerMoving()) {
             super.retaliate(enemy);
+            if (getTarget() == enemy && player.getActions().first(CombatAction.class) != null) {
+                // Fighting back takes over from whatever the player was doing, as a clicked attack does.
+                for (Action<?> action : player.getActions().getAll(ActionType.WEAK)) {
+                    if (!(action instanceof CombatAction)) {
+                        action.interrupt();
+                    }
+                }
+            }
         }
     }
 
