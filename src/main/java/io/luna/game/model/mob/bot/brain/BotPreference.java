@@ -640,8 +640,9 @@ public final class BotPreference {
     /**
      * Loads saved preferences into the existing collections.
      * <p>
-     * Saved entries are merged without clearing current values. Wanted items lacking a minimum
-     * field are skipped; missing priority or tags use their respective default values. Unchanged
+     * Saved preferred skills and gear replace the current ones. Other saved entries are merged without
+     * clearing current values. Wanted items lacking a minimum field are skipped; missing priority or
+     * tags use their respective default values. Unchanged
      * definitions in legacy saves reuse the shared defaults. Explicit shopping requests are restored separately;
      * older saves without that field do not activate their catalogue entries.
      *
@@ -667,6 +668,8 @@ public final class BotPreference {
         }
 
         // Deserialize preferred skills and gear, wanted items, and feelings towards players.
+        // A returning bot is built with a throwaway personality, whose rolled favourites would pile up on each login.
+        skills.clear();
         object.getAsJsonArray("skills").forEach(it -> skills.add(it.getAsInt()));
         object.getAsJsonArray("wanted_items").forEach(it -> {
             JsonObject itemJson = it.getAsJsonObject();
@@ -696,6 +699,7 @@ public final class BotPreference {
                 }
             });
         }
+        gear.clear();
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
         object.getAsJsonArray("player_feelings").forEach(it -> {
             JsonObject feelingsJson = it.getAsJsonObject();
