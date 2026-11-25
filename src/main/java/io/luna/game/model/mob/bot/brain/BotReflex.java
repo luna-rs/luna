@@ -9,6 +9,7 @@ import game.bot.scripts.WildernessScavengeBotScript;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import game.bot.scripts.combat.PkBotScript;
+import game.bot.scripts.combat.WildernessDefence;
 import game.bot.scripts.skills.TeleOtherBotScript;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -146,14 +147,22 @@ public final class BotReflex {
             if (focus == null || !focus.isAlive()) {
                 focus = bot.getActionHandler().getCombat().opponent();
             }
+            // A player who attacks a bot in the Wilderness is answered first, even when it was fighting a monster.
+            Player pker = WildernessDefence.attackingPlayer(bot);
+            if (pker != null) {
+                focus = pker;
+            }
             if (focus != null) {
                 if (focus instanceof Npc && pkSession != null && bot.getScriptStack().current() == pkSession) {
                     pkSession.avoidNpcCombat((Npc) focus);
                     return true;
                 }
-                InitialState response = bot.getEmotions().getCombatResponse(focus);
+                InitialState response = pker != null ? WildernessDefence.respond(bot, pker) :
+                        bot.getEmotions().getCombatResponse(focus);
                 BotReactions.INSTANCE.reactToThreat(bot, focus);
-                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, focus instanceof Player ? pkSession : null));
+                PkBotScript session = pker != null ? WildernessDefence.defenceSession(pkSession, pker) :
+                        focus instanceof Player ? pkSession : null;
+                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, session));
                 bot.log("Reflex [responding to combat] triggered.");
                 return false;
             }

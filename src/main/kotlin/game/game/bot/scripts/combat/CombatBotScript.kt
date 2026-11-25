@@ -49,6 +49,7 @@ import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
@@ -218,6 +219,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         private val MAX_REST = 5.minutes
 
         /**
+         * How long the bot runs from a player in the Wilderness before it looks back at whether it is getting away.
+         */
+        private val WILDERNESS_FLIGHT_LEG = 4.seconds
+
+        /**
          * The share of its prayer points below which a bot fighting a player keeps only its cheapest prayers on.
          */
         private const val SAVE_PRAYER_SHARE = 0.15
@@ -336,6 +342,32 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private var restingSince: Long? = null
 
     /**
+     * The Wilderness attacker this script already decided how to answer ([WildernessDefence.respond]).
+     */
+    private var answered: Player? = focus as? Player
+
+    /**
+     * Whether the bot is running from a player in the Wilderness, a leg at a time ([runFromPlayer]).
+     */
+    private var fleeingPlayer = false
+
+    /**
+     * The tick the bot started running from a player in the Wilderness.
+     */
+    private var flightStart = -1L
+
+    /**
+     * How many attacks the bot has taken while running from a player in the Wilderness, and the last one counted.
+     */
+    private var flightHits = 0
+    private var lastFlightHit = -1L
+
+    /**
+     * Whether the bot, caught while running from a player in the Wilderness, already decided to keep running.
+     */
+    private var keepsRunning = false
+
+    /**
      * Whether the bot already reacted to getting away during this escape, so resting at home doesn't repeat it.
      */
     private var reactedToEscape = false
@@ -425,6 +457,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             delay(600.milliseconds)
             return isTerminated()
         }
+        if (pkSession == null && answerWildernessAttacker()) return false
         if (!combatPolicy.prepareTrainingStyle()) {
             bot.combat.target = null
             if (pkSession == null) {
@@ -700,8 +733,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
     /**
      * Runs from the fight for one cycle, to a tile far enough away that the attacker gives up the chase, then waits
-     * there until the combat timer runs out and the attacker drops it. In the Wilderness, or when nearly dead, the bot
-     * uses the default escape instead, which teleports it home. A bot that can't get away (nowhere to run, too tired to
+     * there until the combat timer runs out and the attacker drops it. From a player in the Wilderness the bot runs out
+     * of the Wilderness a leg at a time and may turn on a player it can't outrun ([runFromPlayer]). Elsewhere in the
+     * Wilderness, or when nearly dead, the bot uses the default escape instead, which teleports it home. A bot that can't get away (nowhere to run, too tired to
      * run, or its attacker keeps up) fights back against an attacker that isn't much stronger, unless it already gave
      * up on the fight; otherwise it teleports home. A bot that gets away reacts to it ([BotReactions.reactToEscape]).
      * Outside the Wilderness, a bot that teleports home remembers where it was attacked so its work keeps it away from
@@ -710,6 +744,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * @return `true` once the bot is out of combat and done waiting.
      */
     private suspend fun runAway(): Boolean {
+        if (bot.inWilderness() && (fleeingPlayer || WildernessDefence.attackingPlayer(bot) != null)) {
+            return runFromPlayer()
+        }
         val threat = combatPolicy.opponent() ?: focus.takeIf { focusAlive() }
         // Going back while the attacker still has the bot as its target would start the fight again.
         if (!bot.combat.inCombat() &&
@@ -768,6 +805,82 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             }
         }
         delay(600.milliseconds)
+        return false
+    }
+
+    /**
+     * Answers a player who starts attacking the bot in the Wilderness while it fights something else, the same way it
+     * would have answered them first ([WildernessDefence.respond]).
+     *
+     * @return `true` if the bot now runs.
+     */
+    private fun answerWildernessAttacker(): Boolean {
+        if (!allowPlayerRetargeting) return false
+        val pker = WildernessDefence.attackingPlayer(bot) ?: return false
+        if (pker === focus || pker === answered) return false
+        answered = pker
+        if (WildernessDefence.respond(bot, pker) == InitialState.RUN) {
+            running = true
+            return true
+        }
+        focus = pker
+        focusSpawn = null
+        return false
+    }
+
+    /**
+     * Runs from a player in the Wilderness, one leg of the escape at a time, eating on the way when the bot is nervous
+     * about its health. A player who keeps hitting the bot while it runs ([WildernessDefence.CAUGHT_HITS]) shows
+     * running isn't working, and a bot that can fight turns on them ([WildernessDefence.turnsWhenCaught]). Once the
+     * player is no longer on it, the bot finishes leaving the Wilderness.
+     *
+     * @return `true` once the bot is out of the Wilderness, or has finished its escape.
+     */
+    private suspend fun runFromPlayer(): Boolean {
+        val chaser = WildernessDefence.attackingPlayer(bot)
+        if (chaser == null) {
+            handler.combat.fleeCombat()
+            if (!bot.inWilderness()) BotReactions.reactToEscape(bot)
+            return true
+        }
+        val now = world.currentTick
+        if (!fleeingPlayer) {
+            fleeingPlayer = true
+            flightStart = now
+            flightHits = 0
+            keepsRunning = false
+        }
+        val hit = bot.combat.lastAttackReceived
+        if (hit != null && hit.attacker === chaser && hit.launchTick >= flightStart && hit.launchTick != lastFlightHit) {
+            lastFlightHit = hit.launchTick
+            flightHits++
+        }
+        if (flightHits >= WildernessDefence.CAUGHT_HITS && !keepsRunning) {
+            keepsRunning = !WildernessDefence.turnsWhenCaught(bot, chaser, gaveUp)
+        }
+        if (flightHits >= WildernessDefence.CAUGHT_HITS && !keepsRunning) {
+            bot.log("Can't outrun $chaser, fighting back.")
+            fleeingPlayer = false
+            bot.combat.isDisabled = false
+            running = false
+            startedAt = System.currentTimeMillis()
+            focus = chaser
+            focusSpawn = null
+            answered = chaser
+            return false
+        }
+        if (bot.emotions.isNervousAboutHp) handler.inventory.eatAnyFood()
+        if (bot.isLocked) {
+            // A teleport out is already being cast.
+            delay(600.milliseconds)
+            return false
+        }
+        bot.combat.isDisabled = true
+        withTimeoutOrNull(WILDERNESS_FLIGHT_LEG) { handler.combat.fleeCombat() }
+        if (!bot.inWilderness()) {
+            BotReactions.reactToEscape(bot)
+            return true
+        }
         return false
     }
 
