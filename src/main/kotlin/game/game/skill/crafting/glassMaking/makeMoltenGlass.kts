@@ -1,15 +1,15 @@
 package game.skill.crafting.glassMaking
 
 import api.predef.*
+import game.skill.smithing.Smithing
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
- * Retrieve all objects named "Furnace" with the "Smelt" option.
+ * Retrieve all objects named "Furnace" with the "Smelt" option, including furnaces the client swaps in by varbit.
  */
-val furnaces = GameObjectDefinition.ALL.stream().filter { it.name.equals("Furnace") }
-    .filter { it.actions.contains("Smelt") }.map { it.id() }.toList()
+val furnaces = GameObjectDefinition.ALL.stream().filter { Smithing.smeltsAt(it, "Furnace") }.map { it.id() }.toList()
 
 /**
  * Opens the molten glass interface.

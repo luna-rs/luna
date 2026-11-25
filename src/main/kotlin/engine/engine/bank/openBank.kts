@@ -33,7 +33,7 @@ on(ServerLaunchEvent::class) {
         }
 
         // Add listeners for "Use-quickly"
-        if (objectDef(id).actions.contains("Use-quickly")) {
+        if (Banking.bankingDefinition(id)?.actions?.contains("Use-quickly") == true) {
             object2(id) { plr.bank.open() }
         }
     }
