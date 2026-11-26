@@ -2,7 +2,7 @@
   This definition file is used for resolving initial economy prices and popularity.
 
   initial_price is an optional positive whole-GP starting price, clamped to economy minimums.
-  Existing saved prices win, except untouched legacy wine seeds migrated at startup.
+  Existing saved prices win, except untouched legacy seeds refreshed at startup.
   Omit it to use the item's normal definition value.
 
   initial_popularity is an optional nonnegative integer in effective-sample units (default 0).
@@ -17,7 +17,7 @@
   },
   {
     "id": 2, // Cannonball
-    "initial_price": 5,
+    "initial_price": 233,
     "initial_popularity": 150
   },
   {
