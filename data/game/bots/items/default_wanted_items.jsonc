@@ -21718,8 +21718,8 @@
   {
     "id": 3470,
     // Fine cloth
-    "min": 4,
-    "target": 16,
+    "min": 10,
+    "target": 20,
     "skill": -1,
     "max_level": -1,
     "priority": "STANDARD",
