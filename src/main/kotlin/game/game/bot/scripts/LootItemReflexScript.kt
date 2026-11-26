@@ -284,6 +284,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
 
             val valuable = when {
                 TreasureTrailBotScript.wantsClue(bot, item.id) -> true
+                ChampionsChallengeBotScript.wantsScroll(bot, item.id) -> true
                 groundItem in bot.deathItems -> true
                 bot.preferences.needsWantedItem(item.id) -> true
                 item.id == 995 -> item.amount >

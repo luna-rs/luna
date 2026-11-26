@@ -39,6 +39,7 @@ object ChampionsChallenge {
     const val STATUE = 10556
     const val STATUE_OPEN = 10557
     const val PORTCULLIS = 10553
+    internal const val ACCEPT_OPTION = "Yes, let me at him!"
 
     /**
      * The handwritten scroll a champion's challenge is read on.
@@ -53,7 +54,7 @@ object ChampionsChallenge {
     private const val HITPOINTS_XP_VARP = 620
     private const val SLAYER_XP_VARP = 621
 
-    private val ANTECHAMBER = Position(3182, 9758, 0)
+    internal val ANTECHAMBER = Position(3182, 9758, 0)
     private val ARENA_ENTRY = Position(3180, 9758, 0)
     private val CHAMPION_SPAWN = Position(3171, 9758, 0)
     private val SPECIAL_BUTTONS = setOf(7562, 7587, 7687, 7512, 7537, 7637, 7612, 7487, 8481, 7662, 7462, 7788, 12311)
@@ -71,13 +72,17 @@ object ChampionsChallenge {
 
     fun challenge(player: Player): Champion? = Champion.entries.getOrNull(player.championChallenge - 1)
 
-    private fun leonWaiting(player: Player) =
+    internal fun leonWaiting(player: Player) =
         player.championsDefeated and Champion.ALL_LOWER == Champion.ALL_LOWER && !defeated(player, Champion.LEON)
 
     fun arena(position: Position) = position.z == 0 && position.x in 3150..3181 && position.y in 9745..9772
 
-    private fun lowerRooms(position: Position) = arena(position) || position.z == 0 && position.x in 3182..3183 &&
+    internal fun lowerRooms(position: Position) = arena(position) || position.z == 0 && position.x in 3182..3183 &&
         position.y in 9757..9759
+
+    internal fun opponent(player: Player): Npc? = owners.entries.firstOrNull {
+        it.value === player && it.key.state == EntityState.ACTIVE && it.key.isAlive
+    }?.key
 
     fun login(player: Player) {
         for (champion in Champion.LOWER) {
@@ -109,7 +114,7 @@ object ChampionsChallenge {
         if (leonWaiting(player) && challenge(player) == null) {
             player.newDialogue().npc(LARXUS, "Leon d'Cour has issued you a challenge. ${ChampionRule.EMPTY_INVENTORY.text} " +
                 "Do you want to accept the challenge?")
-                .options("Yes, let me at him!", { accept(it, Champion.LEON) },
+                .options(ACCEPT_OPTION, { accept(it, Champion.LEON) },
                          "No thanks, I'll pass.", { it.newDialogue().player("No thanks, I'll pass.").open() }).open()
             return
         }
@@ -143,7 +148,7 @@ object ChampionsChallenge {
                 player.newDialogue().npc(LARXUS, "You've already got a champion waiting for you.").open()
             else -> player.newDialogue().npc(LARXUS, "So you want to accept the challenge huh? Well there are some " +
                 "specific rules for these Champion fights. ${champion.rule.text} Do you still want to proceed?")
-                .options("Yes, let me at him!", { accept(it, champion) },
+                .options(ACCEPT_OPTION, { accept(it, champion) },
                          "No thanks, I'll pass.", { it.newDialogue().player("No thanks, I'll pass.").open() }).open()
         }
     }
@@ -156,11 +161,11 @@ object ChampionsChallenge {
     }
 
     /**
-     * Whether the player's items keep to the champion's rule. Ghouls allow only a wielded weapon, the lesser demon
-     * nothing worn and Leon d'Cour nothing carried.
+     * Checks the arena's item restrictions. The Ghoul's own scroll must stay with the player until the kill.
      */
-    private fun allowed(player: Player, rule: ChampionRule): Boolean = when (rule) {
-        ChampionRule.WEAPON_ONLY -> player.inventory.size() == 0 &&
+    internal fun allowed(player: Player, champion: Champion): Boolean = when (champion.rule) {
+        ChampionRule.WEAPON_ONLY -> player.inventory.filterNotNull().all { it.id == champion.scroll } &&
+            player.inventory.computeAmountForId(champion.scroll) <= 1 &&
             (0 until player.equipment.capacity()).all { it == Equipment.WEAPON || player.equipment[it] == null }
         ChampionRule.UNARMED -> player.equipment.size() == 0
         ChampionRule.EMPTY_INVENTORY -> player.inventory.size() == 0
@@ -177,7 +182,7 @@ object ChampionsChallenge {
             player.sendMessage("You need to accept a challenge from Larxus first.")
             return
         }
-        if (!allowed(player, champion.rule)) {
+        if (!allowed(player, champion)) {
             player.sendMessage(champion.rule.text)
             return
         }

@@ -2,6 +2,7 @@ package engine.bot.coordinator
 
 import api.bot.script.BotScript
 import api.predef.*
+import game.bot.scripts.ChampionsChallengeBotScript
 import game.bot.scripts.DragonSlayerBotScript
 import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
@@ -92,6 +93,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         bot.actionHandler.prayerRestoration.preparation()?.let { return it }
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
+        ChampionsChallengeBotScript.select(bot)?.let { return it }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {
                 return OpenCrystalChestBotScript(bot, it, duration)

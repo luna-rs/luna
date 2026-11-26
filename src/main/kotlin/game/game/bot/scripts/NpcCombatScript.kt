@@ -1529,7 +1529,8 @@ open class NpcCombatScript(bot: Bot,
     protected open fun isLoot(item: GroundItem): Boolean {
         return item.id == Currency.COINS.id || item is DeathGroundItem || handler.loot.isRecoveryOrWanted(item) ||
             (slayerTask == SlayerTaskType.SHADE && item.id in ShadeRewards.remains) ||
-            TreasureTrailBotScript.wantsClue(bot, item.id) || item.id in ALL_LOOT_ITEMS.value
+            TreasureTrailBotScript.wantsClue(bot, item.id) || ChampionsChallengeBotScript.wantsScroll(bot, item.id) ||
+            item.id in ALL_LOOT_ITEMS.value
     }
 
     /**
