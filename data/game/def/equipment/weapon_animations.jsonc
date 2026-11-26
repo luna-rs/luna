@@ -363,7 +363,8 @@
       851, // maple_longbow
       855, // yew_longbow
       859, // magic_longbow
-      2883 // ogre_bow
+      2883, // ogre_bow
+      4827 // comp_ogre_bow
     ],
     "styles": [
       {

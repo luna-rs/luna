@@ -4,6 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.Animations
 import game.player.Sound
+import io.luna.game.action.ActionType
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
@@ -23,11 +24,12 @@ import io.luna.game.model.mob.block.Animation
  * require successful storage of all four cannonballs.
  *
  * @param plr The player making cannonballs.
+ * @param remaining The steel bars left to pour, including this one.
  *
  * @author TheLining
  * @author lare96
  */
-class MakeCannonballAction(plr: Player) : LockedAction(plr, true, 1) {
+class MakeCannonballAction(plr: Player, private val remaining: Int = 1) : LockedAction(plr, true, 1) {
 
     companion object {
 
@@ -66,6 +68,11 @@ class MakeCannonballAction(plr: Player) : LockedAction(plr, true, 1) {
          */
         private val POUR_ANIMATION = Animation(827)
     }
+
+    /**
+     * Whether this bar became cannonballs.
+     */
+    private var made = false
 
     /** Live prerequisites shared by queue processing and each timed action stage. */
     private fun canContinue(): Boolean = mob.state == EntityState.ACTIVE && mob.health > 0 &&
@@ -121,6 +128,19 @@ class MakeCannonballAction(plr: Player) : LockedAction(plr, true, 1) {
         mob.animation(POUR_ANIMATION)
         mob.sendMessage("You remove the cannonballs from the mould.")
         mob.smithing.addExperience(EXPERIENCE)
+        made = true
+    }
+
+    override fun onUnlock() {
+        if (!made || remaining <= 1) return
+        val position = mob.position
+        // World tasks run before player input, so leave one full tick for walking or another interaction.
+        world.scheduleOnce(2) {
+            if (mob.position == position && mob.walking.isEmpty && !mob.isLocked && !mob.overlays.hasWindow() &&
+                mob.actions.size() == mob.actions.size(ActionType.SOFT) && canContinue()) {
+                mob.submitAction(MakeCannonballAction(mob, remaining - 1))
+            }
+        }
     }
 
 }

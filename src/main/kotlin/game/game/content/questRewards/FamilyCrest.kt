@@ -10,7 +10,7 @@ import io.luna.game.model.mob.dialogue.Expression
 
 /**
  * The Fitzharmon gauntlets: Dimintheis keeps returning them, and each of his three sons can turn the steel pair into
- * his own kind once.
+ * his own kind, or a brother's pair into his own for a fee.
  *
  * @author TheLining
  */
@@ -25,6 +25,13 @@ object FamilyCrest {
      * The gauntlets that Dimintheis hands out before a son changes them.
      */
     const val STEEL_GAUNTLETS = 778
+
+    /**
+     * The coins a son charges to change gauntlets made by one of his brothers.
+     */
+    const val CHANGE_COST = 25_000
+
+    private const val COINS = 995
 
     /**
      * The three sons and what each one tells and does.
@@ -167,7 +174,10 @@ object FamilyCrest {
         //  every player has finished it.
         val dialogue = plr.newDialogue().npc(son.npc, son.greetingFace, *son.greeting.toTypedArray())
         when {
-            plr.crestGauntlets != 0 -> Unit
+            plr.crestGauntlets == son.gauntlets -> Unit
+            plr.crestGauntlets != 0 -> dialogue.npc(son.npc, "Yes well... Is there anything I can help you with?")
+                .options("Can you change my gauntlets for me?", { change(it, son) },
+                         "No thanks.", { it.newDialogue().player("No thanks.").open() })
             plr.inventory.contains(STEEL_GAUNTLETS) -> {
                 dialogue.player(son.askFace, *son.ask.toTypedArray())
                 for (box in son.offer) dialogue.npc(son.npc, *box.toTypedArray())
@@ -183,6 +193,43 @@ object FamilyCrest {
         }
         dialogue.open()
     }
+
+    /**
+     * [son] changes another son's gauntlets of [plr] into his own kind for [CHANGE_COST] coins.
+     */
+    private fun change(plr: Player, son: Son) {
+        val dialogue = plr.newDialogue().player("Can you change my gauntlets for me?")
+        val held = heldGauntlets(plr, son)
+        when {
+            held == null -> dialogue.npc(son.npc, "You don't have any gauntlets I can imbue.")
+            plr.inventory.computeAmountForId(COINS) < CHANGE_COST ->
+                dialogue.npc(son.npc, "Yes certainly, though it will cost you 25,000 coins.")
+                    .player("Oh, right.")
+            else -> dialogue.npc(son.npc, "Yes certainly, though it will cost you 25,000 coins.")
+                .options("Great thanks!", {
+                    it.newDialogue()
+                        .player("Great thanks!")
+                        .then { buyer ->
+                            val gauntlets = heldGauntlets(buyer, son) ?: return@then
+                            val inventory = buyer.inventory
+                            if (inventory.computeAmountForId(COINS) >= CHANGE_COST &&
+                                inventory.remove(Item(gauntlets)) && inventory.remove(Item(COINS, CHANGE_COST))) {
+                                inventory.add(Item(son.gauntlets))
+                                buyer.crestGauntlets = son.gauntlets
+                                buyer.newDialogue().text(*son.work.toTypedArray()).open()
+                            }
+                        }
+                        .open()
+                }, "No that's okay thanks.", { it.newDialogue().player("No that's okay thanks.").open() })
+        }
+        dialogue.open()
+    }
+
+    /**
+     * The other sons' gauntlets that [plr] carries, if any.
+     */
+    private fun heldGauntlets(plr: Player, son: Son): Int? =
+        Son.values().map { it.gauntlets }.firstOrNull { it != son.gauntlets && plr.inventory.contains(it) }
 
     /**
      * [son] changes the steel gauntlets of [plr] into his own kind, which Dimintheis keeps from then on.

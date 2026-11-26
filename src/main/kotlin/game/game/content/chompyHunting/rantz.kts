@@ -2,6 +2,7 @@ package game.content.chompyHunting
 
 import api.predef.*
 import game.content.chompyHunting.ChompyHunting.BLOATED_TOAD
+import game.content.chompyHunting.ChompyHunting.CHOMPY_BOWS
 import game.content.chompyHunting.ChompyHunting.COOKED_CHOMPY
 import game.content.chompyHunting.ChompyHunting.OGRE_BOW
 import game.content.chompyHunting.ChompyHunting.RAW_CHOMPY
@@ -80,7 +81,7 @@ useItem(BLOATED_TOAD).onNpc(RANTZ) {
         .open()
 }
 
-useItem(OGRE_BOW).onNpc(RANTZ) {
+for (bow in CHOMPY_BOWS) useItem(bow).onNpc(RANTZ) {
     plr.newDialogue()
         .npc(RANTZ, *lines("Yeah, it's a goodly stabbie chucker, but you's is too weedy to use it like Rantz."))
         .open()
@@ -199,13 +200,14 @@ fun giveHats(plr: Player) {
     val builder = plr.newDialogue()
         .player(*lines("Can I have a hat please?"))
         .npc(RANTZ, *lines("You's creature show me da bow den!"))
-    if (!plr.inventory.contains(OGRE_BOW) && !plr.equipment.contains(OGRE_BOW)) {
+    val bow = CHOMPY_BOWS.firstOrNull { plr.inventory.contains(it) || plr.equipment.contains(it) }
+    if (bow == null) {
         builder.player(*lines("Sorry Rantz, I don't have the bow."))
             .npc(RANTZ, *lines("Dat's da shame thing dat is! No flapper hat for you den!"))
             .open()
         return
     }
-    builder.give(Item(OGRE_BOW), boxText("You show Rantz the marks on your bow."), false)
+    builder.give(Item(bow), boxText("You show Rantz the marks on your bow."), false)
     val kills = plr.chompyKills
     val earned = HATS.filter { kills >= it.kills && !QuestRewards.owns(plr, it.id) }
     when {

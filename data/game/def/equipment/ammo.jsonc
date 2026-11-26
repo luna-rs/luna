@@ -295,7 +295,8 @@
       "curve": 15
     },
     "weapons": [
-      2883 // Ogre bow
+      2883, // Ogre bow
+      4827 // Comp ogre bow
     ],
     "ammo": [
       2866 // Ogre arrow

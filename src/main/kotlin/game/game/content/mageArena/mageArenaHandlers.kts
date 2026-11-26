@@ -30,7 +30,6 @@ for (god in MageArena.God.entries) object1(god.statue) { MageArena.pray(plr, god
 object1(2880) {
     if (plr.y > gameObject.position.y) {
         if (!MageArena.completed(plr)) plr.sendMessage("You cannot enter without the permission of Kolodion.")
-        else if (!MageArena.equipmentAllowed(plr)) plr.sendMessage("You cannot enter the arena while carrying weapons or armour.")
         else { plr.move(plr.position.translate(0, -1)); plr.sendMessage("You pass through the mystical barrier.") }
     } else { plr.move(gameObject.position.translate(0, 1)); plr.sendMessage("You pass through the mystical barrier.") }
 }
