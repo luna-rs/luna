@@ -28,6 +28,7 @@ import api.bot.webwalk.walk.ship.ShipBoarding
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.predef.*
+import game.content.mosLeHarmless.BillTeach
 import game.content.sailing.ShipGangplanks
 import game.content.sailing.ShipRoute
 import game.item.degradable.jewellery.TeleportJewellery
@@ -227,6 +228,7 @@ object WebWalkLiveGenerator {
         val report = GenerationReport()
         val climbs = ArrayList<GeneratedObstacle>()
         val leavingPlanks = ArrayList<GameObject>()
+        val billTeachPlanks = ArrayList<GameObject>()
         val trapdoors = HashMap<Int, Hatch>()
         for (trapdoor in Hatch.ALL) {
             trapdoor.closed?.let { trapdoors[it] = trapdoor }
@@ -235,6 +237,7 @@ object WebWalkLiveGenerator {
 
         for (obj in world.objects.staticIterator()) {
             val def = obj.def() ?: continue
+            val billTeachLadder = BillTeach.ladderDirection(obj)
             when {
                 // Entrances come first, because they are what the game does with their ids, whatever they are called.
                 Waterbirth.Gate.entries.any { it.id == obj.id && it.position == obj.position } ||
@@ -248,9 +251,11 @@ object WebWalkLiveGenerator {
                 obj.id in 4106..4107 && obj.position != Entrance.SHADE_CATACOMBS_OUT.position ->
                     nativeDoorPassage(obj, climbs)
                 obj.id in Entrance.BY_ID || obj.id in RopeEntranceCrossing.entrances -> entrance(obj, climbs, report)
+                billTeachLadder != null -> ladder(obj, climbs, report, setOf(billTeachLadder))
                 def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER -> ladder(obj, climbs, report)
                 def.name in StairDestination.NAMES -> stairs(obj, climbs, report)
                 obj.id in trapdoors -> trapdoor(obj, trapdoors.getValue(obj.id), climbs, report)
+                obj.id in BillTeachRouteGenerator.plankIds -> billTeachPlanks += obj
                 obj.id in ShipGangplanks.LEAVING_PLANKS -> leavingPlanks += obj
             }
         }
@@ -269,6 +274,7 @@ object WebWalkLiveGenerator {
         climbs += MoleRouteGenerator.gather(report)
         climbs += MournerBasementRouteGenerator.gather(report)
         climbs += NativeVoyageRouteGenerator.gather(report, ::standableNear)
+        climbs += BillTeachRouteGenerator.gather(billTeachPlanks, report)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)
@@ -367,6 +373,9 @@ object WebWalkLiveGenerator {
                 add("${zone.name.lowercase()}_$index", booth)
             }
         }
+        for (y in 2981..2983) {
+            add("mos_le_harmless_${y - 2981}", Position(3681, y))
+        }
         return seeds
     }
 
@@ -455,7 +464,8 @@ object WebWalkLiveGenerator {
     /**
      * Makes the obstacles of a ladder.
      */
-    private fun ladder(obj: GameObject, climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
+    private fun ladder(obj: GameObject, climbs: MutableList<GeneratedObstacle>, report: GenerationReport,
+                       directions: Set<Boolean> = StairDestination.directions(obj)) {
         if (obj.position in AGILITY_COURSE_LADDERS) {
             report.skipped += "ladder ${obj.id} at ${DoorObstacles.describe(obj.position)}: agility course ladder"
             return
@@ -468,7 +478,7 @@ object WebWalkLiveGenerator {
         // Explicit destinations can be used from the physical floor even when the ladder is stored above it.
         val tiles = if (SpecialLadder.forPosition(obj.position) == null) climbingTiles(obj) else
             EntranceStands.of(obj).sortedWith(LANDING_ORDER)
-        climb(EdgeType.LADDER, obj, StairDestination.directions(obj), climbs, report, tiles) { from, up ->
+        climb(EdgeType.LADDER, obj, directions, climbs, report, tiles) { from, up ->
             LadderDestination.destination(obj, from, up)
         }
     }

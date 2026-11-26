@@ -3,6 +3,7 @@ package api.bot.webwalk.plan
 import api.bot.webwalk.walk.crossing.AltarCrossing
 import api.bot.webwalk.walk.crossing.AbyssCrossing
 import api.bot.webwalk.walk.crossing.CanoeCrossing
+import api.bot.webwalk.walk.crossing.BillTeachCrossing
 import api.bot.webwalk.walk.crossing.JarvaldCrossing
 import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
 import game.content.waterbirth.Jarvald
@@ -18,6 +19,7 @@ import game.skill.runecrafting.enterAltar.Altar
 import game.content.sailing.ShipSearch
 import game.content.craftingGuild.CraftingGuild
 import game.content.fishingGuild.FishingGuild
+import game.content.mosLeHarmless.BillTeach
 import game.obj.webs.Web
 import game.skill.agility.IsafdarForest
 import game.skill.agility.IsafdarLogs
@@ -96,6 +98,7 @@ object BotConditions {
             Jarvald.fare(bot) == 0 || bot.inventory.computeAmountForId(995) >= Jarvald.FARE
         }, CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
                       FISHING_GUILD_ENTRY to { bot: Bot -> FishingGuild.canEnter(bot) },
+                      BillTeachCrossing.ADMISSION to BillTeach::canSail,
                       BARBARIAN_PIPE_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= 35 },
                       AbyssCrossing.ENTRY_ALLOWED to { bot: Bot -> AbyssCrossing.optedIn(bot) },
                       AbyssCrossing.LAW_ALLOWED to { bot: Bot -> AbyssCrossing.lawAllowed(bot) },
