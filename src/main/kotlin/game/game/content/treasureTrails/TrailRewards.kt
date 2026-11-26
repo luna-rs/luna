@@ -4,6 +4,7 @@
 package game.content.treasureTrails
 
 import game.content.treasureTrails.EasyTrailRewards.FIRELIGHTERS
+import game.content.treasureTrails.EasyTrailRewards.GOD_PAGES
 import game.content.treasureTrails.EasyTrailRewards.Reward
 import io.luna.game.model.item.Item
 import kotlin.random.Random
@@ -42,6 +43,7 @@ object TrailRewards {
         Reward(855, 1, 1), // yew_longbow
         Reward(1731, 1, 1), // amulet_of_power
         Reward(7329, 4, 10, FIRELIGHTERS), // gnomish_firelighter_red/green/blue
+        Reward(3827, 1, 1, GOD_PAGES), // torn pages 1-4 (s), (z), (g)
     )
     val mediumRare = listOf(
         Reward(2577, 1, 1), // boots_ranger
@@ -94,6 +96,7 @@ object TrailRewards {
         Reward(861, 1, 1), // magic_shortbow
         Reward(859, 1, 1), // magic_longbow
         Reward(7329, 9, 15, FIRELIGHTERS), // gnomish_firelighter_red/green/blue
+        Reward(3827, 1, 1, GOD_PAGES), // torn pages 1-4 (s), (z), (g)
     )
     val hardRare = listOf(
         Reward(2581, 1, 1), // robinhoodhat
