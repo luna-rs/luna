@@ -42,6 +42,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.TestScope
@@ -58,7 +59,7 @@ import org.mockito.MockedStatic
 import java.time.Instant
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Exercises advertised negotiations through native trade handlers, real overlays and actual inventory transfers.
@@ -106,9 +107,10 @@ class PlayerTradeAdvertisementNegotiationTest {
     private lateinit var scope: TestScope
     private lateinit var stopwatches: MockedStatic<Stopwatch>
 
-    private fun runTradeTest(block: suspend TestScope.() -> Unit) = runTest(timeout = 5.seconds) {
+    private fun runTradeTest(block: suspend TestScope.() -> Unit) = runTest {
         scope = this
-        block()
+        // Bound the negotiation on the game clock. The runTest watchdog also covers cold fixture initialization.
+        withTimeout(3.minutes) { block(this@runTest) }
     }
 
     @BeforeEach fun initialize() {
