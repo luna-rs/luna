@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
@@ -17,7 +18,9 @@ import game.skill.smithing.makeCannonball.MakeCannonballAction.Companion.AMOUNT
 import game.skill.smithing.makeCannonball.MakeCannonballAction.Companion.LEVEL
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Converts owned steel bars into cannonballs through the normal steel-bar-on-furnace interaction.
@@ -90,13 +93,19 @@ class MakeCannonballBotScript(
         return true
     }
 
-    /** Resolves a currently loaded supported furnace in the active zone and starts one normal player action. */
+    /**
+     * Uses the native furnace menu. Each Make-1 keeps the planner's per-bar progress and cancellation checks.
+     */
     private suspend fun startProduction(): Boolean {
         val zone = activeZone ?: return false
         val furnace = world.locator.findObjects(zone.area.centerPosition, zone.area.tileRadius) {
             it.position in zone.area && it.id in Smithing.FURNACE_OBJECTS
         }.firstOrNull() ?: return false
-        return handler.inventory.useItem(STEEL_BAR).onObject(furnace)
+        if (!handler.inventory.useItem(STEEL_BAR).onObject(furnace)) return false
+        if (!waitFor(3.seconds) { bot.overlays[MakeItemDialogue::class]?.length == 1 }) return false
+        if (!isActionSafe() || !canContinue()) return false
+        handler.widgets.clickMakeItem(0, 1)
+        return true
     }
 
     override suspend fun finish() {
