@@ -5,6 +5,7 @@ import api.predef.*
 import game.bot.scripts.BuyInitiateArmourBotScript
 import game.bot.scripts.ChampionsChallengeBotScript
 import game.bot.scripts.DragonSlayerBotScript
+import game.bot.scripts.GodBookBotScript
 import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
 import game.bot.scripts.FillWaterBotScript
@@ -122,6 +123,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         RepairGatheringToolBotScript.TOOLS.flatMap { tool ->
             listOf(false, true).map { RepairGatheringToolBotScript(bot, tool, it, duration) }
         }.filter { it.isEligible() }.randomOrNull()?.let { return it }
+        GodBookBotScript.select(bot)?.let { return it }
         BuyInitiateArmourBotScript.select(bot)?.let { return it }
         return HerbloreSecondaryActivities.general(bot, duration) ?: starterScript(bot, duration)
     }

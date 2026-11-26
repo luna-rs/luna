@@ -19,6 +19,9 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // TODO Heroes' Quest: read its completion once the quest exists.
     HEROES_QUEST(null),
 
+    // TODO Horror from the Deep: read its completion once the quest exists.
+    HORROR_FROM_THE_DEEP(null),
+
     // TODO Jungle Potion: read its completion once the quest exists.
     JUNGLE_POTION(null),
   
