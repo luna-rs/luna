@@ -79,7 +79,7 @@ object TrailClues {
         Clue(2797, tier = TrailTier.HARD, text = "My name is like a tree,|yet it is spelt with a 'g'.|Come see the fur|which is right near me.", npcId = 783, auxiliary = 2798, puzzle = true),
         Clue(2799, tier = TrailTier.HARD, text = "Generally speaking,|his nose was very bent.", npcId = 296, auxiliary = 2800, puzzle = true),
     )
-    val all = EasyClues.all + medium + hard
+    val all = EasyClues.all + medium + hard + LaterClues.all
     val byId = all.associateBy { it.id }
     val byCasket = all.filter { it.casket != -1 }.associateBy { it.casket }
     val byAuxiliary = all.filter { it.auxiliary != -1 }.associateBy { it.auxiliary }
@@ -90,7 +90,7 @@ object TrailClues {
         2850 to "I have 16 kebabs, I eat one|myself and then share the rest|equally between 3 friends.|How many do they have each?",
         2852 to "If x is 15 and y is 3|What is 3x + y?",
         2854 to "What is 57 x 89 + 23?",
-    )
+    ) + LaterClues.challenges
     val easyDrops = setOf(1, 2, 3, 4, 5, 6, 8, 12, 16, 17, 18, 100, 101, 102, 175, 186, 187, 199, 282, 298, 299, 489, 1084, 1085, 1087, 1088, 1089, 1090, 1612, 1648, 1649, 1650, 1651, 1652, 1653, 1654, 1655, 1656, 1657, 1769, 1770, 1771, 1772, 1773, 1774, 1775, 1776, 2274, 2275, 2276, 2277, 2278, 2279, 2280, 2281, 2678, 2679, 2680, 2681, 3222, 3223, 3224, 3225, 3226, 3227, 3246, 3247, 3248, 3249, 3250, 3251, 3252, 3253, 3255, 3256, 3257, 3258, 3259, 3260, 3261, 3262, 3264, 3265, 3266, 3267, 3406)
     val mediumDrops = setOf(9, 10, 20, 32, 113, 125, 145, 191, 202, 203, 204, 3228, 3229, 3230, 3231, 3232, 3233)
     val hardDrops = setOf(49, 50, 53, 54, 55, 83, 941, 1160, 1590, 1608, 1609)

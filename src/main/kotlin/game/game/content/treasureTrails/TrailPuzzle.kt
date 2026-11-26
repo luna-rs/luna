@@ -29,6 +29,11 @@ object TrailPuzzle {
      */
     class PuzzleInterface(val box: Int) : StandardInterface(6976)
 
+    /**
+     * The id before a box's first sliding piece: castle, tree or troll.
+     */
+    fun pieces(box: Int): Int = LaterClues.puzzlePieces[box] ?: 2748
+
     fun clear(player: Player) {
         player.puzzleBox = 0
         player.puzzleTiles = ""
@@ -70,7 +75,7 @@ object TrailPuzzle {
         if (player.puzzleBox != box || tiles(player) == null) start(player, box)
         player.overlays.open(PuzzleInterface(box))
         display(player)
-        player.queue(WidgetItemsMessageWriter(6985, ((1..24).map { Item(2748 + it) } + null).toTypedArray()))
+        player.queue(WidgetItemsMessageWriter(6985, ((1..24).map { Item(pieces(box) + it) } + null).toTypedArray()))
         return true
     }
 
@@ -81,7 +86,7 @@ object TrailPuzzle {
         val overlay = player.overlays.getOverlay(PuzzleInterface::class.java) ?: return false
         if (!player.isAlive || player.isLocked || overlay.box != player.puzzleBox || !owns(player, overlay.box)) return false
         val tiles = tiles(player) ?: return false
-        return index in tiles.indices && tiles[index] != 0 && itemId == 2748 + tiles[index]
+        return index in tiles.indices && tiles[index] != 0 && itemId == pieces(overlay.box) + tiles[index]
     }
 
     fun move(player: Player, index: Int, itemId: Int): Boolean {
@@ -97,7 +102,7 @@ object TrailPuzzle {
     }
 
     private fun display(player: Player) {
-        val items = tiles(player)?.map { if (it == 0) null else Item(2748 + it) } ?: return
+        val items = tiles(player)?.map { if (it == 0) null else Item(pieces(player.puzzleBox) + it) } ?: return
         player.queue(WidgetItemsMessageWriter(6980, items.toTypedArray()))
     }
 }
