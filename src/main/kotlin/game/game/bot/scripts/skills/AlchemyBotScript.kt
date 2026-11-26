@@ -111,8 +111,8 @@ class AlchemyBotScript(
                 addAll(1692..1702 step 2)
                 addAll(listOf(6577, 6581)) // Unenchanted onyx necklace and strung amulet.
                 addAll(HideArmor.entries.filterNot { it.name.startsWith("SNAKESKIN_") }.map { it.id })
-                addAll(listOf(1379, 1389, 1381, 1383, 1385, 1387, Battlestaff.BATTLESTAFF, 3053, 6562, 6603))
-                addAll(Battlestaff.entries.map { it.staff })
+                addAll(listOf(1379, 1389, Battlestaff.BATTLESTAFF, 6603))
+                addAll(Staff.ID_TO_STAFF.keys)
                 ItemDefinition.ALL.stream().filter { definition ->
                     definition.isTradeable && !definition.isNoted && definition.name in METAL_EQUIPMENT_NAMES &&
                         EquipmentDefinition.ALL.get(definition.id()).isPresent
