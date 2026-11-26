@@ -18,7 +18,7 @@ class EctofuntusAction(player: Player, private val target: GameObject, private v
     LockedAction(player, false, 1) {
 
     /**
-     * Separate manual operations; slime filling has no proven player animation in the native sequence metadata.
+     * Separate manual operations at the grinder and fountain.
      *
      * @author lare96
      */
@@ -26,7 +26,6 @@ class EctofuntusAction(player: Player, private val target: GameObject, private v
         LOAD(1649, 2, Sound.FILL_GRINDER),
         GRIND(1648, 4, Sound.GRINDER_WIND),
         COLLECT(1650, 2, Sound.GRINDER_EMPTY),
-        FILL(-1, 2, Sound.FILL_ECTOPLASM),
         WORSHIP(1651, 3, null)
     }
 

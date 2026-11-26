@@ -139,7 +139,7 @@ internal object PrayerOuting {
             val claims = if (tokens == 0) 0 else if (tokens > Ectofuntus.TOKEN_CAP) 2 else 1
             val ticks = toBank + travel + (if (purchases.isEmpty()) 0 else SHOP_TICKS) +
                 grind + (if (grind == 0 || atGrinder) 0 else GRINDER_ROUND_TRIP) +
-                empty * step(Step.FILL) + (if (empty == 0 || atPool && grind == 0) 0 else SLIME_ROUND_TRIP) +
+                empty * Ectofuntus.FILL_TICKS + (if (empty == 0 || atPool && grind == 0) 0 else SLIME_ROUND_TRIP) +
                 worships * step(Step.WORSHIP) + claims * CLAIM_TICKS
             if (ticks > maximumTicks) return null
 
