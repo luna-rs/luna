@@ -9,6 +9,7 @@ import io.luna.util.RandomUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,6 +23,9 @@ import java.util.function.Function;
  * <p>
  * Emotional checks are probabilistic. A higher score makes the bot more likely to feel an emotion, but does not
  * guarantee that the emotion will be felt on every check.
+ * <p>
+ * Each emotion is rolled once and the result stands for 30 to 90 seconds, so code that checks every tick sees one
+ * mood rather than a new roll each time. A new {@link EmotionalTrigger} for an emotion makes its next check roll again.
  * <p>
  * Emotions can be used to influence bot behavior such as combat, trading, speech, skilling, and risk-taking.
  *
@@ -132,6 +136,16 @@ public final class BotEmotion {
     }
 
     /**
+     * The shortest time a rolled emotion check stands, in ticks.
+     */
+    private static final int MINIMUM_HOLD_TICKS = 50;
+
+    /**
+     * The longest time a rolled emotion check stands, in ticks.
+     */
+    private static final int MAXIMUM_HOLD_TICKS = 150;
+
+    /**
      * The active temporary emotion modifiers grouped by emotion type.
      * <p>
      * Multiple triggers may affect the same emotion simultaneously.
@@ -145,6 +159,16 @@ public final class BotEmotion {
      * separately and are not stored in this map.
      */
     private final Map<EmotionType, Double> emotionMap = new EnumMap<>(EmotionType.class);
+
+    /**
+     * The result of the latest roll for each emotion, indexed by {@link EmotionType#ordinal()}.
+     */
+    private final boolean[] feeling = new boolean[EmotionType.values().length];
+
+    /**
+     * The tick each roll in {@link #feeling} stands until. A check at or after that tick rolls again.
+     */
+    private final long[] feelingUntil = new long[EmotionType.values().length];
 
     /**
      * The bot this emotional state belongs to.
@@ -165,6 +189,8 @@ public final class BotEmotion {
      * <p>
      * The trigger will modify future checks for its emotion until it expires. Expired triggers across all emotions
      * are removed when a trigger is added; checks also remove expired triggers for the emotion being queried.
+     * <p>
+     * The next check for the trigger's emotion rolls again, so the bot's mood can change as soon as something happens.
      *
      * @param trigger The trigger to add.
      */
@@ -173,27 +199,33 @@ public final class BotEmotion {
         triggerMap.values().removeIf(existing -> now.isAfter(existing.expire));
         // Something was triggering to our bot :(
         triggerMap.put(trigger.type, trigger);
+        feelingUntil[trigger.type.ordinal()] = 0;
     }
 
     /**
      * Determines whether the bot is currently feeling an emotion.
      * <p>
      * The cached baseline score for {@code type} is combined with all active triggers before being compared against
-     * a random value. If {@code inverse} is enabled, {@code 1.0 - score} is checked instead.
+     * a random value. If {@code inverse} is enabled, the opposite of that result is returned.
      * <p>
-     * Because the final check is probabilistic, repeated calls may return different results without the underlying
-     * emotional state changing.
+     * The roll stands for {@link #MINIMUM_HOLD_TICKS} to {@link #MAXIMUM_HOLD_TICKS} ticks, or until a trigger is
+     * added for {@code type}. Repeated calls in that time return the same result. Rolling on every call would let
+     * code that checks each tick pass within a few ticks whatever the score.
      *
      * @param type The emotion to check.
-     * @param inverse {@code true} to check the inverse of the final emotion score.
+     * @param inverse {@code true} to check that the bot is not feeling the emotion.
      * @return {@code true} if the probability check succeeds.
      */
     public boolean isFeeling(EmotionType type, boolean inverse) {
-        BotPersonality personality = bot.getPersonality();
-        double score = emotionMap.computeIfAbsent(type, it -> type.computeScore.apply(personality));
-        score = checkTriggers(type, score);
-        score = inverse ? (1.0 - score) : score;
-        return score > RandomUtils.nextDouble();
+        int index = type.ordinal();
+        long now = bot.getWorld().getCurrentTick();
+        if (now >= feelingUntil[index]) {
+            BotPersonality personality = bot.getPersonality();
+            double score = emotionMap.computeIfAbsent(type, it -> type.computeScore.apply(personality));
+            feeling[index] = checkTriggers(type, score) > RandomUtils.nextDouble();
+            feelingUntil[index] = now + RandomUtils.inclusive(MINIMUM_HOLD_TICKS, MAXIMUM_HOLD_TICKS);
+        }
+        return feeling[index] != inverse;
     }
 
     /**
@@ -302,13 +334,14 @@ public final class BotEmotion {
     /**
      * Clears all emotional state associated with this bot.
      * <p>
-     * All active triggers and cached baseline scores are removed. Emotion scores will be recalculated from the bot's
-     * current personality the next time they are checked.
+     * All active triggers, cached baseline scores and held rolls are removed. Emotion scores will be recalculated
+     * from the bot's current personality the next time they are checked.
      * <p>
      * This should be called when the bot's personality changes.
      */
     public void clear() {
         triggerMap.clear();
         emotionMap.clear();
+        Arrays.fill(feelingUntil, 0);
     }
 }
