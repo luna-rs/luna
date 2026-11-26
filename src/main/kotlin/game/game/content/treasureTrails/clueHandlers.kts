@@ -19,7 +19,7 @@ for (id in TrailClues.byCasket.keys) item1(id) { TreasureTrails.open(plr, id) }
 for ((id, clue) in TrailClues.byAuxiliary) item1(id) {
     if (clue.puzzle) TrailPuzzle.open(plr, id) else TreasureTrails.read(plr, id)
 }
-for (clue in TrailClues.medium.filter { it.key != -1 }) {
+for (clue in TrailClues.all.filter { it.key != -1 }) {
     val objects = if (clue.kind == EasyClues.Kind.DRAWER) EasyClues.drawer else EasyClues.closedChests
     for (id in objects) useItem(clue.key).onObject(id) { TreasureTrails.search(plr, gameObject, 1) }
 }
@@ -47,7 +47,8 @@ val npcPolicy = InteractionPolicySupplier { player, target ->
 }
 val objectPolicy = InteractionPolicySupplier { player, target ->
     if (target is GameObject && TrailClues.all.any {
-            (it.kind != null || it.targetObjects.isNotEmpty()) && it.position == target.position && player.inventory.contains(it.id)
+            (it.kind != null || it.targetObjects.isNotEmpty()) && it.position == TreasureTrails.shownAt(player, target) &&
+                player.inventory.contains(it.id)
         }) InteractionPolicy.STANDARD_SIZE else InteractionPolicy.UNSPECIFIED
 }
 on(NpcFirstClickEvent::class, interaction = npcPolicy) {
