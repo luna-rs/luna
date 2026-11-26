@@ -1,11 +1,15 @@
 package game.npc.spawn.falador
 
+import api.bot.zone.SubZone
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.content.quests.Quest
 import game.content.quests.QuestGates
 import game.content.respawn.RespawnPoint.faladorRespawn
 import game.npc.spawn.GeneralStore
+import game.npc.spawn.falador.InitiateArmoury.ARMOURY
+import game.npc.spawn.falador.InitiateArmoury.BUY_ARMOUR
+import game.npc.spawn.falador.InitiateArmoury.PIECES
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -16,20 +20,16 @@ import io.luna.game.model.mob.Player
  */
 val SIR_TIFFY = 2290
 
-/**
- * The name of Sir Tiffy's store.
- */
-val ARMOURY = "Initiate Temple Knight Armoury"
-
 ShopHandler.create(ARMOURY) {
+    botAccess {
+        npcSeller(1, SIR_TIFFY, SubZone.FALADOR_PARK_MARKETPLACE, dialogueOption = BUY_ARMOUR)
+    }
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.SLOW
     currency = Currency.COINS
 
     sell {
-        "Initiate helm" x 30
-        "Initiate platemail" x 30
-        "Initiate platelegs" x 30
+        PIECES.forEach { it x 30 }
     }
 }
 
@@ -44,7 +44,7 @@ fun title(plr: Player) = if (plr.appearance.isFemale) "milady" else "sirrah"
 fun knightOptions(plr: Player) {
     plr.newDialogue()
         .options("Can you explain the Gaze of Saradomin to me?", { explainGaze(it) },
-                 "Can I buy some armour?", { buyArmour(it) },
+                 BUY_ARMOUR, { buyArmour(it) },
                  "Can I switch respawns please?", { switchRespawn(it) },
                  "Goodbye.", {
                      it.newDialogue()
@@ -85,9 +85,9 @@ fun explainGaze(plr: Player) {
  */
 fun buyArmour(plr: Player) {
     plr.newDialogue()
-        .player("Can I buy some armour?")
+        .player(BUY_ARMOUR)
         .npc(SIR_TIFFY, "Of course old bean. I can sell you up to Initiate level items only I'm afraid.")
-        .then { GeneralStore.open(it, ARMOURY) }
+        .then { if (QuestGates.passes(it, Quest.RECRUITMENT_DRIVE)) GeneralStore.open(it, ARMOURY) }
         .open()
 }
 
