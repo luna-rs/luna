@@ -3,6 +3,7 @@
  */
 package game.content.treasureTrails
 
+import game.content.treasureTrails.EasyTrailRewards.FIRELIGHTERS
 import game.content.treasureTrails.EasyTrailRewards.Reward
 import io.luna.game.model.item.Item
 import kotlin.random.Random
@@ -40,6 +41,7 @@ object TrailRewards {
         Reward(1393, 1, 1), // fire_battlestaff
         Reward(855, 1, 1), // yew_longbow
         Reward(1731, 1, 1), // amulet_of_power
+        Reward(7329, 4, 10, FIRELIGHTERS), // gnomish_firelighter_red/green/blue
     )
     val mediumRare = listOf(
         Reward(2577, 1, 1), // boots_ranger
@@ -60,6 +62,15 @@ object TrailRewards {
         Reward(7346, 1, 1), // adamant_heraldic_kiteshield3
         Reward(7352, 1, 1), // adamant_heraldic_kiteshield4
         Reward(7358, 1, 1), // adamant_heraldic_kiteshield5
+        Reward(7370, 1, 1), // dragonhide_body_trim_gold
+        Reward(7372, 1, 1), // dragonhide_body_trim
+        Reward(7378, 1, 1), // dragonhide_chaps_trim_gold
+        Reward(7380, 1, 1), // dragonhide_chaps_trim
+        Reward(7319, 1, 1), // strawboater_red
+        Reward(7321, 1, 1), // strawboater_orange
+        Reward(7323, 1, 1), // strawboater_green
+        Reward(7325, 1, 1), // strawboater_blue
+        Reward(7327, 1, 1), // strawboater_black
     )
     val hardNormal = listOf(
         Reward(995, 1000, 5000), // coins
@@ -82,6 +93,7 @@ object TrailRewards {
         Reward(2497, 1, 1), // black_dragonhide_chaps
         Reward(861, 1, 1), // magic_shortbow
         Reward(859, 1, 1), // magic_longbow
+        Reward(7329, 9, 15, FIRELIGHTERS), // gnomish_firelighter_red/green/blue
     )
     val hardRare = listOf(
         Reward(2581, 1, 1), // robinhoodhat
@@ -117,6 +129,10 @@ object TrailRewards {
         Reward(7348, 1, 1), // rune_heraldic_kiteshield3
         Reward(7354, 1, 1), // rune_heraldic_kiteshield4
         Reward(7360, 1, 1), // rune_heraldic_kiteshield5
+        Reward(7374, 1, 1), // blue_dragonhide_body_trim_gold
+        Reward(7376, 1, 1), // blue_dragonhide_body_trim
+        Reward(7382, 1, 1), // blue_dragonhide_chaps_trim_gold
+        Reward(7384, 1, 1), // blue_dragonhide_chaps_trim
     )
 
     fun normal(tier: TrailTier): List<Reward> = when (tier) {
@@ -135,6 +151,6 @@ object TrailRewards {
         List(tier.rewardRolls + random(3)) {
             val table = if (random(tier.rareChance) == 0) rare(tier) else normal(tier)
             val reward = table[random(table.size)]
-            Item(reward.id, reward.min + random(reward.max - reward.min + 1))
+            Item(reward.pickId(random), reward.min + random(reward.max - reward.min + 1))
         }
 }

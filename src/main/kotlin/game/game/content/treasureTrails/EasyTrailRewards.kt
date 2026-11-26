@@ -13,11 +13,23 @@ import kotlin.random.Random
  */
 object EasyTrailRewards {
     /**
-     * An inclusive quantity range for one possible reward.
+     * An inclusive quantity range for one possible reward. When [anyOf] is set, the row gives one of those items,
+     * picked at random, in place of [id].
      *
      * @author lare96
      */
-    data class Reward(val id: Int, val min: Int = 1, val max: Int = min)
+    data class Reward(val id: Int, val min: Int = 1, val max: Int = min, val anyOf: List<Int> = emptyList()) {
+
+        /**
+         * Picks the item this row gives.
+         */
+        fun pickId(random: (Int) -> Int): Int = if (anyOf.isEmpty()) id else anyOf[random(anyOf.size)]
+    }
+
+    /**
+     * The red, green and blue firelighters, given as one row so the other rows keep their odds.
+     */
+    val FIRELIGHTERS = listOf(7329, 7330, 7331)
 
     val normal = listOf(
         Reward(995, 50, 200), // coins
@@ -47,6 +59,7 @@ object EasyTrailRewards {
         Reward(1169, 1, 1), // coif
         Reward(1727, 1, 1), // amulet_of_magic
         Reward(847, 1, 1), // willow_longbow
+        Reward(7329, 3, 5, FIRELIGHTERS), // gnomish_firelighter_red/green/blue
     )
     val rare = listOf(
         Reward(2583), // black_platebody_trim
@@ -71,12 +84,18 @@ object EasyTrailRewards {
         Reward(7396), // bluewizhat_trim
         Reward(7392), // wizards_robe_trim
         Reward(7390), // wizards_robe_trim_gold
+        Reward(7362), // studded_body_trim_gold
+        Reward(7364), // studded_body_trim_fur
+        Reward(7366), // studded_chaps_trim_gold
+        Reward(7368), // studded_chaps_trim_fur
+        Reward(7386), // blue_skirt_trim_gold
+        Reward(7388), // blue_skirt_trim
     )
 
     fun roll(random: (Int) -> Int = { Random.nextInt(it) }): List<Item> =
         List(2 + random(3)) {
             val table = if (random(97) == 0) rare else normal
             val reward = table[random(table.size)]
-            Item(reward.id, reward.min + random(reward.max - reward.min + 1))
+            Item(reward.pickId(random), reward.min + random(reward.max - reward.min + 1))
         }
 }

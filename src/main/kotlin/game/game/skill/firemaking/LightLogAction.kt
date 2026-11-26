@@ -12,11 +12,14 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.ObjectType
 
 /**
- * A [LightAction] implementation that enables lighting logs to create fires.
+ * A [LightAction] implementation that enables lighting logs to create fires. Coloured logs pass their own item,
+ * experience and fire object, and light like [Log.NORMAL] otherwise.
  *
  * @author lare96
  */
-class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
+class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean, val logId: Int = log.id,
+                     val exp: Double = log.exp, val fireId: Int = Firemaking.FIRE_OBJECT,
+                     private val groundLog: GroundItem? = null) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
 
     /**
@@ -48,14 +51,16 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
 
             else -> {
                 if (removeLog) {
-                    if (mob.inventory.remove(log.id)) {
-                        logGroundItem = world.addItem(log.id, 1, mob.position, mob)
-                        mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
+                    if (mob.inventory.remove(logId)) {
+                        logGroundItem = world.addItem(logId, 1, mob.position, mob)
+                        mob.sendMessage("You light the ${itemName(logId).lowercase()}...")
                         return true
                     }
                     return false
                 }
-                mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
+                logGroundItem = groundLog?.takeIf { it.position == mob.position && it.isVisibleTo(mob) }
+                if (groundLog != null && logGroundItem == null) return false
+                mob.sendMessage("You light the ${itemName(logId).lowercase()}...")
                 return true
             }
         }
@@ -74,10 +79,10 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
      */
     private fun light() {
         if (logGroundItem != null && world.removeItem(logGroundItem!!)) {
-            if (mob.isRealBot()) BotProductionMetrics.recordSink(log.id)
+            if (mob.isRealBot()) BotProductionMetrics.recordSink(logId)
             val firePosition = mob.position
             mob.playSound(Sound.FIRE_LIT)
-            mob.firemaking.addExperience(log.exp)
+            mob.firemaking.addExperience(exp)
 
             // Walk in a non-blocked direction prioritizing west.
             for (dir in WALK_DIRECTIONS) {
@@ -91,7 +96,7 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                     break
                 }
             }
-            val fireObject = world.addObject(Firemaking.FIRE_OBJECT, firePosition)
+            val fireObject = world.addObject(fireId, firePosition)
             world.scheduleOnce(rand(Firemaking.BURN_TIME)) {
                 world.removeObject(fireObject)
                 world.addItem(Firemaking.ASHES, 1, fireObject.position)

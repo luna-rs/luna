@@ -485,6 +485,42 @@
     ]
   },
   {
+    "id": 7329,
+    // Red firelighter
+    "min": -1,
+    "target": 2,
+    "skill": 11,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7330,
+    // Green firelighter
+    "min": -1,
+    "target": 2,
+    "skill": 11,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7331,
+    // Blue firelighter
+    "min": -1,
+    "target": 2,
+    "skill": 11,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
     "id": 1511,
     // Logs
     "min": 300,
