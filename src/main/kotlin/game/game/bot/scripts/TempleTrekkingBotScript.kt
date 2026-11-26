@@ -6,6 +6,8 @@ import api.attr.setValue
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotNpcDialogues
+import api.bot.action.PvmFight
+import api.bot.action.eating.PvmEating
 import api.bot.boss.BossFood
 import api.bot.script.BotScript
 import api.bot.webwalk.plan.BankAccess
@@ -114,6 +116,8 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
      */
     private data class Pack(val axe: Int, val logs: List<Item>, val food: List<Item>, val villagerFood: Item?)
 
+    private val eating = PvmEating(bot)
+    private var startingMap: Temple.RouteMap? = null
     private var outing: Trek? = null
     override val actionSafety = ActionSafety.COMBAT
     override val allowsCombatResponse = false
@@ -142,7 +146,12 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
     }
 
     override suspend fun finish() {
-        val trek = outing ?: return
+        eating.stopAttending()
+        val map = startingMap
+        if (map != null && !map.travelling && bot.overlays.getOverlay(Temple.RouteMap::class.java) === map) {
+            bot.overlays.closeWindows()
+        }
+        val trek = outing ?: bot.trek?.takeIf { map?.travelling == true && it.villager == map.villager } ?: return
         if (bot.trek !== trek || bot.state != EntityState.ACTIVE || !bot.isAlive) return
         bot.navigator.cancel()
         bot.walking.clear()
@@ -211,9 +220,11 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
                 handler.interactions.approachLocally(npc, InteractionPolicy.STANDARD_SIZE) &&
                     isActionSafe(ActionSafety.NON_COMBAT) && bot.output.sendNpcInteraction(1, npc)
             }) return false
+        startingMap = bot.overlays.getOverlay(Temple.RouteMap::class.java) ?: return false
         if (!bot.output.clickButton(TrekRoute.ROUTE_ONE.button)) return false
         if (!waitFor(4.seconds) { bot.trek != null }) return false
         outing = bot.trek
+        startingMap = null
         return true
     }
 
@@ -256,7 +267,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
         withTimeoutOrNull(75.seconds) {
             while (inRoom(room)) {
                 if (finished()) return@withTimeoutOrNull true
-                if (bot.health <= bot.totalHealth - 14) BossFood.eat(bot, foodPolicy)
+                if (!eating.check(PvmFight.of(bot))) return@withTimeoutOrNull false
                 val follower = room.follower
                 if (bot.health <= bot.totalHealth / 3 ||
                     (room.type.fight && follower != null && follower.health <= follower.totalHealth / 3)) {
@@ -411,10 +422,11 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
     private suspend fun redeem(): Boolean {
         val token = Temple.TOKENS.firstOrNull { owned(bot, it) > 0 } ?: return false
         if (!clearSpeech()) return false
-        if (!bot.inventory.contains(token)) {
+        if (!bot.inventory.contains(token) || bot.inventory.computeRemainingSize() == 0) {
             if (!handler.banking.travelToBankOpen()) return false
             try {
-                if (!handler.banking.withdrawUnnoted(Item(token))) return false
+                if (bot.inventory.computeRemainingSize() < 2 && !handler.banking.depositInventory(setOf(token))) return false
+                if (!bot.inventory.contains(token) && !handler.banking.withdrawUnnoted(Item(token))) return false
             } finally {
                 if (bot.bank.isOpen) bot.overlays.closeWindows()
             }
