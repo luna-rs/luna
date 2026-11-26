@@ -9,11 +9,9 @@ import api.attr.getValue
 import api.attr.setValue
 import api.predef.ext.scheduleOnce
 import game.player.Sound
-import game.skill.magic.Staff
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
-import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
@@ -75,23 +73,7 @@ object MageArena {
     fun chamber(position: Position): Boolean = position.z == 0 && position.x in 2496..2522 && position.y in 4678..4727
     fun live(player: Player): Boolean = player.state == EntityState.ACTIVE && player.isAlive
 
-    /**
-     * Luna's equipment categories distinguish magical robes by their magic bonus. Unlike physical armour,
-     * robes and staves are admitted. This is the supported equivalent of the reference's category exclusions;
-     * its barrier comments explicitly identify the restriction text as reconstructed from RSC.
-     */
-    fun equipmentAllowed(player: Player): Boolean = (player.inventory.asSequence() + player.equipment.asSequence())
-        .filterNotNull().all { item ->
-            val definition = EquipmentDefinition.ALL.get(item.id).orElse(null)
-            when (definition?.index) {
-                Equipment.WEAPON -> item.id in Staff.ID_TO_STAFF || item.itemDef.name.contains("staff", true)
-                Equipment.HEAD, Equipment.CHEST, Equipment.LEGS, Equipment.HANDS, Equipment.SHIELD -> definition.getBonus(3) > 0
-                Equipment.AMMUNITION -> false
-                else -> true
-            }
-        }
-
-    fun canStart(player: Player): Boolean = live(player) && player.skill(Skill.MAGIC).staticLevel >= 60 && equipmentAllowed(player)
+    fun canStart(player: Player): Boolean = live(player) && player.skill(Skill.MAGIC).staticLevel >= 60
 
     /**
      * Starts or resumes only the saved undefeated form. A duplicate conversation cannot replace a live boss.

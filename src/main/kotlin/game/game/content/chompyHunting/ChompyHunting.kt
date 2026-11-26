@@ -36,9 +36,15 @@ object ChompyHunting {
     const val COOKED_CHOMPY = 2878
     const val OGRE_ARROW = 2866
     const val OGRE_BOW = 2883
+    const val COMP_OGRE_BOW = 4827
     const val CHOMPY_PICTURE = 2884
     const val BONES = 526
     const val FEATHER = 314
+
+    /**
+     * The bows that can shoot chompy birds and carry the kill notches.
+     */
+    val CHOMPY_BOWS = setOf(OGRE_BOW, COMP_OGRE_BOW)
 
     /**
      * Ogre bellows holding three, two and one loads of swamp gas.
@@ -307,7 +313,7 @@ object ChompyHunting {
         val message = when {
             weapon == null -> "You'll need a weapon to try and attack this beast."
             !ranged -> "The Chompy Bird is too quick for your melee weapon."
-            weapon != OGRE_BOW -> "Your ranged weapon isn't powerful enough to hurt the Chompy bird."
+            weapon !in CHOMPY_BOWS -> "Your ranged weapon isn't powerful enough to hurt the Chompy bird."
             !chompy.isBaitedBy(plr) -> "This is not your Chompy Bird to shoot."
             else -> return true
         }

@@ -23,11 +23,12 @@ import io.luna.game.model.mob.block.Animation
  * require successful storage of all four cannonballs.
  *
  * @param plr The player making cannonballs.
+ * @param remaining The steel bars left to pour, including this one.
  *
  * @author TheLining
  * @author lare96
  */
-class MakeCannonballAction(plr: Player) : LockedAction(plr, true, 1) {
+class MakeCannonballAction(plr: Player, private val remaining: Int = 1) : LockedAction(plr, true, 1) {
 
     companion object {
 
@@ -66,6 +67,11 @@ class MakeCannonballAction(plr: Player) : LockedAction(plr, true, 1) {
          */
         private val POUR_ANIMATION = Animation(827)
     }
+
+    /**
+     * Whether this bar became cannonballs.
+     */
+    private var made = false
 
     /** Live prerequisites shared by queue processing and each timed action stage. */
     private fun canContinue(): Boolean = mob.state == EntityState.ACTIVE && mob.health > 0 &&
@@ -121,6 +127,21 @@ class MakeCannonballAction(plr: Player) : LockedAction(plr, true, 1) {
         mob.animation(POUR_ANIMATION)
         mob.sendMessage("You remove the cannonballs from the mould.")
         mob.smithing.addExperience(EXPERIENCE)
+        made = true
+    }
+
+    /**
+     * Pours the next bar a tick later. The player is unlocked for that tick, so walking away or starting anything
+     * else stops the run.
+     */
+    override fun onUnlock() {
+        if (!made || remaining <= 1) return
+        val position = mob.position
+        world.scheduleOnce(1) {
+            if (mob.position == position && mob.walking.isEmpty && mob.actions.size() == 0 && canContinue()) {
+                mob.submitAction(MakeCannonballAction(mob, remaining - 1))
+            }
+        }
     }
 
 }

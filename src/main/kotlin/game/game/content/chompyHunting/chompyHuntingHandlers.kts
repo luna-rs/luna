@@ -8,7 +8,7 @@ import api.predef.ext.*
 import game.content.chompyHunting.ChompyHunting.BLOATED_TOAD
 import game.content.chompyHunting.ChompyHunting.CHOMPY_BIRD
 import game.content.chompyHunting.ChompyHunting.DEAD_CHOMPY
-import game.content.chompyHunting.ChompyHunting.OGRE_BOW
+import game.content.chompyHunting.ChompyHunting.CHOMPY_BOWS
 import game.content.chompyHunting.ChompyHunting.SWAMP_TOAD
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Mob
@@ -31,7 +31,7 @@ for (bellows in ChompyHunting.ALL_BELLOWS) {
 item1(BLOATED_TOAD) { ChompyHunting.placeToad(plr, index) }
 item4(BLOATED_TOAD) { ChompyHunting.releaseAll(plr) }
 
-item3(OGRE_BOW) { ChompyHunting.checkKills(plr) }
+for (bow in CHOMPY_BOWS) item3(bow) { ChompyHunting.checkKills(plr) }
 
 // "Attack" is the chompy bird's fifth option, which the client sends as a fourth click.
 npc4(CHOMPY_BIRD, { plr, target ->
