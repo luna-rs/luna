@@ -228,6 +228,9 @@ class TreasureTrailBotScript(bot: Bot, private val data: TrailData = TrailData()
      */
     private fun findObject(clue: Clue): GameObject? = clue.position?.let { position ->
         world.locator.findObjectsOnTile(position) { objectOption(clue, it.id) != null }.firstOrNull()
+            ?: world.locator.findObjectsOnTile(position.translate(0, 0, 1)) {
+                objectOption(clue, it.id) != null && world.collisionManager.isLoweredOnto(it, position.z)
+            }.firstOrNull()
     }
 
     /**
@@ -316,7 +319,7 @@ class TreasureTrailBotScript(bot: Bot, private val data: TrailData = TrailData()
             val blank = board.indexOf(0)
             if (!TrailPuzzle.adjacent(index, blank) || board[index] == 0) return false
             val expected = board.toMutableList().also { it[blank] = it[index]; it[index] = 0 }
-            if (!handler.widgets.clickItemAction(6976, 6980, 5, index, 2748 + board[index]) ||
+            if (!handler.widgets.clickItemAction(6976, 6980, 5, index, TrailPuzzle.pieces(box) + board[index]) ||
                 !waitFor(3.seconds) { TrailPuzzle.tiles(bot) == expected }) return false
             board = expected
         }
