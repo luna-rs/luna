@@ -58,6 +58,9 @@ enum class Trapdoor(override val closed: Int?, override val open: Int, override 
     // Champions' Guild, into the Champions' Challenge.
     CHAMPIONS_GUILD(closed = 10558, open = 10559, landing = tile(3189, 9758)),
 
+    // Champions' Guild basement, the Champion Statue down to the arena.
+    CHAMPIONS_STATUE(closed = 10556, open = 10557, landing = tile(3182, 9758)),
+
     // Seers' Village, down from the seer's roof (One Small Favour).
     SEERS_ROOF(closed = null, open = 5835, landing = floorsDown(2)),
 
