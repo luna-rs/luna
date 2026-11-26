@@ -249,7 +249,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                           intelligence: Double = 1.0,
                           random: Random = Random(),
                           refine: Boolean = true): WebWalkPlan? =
-        planToNearest(start, graph.banks.map { it.stand }, snapshot, intelligence, random, refine)
+        planToNearest(start, graph.banks.filter(snapshot::canUseBank).map { it.stand }, snapshot, intelligence, random, refine)
 
     /**
      * Plans a trip to the nearest of some destinations, which is the one that the cheapest trip ends at.

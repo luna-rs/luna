@@ -34,13 +34,15 @@ object BotNpcDialogues {
      * @param timeout Complete interaction budget, including any approach performed by [start].
      * @param allowed Additional live activity permission checked before every option.
      * @param completed Real inventory or world-state result that completes the conversation.
+     * @param playerSpeech Exact scripted player pages that can occur independently of the selected options.
      * @param start Native Talk-to or item-on-NPC interaction.
      */
     suspend fun respond(bot: Bot, npc: Npc, responses: List<String>, timeout: Duration = 30.seconds,
                         allowed: () -> Boolean = { true }, completed: () -> Boolean,
+                        playerSpeech: Set<String> = emptySet(),
                         start: suspend () -> Boolean): Boolean =
         respondToSpeaker(bot, npc.id, responses, timeout, { npc.state == EntityState.ACTIVE && allowed() },
-            completed, start)
+            completed, playerSpeech, start)
 
     /**
      * Answers a native remote speaker, such as Brian speaking through the Mystic jewel, without inventing an NPC.
@@ -53,13 +55,14 @@ object BotNpcDialogues {
     suspend fun respondVirtual(bot: Bot, speakerId: Int, responses: List<String>, timeout: Duration = 30.seconds,
                                allowed: () -> Boolean = { true }, completed: () -> Boolean,
                                start: suspend () -> Boolean): Boolean =
-        respondToSpeaker(bot, speakerId, responses, timeout, allowed, completed, start)
+        respondToSpeaker(bot, speakerId, responses, timeout, allowed, completed, emptySet(), start)
 
     /**
      * Shares exact queue, speaker and page ownership between physical and remote native conversations.
      */
     private suspend fun respondToSpeaker(bot: Bot, speakerId: Int, responses: List<String>, timeout: Duration,
                                          allowed: () -> Boolean, completed: () -> Boolean,
+                                         playerSpeech: Set<String>,
                                          start: suspend () -> Boolean): Boolean {
         require(responses.isNotEmpty())
         val previous = bot.dialogues
@@ -71,7 +74,7 @@ object BotNpcDialogues {
         fun safe() = ActionSafety.NON_COMBAT.allows(bot) && allowed()
         fun speech(current: DialogueInterface): Boolean = when (current) {
             is NpcDialogue -> current.npcId == speakerId
-            is PlayerDialogue -> lastResponse != null && current.lines.joinToString(" ") == lastResponse
+            is PlayerDialogue -> current.lines.joinToString(" ").let { it == lastResponse || it in playerSpeech }
             else -> false
         }
         fun recognized(current: DialogueInterface): Boolean = when (current) {
@@ -89,7 +92,7 @@ object BotNpcDialogues {
                     if (current != null && currentQueue != null && currentQueue !== previous) {
                         if (!currentQueue.owns(current)) return@withTimeoutOrNull false
                         if (queue == null) {
-                            if (current !is NpcDialogue || current.npcId != speakerId) return@withTimeoutOrNull false
+                            if (!speech(current)) return@withTimeoutOrNull false
                             queue = currentQueue
                         } else if (currentQueue !== queue) {
                             if (selectedPage == null || !speech(current)) return@withTimeoutOrNull false

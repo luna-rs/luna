@@ -334,7 +334,7 @@
   {
     "opcode": 77,
     "size": 6,
-    "payload": "DebugMessageReader"
+    "payload": "GroundItemOptionMessageReader"
   },
   {
     "opcode": 78,
@@ -433,7 +433,7 @@
   {
     "opcode": 100,
     "size": 6,
-    "payload": "DebugMessageReader"
+    "payload": "GroundItemOptionMessageReader"
   },
   {
     "opcode": 101,

@@ -20,6 +20,7 @@ import game.bot.scripts.BucketSandProfitBotScript
 import game.bot.scripts.CollectGroundItemBotScript
 import game.bot.scripts.FillWaterBotScript
 import game.bot.scripts.FillWaterBotScript.Source
+import game.bot.scripts.JoinDragonShieldBotScript
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenContainerBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
@@ -32,6 +33,7 @@ import game.bot.scripts.trading.BuyStoreBargainBotScript
 import game.bot.scripts.trading.SellToStoreBotScript
 import game.player.item.consume.potion.Potion
 import game.player.item.consume.potion.PotionFamily
+import game.skill.smithing.Smithing.DRAGON_SQUARE_SHIELD
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivityWeights
@@ -40,11 +42,11 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration
 
 /**
- * Selects money-making tasks that do not train a skill or initiate combat.
+ * Selects general money-making tasks outside combat.
  *
  * Existing paid rune deliveries and population-limited scavenging retain their own admission rules. Store bargains,
- * owned reward containers, key processing, and mole exchanges use their native scripts. Early-game accounts can
- * also collect raw flax or Lumbridge eggs, fill containers, or buy and fill empty buckets for sale.
+ * owned reward containers, key processing, dragon shield assembly and mole exchanges use their native scripts.
+ * Early-game accounts can also collect raw flax or Lumbridge eggs, fill containers, or buy and fill empty buckets.
  * Sale visits advertise actual transferable stock through the existing player marketplace. Candidate factories are
  * shuffled before invocation so unchosen rune reservations and store-bargain polls have no side effects.
  *
@@ -79,6 +81,8 @@ object GeneralProfitCoordinator : BotCoordinator {
      */
     internal fun getScript(bot: Bot): BotScript? {
         if (!ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness()) return null
+        val dragonShieldReady = JoinDragonShieldBotScript.eligible(bot)
+        if (dragonShieldReady && owned(bot, DRAGON_SQUARE_SHIELD) == 0L) return JoinDragonShieldBotScript(bot, 20.minutes)
         if (BotActivityWeights.needsStarterCoins(bot)) {
             MerchantingCoordinator.getSellingScript(bot)?.let { return it }
         }
@@ -118,6 +122,7 @@ object GeneralProfitCoordinator : BotCoordinator {
             }
         }
         candidates += { MakeCrystalKeyBotScript(bot, duration).takeIf { it.isEligible() } }
+        if (dragonShieldReady) candidates += { JoinDragonShieldBotScript(bot, 20.minutes) }
         candidates += { TradeMolePartsBotScript(bot, duration).takeIf { it.isEligible() } }
         candidates += { HerbloreSecondaryActivities.profit(bot, duration) }
         for (container in OpenContainerBotScript.Container.entries) {

@@ -126595,6 +126595,67 @@
       "frequency": "NORMAL"
     }
   },
+  // Hobgoblin (id 122) x5
+  {
+    "id": 122,
+    "position": {
+      "x": 3293,
+      "y": 3678,
+      "z": 0
+    },
+    "wander": {
+      "radius": 4,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 122,
+    "position": {
+      "x": 3294,
+      "y": 3686,
+      "z": 0
+    },
+    "wander": {
+      "radius": 4,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 122,
+    "position": {
+      "x": 3298,
+      "y": 3677,
+      "z": 0
+    },
+    "wander": {
+      "radius": 4,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 122,
+    "position": {
+      "x": 3301,
+      "y": 3687,
+      "z": 0
+    },
+    "wander": {
+      "radius": 4,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 122,
+    "position": {
+      "x": 3303,
+      "y": 3680,
+      "z": 0
+    },
+    "wander": {
+      "radius": 4,
+      "frequency": "NORMAL"
+    }
+  },
   // Skeleton (id 92) x5
   {
     "id": 92,
@@ -128488,11 +128549,11 @@
       "frequency": "NORMAL"
     }
   },
-  // Maze Guardian (id 3102) x2
+  // Telekinetic Guardian (id 3098) x2
   {
-    "id": 3102,
+    "id": 3098,
     "position": {
-      "x": 3354,
+      "x": 3358,
       "y": 9679,
       "z": 2
     },
@@ -128502,10 +128563,10 @@
     }
   },
   {
-    "id": 3102,
+    "id": 3098,
     "position": {
-      "x": 3357,
-      "y": 9707,
+      "x": 3355,
+      "y": 9701,
       "z": 2
     },
     "wander": {

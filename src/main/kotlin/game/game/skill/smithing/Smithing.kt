@@ -14,6 +14,11 @@ object Smithing {
      */
     const val HAMMER = 2347
 
+    const val DRAGON_SHIELD_LEFT_HALF = 2366
+    const val DRAGON_SHIELD_RIGHT_HALF = 2368
+    const val DRAGON_SQUARE_SHIELD = 1187
+    const val DRAGON_SHIELD_LEVEL = 60
+
     /**
      * All anvil object IDs.
      */
@@ -22,5 +27,18 @@ object Smithing {
     /**
      * Retrieves all object IDs with the interaction action "Smelt."
      */
-    val FURNACE_OBJECTS = GameObjectDefinition.ALL.filter { it.actions.contains("Smelt") }.map { it.id() }.toSet()
+    val FURNACE_OBJECTS = GameObjectDefinition.ALL.filter { smeltsAt(it) }.map { it.id() }.toSet()
+
+    /**
+     * Whether [definition] has the "Smelt" option, or the client swaps it by varbit for a furnace that does (such as
+     * a furnace repaired in a quest). Clicks on those arrive under the original id.
+     */
+    fun smeltsAt(definition: GameObjectDefinition, name: String? = null): Boolean {
+        val children = definition.varpDef?.childIdList.orEmpty()
+            .filter { it != -1 }
+            .mapNotNull { GameObjectDefinition.ALL.get(it).orElse(null) }
+        return (listOf(definition) + children).any {
+            it.actions.contains("Smelt") && (name == null || it.name == name)
+        }
+    }
 }
