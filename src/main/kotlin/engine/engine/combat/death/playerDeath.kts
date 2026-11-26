@@ -13,6 +13,7 @@ import engine.bot.speech.BotPkingSpeechPool
 import engine.controllers.Controllers.inWilderness
 import engine.item.developerItem.DeveloperItemHandler
 import game.bot.scripts.DeathReflexScript.Companion.lastKiller
+import game.content.respawn.RespawnPoint
 import game.player.Animations
 import game.player.Jingles
 import game.skill.runecrafting.essencePouch.EssencePouch
@@ -75,7 +76,6 @@ DeathHookHandler.setDefaultHook(Player::class) {
 
     postDeath {
         if (source.isRealBot() && victim.inWilderness()) BotPkingSpeechPool.knockout(source, victim)
-        val respawnPosition = Luna.settings().game().startingPosition()
-        victim.move(respawnPosition)
+        victim.move(RespawnPoint.position(victim))
     }
 }

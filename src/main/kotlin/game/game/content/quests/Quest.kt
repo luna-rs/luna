@@ -19,6 +19,9 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // TODO Heroes' Quest: read its completion once the quest exists.
     HEROES_QUEST(null),
 
+    // TODO Horror from the Deep: read its completion once the quest exists.
+    HORROR_FROM_THE_DEEP(null),
+
     // TODO Jungle Potion: read its completion once the quest exists.
     JUNGLE_POTION(null),
   
@@ -34,6 +37,9 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // TODO Recipe for Disaster: read its completion once the quest exists. Each subquest opens more of the
     // Culinaromancer's chest, and the whole quest opens all of it.
     RECIPE_FOR_DISASTER(null),
+
+    // TODO Recruitment Drive: read its completion once the quest exists. Keep its optional gate closed until then.
+    RECRUITMENT_DRIVE({ false }),
 
     // TODO Regicide: read its completion once the quest exists.
     REGICIDE(null),

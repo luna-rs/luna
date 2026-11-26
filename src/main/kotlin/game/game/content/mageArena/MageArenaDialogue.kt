@@ -29,11 +29,7 @@ object MageArenaDialogue {
                 if (MageArena.stage(player) == 0) "I am the great Kolodion, master of battle magic."
                 else "You return, young conjurer.",
                 "Before you can use the power of this arena, you must prove yourself against me.")
-                .options("Okay, let's fight.", {
-                    if (!MageArena.canStart(it)) {
-                        it.sendMessage("You cannot enter the arena while carrying weapons or armour.")
-                    } else MageArena.start(it)
-                }, "What's the point of that?", {
+                .options("Okay, let's fight.", { MageArena.start(it) }, "What's the point of that?", {
                     it.newDialogue().npc(905, "We learn how to use our magic to its fullest and how",
                         "to channel the forces of the cosmos into our world...",
                         "But mainly, I just like blasting people into dust.")

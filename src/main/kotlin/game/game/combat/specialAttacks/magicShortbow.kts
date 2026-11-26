@@ -24,9 +24,9 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
 import io.luna.util.Rational
 
 /**
- * Percentage of a full special bar consumed by revision-377 Snapshot.
+ * Percentage of a full special bar consumed by Snapshot. Jagex raised it from 35% to 55% on 22 February 2005.
  */
-val ENERGY_COST = 35
+val ENERGY_COST = 55
 
 /**
  * Snapshot's poison chance for each positive hit from poisoned arrows.
@@ -41,7 +41,7 @@ val POISON_CHANCE = Rational(1, 4)
  *
  * Lost City's pvm_magic_shortbow and pvp_magic_shortbow scripts use visible Ranged plus ten for damage, an exact
  * ten-sevenths offensive roll, and a one-in-four poison chance. PvP uses different flight lengths and omits the
- * extra NPC impact tick. The weapon configuration charges 350 of its 1000 energy units, represented here as 35%.
+ * extra NPC impact tick.
  *
  * @author lare96
  */

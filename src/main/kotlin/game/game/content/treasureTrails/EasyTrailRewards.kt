@@ -31,6 +31,11 @@ object EasyTrailRewards {
      */
     val FIRELIGHTERS = listOf(7329, 7330, 7331)
 
+    /**
+     * The torn pages of the Saradomin, Zamorak and Guthix prayer books, given as one row like [FIRELIGHTERS].
+     */
+    val GOD_PAGES = (3827..3838).toList()
+
     val normal = listOf(
         Reward(995, 50, 200), // coins
         Reward(334, 6, 10), // cert_trout
@@ -60,6 +65,7 @@ object EasyTrailRewards {
         Reward(1727, 1, 1), // amulet_of_magic
         Reward(847, 1, 1), // willow_longbow
         Reward(7329, 3, 5, FIRELIGHTERS), // gnomish_firelighter_red/green/blue
+        Reward(3827, 1, 1, GOD_PAGES), // torn pages 1-4 (s), (z), (g)
     )
     val rare = listOf(
         Reward(2583), // black_platebody_trim

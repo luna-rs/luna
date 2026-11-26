@@ -19,6 +19,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.withTimeoutOrNull
@@ -290,8 +291,14 @@ class EctofuntusBotScript(
         if (pools.isEmpty()) return false
         val pool = pools[poolAttempt % pools.size]
         val before = count(Ectofuntus.SLIME)
-        val success = approach(pool) && handler.inventory.useItem(Ectofuntus.BUCKET).onObject(pool) { valid() } &&
-            waitFor(8.seconds) { count(Ectofuntus.SLIME) > before }
+        val previousDialogue = bot.overlays.getOverlay(MakeItemDialogue::class.java)
+        val started = approach(pool) && handler.inventory.useItem(Ectofuntus.BUCKET).onObject(pool) { valid() } &&
+            waitFor(8.seconds) {
+                count(Ectofuntus.SLIME) > before ||
+                    bot.overlays.getOverlay(MakeItemDialogue::class.java)?.let { it !== previousDialogue } == true
+            }
+        if (started && valid() && count(Ectofuntus.SLIME) == before) handler.widgets.clickMakeItem(0, 1)
+        val success = started && waitFor(8.seconds) { count(Ectofuntus.SLIME) > before }
         poolAttempt = if (success) 0 else poolAttempt + 1
         return success
     }

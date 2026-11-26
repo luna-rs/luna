@@ -110,4 +110,7 @@ val craftingGuide = skillGuide("Crafting") {
         row(62, 1393, "Fire battlestaff")
         row(66, 1397, "Air battlestaff")
     }
+    category("Snelms") {
+        row(15, 3327, "Snelm")
+    }
 }

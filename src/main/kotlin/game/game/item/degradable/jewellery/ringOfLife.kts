@@ -3,10 +3,10 @@ package game.item.degradable.jewellery
 import api.predef.*
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import engine.bot.economy.BotConsumableDemand
+import game.content.respawn.RespawnPoint
 import game.skill.magic.Magic.findLandingTile
 import game.skill.magic.Magic.teleport
 import game.skill.magic.teleportSpells.TeleportStyle
-import io.luna.Luna
 import io.luna.game.event.impl.DamageReceivedEvent
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.block.Hit.HitType
@@ -22,7 +22,7 @@ on(DamageReceivedEvent::class) {
         plr.health > plr.totalHealth / 10 || plr.wildernessLevel > 30 || plr.status.isTeleBlocked()) {
         return@on
     }
-    val destination = findLandingTile(Luna.settings().game().startingPosition(), 2)
+    val destination = findLandingTile(RespawnPoint.position(plr), 2)
     plr.teleport(destination, TeleportStyle.REGULAR, maxWildernessLevel = 30) {
         plr.sendMessage("Your Ring of Life saves you and is destroyed in the process.")
         plr.equipment[Equipment.RING] = null

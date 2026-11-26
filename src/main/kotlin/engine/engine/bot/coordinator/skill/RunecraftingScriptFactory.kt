@@ -15,6 +15,7 @@ import game.skill.runecrafting.craftRune.CraftableRune
 import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Chooses a Runecrafting trip using owned materials or executable supply and a viable altar entrance.
@@ -31,7 +32,7 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
      * @author lare96
      */
     private data class Candidate(val rune: CraftableRune, val essence: Int, val owned: Boolean,
-                                 val access: Boolean, val score: Double) {
+                                 val access: Boolean, val score: Double, val purchasePrice: Long) {
         val key get() = recipeKey(rune, essence)
     }
 
@@ -44,11 +45,15 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
         createScript(bot, level, zones, training = false)
 
-    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript =
-        choose(bot, level, training, getDuration(bot, skillId))?.also {
+    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
+        val sampledDuration = getDuration(bot, skillId)
+        // Allow extra time for supply and altar travel within the usual two-hour ceiling.
+        val duration = if (training) (sampledDuration + 20.minutes).coerceAtMost(120.minutes) else sampledDuration
+        return choose(bot, level, training, duration)?.also {
             zones.clear()
             zones.add(it.altar.zone)
         } ?: VoidBotScript(bot)
+    }
 
     internal fun alternative(bot: Bot, plan: ProductionPlan, duration: Duration,
                              altarUnavailable: Boolean): CraftRuneBotScript? =
@@ -83,14 +88,14 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
                     val score = if (training) rune.exp else
                         bot.world.economy.getPrice(rune.id).toDouble() * rune.outputMultiplier(currentLevel) -
                             (offered?.unitPrice ?: bot.world.economy.getPrice(essence))
-                    if (score > 0.0) add(Candidate(rune, essence, onHand, hasAccess, score))
+                    if (score > 0.0) add(Candidate(rune, essence, onHand, hasAccess, score, offered?.unitPrice ?: 0L))
                 }
             }
         }.sortedWith(compareByDescending<Candidate> { it.owned }.thenByDescending { it.access }
-            .thenByDescending { it.score }.thenByDescending { it.rune.level })
+            .thenByDescending { it.score }.thenBy { it.purchasePrice }.thenByDescending { it.rune.level })
         val preferred = selectRankedActivity(bot, candidates.takeWhile {
             it.owned == candidates.first().owned && it.access == candidates.first().access
-        }) ?: return null
+        }.distinctBy { it.rune }) ?: return null
         for (candidate in (listOf(preferred) + candidates.filter { it != preferred }).take(MAX_PLANS)) {
             val rune = candidate.rune
             val plan = BotProductionPlanner.select(bot, skillId, currentLevel, training, duration, candidate.key,

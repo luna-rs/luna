@@ -245,6 +245,22 @@ public final class WorldEconomy extends AbstractScheduledService {
         for (ItemEconomyDefinition definition : ItemEconomyDefinition.ALL) {
             resolvePriceData(definition.id());
         }
+        refreshCannonballSeed();
+    }
+
+    /**
+     * Refreshes untouched snapshots created with the former 5 GP cannonball seed.
+     */
+    private void refreshCannonballSeed() {
+        int id = 2;
+        var previous = prices.get(id);
+        if (previous == null || previous.price != 5 || previous.lastPrice != 5 || previous.samples != 0) return;
+        int initial = ItemPriceData.computeInitialPrice(id);
+        if (initial == previous.price) return;
+        var updated = previous.setPrice(initial, 0);
+        prices.put(id, updated);
+        priceUpdates.put(id, updated);
+        historyUpdates.add(updated);
     }
 
     @Override

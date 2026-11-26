@@ -10,8 +10,10 @@ import game.bot.scripts.skills.MakeCannonballBotScript
 import game.bot.scripts.skills.SmeltOreBotScript
 import game.bot.scripts.skills.SmithBarBotScript
 import game.skill.smithing.BarType
+import game.skill.smithing.makeCannonball.MakeCannonballAction.Companion.LEVEL
 import game.skill.smithing.smithBar.SmithingTable
 import io.luna.game.model.mob.bot.Bot
+import kotlin.time.Duration
 
 /**
  * Creates smithing scripts for bots.
@@ -133,8 +135,17 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
 
     /** Selects cannonball production only when the supplied level, permanent level, and owned supplies qualify. */
     internal fun getCannonballScript(bot: Bot, level: Int): MakeCannonballBotScript? {
-        if (level < game.skill.smithing.makeCannonball.MakeCannonballAction.LEVEL) return null
+        if (level < LEVEL) return null
         return MakeCannonballBotScript(bot, getDuration(bot, skillId)).takeIf { it.isEligible() }
+    }
+
+    /**
+     * Gives profitable cannonballs made from owned supplies a chance before opening a new Blast Furnace trip.
+     */
+    internal fun ownedCannonballProfit(bot: Bot, level: Int, duration: Duration): BotScript? {
+        if (level < LEVEL || !MakeCannonballBotScript.hasSupplies(bot) || BlastFurnaceBotScript.pendingWork(bot)) return null
+        return BotProductionPlanner.select(bot, skillId, level, false, duration,
+            keyPrefix = MakeCannonballBotScript.RECIPE_KEY)
     }
 
     /**

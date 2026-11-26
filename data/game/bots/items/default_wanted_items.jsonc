@@ -521,6 +521,150 @@
     ]
   },
   {
+    "id": 3827,
+    // Saradomin page 1
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3828,
+    // Saradomin page 2
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3829,
+    // Saradomin page 3
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3830,
+    // Saradomin page 4
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3831,
+    // Zamorak page 1
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3832,
+    // Zamorak page 2
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3833,
+    // Zamorak page 3
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3834,
+    // Zamorak page 4
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3835,
+    // Guthix page 1
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3836,
+    // Guthix page 2
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3837,
+    // Guthix page 3
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
+    "id": 3838,
+    // Guthix page 4
+    "min": -1,
+    "target": 1,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "LOW",
+    "tags": [
+      "MISCELLANEOUS"
+    ]
+  },
+  {
     "id": 1511,
     // Logs
     "min": 300,

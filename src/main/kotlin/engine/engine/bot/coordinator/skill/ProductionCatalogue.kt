@@ -239,7 +239,7 @@ internal object ProductionCatalogue {
                     .copy(productProbability = if (bar == BarType.IRON) 0.5 else 1.0), { bot, duration ->
                     SmeltOreBotScript(bot, bar, duration, ProductionZones.FURNACES.toMutableList()) }))
             }
-            add(fixed(recipe("cannonballs", SKILL_SMITHING, 35, listOf(Item(2353)), 2, 25.6,
+            add(fixed(recipe(MakeCannonballBotScript.RECIPE_KEY, SKILL_SMITHING, 35, listOf(Item(2353)), 2, 25.6,
                 setOf(4), 4), { bot, duration -> MakeCannonballBotScript(bot, duration) }))
 
             Food.entries.forEach { food ->

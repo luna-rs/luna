@@ -147,7 +147,7 @@ class PickpocketAction(val mob: Player,
     private fun caught(pocket: String) {
         target.speak(thievable.shouts.random())
         mob.sendMessage("You fail to pick the $pocket's pocket.")
-        target.interact(mob)
+        target.face(mob.position)
         target.animation(Animation(target.combat.getAttackAnimation(CombatDamageType.MELEE),
                                    Animation.AnimationPriority.HIGH))
 

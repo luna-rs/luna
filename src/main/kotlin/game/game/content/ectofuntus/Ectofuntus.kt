@@ -11,6 +11,7 @@ import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -25,6 +26,7 @@ object Ectofuntus {
     const val POT = 1931
     const val BUCKET = 1925
     const val SLIME = 4286
+    internal const val FILL_TICKS = 2
     const val TOKEN = 4278
     const val GHOSTSPEAK = 552
     val GHOSTSPEAK_IDS = setOf(552, 4250)
@@ -68,8 +70,29 @@ object Ectofuntus {
 
     fun grind(player: Player, target: GameObject) = submit(player, target, EctofuntusAction.Step.GRIND)
     fun collect(player: Player, target: GameObject) = submit(player, target, EctofuntusAction.Step.COLLECT)
-    fun fill(player: Player, target: GameObject, index: Int) =
-        submit(player, target, EctofuntusAction.Step.FILL, index)
+
+    fun fill(player: Player, target: GameObject, index: Int) {
+        if (player.isLocked || target.id !in POOL_IDS || !reachable(player, target) ||
+            player.inventory.computeIdForIndex(index) != BUCKET) return
+
+        val origin = player.position
+        fun start(amount: Int) {
+            if (amount <= 0 || player.isLocked || player.position != origin || !reachable(player, target)) return
+            val count = minOf(amount, player.inventory.computeAmountForId(BUCKET))
+            if (count > 0) player.submitAction(FillSlimeAction(player, target, index, count))
+        }
+
+        if (player.inventory.computeAmountForId(BUCKET) == 1) {
+            start(1)
+        } else {
+            // Keep the interaction's final walking step from closing the quantity menu.
+            player.walking.clear()
+            player.overlays.open(object : MakeItemDialogue(SLIME) {
+                override fun make(player: Player, id: Int, index: Int, forAmount: Int) = start(forAmount)
+            })
+        }
+    }
+
     fun worship(player: Player, target: GameObject) = submit(player, target, EctofuntusAction.Step.WORSHIP)
 
     private fun submit(player: Player, target: GameObject, step: EctofuntusAction.Step,
@@ -124,10 +147,6 @@ object Ectofuntus {
                 POT !in inventory -> "You need an empty pot to collect the bonemeal."
                 else -> null
             }
-            EctofuntusAction.Step.FILL -> when {
-                target.id !in POOL_IDS || inventory.computeIdForIndex(index) != BUCKET -> return false
-                else -> null
-            }
             EctofuntusAction.Step.WORSHIP -> when {
                 target.id != FOUNTAIN -> return false
                 pendingTokens(player) > TOKEN_CAP - TOKEN_REWARD ->
@@ -166,10 +185,6 @@ object Ectofuntus {
                 player.grinderBone = -1
                 player.grinderGround = false
                 player.sendMessage("You fill the pot with bonemeal.")
-            }
-            EctofuntusAction.Step.FILL -> {
-                player.inventory[index] = Item(SLIME)
-                player.sendMessage("You fill the bucket with slime.")
             }
             EctofuntusAction.Step.WORSHIP -> {
                 val recipe = meal(player) ?: return
