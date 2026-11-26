@@ -27,6 +27,8 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
 
     companion object {
 
+        private const val GUARD_SIGHT_RANGE = 5
+
         /**
          * A set of names of guards in local cities.
          */
@@ -38,19 +40,31 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
          * @param npc The NPC.
          * @return `true` if [npc] is a guard free to stop a theft.
          */
-        fun isGuard(npc: Npc): Boolean =
+        private fun isGuard(npc: Npc): Boolean =
             !npc.combat.inCombat() && GUARD_NAMES.contains(npc.def().name) && npc.combat.isAttackable
 
         /**
-         * Determines if [npc] can see a theft by someone standing on [thief]: nothing blocks its line of sight, and
-         * [thief] is inside its view cone.
+         * Finds the first available guard within five tiles who has a clear line of sight to [thief].
          *
-         * @param npc The NPC watching.
          * @param thief The thief, or the tile a thief would stand on.
-         * @return `true` if [npc] sees the theft.
+         * @return The guard who would respond to the theft, or `null`.
          */
-        fun canSee(npc: Npc, thief: Locatable): Boolean =
-            world.collisionManager.raycast(npc.position, thief.abs()) && npc.inViewCone(thief)
+        fun findWatchingGuard(thief: Locatable): Npc? {
+            val tile = thief.abs()
+            return world.locator.findNpcs(tile, GUARD_SIGHT_RANGE) { isGuard(it) && it.combat.target == null }
+                .firstOrNull { world.collisionManager.raycast(it.position, tile) }
+        }
+
+        /**
+         * Finds an owner of [stall] who has [thief] in their view cone and has a clear line of sight.
+         *
+         * @param thief The thief, or the tile a thief would stand on.
+         * @param stall The stall type being stolen from.
+         * @return The owner who would spot the theft, or `null`.
+         */
+        fun findWatchingOwner(thief: Locatable, stall: ThievingStallType): Npc? =
+            world.locator.findViewableNpcs(thief) { stall.owners.contains(it.def().name) }
+                .firstOrNull { it.inViewCone(thief) && world.collisionManager.raycast(it.position, thief.abs()) }
 
         /**
          * When the player last stole from each stall, by full stall object id, in epoch milliseconds.
@@ -130,7 +144,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
         mob.interact(obj)
         thievable.attempt?.let { mob.sendMessage(it) }
         mob.animation(Animations.PICKPOCKET)
-        if (alertOwner() || alertGuards()) {
+        if (alertGuard() || alertOwner()) {
             // Seen: the theft doesn't happen.
             return true
         }
@@ -165,32 +179,21 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
      * @return `true` if the owner saw you.
      */
     private fun alertOwner(): Boolean {
-        val owners = world.locator.findViewableNpcs(mob) { thievable.owners.contains(it.def().name) }
-        for (owner in owners) {
-            if (canSee(owner, mob)) {
-                owner.speak("Hey! Get your hands off there!")
-                return true
-            }
-        }
-        return false
+        val owner = findWatchingOwner(mob, thievable) ?: return false
+        owner.speak("Hey! Get your hands off there!")
+        return true
     }
 
     /**
-     * Determines if nearby guards will be alerted by you stealing and if so, alerts them.
+     * Alerts the first available guard who can see the theft.
      *
      * @return `true` if a guard saw you.
      */
-    private fun alertGuards(): Boolean {
-        val nearbyGuards = world.locator.findViewableNpcs(mob) { isGuard(it) }
-        for (guard in nearbyGuards) {
-            if (canSee(guard, mob)) {
-                // The guard can see the player.
-                guard.speak("Hey! Get your hands off there!")
-                guard.combat.attack(mob)
-                return true
-            }
-        }
-        return false
+    private fun alertGuard(): Boolean {
+        val guard = findWatchingGuard(mob) ?: return false
+        guard.speak("Hey! Get your hands off there!")
+        guard.combat.attack(mob)
+        return true
     }
 
     /**

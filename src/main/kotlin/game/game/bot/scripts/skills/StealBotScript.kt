@@ -621,11 +621,8 @@ class StealBotScript(
      * @param type The stall's type.
      * @return `true` if someone can see [tile].
      */
-    private fun isWatched(tile: Position, type: ThievingStallType): Boolean {
-        return world.locator.findViewableNpcs(tile) {
-            type.owners.contains(it.def().name) || StealFromAction.isGuard(it)
-        }.any { StealFromAction.canSee(it, tile) }
-    }
+    private fun isWatched(tile: Position, type: ThievingStallType): Boolean =
+        StealFromAction.findWatchingGuard(tile) != null || StealFromAction.findWatchingOwner(tile, type) != null
 
     /**
      * Returns the tiles beside [stall] that a bot can stand on and steal from.
