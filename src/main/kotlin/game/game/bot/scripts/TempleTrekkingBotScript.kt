@@ -69,7 +69,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
         private var Bot.trekRetryAt by Attr.long()
 
         /**
-         * Recovers an existing token or plans a supplied trip for combat-capable bots in Morytania.
+         * Recovers an existing token or plans a supplied trip for nearby combat-capable bots.
          */
         fun select(bot: Bot): TempleTrekkingBotScript? {
             if (!bot.isAlive || bot.isLocked || bot.combat.inCombat() || bot.overlays.hasWindow() ||
@@ -96,7 +96,8 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
             val logs = Puzzles.LOGS.flatMap { id -> List(minOf(6L, owned(bot, id)).toInt()) { id } }.take(6)
             if (logs.size < 3) return null
             val stock = BossFood.stock(bot.inventory, bot.bank)
-            val food = BossFood.plan(stock, foodPolicy, slots = SPARE_SLOTS - logs.size + 3) ?: return null
+            val foodSlots = bot.inventory.capacity() - SPARE_SLOTS - logs.size - 2 // Knife and any replaced weapon.
+            val food = BossFood.plan(stock, foodPolicy, slots = foodSlots) ?: return null
             val toPack = (6 - TrekEvents.food(bot).size).coerceAtLeast(0)
             val villagerFood = TrekEvents.FOODS.firstNotNullOfOrNull { id ->
                 val surplus = owned(bot, id) - food.filter { it.id == id }.sumOf { it.amount }
@@ -395,8 +396,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
     }
 
     private suspend fun walkTo(tile: Position): Boolean =
-        bot.position.isWithinDistance(tile, 3) ||
-            WebWalker.webWalk(bot, tile, attempts = 2, bank = BankAccess.NONE, fallback = false).success
+        WebWalker.webWalk(bot, tile, radius = 3, attempts = 2, bank = BankAccess.NONE, fallback = false).success
 
     private suspend fun clearSpeech(): Boolean {
         val queue = bot.dialogues ?: return !bot.overlays.hasWindow()
