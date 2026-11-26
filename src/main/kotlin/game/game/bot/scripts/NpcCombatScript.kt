@@ -52,6 +52,7 @@ import game.combat.npcHooks.chaosElemental.ChaosElementalAttack
 import game.combat.spells.IbanStaff
 import game.combat.npcHooks.zygomite.Zygomites
 import game.combat.npcHooks.shades.MorttonShades
+import game.content.mortton.ShadeRewards
 import game.combat.npcHooks.wallBeast.WallBeasts
 import game.combat.npcHooks.mogre.Mogres
 import game.skill.firemaking.Firemaking
@@ -1527,6 +1528,7 @@ open class NpcCombatScript(bot: Bot,
      */
     protected open fun isLoot(item: GroundItem): Boolean {
         return item.id == Currency.COINS.id || item is DeathGroundItem || handler.loot.isRecoveryOrWanted(item) ||
+            (slayerTask == SlayerTaskType.SHADE && item.id in ShadeRewards.remains) ||
             TreasureTrailBotScript.wantsClue(bot, item.id) || item.id in ALL_LOOT_ITEMS.value
     }
 

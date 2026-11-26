@@ -243,6 +243,10 @@ object WebWalkLiveGenerator {
                 obj.id == EssenceMine.PORTAL -> essencePortal(obj, climbs, report)
                 obj.id == WildernessLever.LAVA_MAZE_DUNGEON.id -> lever(obj, WildernessLever.LAVA_MAZE_DUNGEON, climbs, report)
                 obj.id == WildernessLever.KING_BLACK_DRAGON_LAIR.id -> lever(obj, WildernessLever.KING_BLACK_DRAGON_LAIR, climbs, report)
+                obj.id in 12816..12817 && obj.position.y == 3244 && obj.position.x in 3484..3485 ->
+                    nativeDoorPassage(obj, climbs)
+                obj.id in 4106..4107 && obj.position != Entrance.SHADE_CATACOMBS_OUT.position ->
+                    nativeDoorPassage(obj, climbs)
                 obj.id in Entrance.BY_ID || obj.id in RopeEntranceCrossing.entrances -> entrance(obj, climbs, report)
                 def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER -> ladder(obj, climbs, report)
                 def.name in StairDestination.NAMES -> stairs(obj, climbs, report)
@@ -272,6 +276,17 @@ object WebWalkLiveGenerator {
         val waypoints = waypoints(report)
         return Gathered(climbs, waypoints + scatter(waypoints + manualWaypoints(directory), report), teleports(report),
                         bankSeeds(report), ships(leavingPlanks, report), report)
+    }
+
+    /**
+     * Routes through native door actions that move the player across when clicked.
+     */
+    private fun nativeDoorPassage(gate: GameObject, climbs: MutableList<GeneratedObstacle>) {
+        val near = gate.position
+        val far = near.translate(1, gate.direction.toNormalDirection())
+        if (!LadderDestination.canLand(near) || !LadderDestination.canLand(far)) return
+        climbs += GeneratedObstacle(EdgeType.ENTRANCE, gate.id, near, near, far, "Open", cost = 4)
+        climbs += GeneratedObstacle(EdgeType.ENTRANCE, gate.id, near, far, near, "Open", cost = 4)
     }
 
     /**

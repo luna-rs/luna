@@ -76,6 +76,8 @@ import game.bot.scripts.skills.BuryBoneBotScript
 import game.bot.scripts.skills.BuryBoneBotScript.Companion.BoneData
 import game.bot.scripts.skills.EctofuntusBotScript
 import game.bot.scripts.skills.EctofuntusBotScript.EctofuntusData
+import game.bot.scripts.skills.MorttonPrayerBotScript
+import game.bot.scripts.skills.MorttonPrayerBotScript.MorttonData
 import game.bot.scripts.skills.PrayerPurchaseBotScript
 import game.bot.scripts.skills.PrayerPurchaseBotScript.PurchaseData
 import game.bot.scripts.skills.SuperheatItemBotScript
@@ -308,6 +310,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
     scriptManager.addScript<PurchaseData>(PrayerPurchaseBotScript::class) { bot, data -> PrayerPurchaseBotScript(bot, data) }
     scriptManager.addScript<EctofuntusData>(EctofuntusBotScript::class) { bot, data -> EctofuntusBotScript(bot, data) }
+    scriptManager.addScript<MorttonData>(MorttonPrayerBotScript::class) { bot, data -> MorttonPrayerBotScript(bot, data) }
     scriptManager.addScript<FarmingData>(FarmingBotScript::class) { bot, data -> FarmingBotScript(bot, data) }
     scriptManager.addScript<ReturnData>(FarmingReturnBotScript::class) { bot, data -> FarmingReturnBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
