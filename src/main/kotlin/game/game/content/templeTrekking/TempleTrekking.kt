@@ -13,6 +13,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.varp.Varbit
 
@@ -94,34 +95,33 @@ object TempleTrekking {
     fun talk(plr: Player, villager: TrekVillager) {
         if (plr.trek != null) return
         val id = villager.npc
-        plr.newDialogue()
+        val dialogue = plr.newDialogue()
             .player("Hello there. What are you doing here?")
             .npc(id, "I'm waiting here hoping that someone can guide me to the Paterdomus, the temple on the Salve.")
-            .then { questions(it, villager) }
-            .open()
+        questions(dialogue, villager).open()
     }
 
-    private fun questions(plr: Player, villager: TrekVillager) {
+    private fun questions(dialogue: DialogueQueueBuilder, villager: TrekVillager): DialogueQueueBuilder {
         val id = villager.npc
-        plr.newDialogue().options(
+        return dialogue.options(
             "Where is Paterdomus?", {
                 it.newDialogue().player("Where is Paterdomus?")
                     .npc(id, "Oh, Paterdomus is that rather impressive looking temple on the Salve... I'm sure you " +
                         "must have passed it on your way into Morytania.")
-                    .then { p -> questions(p, villager) }.open()
+                    .then { p -> questions(p.newDialogue(), villager).open() }.open()
             },
             "Why do you want to go to Paterdomus?", {
                 it.newDialogue().player("Why do you want to go to Paterdomus?")
                     .npc(id, "I'm hoping to get back to civilisation and see what the lands of Misthalin look like.")
-                    .then { p -> questions(p, villager) }.open()
+                    .then { p -> questions(p.newDialogue(), villager).open() }.open()
             },
             "Could you defend yourself if we met enemies...?", {
                 it.newDialogue().player("Could you defend yourself if we met enemies on the route to Paterdomus?")
                     .npc(id, villager.tier.defence)
-                    .then { p -> questions(p, villager) }.open()
+                    .then { p -> questions(p.newDialogue(), villager).open() }.open()
             },
             "I can take you to Paterdomus.", { offer(it, villager) },
-            "Ok, thanks.", { it.newDialogue().player("Ok, thanks.").open() }).open()
+            "Ok, thanks.", { it.newDialogue().player("Ok, thanks.").open() })
     }
 
     /**
