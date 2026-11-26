@@ -19,12 +19,16 @@ import io.luna.net.msg.out.WidgetItemModelMessageWriter
 /**
  * Bill Teach's ship between Port Phasmatys and Mos Le'Harmless, which Cabin Fever opens (Jagex Knowledge Base,
  * 17 May 2006). He waits on board at both ports; in the Green Ghost and on the island he points players to the ship.
+ *
+ * @author TheLining
  */
 object BillTeach {
     const val IN_PUB = 3155
     const val ON_ISLAND = 3159
-    const val AT_PHASMATYS = 3157
-    const val AT_MOS_LE_HARMLESS = 3160
+    const val ACCEPT = "Yes Cap'n, I'd like a lift."
+    const val DECLINE = "No thanks, Cap'n."
+    const val ACCEPT_REPLY = "Yes Cap'n, I'd like a lift. If you aren't busy."
+    const val SAIL_TICKS = 6
 
     private const val FADE_OVERLAY = 11124
     private const val FADE_WIDGET = 11125
@@ -32,39 +36,52 @@ object BillTeach {
     private const val FADE_IN = 1378
 
     /**
-     * Where the lift lands: on the other ship's deck, by its gangplank.
+     * Bill's actor, landing and gangplanks at each port.
+     *
+     * @author lare96
      */
-    private val TO_MOS_LE_HARMLESS = Position(3684, 2950, 1)
-    private val TO_PHASMATYS = Position(3712, 3496, 1)
+    enum class Port(val npcId: Int, val deck: Position, val boardPlank: Int, val leavePlank: Int) {
+        PHASMATYS(3157, Position(3712, 3496, 1), 11209, 11210),
+        MOS_LE_HARMLESS(3160, Position(3684, 2950, 1), 11211, 11212);
+
+        val other: Port
+            get() = if (this == PHASMATYS) MOS_LE_HARMLESS else PHASMATYS
+    }
+
+    fun canSail(player: Player) = QuestGates.passes(player, Quest.CABIN_FEVER)
 
     private fun lad(player: Player) = if (player.appearance.isMale) "lad" else "lass"
+
+    fun question(player: Player) = "I suppose ye'll be wantin' a lift while yer here, right ${lad(player)}?"
+
+    fun reply(player: Player, port: Port): String {
+        val answer = if (port == Port.PHASMATYS) "No, I should be gettin' back anyway." else "Nothin' I won't put on hold."
+        return "$answer Come on ${lad(player)}, let's be off."
+    }
 
     private fun before(player: Player) {
         player.newDialogue().npc(IN_PUB, "Mumblelandlubbermumblemumble...").open()
     }
 
     fun ashore(player: Player, npc: Npc) {
-        if (!QuestGates.passes(player, Quest.CABIN_FEVER)) {
+        if (!canSail(player)) {
             before(player)
             return
         }
         player.newDialogue().npc(npc.id, "If yer after a lift go to the ship and I'll take ye where ye want to go.").open()
     }
 
-    fun aboard(player: Player, npc: Npc) {
-        if (!QuestGates.passes(player, Quest.CABIN_FEVER)) {
+    fun aboard(player: Player, port: Port) {
+        if (!canSail(player)) {
             before(player)
             return
         }
-        val toIsland = npc.id == AT_PHASMATYS
-        player.newDialogue().npc(npc.id, "I suppose ye'll be wantin' a lift while yer here, right ${lad(player)}?")
-            .options("Yes Cap'n, I'd like a lift.", {
-                val reply = if (toIsland) "No, I should be gettin' back anyway." else "Nothin' I won't put on hold."
-                it.newDialogue().player("Yes Cap'n, I'd like a lift. If you aren't busy.")
-                    .npc(npc.id, "$reply Come on ${lad(it)}, let's be off.")
-                    .then { p -> sail(p, if (toIsland) TO_MOS_LE_HARMLESS else TO_PHASMATYS) }.open()
-            }, "No thanks, Cap'n.", {
-                it.newDialogue().player("No thanks, Cap'n.").npc(npc.id, "Well, come see me if ye ever do.").open()
+        player.newDialogue().npc(port.npcId, question(player))
+            .options(ACCEPT, {
+                it.newDialogue().player(ACCEPT_REPLY).npc(port.npcId, reply(it, port))
+                    .then { p -> sail(p, port.other.deck) }.open()
+            }, DECLINE, {
+                it.newDialogue().player(DECLINE).npc(port.npcId, "Well, come see me if ye ever do.").open()
             }).open()
     }
 
@@ -76,11 +93,11 @@ object BillTeach {
     }
 
     private fun sail(player: Player, destination: Position) {
-        if (player.isLocked || !LadderDestination.canLand(destination)) return
+        if (player.isLocked || !canSail(player) || !LadderDestination.canLand(destination)) return
         player.overlays.closeWindows()
         player.lock()
         fade(player, FADE_OUT)
-        world.scheduleOnce(4) {
+        world.scheduleOnce(SAIL_TICKS - 2) {
             if (player.state != EntityState.ACTIVE) return@scheduleOnce
             player.move(destination)
             fade(player, FADE_IN)
@@ -92,13 +109,19 @@ object BillTeach {
         }
     }
 
-    /**
-     * The island's bamboo ladders and the ladders on both of Bill's ships. The same ids elsewhere are left alone.
-     */
-    fun ladders(position: Position) = position.x in 3640..3720 && (position.y in 2940..3010 || position.y in 3490..3505)
+    val ladderDirections = mapOf(4772 to true, 4778 to false, 11289 to true, 11290 to false, 11308 to true, 11309 to false)
 
-    fun climb(player: Player, ladder: GameObject, up: Boolean) {
-        if (!ladders(ladder.position)) return
+    /**
+     * The island's bamboo ladders and the ladders on both of Bill's ships.
+     */
+    fun ladderDirection(ladder: GameObject): Boolean? {
+        val direction = ladderDirections[ladder.id] ?: return null
+        val position = ladder.position
+        return direction.takeIf { position.x in 3640..3720 && (position.y in 2940..3010 || position.y in 3490..3505) }
+    }
+
+    fun climb(player: Player, ladder: GameObject) {
+        val up = ladderDirection(ladder) ?: return
         val destination = LadderDestination.destination(ladder, player.position, up)
         if (destination == null) {
             player.sendMessage("Nothing interesting happens.")
