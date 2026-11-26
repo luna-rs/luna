@@ -85,6 +85,8 @@ object Ectofuntus {
         if (player.inventory.computeAmountForId(BUCKET) == 1) {
             start(1)
         } else {
+            // Keep the interaction's final walking step from closing the quantity menu.
+            player.walking.clear()
             player.overlays.open(object : MakeItemDialogue(SLIME) {
                 override fun make(player: Player, id: Int, index: Int, forAmount: Int) = start(forAmount)
             })
