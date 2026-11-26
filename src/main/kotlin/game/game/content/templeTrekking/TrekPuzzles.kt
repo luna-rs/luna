@@ -237,7 +237,7 @@ object TrekPuzzles {
             }
             val step = AgilityStep(bog.position, 1, walkingAnimation = AgilityWalk.NORMAL)
             if (isFirm(tile)) {
-                plr.submitAction(AgilityAction(plr, listOf(step), null))
+                plr.submitAction(AgilityAction(plr, listOf(step), null, valid = { trek.active }))
                 return
             }
             val shore = controller.tile(SHORE)
@@ -245,7 +245,7 @@ object TrekPuzzles {
                                    sounds = listOf(AgilitySound(Sound.TREK_BOG_SUCK)),
                                    message = "You sink into the bog!")
             val out = AgilityStep(shore, 1, jump = true, sounds = listOf(AgilitySound(Sound.TREK_BOG_LEAVE)))
-            plr.submitAction(AgilityAction(plr, listOf(step, sink, out), null))
+            plr.submitAction(AgilityAction(plr, listOf(step, sink, out), null, valid = { trek.active }))
         }
     }
 
@@ -353,7 +353,7 @@ object TrekPuzzles {
             val steps = if (plr.position == from) listOf(swing) else
                 listOf(AgilityStep(from, from.computeLongestDistance(plr.position), walkingAnimation = AgilityWalk.NORMAL),
                        swing)
-            val action = AgilityAction(plr, steps, null)
+            val action = AgilityAction(plr, steps, null, valid = { trek.active })
             action.onSuccess = { across() }
             plr.submitAction(action)
         }
@@ -429,7 +429,7 @@ object TrekPuzzles {
                                      walkingAnimation = AgilityWalk.NORMAL)
             }
             steps += AgilityStep(to, 2, walkingAnimation = AgilityWalk.NORMAL)
-            val action = AgilityAction(plr, steps, null)
+            val action = AgilityAction(plr, steps, null, valid = { trek.active })
             action.onSuccess = { across() }
             plr.submitAction(action)
         }

@@ -5,6 +5,7 @@ import api.predef.*
 import game.bot.scripts.BuyInitiateArmourBotScript
 import game.bot.scripts.ChampionsChallengeBotScript
 import game.bot.scripts.DragonSlayerBotScript
+import game.bot.scripts.TempleTrekkingBotScript
 import game.bot.scripts.GodBookBotScript
 import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
@@ -125,7 +126,8 @@ object GeneralActivityCoordinator : BotCoordinator {
         }.filter { it.isEligible() }.randomOrNull()?.let { return it }
         GodBookBotScript.select(bot)?.let { return it }
         BuyInitiateArmourBotScript.select(bot)?.let { return it }
-        return HerbloreSecondaryActivities.general(bot, duration) ?: starterScript(bot, duration)
+        return HerbloreSecondaryActivities.general(bot, duration) ?: TempleTrekkingBotScript.select(bot)
+            ?: starterScript(bot, duration)
     }
 
     internal fun starterScript(bot: Bot, duration: Duration): BotScript? {
