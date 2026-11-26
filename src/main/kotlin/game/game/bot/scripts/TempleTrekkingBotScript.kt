@@ -127,7 +127,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
     override suspend fun run(): Boolean {
         bot.trekRetryAt = System.currentTimeMillis() + 30.minutes.inWholeMilliseconds
         val completed = if (pack == null) {
-            withTimeoutOrNull(4.minutes) { redeem() } == true
+            withTimeoutOrNull(7.minutes) { redeem() } == true
         } else {
             val arrived = withTimeoutOrNull(7.minutes) {
                 prepare(pack) && startTrek() && escort()
@@ -139,7 +139,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
                 }
                 bot.log("Temple Trekking: outing ended at ${bot.position}.")
             }
-            arrived && withTimeoutOrNull(4.minutes) { redeem() } == true
+            arrived && withTimeoutOrNull(7.minutes) { redeem() } == true
         }
         if (completed) bot.trekRetryAt = System.currentTimeMillis() + 90.minutes.inWholeMilliseconds
         return true
@@ -310,7 +310,8 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
             }
             if (!stepped) return false
         }
-        return walkLocal(room, room.tile(puzzle.villagerLanding)) && waitFor(4.seconds) { puzzle.crossed }
+        walkLocal(room, room.tile(puzzle.villagerLanding))
+        return waitFor(4.seconds) { puzzle.crossed }
     }
 
     private suspend fun probe(room: TrekController, ground: GameObject): Boolean {
@@ -358,12 +359,17 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
         }
         val gap = room.tile(Puzzles.Bridge.WEST_END.translate(1, 0))
         fun bridgeAt(id: Int) = bot.world.locator.findObjectsOnTile(gap) { it.id == id }.firstOrNull()
-        if (!walkLocal(room, room.tile(Puzzles.Bridge.WEST_END))) return false
         for (stage in Puzzles.BROKEN_BRIDGE until Puzzles.FIXED_BRIDGE) {
-            val bridge = bridgeAt(stage) ?: return false
+            val bridge = bridgeAt(stage) ?: run {
+                bot.log("Temple Trekking: bridge stage $stage is missing at $gap.")
+                return false
+            }
             val log = Puzzles.LOGS.firstOrNull(bot.inventory::contains) ?: return false
-            if (!useOnObject(log, bridge, InteractionPolicy.STANDARD_SIZE, room) ||
-                !waitFor(4.seconds) { bridgeAt(stage + 1) != null }) return false
+            if (!useOnObject(log, bridge, Puzzles.NEXT_TO, room) ||
+                !waitFor(4.seconds) { bridgeAt(stage + 1) != null }) {
+                bot.log("Temple Trekking: could not repair bridge stage $stage from ${bot.position}.")
+                return false
+            }
         }
         return clickObject(room, bridgeAt(Puzzles.FIXED_BRIDGE), 2) && waitFor(8.seconds) { puzzle.crossed }
     }
@@ -436,7 +442,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
         val npc = bot.world.locator.findNpcs(banker, 5) {
             it.id == Temple.CORNELIUS && it.state == EntityState.ACTIVE
         }.firstOrNull() ?: return false
-        if (!handler.interactions.approach(npc, Banking.BANKER_POLICY, timeout = 3.minutes,
+        if (!handler.interactions.approach(npc, Banking.BANKER_POLICY, timeout = 6.minutes,
                 allowOutOfView = true, canContinue = { bot.inventory.contains(token) })) return false
         if (!BotNpcDialogues.respond(bot, npc, listOf("Yes please."), completed = { !bot.inventory.contains(token) },
                 advanceSpeech = true) {

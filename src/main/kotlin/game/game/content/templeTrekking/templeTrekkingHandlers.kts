@@ -236,7 +236,7 @@ for (stage in TrekPuzzles.BROKEN_BRIDGE..TrekPuzzles.FIXED_BRIDGE) {
     object1(stage) { plr.sendMessage(objectDef(gameObject.id).description) }
     if (stage == TrekPuzzles.FIXED_BRIDGE) continue
     for (log in TrekPuzzles.LOGS) {
-        useItem(log).onObject(stage) {
+        useItem(log).onObject(stage, { _, _ -> TrekPuzzles.NEXT_TO }) {
             TrekPuzzles.puzzle<TrekPuzzles.Bridge>(plr)?.mend(plr, gameObject, usedItemIndex)
         }
     }
