@@ -170,7 +170,17 @@ public enum SpecialAttackType {
      *
      * <p>Description: Pushes the target back and stuns them for 3 seconds. This attack deals no damage.
      */
-    DRAGON_SPEAR(1249, 1263, 3176, 5716, 5730);
+    DRAGON_SPEAR(1249, 1263, 3176, 5716, 5730),
+
+    /**
+     * Name: Retainer
+     *
+     * <p>Energy Used: 10%
+     *
+     * <p>Description: Holds a vampyre juvinate with less than half of its health still for 30 seconds, using one of
+     * the rod's charges. This attack deals no damage.
+     */
+    ROD_OF_IVANDIS(7639, 7640, 7641, 7642, 7643, 7644, 7645, 7646, 7647, 7648);
 
     /**
      * A map of all weapon IDs to their special attack types.

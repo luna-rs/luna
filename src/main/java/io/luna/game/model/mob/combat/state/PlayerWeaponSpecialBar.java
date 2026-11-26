@@ -175,6 +175,14 @@ public final class PlayerWeaponSpecialBar {
         int segmentId = specialDef.getMeter();
         int fillSegments = energy / SPECIAL_BAR_SEGMENTS;
 
+        int[] segments = specialDef.getSegments();
+        if (segments != null) {
+            for (int i = 0; i < segments.length; i++) {
+                player.queue(new WidgetPositionMessageWriter(segments[i], fillSegments >= i + 1 ?
+                        SPECIAL_BAR_FILLED : SPECIAL_BAR_EMPTY, 0));
+            }
+            return true;
+        }
         for (int i = 0; i < SPECIAL_BAR_SEGMENTS; i++) {
             player.queue(new WidgetPositionMessageWriter(--segmentId, fillSegments >= segment ?
                     SPECIAL_BAR_FILLED : SPECIAL_BAR_EMPTY, 0));

@@ -281,6 +281,9 @@ object MultiCombatAreaListener : PlayerAreaListener() {
         // Crash Island Dungeon snake pit
         Area.of(3016, 5480, 3031, 5495, 0),
 
+        // Temple Trekking's event rooms
+        Area.of(1984, 4992, 2431, 5055, 0),
+
         // Instances of the areas above
         InstanceArea
     )
