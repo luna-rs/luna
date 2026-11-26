@@ -14,6 +14,7 @@ import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder
 
 /**
  * Sir Tiffy Cashien.
@@ -41,25 +42,22 @@ fun title(plr: Player) = if (plr.appearance.isFemale) "milady" else "sirrah"
 /**
  * Sir Tiffy's questions for a Temple Knight.
  */
-fun knightOptions(plr: Player) {
-    plr.newDialogue()
-        .options("Can you explain the Gaze of Saradomin to me?", { explainGaze(it) },
-                 BUY_ARMOUR, { buyArmour(it) },
-                 "Can I switch respawns please?", { switchRespawn(it) },
-                 "Goodbye.", {
-                     it.newDialogue()
-                         .player("Well, see you around Tiffy.")
-                         .npc(SIR_TIFFY, "Ta-ta for now, old bean!")
-                         .open()
-                 })
-        .open()
-}
+fun knightOptions(dialogue: DialogueQueueBuilder) =
+    dialogue.options("Can you explain the Gaze of Saradomin to me?", { explainGaze(it) },
+                     BUY_ARMOUR, { buyArmour(it) },
+                     "Can I switch respawns please?", { switchRespawn(it) },
+                     "Goodbye.", {
+                         it.newDialogue()
+                             .player("Well, see you around Tiffy.")
+                             .npc(SIR_TIFFY, "Ta-ta for now, old bean!")
+                             .open()
+                     })
 
 /**
  * Sir Tiffy explains why Temple Knights respawn in Falador.
  */
 fun explainGaze(plr: Player) {
-    plr.newDialogue()
+    val dialogue = plr.newDialogue()
         .player("I don't really understand this 'Gaze of Saradomin' thing... Do you think you could explain what " +
                     "it does for me?")
         .npc(SIR_TIFFY, "Certainly ${title(plr)}! As you know, we Temple Knights are personally favoured by " +
@@ -76,8 +74,7 @@ fun explainGaze(plr: Player) {
         .npc(SIR_TIFFY, "Well, you should be glad that we offer you a step up then! Falador is clearly a far " +
             "superior town to spend your time in!")
         .npc(SIR_TIFFY, "Was there something else you wanted to ask good old Tiffy, ${title(plr)}?")
-        .then { knightOptions(it) }
-        .open()
+    knightOptions(dialogue).open()
 }
 
 /**
@@ -120,11 +117,10 @@ fun switchRespawn(plr: Player) {
 
 npc1(SIR_TIFFY) {
     if (QuestGates.passes(plr, Quest.RECRUITMENT_DRIVE)) {
-        plr.newDialogue()
+        val dialogue = plr.newDialogue()
             .npc(SIR_TIFFY, "What ho, ${if (plr.appearance.isFemale) "milady" else "sir"}. Jolly good show on the " +
                 "old training grounds thingy, what?")
-            .then { knightOptions(it) }
-            .open()
+        knightOptions(dialogue).open()
     } else {
         plr.newDialogue()
             .player("Hello.")
