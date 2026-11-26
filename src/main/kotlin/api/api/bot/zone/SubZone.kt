@@ -712,6 +712,14 @@ enum class SubZone(
         parent = { DRAYNOR }),
 
     /**
+     * The upper floor of the Wizards' Tower where the armoured wizard takes commissions.
+     */
+    WIZARDS_TOWER_ARMOUR(
+        inside = Position(3104, 3161, 1),
+        area = SimpleBoxArea.of(3100, 3156, 3113, 3166, 1),
+        parent = { DRAYNOR }),
+
+    /**
      * The home area, currently Varrock west bank. Intended for smithers, pickpockets, dumb cookers, and low -> average
      * intelligence firemakers.
      */
@@ -1070,6 +1078,38 @@ enum class SubZone(
         entrance = EDGEVILLE_DUNGEON_MINE.entrance,
         area = SimpleBoxArea.of(3115, 9867, 3130, 9883),
         parent = { VARROCK }),
+
+    /**
+     * The northern hobgoblin tunnel in the Asgarnian Ice Dungeon.
+     */
+    ASGARNIAN_DUNGEON_HOBGOBLINS(
+        inside = Position(3014, 9593),
+        area = SimpleBoxArea.of(3004, 9586, 3024, 9600),
+        parent = { PORT_SARIM }, bankZone = { DRAYNOR }),
+
+    /**
+     * The coastal hobgoblins west of the Crafting Guild.
+     */
+    CRAFTING_GUILD_HOBGOBLINS(
+        inside = Position(2907, 3287),
+        area = SimpleBoxArea.of(2899, 3280, 2911, 3300),
+        parent = { FALADOR }),
+
+    /**
+     * The hobgoblins around the Wilderness mine.
+     */
+    WILDERNESS_HOBGOBLIN_MINE(
+        inside = Position(3092, 3758),
+        area = SimpleBoxArea.of(3069, 3736, 3113, 3779),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
+
+    /**
+     * The eastern Wilderness hobgoblins north of the hill giants.
+     */
+    EAST_WILDERNESS_HOBGOBLINS(
+        inside = Position(3298, 3682),
+        area = SimpleBoxArea.of(3287, 3673, 3311, 3691),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
 
     /**
      * The yew trees north of Varrock Palace. Intended for money making woodcutters.
@@ -2590,6 +2630,14 @@ enum class SubZone(
         parent = { RELLEKKA }),
 
     /**
+     * The Rellekka streets and buildings where Skulgrimen, Sigli and Peer make armour.
+     */
+    RELLEKKA_ARMOUR_MAKERS(
+        inside = Position(2640, 3676),
+        area = SimpleBoxArea.of(2627, 3647, 2670, 3701, 0),
+        parent = { RELLEKKA }),
+
+    /**
      * Miscellania's market, containing two fish stalls and one vegetable stall.
      */
     MISCELLANIA_MARKET_STALLS(
@@ -3379,6 +3427,9 @@ enum class SubZone(
         EAST_WILDERNESS_HILL_GIANTS, LAVA_MAZE_HILL_GIANTS, DEEP_WILDERNESS_DUNGEON_HILL_GIANTS,
         DEEP_WILDERNESS_DUNGEON_FIRE_GIANTS, WILDERNESS_MOSS_GIANTS ->
             if (bot.personality.isConfident) null else "Wilderness giant camps need a confident personality"
+
+        WILDERNESS_HOBGOBLIN_MINE, EAST_WILDERNESS_HOBGOBLINS ->
+            if (bot.personality.isConfident) null else "Wilderness hobgoblin camps need a confident personality"
 
         MOSS_GIANT_ISLAND ->
             if (this !in bot.subZones && bot.agility.level < AgilityShortcut.MOSS_GIANT_ROPE.level)

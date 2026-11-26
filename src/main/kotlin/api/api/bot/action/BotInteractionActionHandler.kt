@@ -151,6 +151,23 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         withTimeoutOrNull(timeout) { interact(option, target, local = true, allowed = allowed) } == true
 
     /**
+     * Reaches a nearby target without opening a web route or assuming it stays in reach after a click.
+     */
+    internal suspend fun approachLocally(target: Entity, policy: InteractionPolicy): Boolean {
+        val request = NavigationRequest.builder(bot).async(true).continuous(false).policy(policy).target(target)
+        val pending = bot.navigator.submit(request.build())
+        try {
+            return pending.await() == NavigationResult.REACHED && world.collisionManager.reached(bot, target, policy)
+        } catch (e: CancellationException) {
+            if (bot.navigator.currentPending === pending) {
+                bot.navigator.cancel()
+                bot.walking.clear()
+            }
+            throw e
+        }
+    }
+
+    /**
      * Attempts to make this bot interact with [target] using [option].
      *
      * The bot first uses the web-walker to reach an allowed stand, then sends the native interaction packet.
@@ -216,19 +233,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         }")
 
         val policy = reachPolicy ?: interactionPolicy(option, target)
-        val reached = if (local) {
-            val request = NavigationRequest.builder(bot).async(true).continuous(false).policy(policy).target(target)
-            val pending = bot.navigator.submit(request.build())
-            try {
-                pending.await() == NavigationResult.REACHED && world.collisionManager.reached(bot, target, policy)
-            } catch (e: CancellationException) {
-                if (bot.navigator.currentPending === pending) {
-                    bot.navigator.cancel()
-                    bot.walking.clear()
-                }
-                throw e
-            }
-        } else approach(target, policy, canContinue = allowed)
+        val reached = if (local) approachLocally(target, policy) else approach(target, policy, canContinue = allowed)
         if (!reached) {
             bot.log(if (local) "Interaction failed: local approach did not reach the target."
                 else "Interaction failed: web approach did not reach the target.")

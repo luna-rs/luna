@@ -278,12 +278,12 @@ object BotEquipmentPreferences {
     private fun progressionOutfit(bot: Bot): List<BotGearItem> {
         val style = planningPurpose(bot)
         val ladder = when (style) {
-            BotGearPurpose.MAGIC -> listOf(BotGearSet.WIZARD_BLUE, BotGearSet.MYSTIC_LIGHT,
-                BotGearSet.MYSTIC_DARK, BotGearSet.AHRIMS)
-            BotGearPurpose.RANGED -> listOf(BotGearSet.LEATHER, BotGearSet.STUDDED_LEATHER,
+            BotGearPurpose.MAGIC -> listOf(BotGearSet.WIZARD_BLUE, BotGearSet.SPLITBARK, BotGearSet.SKELETAL,
+                BotGearSet.MYSTIC_LIGHT, BotGearSet.MYSTIC_DARK, BotGearSet.AHRIMS)
+            BotGearPurpose.RANGED -> listOf(BotGearSet.LEATHER, BotGearSet.STUDDED_LEATHER, BotGearSet.SPINED,
                 BotGearSet.GREEN_DHIDE, BotGearSet.BLUE_DHIDE, BotGearSet.RED_DHIDE,
                 BotGearSet.BLACK_DHIDE, BotGearSet.KARILS)
-            else -> ordinarySets + BotGearSet.BLACK_FULL_LEGS + BotGearSet.BLACK_FULL_SKIRT
+            else -> ordinarySets + listOf(BotGearSet.BLACK_FULL_LEGS, BotGearSet.BLACK_FULL_SKIRT, BotGearSet.ROCKSHELL)
         }
         val weaponGroups = when (style) {
             BotGearPurpose.MAGIC -> WeaponBotGear.entries.filter { it.name in setOf("STAFF", "MAGIC_STAFF",

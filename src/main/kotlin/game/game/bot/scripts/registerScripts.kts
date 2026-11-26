@@ -96,6 +96,8 @@ import game.bot.scripts.skills.CookFoodBotScript
 import game.bot.scripts.skills.CookFoodBotScript.Companion.CookFoodData
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
+import game.bot.scripts.skills.CommissionArmourBotScript
+import game.bot.scripts.skills.CommissionArmourBotScript.Companion.CommissionData
 import game.bot.scripts.skills.CraftRuneBotScript
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.CraftRuneData
 import game.bot.scripts.skills.MakePotteryBotScript
@@ -166,6 +168,7 @@ import game.bot.scripts.ToggleLightBotScript.Companion.LightData
 import game.bot.scripts.RepairGatheringToolBotScript.Companion.RepairData
 import game.bot.scripts.OpenCrystalChestBotScript.Companion.ChestData
 import game.bot.scripts.FillWaterBotScript.Companion.FillWaterData
+import game.bot.scripts.JoinDragonShieldBotScript.Companion.DragonShieldData
 import game.bot.scripts.MakeCrystalKeyBotScript.Companion.CrystalKeyData
 import game.bot.scripts.skills.StringJewelleryBotScript.Companion.JewelleryData
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
@@ -244,6 +247,9 @@ on(ServerLaunchEvent::class) {
     scriptManager.scriptMap["game.bot.scripts.skills.SpinFlaxBotScript"] =
         scriptManager.scriptMap.getValue(SpinTextileBotScript::class.qualifiedName!!)
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+    scriptManager.addScript<CommissionData>(CommissionArmourBotScript::class) { bot, data ->
+        CommissionArmourBotScript(bot, data)
+    }
     scriptManager.addScript<StarterLeatherBotScript.BatchData>(StarterLeatherBotScript::class) { bot, data ->
         StarterLeatherBotScript(bot, data)
     }
@@ -260,6 +266,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<UnfPotionData>(MakeUnfPotionBotScript::class) { bot, data -> MakeUnfPotionBotScript(bot, data) }
     scriptManager.addScript<JewelleryData>(StringJewelleryBotScript::class) { bot, data -> StringJewelleryBotScript(bot, data) }
     scriptManager.addScript<CrystalKeyData>(MakeCrystalKeyBotScript::class) { bot, data -> MakeCrystalKeyBotScript(bot, data) }
+    scriptManager.addScript<DragonShieldData>(JoinDragonShieldBotScript::class) { bot, data -> JoinDragonShieldBotScript(bot, data) }
     scriptManager.addScript<AssemblyData>(AssembleFoodBotScript::class) { bot, data -> AssembleFoodBotScript(bot, data) }
     scriptManager.addScript<CutFoodData>(CutFoodBotScript::class) { bot, data -> CutFoodBotScript(bot, data) }
     scriptManager.addScript<DoughData>(MakeDoughBotScript::class) { bot, data -> MakeDoughBotScript(bot, data) }

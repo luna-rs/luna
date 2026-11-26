@@ -19,6 +19,7 @@ import game.content.fightPit.FightPit
 import game.bot.scripts.DropPartyBotScript
 import game.bot.scripts.FishingTrawlerBotScript
 import game.bot.scripts.MageArenaBotScript
+import game.bot.scripts.MageTrainingArenaBotScript
 import game.bot.scripts.BlastFurnaceBotScript
 import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.PestControlBotScript
@@ -72,6 +73,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
         if (BarrowsBotScript.eligible(bot) && rand(0.20)) return BarrowsBotScript(bot)
         if (FightPitBotScript.eligible(bot) && (FightPit.inside(bot.position) || rand(0.25))) return FightPitBotScript(bot)
         if (MageArenaBotScript.eligible(bot) && rand(0.25)) return MageArenaBotScript(bot)
+        if (MageTrainingArenaBotScript.eligible(bot) && rand(0.25)) return MageTrainingArenaBotScript(bot)
         if (GamesRoom.inRoom(bot.position) && GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
         if (pestReady && rand(0.25)) return PestControlBotScript(bot)
         if (RangingGuildBotScript.eligible(bot) && (bot.count > 0 || rand(0.25))) return RangingGuildBotScript(bot)

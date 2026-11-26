@@ -59,6 +59,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         private const val FEATHERS = 314
         private const val BIG_BONES = 532
         private const val DRAGON_BONES = 536
+        private const val HOBGOBLIN = "Hobgoblin"
 
         /**
          * A configured spawn group and the minimum combat readiness needed for deliberate attacks.
@@ -82,6 +83,17 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             SubZone.EAST_WILDERNESS_HILL_GIANTS to 45,
             SubZone.LAVA_MAZE_HILL_GIANTS to 55,
             SubZone.DEEP_WILDERNESS_DUNGEON_HILL_GIANTS to 55
+        )
+
+        /**
+         * Dedicated hobgoblin destinations for combat training, profit and Slayer.
+         */
+        internal val hobgoblinCamps = mapOf(
+            SubZone.CRAFTING_GUILD_HOBGOBLINS to 35,
+            SubZone.EDGEVILLE_DUNGEON_HOBGOBLINS to 45,
+            SubZone.ASGARNIAN_DUNGEON_HOBGOBLINS to 45,
+            SubZone.EAST_WILDERNESS_HOBGOBLINS to 45,
+            SubZone.WILDERNESS_HOBGOBLIN_MINE to 55
         )
 
         /**
@@ -113,7 +125,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.VARROCK_DARK_WIZARDS, 25, setOf("Dark wizard")),
             Camp(SubZone.AL_KHARID_MINE, 25, setOf("Scorpion")),
             Camp(SubZone.DWARVEN_MINE, 35, setOf("Scorpion")),
-            Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Cow", "Cow calf", "Hobgoblin")),
+            Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Cow", "Cow calf", HOBGOBLIN)),
             Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
             Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
@@ -138,7 +150,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.GIANT_MOLE_LAIR, 75, setOf("Giant Mole"), true),
             Camp(SubZone.CHAOS_ELEMENTAL_WILDERNESS, 95, setOf("Chaos Elemental"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
-        ) + hillGiantCamps.map { (zone, minimum) -> Camp(zone, minimum, setOf(HILL_GIANT), true) }
+        ) + hillGiantCamps.map { (zone, minimum) -> Camp(zone, minimum, setOf(HILL_GIANT), true) } +
+            hobgoblinCamps.map { (zone, minimum) -> Camp(zone, minimum, setOf(HOBGOBLIN), true) }
 
         /**
          * A verified drop and bounded owned-stock goal for an ordinary profit combat outing.

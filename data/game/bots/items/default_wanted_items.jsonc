@@ -21716,6 +21716,138 @@
     ]
   },
   {
+    "id": 3470,
+    // Fine cloth
+    "min": 4,
+    "target": 16,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6155,
+    // Dagannoth hide
+    "min": 3,
+    "target": 12,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6157,
+    // Rock-shell chunk
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6159,
+    // Rock-shell shard
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6161,
+    // Rock-shell splinter
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6163,
+    // Skull piece
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6165,
+    // Ribcage piece
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6167,
+    // Fibula piece
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6169,
+    // Circular hide
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6171,
+    // Flattened hide
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6173,
+    // Stretched hide
+    "min": 1,
+    "target": 3,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
     "id": 6573,
     // Onyx
     "min": 10,

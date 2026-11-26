@@ -1198,7 +1198,8 @@ open class NpcCombatScript(bot: Bot,
             }
         }
         if (zone in CombatCoordinator.additionalBigBoneZones ||
-            zone in CombatCoordinator.hillGiantCamps && WildernessLocatableController.levelAt(zone.inside) > 0) {
+            (zone in CombatCoordinator.hillGiantCamps || zone in CombatCoordinator.hobgoblinCamps) &&
+            WildernessLocatableController.levelAt(zone.inside) > 0) {
             return handler.webWalkTo(zone, attempts = 2, bank = bank, fallback = false)
         }
         return super.travelToWorkZone(zone, bank)

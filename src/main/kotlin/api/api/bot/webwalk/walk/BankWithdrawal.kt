@@ -209,6 +209,7 @@ object BankWithdrawal {
      * @return `true` if the bank is open.
      */
     suspend fun openBank(bot: Bot, handler: BotActionHandler, bank: BankDefinition): Boolean {
+        if (bank.questBank?.passes(bot) == false) return false
         val target = resolve(bank, bot.world)
         if (target == null) {
             bot.log("WebWalk: the bank at ${bank.booth} is unavailable.")
@@ -226,8 +227,9 @@ object BankWithdrawal {
      * @return A banking object or active native banker, or `null` when the destination is unavailable.
      */
     fun resolve(bank: BankDefinition, currentWorld: World = world): Entity? {
+        val questBank = bank.questBank
         val npcId = bank.npcId ?: return currentWorld.locator.findObjectsOnTile(bank.booth) {
-            it.id in Banking.bankingObjects
+            if (questBank == null) it.id in Banking.bankingObjects else it.id == questBank.objectId
         }.firstOrNull()
         return currentWorld.locator.findViewableNpcs(bank.booth).firstOrNull { npc ->
             npc.id == npcId && npc.basePosition == bank.booth && isBanker(npc) &&

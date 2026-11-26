@@ -159,6 +159,11 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     companion object {
 
+        /**
+         * How long a patrol that ran out of the Wilderness waits before going back in.
+         */
+        private val REENTRY_HOLD = 1.minutes
+
         internal fun forEvent(bot: Bot, participant: BotEventParticipant, area: PkPatrolArea): PkBotScript =
             PkBotScript(bot, Duration.ZERO, soloClanOuting = true, purpose = Purpose.VALUE).apply {
                 event = participant
@@ -1202,6 +1207,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
             } else if (attacker is Player) {
                 if (event != null && (!mayStartFight() || !checkTarget(attacker))) return true
                 bot.log("Player attacker detected. Pushing CombatBotScript for $attacker")
+                if (event == null && WildernessDefence.attackingPlayer(bot) === attacker) {
+                    // Defending itself is not a hunt: answer the way any bot does, outside the patrol's rules.
+                    bot.scriptStack.pushHead(CombatBotScript(bot, attacker, WildernessDefence.respond(bot, attacker),
+                        WildernessDefence.defenceSession(this, attacker)))
+                    return true
+                }
                 queueFight(attacker)
                 return true
             }
@@ -1330,6 +1341,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     internal suspend fun enterWild(): Boolean {
         if (!riskAffordable() || !clan.wearingCape() || !clanCanHunt()) return false
+        val escape = bot.recentEscape
+        if (!bot.inWilderness() && event == null && escape != null &&
+            System.currentTimeMillis() - escape.time < REENTRY_HOLD.inWholeMilliseconds) {
+            // A bot that just ran out of the Wilderness catches its breath before going back in.
+            return false
+        }
         if (!bot.inWilderness() || !insidePatrolArea(bot.position)) {
             val anchor = patrolDestination?.takeUnless { bot.recentEscape?.avoids(it) == true } ?: when {
                 isGroupOuting() -> selectPatrolDestination()

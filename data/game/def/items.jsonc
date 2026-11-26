@@ -8810,6 +8810,11 @@
     "tradeable": true
   },
   {
+    "id": 6159, // Rock-shell shard
+    "weight": 3.0,
+    "tradeable": true
+  },
+  {
     "id": 6161, // Rock-shell splinter
     "weight": 3.0,
     "tradeable": true

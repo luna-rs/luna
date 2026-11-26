@@ -16,6 +16,7 @@ import api.predef.prayer
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import game.player.item.consume.potion.PotionFamily
+import game.skill.smithing.Smithing.DRAGON_SQUARE_SHIELD
 import com.google.common.collect.ImmutableSet
 import engine.bot.gear.BotEquipmentPreferences
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
@@ -30,6 +31,7 @@ import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
+import io.luna.game.model.mob.bot.brain.BotActivityWeights
 import io.luna.game.model.item.Equipment
 
 /**
@@ -454,6 +456,7 @@ object BotTradeIntentions {
     fun retainedStock(bot: Bot, consumingOwner: Any? = null, consumingPlan: ProductionPlan? = null): Map<Int, Int> {
         val ownPlan = consumingPlan?.takeIf { bot.productionPlan === it && bot.productionOwner === consumingOwner }
         val retained = supplyPlans(bot, System.currentTimeMillis(), ownPlan).mapValuesTo(HashMap()) { it.value.target }
+        retained[DRAGON_SQUARE_SHIELD] = maxOf(retained[DRAGON_SQUARE_SHIELD] ?: 0, dragonShieldReserve(bot))
         for ((id, amount) in PrayerBoneStock.reserves(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotGearDemand.retained(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotPotionDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
@@ -484,6 +487,13 @@ object BotTradeIntentions {
     }
 
     fun retained(bot: Bot, id: Int): Int = retainedStock(bot)[id] ?: 0
+
+    /**
+     * Keeps one working dragon square shield. Prepared non-merchants with enough coins may bank a replacement.
+     */
+    private fun dragonShieldReserve(bot: Bot): Int =
+        if (!bot.preferences.isMerchant && (bot.personality.isDextrous || bot.personality.isIntelligent) &&
+            bot.canUseWantedItem(DRAGON_SQUARE_SHIELD) && !BotActivityWeights.needsStarterCoins(bot)) 2 else 1
 
     /**
      * Reads only the quantity an activity explicitly requested, independently of larger catalogue targets.
@@ -536,6 +546,7 @@ object BotTradeIntentions {
             BotPotionDemand.retainedStock(bot)[id] ?: 0, BotFoodDemand.retained(bot, id),
             activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
             explicitSupplyPlan(bot, id)?.target ?: 0, PrayerBoneStock.reserve(bot, id))
+        if (id == DRAGON_SQUARE_SHIELD) target = maxOf(target, dragonShieldReserve(bot))
         val allocated = bot.scriptStack.findActive(AlchemyBotScript::class.java)
             .orElse(null)?.allocatedStock()?.takeIf { it.id == id }?.amount ?: 0
         target = (target.toLong() + allocated).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()

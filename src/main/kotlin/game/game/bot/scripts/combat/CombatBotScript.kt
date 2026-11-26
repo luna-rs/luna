@@ -368,6 +368,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private var keepsRunning = false
 
     /**
+     * The player the bot last ran from in the Wilderness.
+     */
+    private var chasedBy: Player? = null
+
+    /**
      * Whether the bot already reacted to getting away during this escape, so resting at home doesn't repeat it.
      */
     private var reactedToEscape = false
@@ -842,9 +847,10 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         val chaser = WildernessDefence.attackingPlayer(bot)
         if (chaser == null) {
             handler.combat.fleeCombat()
-            if (!bot.inWilderness()) BotReactions.reactToEscape(bot)
+            if (!bot.inWilderness()) escapedPlayer()
             return true
         }
+        chasedBy = chaser
         val now = world.currentTick
         if (!fleeingPlayer) {
             fleeingPlayer = true
@@ -885,10 +891,21 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             delay(600.milliseconds)
         }
         if (!bot.inWilderness()) {
-            BotReactions.reactToEscape(bot)
+            escapedPlayer()
             return true
         }
         return false
+    }
+
+    /**
+     * Records that the bot ran out of the Wilderness from a player, so the work it goes back to, PK patrols
+     * included, keeps it away from where it was attacked for a while.
+     */
+    private fun escapedPlayer() {
+        BotReactions.reactToEscape(bot)
+        val attacker = chasedBy ?: return
+        val zone = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)?.interruptedZone
+        bot.lastEscape = BotEscape(attackedAt, attacker.toString(), System.currentTimeMillis(), zone)
     }
 
     /**
