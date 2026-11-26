@@ -15,6 +15,7 @@ import game.skill.runecrafting.craftRune.CraftableRune
 import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Chooses a Runecrafting trip using owned materials or executable supply and a viable altar entrance.
@@ -44,11 +45,15 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
         createScript(bot, level, zones, training = false)
 
-    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript =
-        choose(bot, level, training, getDuration(bot, skillId))?.also {
+    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
+        val sampledDuration = getDuration(bot, skillId)
+        // Allow extra time for supply and altar travel within the usual two-hour ceiling.
+        val duration = if (training) (sampledDuration + 20.minutes).coerceAtMost(120.minutes) else sampledDuration
+        return choose(bot, level, training, duration)?.also {
             zones.clear()
             zones.add(it.altar.zone)
         } ?: VoidBotScript(bot)
+    }
 
     internal fun alternative(bot: Bot, plan: ProductionPlan, duration: Duration,
                              altarUnavailable: Boolean): CraftRuneBotScript? =
