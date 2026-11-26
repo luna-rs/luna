@@ -36,7 +36,16 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     ROVING_ELVES(null),
 
     // TODO The Fremennik Trials: read its completion once the quest exists.
-    FREMENNIK_TRIALS(null);
+    FREMENNIK_TRIALS(null),
+
+    // TODO Icthlarin's Little Helper: read its completion once the quest exists.
+    ICTHLARINS_LITTLE_HELPER(null),
+
+    // TODO Rune Mysteries: read its completion once the quest exists.
+    RUNE_MYSTERIES(null),
+
+    // TODO The Feud: read its completion once the quest exists.
+    THE_FEUD(null);
 
     /**
      * Whether [player] has finished this quest. A quest that Luna does not have yet counts as finished.
