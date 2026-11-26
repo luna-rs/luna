@@ -52,4 +52,14 @@ public interface InjectableEvent {
     default int contextRadius(Bot bot) {
         return Position.VIEWING_DISTANCE;
     }
+
+    /**
+     * Determines whether this event is queued for bots at all. Returning {@code false} keeps frequent events that no
+     * bot reacts to out of the dispatch buffer.
+     *
+     * @return {@code true} if this event should be queued for bots.
+     */
+    default boolean isInjectable() {
+        return true;
+    }
 }
