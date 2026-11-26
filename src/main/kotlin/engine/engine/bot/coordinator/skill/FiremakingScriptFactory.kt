@@ -38,8 +38,8 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
      */
     fun getTrainingScript(bot: Bot, level: Int, duration: Duration): BotScript {
         if (FirelighterStock.canMakeColouredFires(bot)) {
-            BotProductionPlanner.select(bot, skillId, level, true, duration, keyPrefix = "burn:" + Log.NORMAL.name)
-                ?.let { return it }
+            BotProductionPlanner.select(bot, skillId, level, true, duration, keyPrefix = "burn:" + Log.NORMAL.name,
+                maximumCoinsLimit = 0L)?.let { return it }
         }
         return BotProductionPlanner.select(bot, skillId, level, true, duration)
             ?: BotProductionPlanner.collectTrainingLogs(bot, skillId, level, duration)
