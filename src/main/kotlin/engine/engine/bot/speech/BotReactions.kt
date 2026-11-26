@@ -74,10 +74,26 @@ object BotReactions {
     private var Bot.threatScareEnds by Attr.obj { Instant.EPOCH }
 
     /**
+     * The most bots that speak about one event they all saw.
+     */
+    private const val MAX_RESPONDERS = 2
+
+    /**
+     * Picks which bots react to an event that many of them saw, so a crowd doesn't all answer at once. Every bot has
+     * the same chance of being picked.
+     *
+     * @param willing The bots that would react.
+     * @param limit The most bots to pick.
+     * @return The bots that react, in random order.
+     */
+    internal fun <T> pickResponders(willing: Collection<T>, limit: Int = MAX_RESPONDERS): List<T> =
+        willing.shuffled().take(limit)
+
+    /**
      * Makes nearby bots react after a player dies.
      *
      * Witnessing bots roll against their social personality trait and may queue an [ReactionSpeech.OTHER_DIED] line
-     * with a short randomized delay.
+     * with a short randomized delay. At most [MAX_RESPONDERS] of the bots that pass the roll speak.
      *
      * @param source The mob that caused the death, or `null` if there is no known source.
      * @param died The player who died.
@@ -86,6 +102,7 @@ object BotReactions {
         // Ignore if the source or victim, if currently in combat with a player, or if the social check fails.
         world.locator.findViewablePlayers(died) { it != died && it.combat.target !is Player && it != source &&
                 it.isRealBot() && rand(it.personality.social) }
+            .let { pickResponders(it) }
             .forEach {
                 val bot = it as Bot
                 val text = BotReactionSpeechPool.take(bot, ReactionSpeech.OTHER_DIED)
