@@ -35,6 +35,9 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // Culinaromancer's chest, and the whole quest opens all of it.
     RECIPE_FOR_DISASTER(null),
 
+    // TODO Recruitment Drive: read its completion once the quest exists.
+    RECRUITMENT_DRIVE(null),
+
     // TODO Regicide: read its completion once the quest exists.
     REGICIDE(null),
 
