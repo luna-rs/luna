@@ -4,6 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.Animations
 import game.player.Sound
+import io.luna.game.action.ActionType
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
@@ -130,15 +131,13 @@ class MakeCannonballAction(plr: Player, private val remaining: Int = 1) : Locked
         made = true
     }
 
-    /**
-     * Pours the next bar a tick later. The player is unlocked for that tick, so walking away or starting anything
-     * else stops the run.
-     */
     override fun onUnlock() {
         if (!made || remaining <= 1) return
         val position = mob.position
-        world.scheduleOnce(1) {
-            if (mob.position == position && mob.walking.isEmpty && mob.actions.size() == 0 && canContinue()) {
+        // World tasks run before player input, so leave one full tick for walking or another interaction.
+        world.scheduleOnce(2) {
+            if (mob.position == position && mob.walking.isEmpty && !mob.isLocked && !mob.overlays.hasWindow() &&
+                mob.actions.size() == mob.actions.size(ActionType.SOFT) && canContinue()) {
                 mob.submitAction(MakeCannonballAction(mob, remaining - 1))
             }
         }
