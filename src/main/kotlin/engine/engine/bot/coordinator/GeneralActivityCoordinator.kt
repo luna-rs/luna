@@ -5,6 +5,7 @@ import api.predef.*
 import game.bot.scripts.BuyInitiateArmourBotScript
 import game.bot.scripts.ChampionsChallengeBotScript
 import game.bot.scripts.DragonSlayerBotScript
+import game.bot.scripts.TempleTrekkingBotScript
 import game.bot.scripts.GodBookBotScript
 import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
@@ -96,6 +97,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
         ChampionsChallengeBotScript.select(bot)?.let { return it }
+        TempleTrekkingBotScript.select(bot)?.let { return it }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {
                 return OpenCrystalChestBotScript(bot, it, duration)

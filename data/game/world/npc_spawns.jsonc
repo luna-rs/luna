@@ -138739,6 +138739,16 @@
       "frequency": "NORMAL"
     }
   },
+  // Cornelius (id 3569), the Burgh de Rott banker
+  {
+    "id": 3569,
+    "position": {
+      "x": 3493,
+      "y": 3211,
+      "z": 0
+    },
+    "default_direction": "EAST"
+  },
   // Aurel (id 3541)
   {
     "id": 3541,

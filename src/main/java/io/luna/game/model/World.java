@@ -382,7 +382,7 @@ public final class World {
 
         // Housekeeping that depends on synchronization having completed.
         chunks.resetUpdatedChunks();
-        botManager.getInjectorManager().clearEvents();
+        botManager.getInjectorManager().advanceTick();
         collisionManager.handleSnapshots();
 
         // Increment tick counter.

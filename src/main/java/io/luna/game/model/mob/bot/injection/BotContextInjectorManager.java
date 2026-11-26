@@ -26,7 +26,9 @@ import java.util.List;
  * improving both realism and scalability.
  * <p>
  * The internal injector list is stored as an immutable snapshot for thread safety and atomic updates through
- * {@link #setInjectors(List)}. The pending event buffer is cleared at the end of each tick using {@link #clearEvents()}.
+ * {@link #setInjectors(List)}. Bots are processed inside the player loop, so an event can be posted after some bots
+ * have already had their turn. Events are therefore kept until the end of the following tick, and each bot keeps a
+ * cursor ({@link Bot#getNextInjectedEvent()}) so every event is offered to it once.
  *
  * @author lare96
  * @see BotContextInjector
@@ -42,16 +44,24 @@ public final class BotContextInjectorManager {
     private volatile ImmutableList<BotContextInjector> injectorList = ImmutableList.of();
 
     /**
-     * The temporary buffer of {@link InjectableEvent}s awaiting dispatch.
-     * <p>
-     * This list is populated throughout the tick and flushed at the end of each tick cycle
-     * using {@link #clearEvents()}.
+     * The events posted during this tick and the previous one, oldest first.
      */
-    private final List<InjectableEvent> pendingDispatch = new ArrayList<>();
+    private final List<InjectableEvent> events = new ArrayList<>();
 
     /**
-     * Dispatches all {@link InjectableEvent}s in {@link #pendingDispatch} to this bot while it has a human observer.
-     * Human presence is read from the existing local-human view without a world or chunk scan.
+     * The sequence number of the first entry in {@link #events}.
+     */
+    private long firstSequence;
+
+    /**
+     * The sequence number of the first event posted during the current tick.
+     */
+    private long tickStartSequence;
+
+    /**
+     * Dispatches every {@link InjectableEvent} this bot has not yet been offered, while it has a human observer.
+     * Human presence is read from the existing local-human view without a world or chunk scan. Events skipped
+     * because no human is watching are not offered again later.
      * <p>
      * For each event, the spatial context is checked:
      * <ul>
@@ -65,10 +75,14 @@ public final class BotContextInjectorManager {
      * @param bot The bot receiving the event injection pass.
      */
     public void injectEvents(Bot bot) {
-        if (bot.getLocalHumans().isEmpty()) {
+        int start = (int) Math.max(0, bot.getNextInjectedEvent() - firstSequence);
+        int end = events.size();
+        bot.setNextInjectedEvent(firstSequence + end);
+        if (start >= end || bot.getLocalHumans().isEmpty()) {
             return;
         }
-        for (InjectableEvent event : pendingDispatch) {
+        for (int index = start; index < end; index++) {
+            InjectableEvent event = events.get(index);
             Locatable locatable = event.contextLocatable(bot);
             if (locatable == null || locatable.equals(bot)) {
                 continue;
@@ -92,24 +106,28 @@ public final class BotContextInjectorManager {
     }
 
     /**
-     * Adds a new {@link InjectableEvent} to the pending dispatch buffer.
+     * Adds a new {@link InjectableEvent} to the pending dispatch buffer, unless
+     * {@link InjectableEvent#isInjectable()} rules it out.
      * <p>
-     * The event will be delivered to eligible bots on the next call to {@link #injectEvents(Bot)}.
+     * Each bot is offered the event on its next call to {@link #injectEvents(Bot)}.
      *
      * @param event The injectable event to queue.
      */
     public void addEvent(InjectableEvent event) {
-        pendingDispatch.add(event);
+        if (event.isInjectable()) {
+            events.add(event);
+        }
     }
 
     /**
-     * Clears all events in the pending dispatch buffer.
+     * Drops the events posted before this tick. Every bot has had a turn since they were posted.
      * <p>
-     * This should be called once per tick after all bots have been processed to prevent duplicate event injections
-     * on the following cycle.
+     * This should be called once per tick after all bots have been processed.
      */
-    public void clearEvents() {
-        pendingDispatch.clear();
+    public void advanceTick() {
+        events.subList(0, (int) (tickStartSequence - firstSequence)).clear();
+        firstSequence = tickStartSequence;
+        tickStartSequence = firstSequence + events.size();
     }
 
     /**

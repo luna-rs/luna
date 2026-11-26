@@ -63,6 +63,14 @@ public final class SkillChangeEvent extends PlayerEvent implements InjectableEve
     }
 
     /**
+     * Only level-ups are queued for bots. This event is posted on every experience drop.
+     */
+    @Override
+    public boolean isInjectable() {
+        return levelUp;
+    }
+
+    /**
      * Determines whether this change raised the static level when the event was created.
      * Later skill changes do not alter the result for a queued event.
      *
