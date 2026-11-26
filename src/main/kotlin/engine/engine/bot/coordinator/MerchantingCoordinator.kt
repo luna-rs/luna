@@ -18,6 +18,7 @@ import game.bot.scripts.trading.BuyFromStoreBotScript
 import game.bot.scripts.trading.BuyStoreBargainBotScript
 import game.bot.scripts.trading.SellToStoreBotScript
 import game.bot.scripts.trading.TradeBotScript
+import game.bot.scripts.skills.FirelighterStock
 import engine.controllers.Controllers.inWilderness
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
@@ -69,6 +70,7 @@ object MerchantingCoordinator : BotCoordinator {
     }
 
     override fun accept(bot: Bot) {
+        FirelighterStock.request(bot)
         val canMarketSell = BotMarketCooldown.ready(bot, BotTradePurpose.SELL)
         val canMarketBuyNow = BotMarketCooldown.ready(bot, BotTradePurpose.BUY)
         if (bot.preferences.isMerchant) {

@@ -2,6 +2,8 @@ package game.skill.firemaking
 
 /**
  * Logs coated with a treasure trail firelighter. They light like normal logs and burn as a coloured fire.
+ *
+ * @author lare96
  */
 enum class ColouredLog(val id: Int, val firelighter: Int, val fireId: Int) {
     RED(id = 7404, firelighter = 7329, fireId = 11404),

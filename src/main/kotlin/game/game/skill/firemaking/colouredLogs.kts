@@ -1,10 +1,12 @@
 package game.skill.firemaking
 
 import api.predef.*
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.interact.InteractionPolicy
 
-fun light(plr: Player, log: ColouredLog, removeLog: Boolean) {
-    plr.submitAction(LightLogAction(plr, Log.NORMAL, removeLog, log.id, ColouredLog.EXP, log.fireId))
+fun light(plr: Player, log: ColouredLog, groundLog: GroundItem? = null) {
+    plr.submitAction(LightLogAction(plr, Log.NORMAL, groundLog == null, log.id, ColouredLog.EXP, log.fireId, groundLog))
 }
 
 for (log in ColouredLog.entries) {
@@ -17,11 +19,13 @@ for (log in ColouredLog.entries) {
     }
 
     // Use tinderbox on log in inventory.
-    useItem(Firemaking.TINDERBOX).onItem(log.id) { light(plr, log, true) }
+    useItem(Firemaking.TINDERBOX).onItem(log.id) { light(plr, log) }
 
     // Use tinderbox on log on floor.
-    useItem(Firemaking.TINDERBOX).onGroundItem(log.id) { light(plr, log, false) }
+    useItem(Firemaking.TINDERBOX).onGroundItem(log.id, InteractionPolicy.EQUAL_POSITION_BIF) {
+        light(plr, log, groundItem)
+    }
 
     // Use "Light" option with log on ground.
-    groundItem2(log.id) { light(plr, log, false) }
+    groundItem2(log.id) { light(plr, log, groundItem) }
 }

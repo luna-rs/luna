@@ -18,7 +18,8 @@ import io.luna.game.model.`object`.ObjectType
  * @author lare96
  */
 class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean, val logId: Int = log.id,
-                     val exp: Double = log.exp, val fireId: Int = Firemaking.FIRE_OBJECT) :
+                     val exp: Double = log.exp, val fireId: Int = Firemaking.FIRE_OBJECT,
+                     private val groundLog: GroundItem? = null) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
 
     /**
@@ -57,6 +58,8 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean, val logI
                     }
                     return false
                 }
+                logGroundItem = groundLog?.takeIf { it.position == mob.position && it.isVisibleTo(mob) }
+                if (groundLog != null && logGroundItem == null) return false
                 mob.sendMessage("You light the ${itemName(logId).lowercase()}...")
                 return true
             }

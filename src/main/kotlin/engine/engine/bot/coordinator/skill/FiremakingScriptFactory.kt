@@ -6,6 +6,7 @@ import api.bot.script.VoidBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.skills.FirelighterStock
 import game.bot.scripts.skills.FiremakingBotScript
 import game.bot.scripts.skills.FiremakingBotScript.FiremakingSpot
 import game.skill.firemaking.Log
@@ -36,6 +37,10 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
      * Continues an existing Firemaking session within the time it has left.
      */
     fun getTrainingScript(bot: Bot, level: Int, duration: Duration): BotScript {
+        if (FirelighterStock.canMakeColouredFires(bot)) {
+            BotProductionPlanner.select(bot, skillId, level, true, duration, keyPrefix = "burn:" + Log.NORMAL.name)
+                ?.let { return it }
+        }
         return BotProductionPlanner.select(bot, skillId, level, true, duration)
             ?: BotProductionPlanner.collectTrainingLogs(bot, skillId, level, duration)
             ?: VoidBotScript(bot)

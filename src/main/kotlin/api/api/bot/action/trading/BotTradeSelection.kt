@@ -1,5 +1,6 @@
 package api.bot.action.trading
 
+import game.skill.firemaking.ColouredLog
 import api.predef.world
 import com.google.common.math.LongMath
 import io.luna.Luna
@@ -56,7 +57,7 @@ object BotTradeSelection {
         val base = ItemDefinition.ALL.get(id).map { it.unnotedId.orElse(id) }.orElse(id)
         val tags = WantedItemDefinition.DEFAULT.get(base).orElse(null)?.tags() ?: emptySet()
         return when {
-            WantedItemTag.SKILLING_CONSUMABLE in tags -> 2
+            WantedItemTag.SKILLING_CONSUMABLE in tags || ColouredLog.entries.any { it.firelighter == base } -> 2
             WantedItemTag.COMBAT_CONSUMABLE in tags -> 1
             else -> 0
         }

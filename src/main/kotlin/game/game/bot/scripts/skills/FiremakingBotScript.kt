@@ -11,6 +11,7 @@ import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.FiremakingScriptFactory
 import engine.bot.coordinator.BankResourceCoordinator
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.skill.firemaking.ColouredLog
 import game.skill.firemaking.Firemaking
 import game.skill.firemaking.Firemaking.TINDERBOX
 import game.skill.firemaking.Log
@@ -26,7 +27,8 @@ import kotlin.time.Duration.Companion.seconds
  * Trains Firemaking by burning banked logs in straight lines at a [FiremakingSpot].
  *
  * The script withdraws a tinderbox and up to [LOGS_PER_TRIP] logs of one [log] type, walks to the eastern end of a
- * [FiremakingLane] beside the bank, and lights one log after another. Each fire steps the bot one tile west, so the
+ * [FiremakingLane] beside the bank, and lights one log after another. Social bots may bring a stack of firelighters
+ * for ordinary logs. Each fire steps the bot one tile west, so the
  * fires form a straight line. When the lane runs out or a fire is in the way, the bot picks another lane, and once its
  * logs are gone it banks for more. When fuel runs out, the remaining session time passes to the existing
  * owned or purchased fuel selected by the production planner.
@@ -56,7 +58,9 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
     override fun allowsLoot(item: io.luna.game.model.item.GroundItem): Boolean = !bankRelief && super.allowsLoot(item)
 
     // Lighting a log drops it on the bot's tile first.
-    override val ignoredLoot = setOf(log.id)
+    override val ignoredLoot = setOf(log.id) + if (log == Log.NORMAL) ColouredLog.entries.map { it.id } else emptyList()
+
+    private val useFirelighters get() = log == Log.NORMAL && bot.personality.isSocial && !bankRelief
 
     companion object {
 
@@ -76,7 +80,9 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
          * can block them.
          */
         private fun hasFire(position: Position): Boolean =
-            world.objects.findAll(position).anyMatch { it.id == Firemaking.FIRE_OBJECT }
+            world.objects.findAll(position).anyMatch { obj ->
+                obj.id == Firemaking.FIRE_OBJECT || ColouredLog.entries.any { it.fireId == obj.id }
+            }
 
         /**
          * Serializable data used to save and restore a [FiremakingBotScript].
@@ -303,6 +309,13 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         }
         if (!bankOnly) productionWithdraw(listOf(Item(log.id)), setOf(TINDERBOX), requestMissing = !bankRelief)
         if (bankOnly && TINDERBOX !in bot.itemTracker) { stop(); return emptyList() }
+        val colour = if (bankOnly && useFirelighters)
+            ColouredLog.entries.maxByOrNull { bot.bank.computeAmountForId(it.firelighter) } else null
+        val firelighters = colour?.let { minOf(bot.bank.computeAmountForId(it.firelighter), stock, LOGS_PER_TRIP - 1) } ?: 0
+        if (colour != null && firelighters > 0) {
+            return listOf(Item(TINDERBOX), Item(log.id, minOf(stock, LOGS_PER_TRIP - 1)),
+                Item(colour.firelighter, firelighters))
+        }
         return listOf(Item(TINDERBOX), Item(log.id, minOf(stock, LOGS_PER_TRIP)))
     }
 
@@ -312,13 +325,14 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             stop()
             return true
         }
-        if (log.id !in bot.inventory && bot.bank.computeAmountForId(log.id) < 1) {
+        val prepared = if (useFirelighters) ColouredLog.entries.firstOrNull { it.id in bot.inventory } else null
+        if (prepared == null && log.id !in bot.inventory && bot.bank.computeAmountForId(log.id) < 1) {
             bot.log("I've burned all of my ${itemName(log.id)}.")
             restockLogs()
             return true
         }
 
-        if (TINDERBOX !in bot.inventory || log.id !in bot.inventory) {
+        if (TINDERBOX !in bot.inventory || prepared == null && log.id !in bot.inventory) {
             bot.log("No ${itemName(log.id)} or tinderbox left in inventory; requesting bank trip.")
             lane = null
             forceBanking = true
@@ -334,9 +348,10 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             return true
         }
 
-        val logs = bot.inventory.computeAmountForId(log.id)
-        handler.inventory.useItem(TINDERBOX).onItem(log.id)
-        if (!waitFor(2.seconds) { bot.inventory.computeAmountForId(log.id) < logs }) {
+        val fuel = prepared?.id ?: prepareColouredLog() ?: log.id
+        val logs = bot.inventory.computeAmountForId(fuel)
+        handler.inventory.useItem(TINDERBOX).onItem(fuel)
+        if (!waitFor(2.seconds) { bot.inventory.computeAmountForId(fuel) < logs }) {
             bot.log("Couldn't light ${itemName(log.id)} on $tile. Trying another spot.")
             return false
         }
@@ -347,6 +362,16 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             bot.naturalMicroDelay()
         }
         return true
+    }
+
+    /**
+     * Uses the normal item interaction and waits for a converted log before trying the tinderbox.
+     */
+    private suspend fun prepareColouredLog(): Int? {
+        if (!useFirelighters) return null
+        val colour = ColouredLog.entries.firstOrNull { it.firelighter in bot.inventory } ?: return null
+        if (!handler.inventory.useItem(colour.firelighter).onItem(log.id)) return null
+        return colour.id.takeIf { waitFor(2.seconds) { it in bot.inventory } }
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {
@@ -389,7 +414,9 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             return false
         }
 
-        val next = spot.findLane(bot.inventory.computeAmountForId(log.id))
+        val logs = bot.inventory.computeAmountForId(log.id)
+        val prepared = if (useFirelighters) ColouredLog.entries.sumOf { bot.inventory.computeAmountForId(it.id) } else 0
+        val next = spot.findLane(logs + prepared)
         if (next == null) {
             bot.log("Every lane at $spot is burning. Trying another spot.")
             return false
