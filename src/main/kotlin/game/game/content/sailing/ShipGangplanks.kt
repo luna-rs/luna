@@ -24,13 +24,15 @@ object ShipGangplanks {
         2414 to null, // Entrana
         DragonSlayerShip.BOARD_PLANK to null,
         14304 to "Speak to the Squire to sail to the Void Knights' outpost.",
-        14306 to "Speak to the Squire to sail to Port Sarim."
+        14306 to "Speak to the Squire to sail to Port Sarim.",
+        11209 to null, // Port Phasmatys, Bill Teach's ship
+        11211 to null // Mos Le'Harmless, Bill Teach's ship
     )
 
     /**
      * Gangplanks on deck that lead ashore.
      */
-    val LEAVING_PLANKS = setOf(2082, 2084, 2086, 2088, 2413, 2415, 14305, 14307, DragonSlayerShip.LEAVE_PLANK)
+    val LEAVING_PLANKS = setOf(2082, 2084, 2086, 2088, 2413, 2415, 14305, 14307, 11210, 11212, DragonSlayerShip.LEAVE_PLANK)
 
     /**
      * The Entrana ships' gangplanks, which don't say "You board the ship."
