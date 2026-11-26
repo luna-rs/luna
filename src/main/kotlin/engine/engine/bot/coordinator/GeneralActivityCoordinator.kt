@@ -97,6 +97,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
         ChampionsChallengeBotScript.select(bot)?.let { return it }
+        TempleTrekkingBotScript.select(bot)?.let { return it }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {
                 return OpenCrystalChestBotScript(bot, it, duration)
@@ -126,8 +127,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         }.filter { it.isEligible() }.randomOrNull()?.let { return it }
         GodBookBotScript.select(bot)?.let { return it }
         BuyInitiateArmourBotScript.select(bot)?.let { return it }
-        return HerbloreSecondaryActivities.general(bot, duration) ?: TempleTrekkingBotScript.select(bot)
-            ?: starterScript(bot, duration)
+        return HerbloreSecondaryActivities.general(bot, duration) ?: starterScript(bot, duration)
     }
 
     internal fun starterScript(bot: Bot, duration: Duration): BotScript? {
