@@ -142335,6 +142335,7 @@
       "y": 3506,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"

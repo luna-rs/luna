@@ -129,6 +129,8 @@ public final class DynamicMap {
             CollisionUpdate.Builder terrain = new CollisionUpdate.Builder();
             terrain.type(CollisionUpdateType.ADDING);
             terrain.mapCoordinates();
+            CollisionUpdate.Builder roofs = new CollisionUpdate.Builder();
+            roofs.type(CollisionUpdateType.ADDING);
             // Prepare destination planes before applying any walls that cross chunk boundaries.
             palette.forEach((x, y, z) -> {
                 DynamicMapChunk source = palette.getChunk(x, y, z);
@@ -149,11 +151,13 @@ public final class DynamicMap {
                         Position destination = transform(x, y, z, source, real, 1, 1);
                         if (z == 1 && tile.isBridge()) world.getCollisionManager().markBridged(destination);
                         if (tile.isBlocked()) terrain.flag(destination, CollisionFlag.BLOCK_WALK);
-                        if (tile.isRoof()) terrain.flag(destination, CollisionFlag.ROOF);
+                        if (tile.isRoof()) roofs.flag(destination, CollisionFlag.ROOF);
                     }
                 }
             });
             world.getCollisionManager().apply(terrain.build(), false);
+            // Keep roofs on the palette's destination plane when floor clipping is lowered.
+            world.getCollisionManager().apply(roofs.build(), false);
 
             // Use immutable cache placements, not live source objects that may have been opened, removed or replaced.
             Map<Chunk, List<int[]>> slots = new HashMap<>();

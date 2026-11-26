@@ -160,17 +160,22 @@ public final class CollisionManager {
             world.getObjects().register(mapObject.toGameObject(context));
         }
 
-        // Apply blocked and roofed tiles. Bridged tiles are moved down a level when the update is applied.
-        CollisionUpdate.Builder tiles = new CollisionUpdate.Builder();
-        tiles.type(CollisionUpdateType.ADDING);
-        tiles.mapCoordinates();
+        // Bridge links lower floor clipping to the walking plane.
+        CollisionUpdate.Builder floors = new CollisionUpdate.Builder();
+        floors.type(CollisionUpdateType.ADDING);
+        floors.mapCoordinates();
         for (Position position : blocked.values()) {
-            tiles.flag(position, CollisionFlag.BLOCK_WALK);
+            floors.flag(position, CollisionFlag.BLOCK_WALK);
         }
+        apply(floors.build(), true);
+
+        // Roof flags describe the original terrain plane, including the ground below a bridge link.
+        CollisionUpdate.Builder roofs = new CollisionUpdate.Builder();
+        roofs.type(CollisionUpdateType.ADDING);
         for (Position position : roofed.values()) {
-            tiles.flag(position, CollisionFlag.ROOF);
+            roofs.flag(position, CollisionFlag.ROOF);
         }
-        apply(tiles.build(), true);
+        apply(roofs.build(), true);
 
         // Snapshot final built state.
         for (ChunkRepository repository : chunks.getAll()) {
