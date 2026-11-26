@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The script withdraws a tinderbox and up to [LOGS_PER_TRIP] logs of one [log] type, walks to the eastern end of a
  * [FiremakingLane] beside the bank, and lights one log after another. Social bots may bring a stack of firelighters
- * for ordinary logs. Each fire steps the bot one tile west, so the
+ * for ordinary logs. Other bots bring one when they have them. Each fire steps the bot one tile west, so the
  * fires form a straight line. When the lane runs out or a fire is in the way, the bot picks another lane, and once its
  * logs are gone it banks for more. When fuel runs out, the remaining session time passes to the existing
  * owned or purchased fuel selected by the production planner.
@@ -60,7 +60,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
     // Lighting a log drops it on the bot's tile first.
     override val ignoredLoot = setOf(log.id) + if (log == Log.NORMAL) ColouredLog.entries.map { it.id } else emptyList()
 
-    private val useFirelighters get() = log == Log.NORMAL && bot.personality.isSocial && !bankRelief
+    private val canColourLogs get() = log == Log.NORMAL && !bankRelief
 
     companion object {
 
@@ -309,9 +309,10 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         }
         if (!bankOnly) productionWithdraw(listOf(Item(log.id)), setOf(TINDERBOX), requestMissing = !bankRelief)
         if (bankOnly && TINDERBOX !in bot.itemTracker) { stop(); return emptyList() }
-        val colour = if (bankOnly && useFirelighters)
+        val colour = if (bankOnly && canColourLogs)
             ColouredLog.entries.maxByOrNull { bot.bank.computeAmountForId(it.firelighter) } else null
-        val firelighters = colour?.let { minOf(bot.bank.computeAmountForId(it.firelighter), stock, LOGS_PER_TRIP - 1) } ?: 0
+        val lighterLimit = if (bot.personality.isSocial) LOGS_PER_TRIP - 1 else 1
+        val firelighters = colour?.let { minOf(bot.bank.computeAmountForId(it.firelighter), stock, lighterLimit) } ?: 0
         if (colour != null && firelighters > 0) {
             return listOf(Item(TINDERBOX), Item(log.id, minOf(stock, LOGS_PER_TRIP - 1)),
                 Item(colour.firelighter, firelighters))
@@ -325,7 +326,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             stop()
             return true
         }
-        val prepared = if (useFirelighters) ColouredLog.entries.firstOrNull { it.id in bot.inventory } else null
+        val prepared = if (canColourLogs) ColouredLog.entries.firstOrNull { it.id in bot.inventory } else null
         if (prepared == null && log.id !in bot.inventory && bot.bank.computeAmountForId(log.id) < 1) {
             bot.log("I've burned all of my ${itemName(log.id)}.")
             restockLogs()
@@ -368,7 +369,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
      * Uses the normal item interaction and waits for a converted log before trying the tinderbox.
      */
     private suspend fun prepareColouredLog(): Int? {
-        if (!useFirelighters) return null
+        if (!canColourLogs) return null
         val colour = ColouredLog.entries.firstOrNull { it.firelighter in bot.inventory } ?: return null
         if (!handler.inventory.useItem(colour.firelighter).onItem(log.id)) return null
         return colour.id.takeIf { waitFor(2.seconds) { it in bot.inventory } }
@@ -415,7 +416,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         }
 
         val logs = bot.inventory.computeAmountForId(log.id)
-        val prepared = if (useFirelighters) ColouredLog.entries.sumOf { bot.inventory.computeAmountForId(it.id) } else 0
+        val prepared = if (canColourLogs) ColouredLog.entries.sumOf { bot.inventory.computeAmountForId(it.id) } else 0
         val next = spot.findLane(logs + prepared)
         if (next == null) {
             bot.log("Every lane at $spot is burning. Trying another spot.")
