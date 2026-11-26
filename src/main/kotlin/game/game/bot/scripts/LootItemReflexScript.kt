@@ -118,9 +118,15 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
     }
 
     /**
-     * The minimum loot value for the current scan and its subsequent pickup attempts.
+     * The minimum loot value for the current scan and its subsequent pickup attempts, or `null` until something has to
+     * be valued. Most scans find nothing on the ground, so the calculation waits for the first item that needs it.
      */
-    private var minimumLootValue = 1
+    private var scanLootValue: Int? = null
+
+    /**
+     * Returns the minimum loot value for the current scan, working it out on first use.
+     */
+    private fun minimumLootValue(): Int = scanLootValue ?: calculateMinLootValue(bot).also { scanLootValue = it }
 
     /**
      * Ground items selected for pickup, ordered by death recovery, profit ore, wanted-item status and general value.
@@ -173,7 +179,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
         }
 
         ignored = bot.scriptStack.current()?.takeIf { it.isRunning() }?.ignoredLoot ?: emptySet()
-        minimumLootValue = calculateMinLootValue(bot)
+        scanLootValue = null
         bot.deathItems.removeAll { it.state != EntityState.ACTIVE }
         findValuableItems()
         return valuableItems.isNotEmpty()
@@ -288,8 +294,8 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                 groundItem in bot.deathItems -> true
                 bot.preferences.needsWantedItem(item.id) -> true
                 item.id == 995 -> item.amount >
-                        (minimumLootValue * 0.25).coerceAtLeast(MINIMUM_LOOT_GP_VALUE)
-                else -> world.economy.getTotalPrice(item) >= minimumLootValue
+                        (minimumLootValue() * 0.25).coerceAtLeast(MINIMUM_LOOT_GP_VALUE)
+                else -> world.economy.getTotalPrice(item) >= minimumLootValue()
             }
             if (valuable) {
                 valuableItems += groundItem
@@ -379,7 +385,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
             if (item.id !in ALL_JUNK ||
                 item.id in protectedIds ||
                 bot.preferences.needsWantedItem(item.id) ||
-                world.economy.getTotalPrice(item) >= minimumLootValue) {
+                world.economy.getTotalPrice(item) >= minimumLootValue()) {
                 continue
             }
 
