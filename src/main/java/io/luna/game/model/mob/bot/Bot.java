@@ -455,6 +455,11 @@ public final class Bot extends Player {
     private long cycles;
 
     /**
+     * The sequence number of the next injectable event this bot has not yet been offered.
+     */
+    private long nextInjectedEvent;
+
+    /**
      * The reflex model used for immediate interrupt-style behavior.
      */
     private final BotReflex reflex;
@@ -922,6 +927,22 @@ public final class Bot extends Player {
      */
     public long getCycles() {
         return cycles;
+    }
+
+    /**
+     * @return The sequence number of the next injectable event this bot has not yet been offered.
+     */
+    public long getNextInjectedEvent() {
+        return nextInjectedEvent;
+    }
+
+    /**
+     * Sets the sequence number of the next injectable event this bot has not yet been offered.
+     *
+     * @param nextInjectedEvent The new sequence number.
+     */
+    public void setNextInjectedEvent(long nextInjectedEvent) {
+        this.nextInjectedEvent = nextInjectedEvent;
     }
 
     /**
