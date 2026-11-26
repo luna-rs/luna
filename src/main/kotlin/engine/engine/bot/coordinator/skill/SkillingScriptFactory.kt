@@ -91,6 +91,9 @@ abstract class SkillingScriptFactory(val skillId: Int) {
 
     private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
         if (training && !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
+        if (!training && skillId == SKILL_SMITHING) {
+            SmithingScriptFactory.ownedCannonballProfit(bot, level, getDuration(bot, skillId))?.let { return it }
+        }
         if (skillId in setOf(SKILL_SMITHING, SKILL_AGILITY, SKILL_FIREMAKING, SKILL_CRAFTING)) {
             BlastFurnaceBotScript.select(bot, skillId, getDuration(bot, skillId).inWholeMilliseconds)?.let { return it }
         }

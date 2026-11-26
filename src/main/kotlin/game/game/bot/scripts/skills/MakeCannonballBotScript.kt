@@ -47,8 +47,16 @@ class MakeCannonballBotScript(
     override val verifiedProductionWithdrawals = true
 
     companion object {
+        internal const val RECIPE_KEY = "cannonballs"
+
         /** Existing banked furnace routes shared with ore-smelting bots. */
         val DEFAULT_ZONES = ProductionZones.FURNACES
+
+        private val materials = listOf(Item(STEEL_BAR))
+        private val tools = setOf(AMMO_MOULD)
+
+        internal fun hasSupplies(bot: Bot): Boolean =
+            bot.smithing.staticLevel >= LEVEL && bot.ownsProductionSupplies(materials, tools)
 
         /**
          * Saved session configuration and persistent production and banking retry budgets.
@@ -58,18 +66,13 @@ class MakeCannonballBotScript(
         class CannonballData : InventoryScriptData()
     }
 
-    /** Minimum steel required for one player action. */
-    private val materials = listOf(Item(STEEL_BAR))
-    /** Reusable mould retained throughout a bank batch. */
-    private val tools = setOf(AMMO_MOULD)
-
     /** Restores configuration and retry budgets; live supplies and safety are validated again on startup. */
     constructor(bot: Bot, data: CannonballData) : this(bot, data.duration, data.zones) {
         restoreInventoryState(data)
     }
 
     /** Checks permanent Smithing level and owned bars and mould across inventory and bank. */
-    fun isEligible(): Boolean = bot.smithing.staticLevel >= LEVEL && bot.ownsProductionSupplies(materials, tools)
+    fun isEligible(): Boolean = hasSupplies(bot)
 
     /** Withdraws one mould and up to twenty-seven bars, limited by actual bank stock. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials, tools)

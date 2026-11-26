@@ -190,7 +190,7 @@ class BlastFurnaceBotScript(bot: Bot, val selectedBar: BarType = BarType.STEEL,
             return null
         }
 
-        private fun pendingWork(bot: Bot): Boolean = BlastFurnace.totalBars(bot) > 0 || oreWork(bot)
+        internal fun pendingWork(bot: Bot): Boolean = BlastFurnace.totalBars(bot) > 0 || oreWork(bot)
 
         /**
          * Reports ore still moving on the belt or enough loaded ore for another bar.
