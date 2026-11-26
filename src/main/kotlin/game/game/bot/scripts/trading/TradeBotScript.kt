@@ -1381,12 +1381,27 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
+     * Explains why a human request cannot enter a direct purchase before the native offer screen opens.
+     */
+    fun refuseHumanTradeRequest(other: Player): Boolean {
+        if (other.isRealBot() || !buying || !prepared || forceBanking ||
+            advertisementTrade?.entry?.player === other || canStartOrdinaryHumanTrade(other) ||
+            PlayerTradeAdvertisementMarket.live.directPurchase(this, other) != null) return false
+        val item = expected.singleOrNull()?.item
+        val message = if (item == null) "I don't have enough coins for my current buys."
+            else "I can't afford one ${tradeItemName(item.id)} right now."
+        PlayerTradeAdvertisementMessages.notice(bot, other, "@blu@${bot.username}: $message@bla@")
+        return true
+    }
+
+    /**
      * Repeats one configured advertisement, or a merchant buyer's preconfigured rotation.
      */
     private fun sendMessage() {
         if (browsing || reactivePlayer != null) return
         if (messageTimer.isRunning && messageTimer.elapsed().seconds < messageCooldown) return
-        val advertised = if (buying) expected.take(1) else advertisedSaleStock()
+        val directBuys = if (buying) fundedDirectBuyQuotes() else emptySequence()
+        val advertised = if (buying) directBuys.take(1).toList() else advertisedSaleStock()
         if (advertised.isEmpty()) return
         val variedSale = merchantSelling && advertised.size > 1
         val advertisedPurpose = when {
@@ -1397,7 +1412,7 @@ class TradeBotScript(bot: Bot,
         val urgent = if (purpose == BotTradePurpose.MERCHANT_BUY) {
             val needed = actionableWants.values.filter { it.priority == WantedItemPriority.URGENT }
                 .map { it.id }.toSet()
-            expected.filter { it.item.id in needed }.take(2)
+            directBuys.filter { it.item.id in needed }.take(2).toList()
         } else emptyList()
         val namedQuotes = if (variedSale) emptyList() else advertised.take(1) + urgent
         val key = advertisedPurpose to namedQuotes.map { it.item.id to it.price }
@@ -1675,7 +1690,7 @@ class TradeBotScript(bot: Bot,
         market.pricing(entry, bot, advertised, id) {
             val profile = advertisementProfile
             val wanted = playerWantedQuantity(id) > 0
-            val maximum = if (wanted) playerWantedBid(id) else playerSurplusBid(id)
+            val maximum = playerUnitBid(id, wanted)
             PlayerTradeAdvertisementPolicy.quote(concreteAdvertisement(advertised, id), maximum, profile,
                 if (wanted) rand().nextDouble() else 1.0, rand().nextDouble())
                 ?.let { Pricing(id, maximum, it, unexpected = !wanted) }
@@ -1707,7 +1722,8 @@ class TradeBotScript(bot: Bot,
         val direct = if (advertised == null && !other.isRealBot())
             PlayerTradeAdvertisementMarket.live.directPurchase(this, other)?.takeIf { it.market.claimDirectPurchase(it) }
         else null
-        if (existing == null && feedback != null && advertised == null && direct == null && !canOrdinaryHumanTrade()) return
+        if (existing == null && feedback != null && advertised == null && direct == null &&
+            !canStartOrdinaryHumanTrade(other)) return
         negotiating = true
         marketExperience.pause()
         pendingPartner = other
@@ -1730,7 +1746,7 @@ class TradeBotScript(bot: Bot,
                         }
                     }, canContinue = { advertisementApproachAlive(context) })
                 } else request.sendAndAwait {
-                    val proceed = if (!other.isRealBot()) !purchaseExpired() && canOrdinaryHumanTrade()
+                    val proceed = if (!other.isRealBot()) !purchaseExpired() && canStartOrdinaryHumanTrade(other)
                         else !hasHumanRequest() && !PlayerTradeAdvertisementMarket.live.hasPriority(this)
                     if (!proceed) yieldedToPlayer = true
                     proceed
@@ -2138,10 +2154,10 @@ class TradeBotScript(bot: Bot,
             val screen = bot.overlays[OfferTradeInterface::class] ?: return false
             if (screen.other !== other) return false
             if (feedback != null && warnExpiredTrade(screen, feedback)) return false
-            if (feedback != null && !canOrdinaryHumanTrade()) {
+            if (feedback != null && !hasOrdinaryTradeStock()) {
                 val message = if (buying) "I don't have any coins left to buy your items."
                     else "I don't have any tradeable stock left to sell."
-                feedback.awaitResponse(screen, "$message Please trade me again later.") { canOrdinaryHumanTrade() }
+                feedback.awaitResponse(screen, "$message Please trade me again later.") { hasOrdinaryTradeStock() }
                 continue
             }
             if (timing != null && !awaitPlayerOffer(screen, timer, timing)) continue
@@ -2543,11 +2559,34 @@ class TradeBotScript(bot: Bot,
         return amount > 0 && price * amount >= BotTradeManager.MINIMUM_OFFER_VALUE
     }
 
-    /**
-     * Allows a direct human request only when the prepared bot can offer real payment or sale stock.
-     */
-    private fun canOrdinaryHumanTrade(): Boolean =
+    private fun hasOrdinaryTradeStock(): Boolean =
         if (buying) playerCoins() > 0 else humanSaleStock().isNotEmpty()
+
+    /**
+     * Checks the advertised price and the bid used on the offer screen against carried coins.
+     */
+    private fun fundedDirectBuyQuotes(): Sequence<BotTradeItem> {
+        val coins = playerCoins().toLong()
+        return expected.asSequence().filter { quote ->
+            val id = quote.item.id
+            quote.item.amount > 0 && quote.price in 1L..coins && playerMaySell(id) &&
+                playerUnitBid(id, playerWantedQuantity(id) > 0) <= coins
+        }
+    }
+
+    /**
+     * Requires enough cash for one unit before opening a direct purchase. A previously communicated sale
+     * can use its own captured terms, which may be cheaper than this bot's public bid.
+     */
+    private fun canStartOrdinaryHumanTrade(other: Player): Boolean {
+        if (!buying) return hasOrdinaryTradeStock()
+        if (fundedDirectBuyQuotes().any()) return true
+        val market = PlayerTradeAdvertisementMarket.live
+        return market.rememberedOffers(this, other).any { remembered ->
+            remembered.offer.direction == PlayerTradeAdvertisement.Direction.SELL &&
+                advertisementCandidate(market, remembered.entry, remembered.offer, remembered = remembered)?.plan != null
+        }
+    }
 
     /**
      * Quantities the bot can afford from the offered basket and their individual costs in coins.
@@ -2593,6 +2632,9 @@ class TradeBotScript(bot: Bot,
 
     private fun playerMaySell(id: Int): Boolean =
         id != COINS && ItemDefinition.ALL.get(id).map { it.isTradeable }.orElse(false)
+
+    private fun playerUnitBid(id: Int, wanted: Boolean): Long =
+        if (wanted) playerWantedBid(id) else playerSurplusBid(id)
 
     private fun playerWantedBid(id: Int): Long =
         if (purchaseTarget?.id == id && purchasePrice > 0L) purchasePrice
@@ -2958,7 +3000,7 @@ class TradeBotScript(bot: Bot,
             other.isRealBot() && (BotSocialInteractions.engaged(other) || BotConversations.engaged(other))) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
-        if (!other.isRealBot()) return canOrdinaryHumanTrade() ||
+        if (!other.isRealBot()) return canStartOrdinaryHumanTrade(other) ||
                 PlayerTradeAdvertisementMarket.live.directPurchase(this, other) != null
         val script = other.scriptStack.current() as? TradeBotScript ?: return false
         if (script.negotiating && other.tradingWith != bot.index && existing?.other !== bot) return false

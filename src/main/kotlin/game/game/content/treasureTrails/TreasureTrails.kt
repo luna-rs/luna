@@ -7,6 +7,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.content.treasureTrails.EasyClues.Kind
 import io.luna.game.model.EntityState
+import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -64,7 +65,7 @@ object TreasureTrails {
 
     fun drop(player: Player, npc: Npc, random: (Int) -> Int = { Random.nextInt(it) }) {
         TrailGuardians.defeated(player, npc)
-        for (clue in TrailClues.medium.filter { it.key != -1 }) {
+        for (clue in TrailClues.all.filter { it.key != -1 }) {
             if (npc.id in clue.keyNpcs && player.inventory.contains(clue.id) &&
                 !player.inventory.contains(clue.key) && !player.bank.contains(clue.key)) {
                 world.addItem(clue.key, position = npc.position, plr = player)
@@ -192,12 +193,19 @@ object TreasureTrails {
         return advance(player, clue.id, random)
     }
 
+    /**
+     * Where the player sees an object. Objects on a bridged tile are stored one level above it.
+     */
+    fun shownAt(player: Player, obj: GameObject): Position =
+        if (world.collisionManager.isLoweredOnto(obj, player.position.z)) obj.position.translate(0, 0, -1) else obj.position
+
     fun search(player: Player, obj: GameObject, option: Int,
                random: (Int) -> Int = { Random.nextInt(it) }): Boolean {
+        val spot = shownAt(player, obj)
         if (!available(player) || obj.state != EntityState.ACTIVE ||
-            !player.position.isWithinDistance(obj.position, 2)) return false
+            !player.position.isWithinDistance(spot, 2)) return false
         val clue = TrailClues.all.firstOrNull {
-            (it.kind != null || it.targetObjects.isNotEmpty()) && it.position == obj.position && player.inventory.contains(it.id)
+            (it.kind != null || it.targetObjects.isNotEmpty()) && it.position == spot && player.inventory.contains(it.id)
         } ?: return false
         val matches = when (clue.kind) {
             Kind.CHEST_CLOSED -> option == 1 && obj.id in EasyClues.closedChests ||
@@ -220,9 +228,10 @@ object TreasureTrails {
                         2833 -> "Beware of the dog!"
                         2835 -> "It's a guard's life."
                         2837 -> "Don't forget to feed the chickens."
-                        else -> "Stand by your man."
+                        2839 -> "Stand by your man."
+                        else -> null
                     }
-                    player.sendMessage("It's locked! The inscription reads: $hint")
+                    player.sendMessage(if (hint == null) "It's locked!" else "It's locked! The inscription reads: $hint")
                     return true
                 }
                 player.inventory.remove(clue.key)

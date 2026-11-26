@@ -13,6 +13,9 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     DRAGON_SLAYER({ DragonSlayer.stage(it) == DragonSlayer.COMPLETE }),
     LOST_CITY({ LostCity.stage(it) == LostCity.COMPLETE }),
 
+    // TODO Cabin Fever: read its completion once the quest exists.
+    CABIN_FEVER(null),
+
     // TODO Heroes' Quest: read its completion once the quest exists.
     HEROES_QUEST(null),
 

@@ -118,7 +118,7 @@ object QuestDoors {
         3743 to 3744, 3747 to 1535,
         // TODO Troll Stronghold: the storeroom key.
         3810 to 3764,
-        // TODO Shades of Mort'ton: the shade keys.
+        // Interior shade catacomb doors.
         4107 to 4107, 4108 to 4108, 4109 to 4109,
         // TODO The Fremennik Trials: Olaf's and Peer's trials.
         4148 to 4248, 4165 to 4248, 4166 to 4248,
@@ -182,6 +182,17 @@ object QuestDoors {
      */
     fun cross(plr: Player, door: GameObject) {
         val open = doors[door.id] ?: return
+        cross(plr, door, open)
+    }
+
+    /**
+     * Opens an interior bronze shade door using the ordinary door crossing.
+     */
+    fun crossBronzeShadeDoor(plr: Player, door: GameObject) {
+        cross(plr, door, door.id)
+    }
+
+    private fun cross(plr: Player, door: GameObject, open: Int) {
         if (door.objectType != ObjectType.STRAIGHT_WALL || door.position in swung) {
             return
         }

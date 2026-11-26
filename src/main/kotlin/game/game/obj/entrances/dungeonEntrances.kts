@@ -2,6 +2,7 @@ package game.obj.entrances
 
 import api.predef.*
 import api.predef.ext.*
+import game.obj.doors.QuestDoors
 
 /**
  * A rope.
@@ -34,7 +35,11 @@ for (id in Entrance.BY_ID.keys) {
     object1(id) {
         val entrance = Entrance.forObject(id, gameObject.position)
         if (entrance == null) {
-            plr.sendMessage("Nothing interesting happens.")
+            if (id == Entrance.SHADE_CATACOMBS_OUT.id) {
+                QuestDoors.crossBronzeShadeDoor(plr, gameObject)
+            } else {
+                plr.sendMessage("Nothing interesting happens.")
+            }
         } else {
             Entrances.use(plr, entrance)
         }

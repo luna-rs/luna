@@ -12,6 +12,7 @@ import game.bot.scripts.skills.BuryBoneBotScript
 import game.bot.scripts.skills.PrayerBoneStock
 import game.bot.scripts.skills.PrayerPurchaseBotScript
 import game.bot.scripts.skills.EctofuntusBotScript
+import game.bot.scripts.skills.MorttonPrayerBotScript
 import game.content.ectofuntus.EctofuntusBone
 import game.skill.prayer.Bone
 import io.luna.game.model.mob.bot.Bot
@@ -35,6 +36,7 @@ object PrayerScriptFactory : SkillingScriptFactory(SKILL_PRAYER) {
         val duration = getDuration(bot, skillId)
         if (!BotCombatActionHandler.wantsToTrain(bot, skillId)) return null
         EctofuntusBotScript.recover(bot, duration)?.let { return it }
+        MorttonPrayerBotScript.select(bot, duration)?.let { return it }
         PrayerBonePurchases.select(bot)?.let { return PrayerPurchaseBotScript(bot, duration, it) }
         if (PrayerBoneStock.hasNotes(bot)) return PrayerPurchaseBotScript(bot, duration)
         ownedTraining(bot, duration)?.let { return it }
