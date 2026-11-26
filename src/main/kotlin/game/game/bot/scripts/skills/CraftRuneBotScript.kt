@@ -20,6 +20,7 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.RuneRunningCoordinator
+import engine.bot.coordinator.skill.BotProductionPlanner
 import engine.bot.coordinator.skill.RunecraftingScriptFactory
 import engine.bot.economy.BotProductionMetrics
 import engine.bot.economy.BotProductionMetrics.RunecraftingStage
@@ -103,19 +104,15 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         }
 
         /**
-         * Checks native shop visibility and stock without reserving it or creating essence.
+         * Uses owned essence first, then prefers the cheapest executable quote for a compatible essence.
          */
-        internal fun canPurchaseEssence(bot: Bot, id: Int): Boolean = bot.world.shops.sourcesForStock(id).any { shop ->
-            shop.npcSellers.isNotEmpty() && shop.items.computeAmountForId(shop.stockIdFor(id)) > 0
+        internal fun essenceForPurchase(bot: Bot, rune: CraftableRune): Int {
+            compatibleEssence(bot, rune)?.let { return it }
+            if (rune.level > 20) return PURE_ESSENCE
+            val runePrice = BotProductionPlanner.runeSupply(bot, RUNE_ESSENCE)?.unitPrice ?: Long.MAX_VALUE
+            val purePrice = BotProductionPlanner.runeSupply(bot, PURE_ESSENCE)?.unitPrice ?: Long.MAX_VALUE
+            return if (purePrice < runePrice) PURE_ESSENCE else RUNE_ESSENCE
         }
-
-        /**
-         * Keeps owned compatible stock first. Low-level recipes may buy pure essence when ordinary stock is absent;
-         * higher recipes always require pure essence. Missing shop stock still permits a bounded wanted request.
-         */
-        internal fun essenceForPurchase(bot: Bot, rune: CraftableRune): Int = compatibleEssence(bot, rune)
-            ?: if (rune.level > 20 || !canPurchaseEssence(bot, RUNE_ESSENCE) && canPurchaseEssence(bot, PURE_ESSENCE))
-                PURE_ESSENCE else RUNE_ESSENCE
 
         /**
          * Compares the selected essence against native multiple-rune output, without treating guide prices as sales.
@@ -276,7 +273,6 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             bot.runecrafting.level < craftingRune.level || !isActionSafe(ActionSafety.NON_COMBAT) ||
             bot.inWilderness() || inAbyss()) return false
         val chosen = essenceForPurchase(bot, craftingRune)
-        if (profit && !profitable(bot, craftingRune, chosen)) return false
         val pouchSlots = EssencePouch.entries.count {
             it.level <= bot.runecrafting.staticLevel && it.isOwnedBy(bot) &&
                 (bot.attributes()[it.essence] == 0 || bot.attributes()[it.essenceId] == chosen) &&
@@ -287,8 +283,8 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         val capacity = (bot.inventory.capacity() - 1 - reserved - pouchSlots).coerceAtLeast(1)
         fun owned(id: Int) = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
         withTimeoutOrNull(minOf(120_000L, remaining.inWholeMilliseconds)) {
-            val alternatives = if (craftingRune.level <= 20 && chosen == RUNE_ESSENCE)
-                listOf(RUNE_ESSENCE, PURE_ESSENCE) else listOf(chosen)
+            val alternatives = if (craftingRune.level > 20) listOf(chosen)
+                else listOf(chosen, if (chosen == RUNE_ESSENCE) PURE_ESSENCE else RUNE_ESSENCE)
             for (id in alternatives) {
                 if (isPaused() || isTerminated() || bot.state != EntityState.ACTIVE ||
                     !isActionSafe(ActionSafety.NON_COMBAT) || bot.inWilderness() || inAbyss()) break

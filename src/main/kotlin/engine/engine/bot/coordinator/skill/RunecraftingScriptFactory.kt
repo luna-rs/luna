@@ -32,7 +32,7 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
      * @author lare96
      */
     private data class Candidate(val rune: CraftableRune, val essence: Int, val owned: Boolean,
-                                 val access: Boolean, val score: Double) {
+                                 val access: Boolean, val score: Double, val purchasePrice: Long) {
         val key get() = recipeKey(rune, essence)
     }
 
@@ -88,14 +88,14 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
                     val score = if (training) rune.exp else
                         bot.world.economy.getPrice(rune.id).toDouble() * rune.outputMultiplier(currentLevel) -
                             (offered?.unitPrice ?: bot.world.economy.getPrice(essence))
-                    if (score > 0.0) add(Candidate(rune, essence, onHand, hasAccess, score))
+                    if (score > 0.0) add(Candidate(rune, essence, onHand, hasAccess, score, offered?.unitPrice ?: 0L))
                 }
             }
         }.sortedWith(compareByDescending<Candidate> { it.owned }.thenByDescending { it.access }
-            .thenByDescending { it.score }.thenByDescending { it.rune.level })
+            .thenByDescending { it.score }.thenBy { it.purchasePrice }.thenByDescending { it.rune.level })
         val preferred = selectRankedActivity(bot, candidates.takeWhile {
             it.owned == candidates.first().owned && it.access == candidates.first().access
-        }) ?: return null
+        }.distinctBy { it.rune }) ?: return null
         for (candidate in (listOf(preferred) + candidates.filter { it != preferred }).take(MAX_PLANS)) {
             val rune = candidate.rune
             val plan = BotProductionPlanner.select(bot, skillId, currentLevel, training, duration, candidate.key,
