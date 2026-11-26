@@ -452,8 +452,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
         val npc = bot.world.locator.findNpcs(banker, 5) {
             it.id == Temple.CORNELIUS && it.state == EntityState.ACTIVE
         }.firstOrNull() ?: return false
-        if (!handler.interactions.approach(npc, Banking.BANKER_POLICY, timeout = 6.minutes,
-                allowOutOfView = true, canContinue = { bot.inventory.contains(token) })) {
+        if (!reachCornelius(npc, token)) {
             bot.log("Temple Trekking: could not reach Cornelius from ${bot.position}.")
             return false
         }
@@ -465,5 +464,14 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
             if (bot.inventory.contains(id)) handler.inventory.clickItem(1, id)
         }
         return true
+    }
+
+    private suspend fun reachCornelius(npc: Npc, token: Int): Boolean {
+        repeat(2) {
+            if (!bot.isAlive || !bot.inventory.contains(token)) return false
+            if (handler.interactions.approach(npc, Banking.BANKER_POLICY, timeout = 6.minutes,
+                    allowOutOfView = true, canContinue = { bot.inventory.contains(token) })) return true
+        }
+        return false
     }
 }
