@@ -254,7 +254,9 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
                 return false
             }
         }
-        return bot.isAlive && bot.position == Temple.ARRIVAL && bot.inventory.contains(TrekRoute.ROUTE_ONE.token)
+        return waitFor(4.seconds) {
+            bot.isAlive && bot.position == Temple.ARRIVAL && bot.inventory.contains(TrekRoute.ROUTE_ONE.token)
+        }
     }
 
     private suspend fun fight(room: TrekController): Boolean {
@@ -358,7 +360,11 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
             return false
         }
         val gap = room.tile(Puzzles.Bridge.WEST_END.translate(1, 0))
+        val deck = gap.translate(0, 0, 1)
+        val collision = bot.world.collisionManager
         fun bridgeAt(id: Int) = bot.world.locator.findObjectsOnTile(gap) { it.id == id }.firstOrNull()
+            ?: bot.world.locator.findObjectsOnTile(deck) { it.id == id && collision.isLoweredOnto(it, gap.z) }.firstOrNull()
+        if (!walkLocal(room, room.tile(Puzzles.Bridge.WEST_END))) return false
         for (stage in Puzzles.BROKEN_BRIDGE until Puzzles.FIXED_BRIDGE) {
             val bridge = bridgeAt(stage) ?: run {
                 bot.log("Temple Trekking: bridge stage $stage is missing at $gap.")
@@ -395,17 +401,21 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
 
     private suspend fun clickObject(room: TrekController, obj: GameObject?, option: Int): Boolean =
         obj != null && withTimeoutOrNull(9.seconds) {
-            inRoom(room) && handler.interactions.approachLocally(obj, Puzzles.NEXT_TO) && inRoom(room) &&
+            inRoom(room) && reachObject(obj, Puzzles.NEXT_TO) && inRoom(room) &&
                 obj.state == EntityState.ACTIVE && bot.output.sendObjectInteraction(option, obj)
         } == true
 
     private suspend fun useOnObject(id: Int, obj: GameObject, policy: InteractionPolicy, room: TrekController): Boolean =
         withTimeoutOrNull(9.seconds) {
-            if (!inRoom(room) || !handler.interactions.approachLocally(obj, policy) || !inRoom(room) ||
+            if (!inRoom(room) || !reachObject(obj, policy) || !inRoom(room) ||
                 obj.state != EntityState.ACTIVE) return@withTimeoutOrNull false
             val slot = bot.inventory.computeIndexForId(id)
             slot >= 0 && bot.output.useItemOnObject(slot, id, obj)
         } == true
+
+    private suspend fun reachObject(obj: GameObject, policy: InteractionPolicy): Boolean =
+        (bot.walking.isEmpty && bot.world.collisionManager.reached(bot, obj, policy)) ||
+            handler.interactions.approachLocally(obj, policy)
 
     private suspend fun useOnNpc(id: Int, npc: Npc, policy: InteractionPolicy): Boolean {
         if (!handler.interactions.approachLocally(npc, policy) || !isActionSafe(ActionSafety.NON_COMBAT) ||
@@ -429,7 +439,7 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
 
     private suspend fun redeem(): Boolean {
         val token = Temple.TOKENS.firstOrNull { owned(bot, it) > 0 } ?: return false
-        if (!clearSpeech()) return false
+        if (!clearSpeech() && !waitFor(5.seconds) { !bot.overlays.hasWindow() }) return false
         if (!bot.inventory.contains(token) || bot.inventory.computeRemainingSize() == 0) {
             if (!handler.banking.travelToBankOpen()) return false
             try {
@@ -443,7 +453,10 @@ class TempleTrekkingBotScript private constructor(bot: Bot, private val pack: Pa
             it.id == Temple.CORNELIUS && it.state == EntityState.ACTIVE
         }.firstOrNull() ?: return false
         if (!handler.interactions.approach(npc, Banking.BANKER_POLICY, timeout = 6.minutes,
-                allowOutOfView = true, canContinue = { bot.inventory.contains(token) })) return false
+                allowOutOfView = true, canContinue = { bot.inventory.contains(token) })) {
+            bot.log("Temple Trekking: could not reach Cornelius from ${bot.position}.")
+            return false
+        }
         if (!BotNpcDialogues.respond(bot, npc, listOf("Yes please."), completed = { !bot.inventory.contains(token) },
                 advanceSpeech = true) {
                 useOnNpc(token, npc, Banking.BANKER_POLICY)
