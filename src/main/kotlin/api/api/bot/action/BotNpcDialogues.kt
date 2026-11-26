@@ -36,13 +36,14 @@ object BotNpcDialogues {
      * @param completed Real inventory or world-state result that completes the conversation.
      * @param playerSpeech Exact scripted player pages that can occur independently of the selected options.
      * @param advanceSpeech Whether to advance recognized speech here so the reflex cannot skip the opening page.
+     * @param speakerId NPC head shown by the dialogue when a morph uses a different ID from the clicked NPC.
      * @param start Native Talk-to or item-on-NPC interaction.
      */
     suspend fun respond(bot: Bot, npc: Npc, responses: List<String>, timeout: Duration = 30.seconds,
                         allowed: () -> Boolean = { true }, completed: () -> Boolean,
-                        playerSpeech: Set<String> = emptySet(), advanceSpeech: Boolean = false,
+                        playerSpeech: Set<String> = emptySet(), advanceSpeech: Boolean = false, speakerId: Int = npc.id,
                         start: suspend () -> Boolean): Boolean =
-        respondToSpeaker(bot, npc.id, responses, timeout, { npc.state == EntityState.ACTIVE && allowed() },
+        respondToSpeaker(bot, speakerId, responses, timeout, { npc.state == EntityState.ACTIVE && allowed() },
             completed, playerSpeech, advanceSpeech, start)
 
     /**

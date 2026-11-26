@@ -1,6 +1,45 @@
 [
   {
     "ids": [
+      3612, // Giant snail
+      3613, // Giant snail
+      3614 // Giant snail
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 7800, // Snail shell
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      3622 // Zombie
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 1351, // Bronze axe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
       1604, // Aberrant specter
       1605, // Aberrant specter
       1606, // Aberrant specter
@@ -396,8 +435,7 @@
       75, // Zombie
       751, // Zombie
       76, // Zombie
-      2058, // Zombie
-      3622 // Zombie
+      2058 // Zombie
     ],
     "rare": "RARE",
     "drops": [
@@ -18104,7 +18142,10 @@
   },
   {
     "ids": [
-      1053 // Ghast
+      1053, // Ghast
+      3609, // Ghast
+      3610, // Ghast
+      3611 // Ghast
     ],
     "rare": "GEM",
     "drops": [
@@ -20379,392 +20420,6 @@
   },
   {
     "ids": [
-      3601 // Swamp snake
-    ],
-    "rare": "GEM",
-    "drops": [
-      {
-        "id": 532, // Big bones
-        "quantity": "1",
-        "noted": false,
-        "rarity": 1.0,
-        "table": 1
-      },
-      {
-        "id": 209, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00244140625,
-        "table": 1
-      },
-      {
-        "id": 211, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0018311664530305805,
-        "table": 1
-      },
-      {
-        "id": 213, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0015257857796765334,
-        "table": 1
-      },
-      {
-        "id": 215, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.001220703125,
-        "table": 1
-      },
-      {
-        "id": 2485, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0009154994049253868,
-        "table": 1
-      },
-      {
-        "id": 217, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0009154994049253868,
-        "table": 1
-      },
-      {
-        "id": 5100, // Limpwurt seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.01430615164520744,
-        "table": 1
-      },
-      {
-        "id": 5323, // Strawberry seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.013679890560875513,
-        "table": 1
-      },
-      {
-        "id": 5292, // Marrentill seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.01303780964797914,
-        "table": 1
-      },
-      {
-        "id": 5104, // Jangerberry seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.009606147934678195,
-        "table": 1
-      },
-      {
-        "id": 555, // Water rune
-        "quantity": "15",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 5293, // Tarromin seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.008873114463176575,
-        "table": 1
-      },
-      {
-        "id": 5311, // Wildblood seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.008665511265164644,
-        "table": 1
-      },
-      {
-        "id": 5321, // Watermelon seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.006574621959237344,
-        "table": 1
-      },
-      {
-        "id": 5294, // Harralander seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0058445353594389245,
-        "table": 1
-      },
-      {
-        "id": 5295, // Ranarr seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00407000407000407,
-        "table": 1
-      },
-      {
-        "id": 5105, // Whiteberry seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0035486160397444995,
-        "table": 1
-      },
-      {
-        "id": 5282, // Mushroom spore
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.003026634382566586,
-        "table": 1
-      },
-      {
-        "id": 5296, // Toadflax seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.002817695125387433,
-        "table": 1
-      },
-      {
-        "id": 5281, // Belladonna seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0018786398647379298,
-        "table": 1
-      },
-      {
-        "id": 4695, // Mist rune
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 5297, // Irit seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0018786398647379298,
-        "table": 1
-      },
-      {
-        "id": 5106, // Poison ivy seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00135666802333469,
-        "table": 1
-      },
-      {
-        "id": 5298, // Avantoe seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0012523481527864746,
-        "table": 1
-      },
-      {
-        "id": 5280, // Cactus seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0012523481527864746,
-        "table": 1
-      },
-      {
-        "id": 5299, // Kwuarm seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0009393199323689649,
-        "table": 1
-      },
-      {
-        "id": 5300, // Snapdragon seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0005218389604967907,
-        "table": 1
-      },
-      {
-        "id": 5301, // Cadantine seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0004174668113884946,
-        "table": 1
-      },
-      {
-        "id": 5302, // Lantadyme seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0003130968408528758,
-        "table": 1
-      },
-      {
-        "id": 5303, // Dwarf weed seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00020872904882172452,
-        "table": 1
-      },
-      {
-        "id": 4160, // Broad arrows
-        "quantity": "4",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 5304, // Torstol seed
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.00010436561361762527,
-        "table": 1
-      },
-      {
-        "id": 995, // Coins
-        "quantity": "44",
-        "noted": false,
-        "rarity": 0.3203125,
-        "table": 1
-      },
-      {
-        "id": 995, // Coins
-        "quantity": "32",
-        "noted": false,
-        "rarity": 0.0859375,
-        "table": 2
-      },
-      {
-        "id": 995, // Coins
-        "quantity": "24",
-        "noted": false,
-        "rarity": 0.0703125,
-        "table": 3
-      },
-      {
-        "id": 995, // Coins
-        "quantity": "23",
-        "noted": false,
-        "rarity": 0.0546875,
-        "table": 4
-      },
-      {
-        "id": 823, // Adamant dart tip
-        "quantity": "2",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 313, // Fishing bait
-        "quantity": "50",
-        "noted": false,
-        "rarity": 0.03125,
-        "table": 1
-      },
-      {
-        "id": 46, // Pearl bolttips
-        "quantity": "3",
-        "noted": false,
-        "rarity": 0.03125,
-        "table": 1
-      },
-      {
-        "id": 571, // Water orb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0234375,
-        "table": 1
-      },
-      {
-        "id": 363, // Raw bass
-        "quantity": "2",
-        "noted": false,
-        "rarity": 0.03125,
-        "table": 1
-      },
-      {
-        "id": 199, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.009765625,
-        "table": 1
-      },
-      {
-        "id": 377, // Raw lobster
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 401, // Seaweed
-        "quantity": "5",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 403, // Edible seaweed
-        "quantity": "5",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 405, // Casket
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 411, // Oyster pearl
-        "quantity": "2",
-        "noted": false,
-        "rarity": 0.0078125,
-        "table": 1
-      },
-      {
-        "id": 413, // Oyster pearls
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0078125,
-        "table": 1
-      },
-      {
-        "id": 201, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.007326007326007326,
-        "table": 1
-      },
-      {
-        "id": 2801, // Clue scroll
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0078125,
-        "table": 1
-      },
-      {
-        "id": 203, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.005494505494505495,
-        "table": 1
-      },
-      {
-        "id": 205, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.004271678769756515,
-        "table": 1
-      },
-      {
-        "id": 207, // Herb
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.003356831151393085,
-        "table": 1
-      }
-    ]
-  },
-  {
-    "ids": [
       365 // Paladin
     ],
     "rare": "GEM",
@@ -21358,7 +21013,8 @@
   {
     "ids": [
       1245, // Riyl Shadow
-      1246 // Riyl Shade
+      1246, // Riyl Shade
+      3615 // Riyl shadow
     ],
     "rare": null,
     "drops": [
@@ -21373,7 +21029,8 @@
   },
   {
     "ids": [
-      1248 // Asyn Shade
+      1248, // Asyn Shade
+      3616 // Asyn shadow
     ],
     "rare": null,
     "drops": [
@@ -21389,7 +21046,8 @@
   {
     "ids": [
       1249, // Fiyr Shadow
-      1250 // Fiyr Shade
+      1250, // Fiyr Shade
+      3617 // Shade
     ],
     "rare": null,
     "drops": [

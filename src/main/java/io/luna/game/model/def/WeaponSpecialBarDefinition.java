@@ -20,6 +20,12 @@ public final class WeaponSpecialBarDefinition {
     private final int meter;
 
     /**
+     * The meter's ten segment widgets from the first to fill to the last, for bars whose segments don't count down
+     * from {@link #meter} one id at a time, or {@code null}.
+     */
+    private final int[] segments;
+
+    /**
      * Creates a new {@link WeaponSpecialBarDefinition}.
      *
      * @param bar The widget id for the special attack bar.
@@ -28,6 +34,7 @@ public final class WeaponSpecialBarDefinition {
     public WeaponSpecialBarDefinition(int bar, int meter) {
         this.bar = bar;
         this.meter = meter;
+        segments = null;
     }
 
     /**
@@ -42,5 +49,13 @@ public final class WeaponSpecialBarDefinition {
      */
     public int getMeter() {
         return meter;
+    }
+
+    /**
+     * @return The meter's segment widgets from the first to fill to the last, or {@code null} if they count down from
+     * the meter.
+     */
+    public int[] getSegments() {
+        return segments;
     }
 }
