@@ -159,6 +159,12 @@ enum class GodBook(val damaged: Int,
     companion object {
 
         /**
+         * Jossik's NPC ID and the Talk-to response that opens his prayer-book dialogue.
+         */
+        const val JOSSIK = 1334
+        const val PRAYER_BOOKS_OPTION = "Have you found any more prayerbooks?"
+
+        /**
          * The ticks between recited lines.
          */
         const val RECITE_TICKS = 3

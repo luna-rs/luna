@@ -8,6 +8,8 @@ package game.npc.spawn.lighthouse
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.content.godBooks.GodBook
+import game.content.godBooks.GodBook.Companion.JOSSIK
+import game.content.godBooks.GodBook.Companion.PRAYER_BOOKS_OPTION
 import game.content.questRewards.QuestRewards
 import game.content.quests.Quest
 import game.content.quests.QuestGates
@@ -55,14 +57,9 @@ ShopHandler.create("Lighthouse Store") {
     }
 
     open {
-        npc2 += 1334
+        npc2 += JOSSIK
     }
 }
-
-/**
- * Jossik, the lighthouse keeper.
- */
-val JOSSIK = 1334
 
 /**
  * The coins Jossik asks for another god's book once the player has completed theirs.
@@ -82,7 +79,7 @@ npc1(JOSSIK) {
                 .npc(JOSSIK, "Sure thing! I think you'll find my prices are remarkable!")
                 .then { p -> GeneralStore.open(p, "Lighthouse Store") }
                 .open()
-        }, "Have you found any more prayerbooks?", { prayerBooks(it) },
+        }, PRAYER_BOOKS_OPTION, { prayerBooks(it) },
                  "Nothing, really. Good bye.", { it.newDialogue().player("Nothing, really. Good bye.").open() })
         .open()
 }
@@ -92,7 +89,7 @@ npc1(JOSSIK) {
  * they have is complete, another god's book for [BOOK_PRICE] coins.
  */
 fun prayerBooks(plr: Player) {
-    val dialogue = plr.newDialogue().player("Have you found any more prayerbooks?")
+    val dialogue = plr.newDialogue().player(PRAYER_BOOKS_OPTION)
     val given = GodBook.entries.filter { it.given(plr) }
     val lost = given.filter { !it.owned(plr) }
     val unclaimed = GodBook.entries.filter { !it.given(plr) }

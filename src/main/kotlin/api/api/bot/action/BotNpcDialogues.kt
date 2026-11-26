@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Selects fixed native NPC responses while the ordinary dialogue reflex advances speech.
+ * Selects fixed native NPC responses. The ordinary dialogue reflex usually advances speech.
  * Queue ownership starts with the expected NPC, and replacements require this call's own preceding choice.
  * Foreign speakers, options and windows abort without being clicked or closed. Rewards remain native.
  *
@@ -35,14 +35,15 @@ object BotNpcDialogues {
      * @param allowed Additional live activity permission checked before every option.
      * @param completed Real inventory or world-state result that completes the conversation.
      * @param playerSpeech Exact scripted player pages that can occur independently of the selected options.
+     * @param advanceSpeech Whether to advance recognized speech here so the reflex cannot skip the opening page.
      * @param start Native Talk-to or item-on-NPC interaction.
      */
     suspend fun respond(bot: Bot, npc: Npc, responses: List<String>, timeout: Duration = 30.seconds,
                         allowed: () -> Boolean = { true }, completed: () -> Boolean,
-                        playerSpeech: Set<String> = emptySet(),
+                        playerSpeech: Set<String> = emptySet(), advanceSpeech: Boolean = false,
                         start: suspend () -> Boolean): Boolean =
         respondToSpeaker(bot, npc.id, responses, timeout, { npc.state == EntityState.ACTIVE && allowed() },
-            completed, playerSpeech, start)
+            completed, playerSpeech, advanceSpeech, start)
 
     /**
      * Answers a native remote speaker, such as Brian speaking through the Mystic jewel, without inventing an NPC.
@@ -55,14 +56,14 @@ object BotNpcDialogues {
     suspend fun respondVirtual(bot: Bot, speakerId: Int, responses: List<String>, timeout: Duration = 30.seconds,
                                allowed: () -> Boolean = { true }, completed: () -> Boolean,
                                start: suspend () -> Boolean): Boolean =
-        respondToSpeaker(bot, speakerId, responses, timeout, allowed, completed, emptySet(), start)
+        respondToSpeaker(bot, speakerId, responses, timeout, allowed, completed, emptySet(), false, start)
 
     /**
      * Shares exact queue, speaker and page ownership between physical and remote native conversations.
      */
     private suspend fun respondToSpeaker(bot: Bot, speakerId: Int, responses: List<String>, timeout: Duration,
                                          allowed: () -> Boolean, completed: () -> Boolean,
-                                         playerSpeech: Set<String>,
+                                         playerSpeech: Set<String>, advanceSpeech: Boolean,
                                          start: suspend () -> Boolean): Boolean {
         require(responses.isNotEmpty())
         val previous = bot.dialogues
@@ -71,6 +72,7 @@ object BotNpcDialogues {
         var selectedPage: OptionDialogue? = null
         var lastResponse: String? = null
         var next = 0
+        val previousReflex = advanceSpeech && bot.reflex.isDisableDialogueReflex
         fun safe() = ActionSafety.NON_COMBAT.allows(bot) && allowed()
         fun speech(current: DialogueInterface): Boolean = when (current) {
             is NpcDialogue -> current.npcId == speakerId
@@ -82,6 +84,7 @@ object BotNpcDialogues {
             else -> speech(current)
         }
         try {
+            if (advanceSpeech) bot.reflex.isDisableDialogueReflex = true
             return withTimeoutOrNull(timeout) {
                 if (completed()) return@withTimeoutOrNull true
                 if (!safe() || !start()) return@withTimeoutOrNull false
@@ -100,6 +103,7 @@ object BotNpcDialogues {
                             selectedPage = null
                         }
                         if (!recognized(current)) return@withTimeoutOrNull false
+                        val changed = current !== page
                         page = current
                         if (current is OptionDialogue && current !== selectedPage) {
                             val response = responses.getOrNull(next) ?: return@withTimeoutOrNull false
@@ -108,6 +112,8 @@ object BotNpcDialogues {
                             selectedPage = current
                             lastResponse = response
                             next++
+                        } else if (advanceSpeech && changed && speech(current)) {
+                            if (!safe() || !bot.output.sendContinueDialogue()) return@withTimeoutOrNull false
                         }
                     } else if (queue != null && currentQueue != null && currentQueue !== queue) {
                         return@withTimeoutOrNull false
@@ -117,6 +123,7 @@ object BotNpcDialogues {
                 false
             } == true
         } finally {
+            if (advanceSpeech) bot.reflex.isDisableDialogueReflex = previousReflex
             val current = bot.overlays.getOverlay(DialogueInterface::class.java)
             val ownedQueue = queue
             if (ownedQueue != null && bot.dialogues === ownedQueue && current != null &&
