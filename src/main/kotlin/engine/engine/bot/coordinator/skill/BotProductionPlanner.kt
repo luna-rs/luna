@@ -574,7 +574,7 @@ object BotProductionPlanner {
                     (!singlePurchaseBatch && !fundedRunecrafting && !BotTradeManager.hasNativeSaleStock(bot, id, units.toInt())))
                     return@mapNotNull null
                 if (singlePurchaseBatch && !hasSingleBatchBuyer(bot, id, units.toInt(), floor)) return@mapNotNull null
-                ProductionSaleGuard(id, floor, batchCost, now)
+                ProductionSaleGuard(id, floor, batchCost, now, fixedCost = toolCost.takeIf { fundedRunecrafting })
             }
             val ticks = path.stages.sumOf { processingTicks(it.recipe) * it.operations }
             val netCost = (quote.inputValue - quote.outputValue).coerceAtLeast(0L).toDouble()

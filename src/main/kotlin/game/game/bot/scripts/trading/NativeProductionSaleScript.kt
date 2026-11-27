@@ -6,6 +6,7 @@ import api.bot.action.trading.BotTradePurpose
 import api.bot.action.trading.NativeOutputDemand
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.script.ProductionPlan
 import api.bot.script.ProductionSaleGuard
 import com.google.gson.JsonObject
 import engine.bot.economy.BotProductionMetrics
@@ -69,6 +70,20 @@ class NativeProductionSaleScript(bot: Bot, private val data: SaleData) : BotScri
     }
 
     companion object {
+        /**
+         * Carries measured final output, using the materials consumed by a partial Runecrafting trip.
+         */
+        internal fun create(bot: Bot, plan: ProductionPlan, deadline: Long): BotScript? {
+            if (plan.hasNextStage()) return null
+            val guard = plan.saleGuard ?: return null
+            val prepared = if (guard.fixedCost == null) guard else {
+                val essencePrice = plan.maximumUnitPrices.getValue(plan.recipe.materials.keys.single())
+                val cost = guard.costForOperations(plan.completedOperations, plan.currentStageOperations, essencePrice)
+                guard.copy(batchCost = cost, fixedCost = null)
+            }
+            return create(bot, prepared, plan.guardedOutputProduced, deadline)
+        }
+
         /**
          * Carries new goods only, leaving prior and personally retained stock in the account.
          */

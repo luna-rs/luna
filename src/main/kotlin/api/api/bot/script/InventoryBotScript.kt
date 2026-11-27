@@ -688,8 +688,7 @@ abstract class InventoryBotScript(
                 recordProductionOutcome(plannedEndReason(it))
                 BotTradeIntentions.clearProductionPlan(bot, it, this)
                 it.saleGuard?.let { guard ->
-                    val sale = if (it.hasNextStage()) null else NativeProductionSaleScript.create(bot, guard,
-                        it.guardedOutputProduced, System.currentTimeMillis() + 180_000L)
+                    val sale = NativeProductionSaleScript.create(bot, it, System.currentTimeMillis() + 180_000L)
                     if (sale != null) {
                         if (bot.scriptStack.current() === this) bot.scriptStack.softPushHead(sale)
                         else bot.scriptStack.pushHead(sale)
