@@ -1,5 +1,6 @@
 package engine.bot.coordinator.skill
 
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory.Resource
 import api.bot.script.BotScript
 import api.bot.script.ProfitGatheringGoal
 import api.bot.script.VoidBotScript
@@ -107,7 +108,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
             if (tree in setOf(TEAK, MAHOGANY) && !CutTreeBotScript.groveSuppliesOwned(bot)) continue
             activities.add(BotSkillingActivity(tokens = setOf(tree), zones = routes.getValue(tree)))
         }
-        val activity = getBestSkillingActivity(bot, level, { it.level }, activities)
+        val activity = getBestSkillingActivity(bot, level, { it.level }, activities, Resource.TREES)
             ?: error("No woodcutting activity is available at level $level.")
         zones.clear()
         zones.addAll(activity.zones)

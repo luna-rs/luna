@@ -4,6 +4,9 @@ import api.bot.action.BotCombatActionHandler
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.script.VoidBotScript
+import api.bot.script.findsDangerous
+import api.bot.script.findsPacked
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory.Resource
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
@@ -184,20 +187,24 @@ abstract class SkillingScriptFactory(val skillId: Int) {
 
     /**
      * Applies the existing best/worst/random personality choice to complete resource-and-location groups. Activities
-     * whose every zone is near the bot's recent escape from an attacker are left out while others remain, so the bot
-     * isn't sent straight back to that attacker.
+     * whose every zone is near the bot's recent escape from an attacker, is one it stays away from after dying there,
+     * or recently had its [resource] taken by others are left out while others remain, so the bot isn't sent straight
+     * back to them. Work no one else can use up has no resource and is never skipped as packed.
      */
     protected fun <T> getBestSkillingActivity(
         bot: Bot,
         level: Int,
         levelFunc: (T) -> Int,
-        options: Collection<BotSkillingActivity<T>>
+        options: Collection<BotSkillingActivity<T>>,
+        resource: Resource? = null
     ): BotSkillingActivity<T>? {
         val available = getSkillingActivities(level, levelFunc, options)
         val escape = bot.recentEscape
-        val activities = if (escape == null) available else
-            available.filterNot { activity -> activity.zones.isNotEmpty() && activity.zones.all { escape.avoids(it) } }
-                .ifEmpty { available }
+        val activities = available.filterNot { activity ->
+            activity.zones.isNotEmpty() && activity.zones.all {
+                escape?.avoids(it) == true || bot.findsDangerous(it) || bot.findsPacked(it, resource)
+            }
+        }.ifEmpty { available }
         return selectRankedActivity(bot, activities)
     }
 

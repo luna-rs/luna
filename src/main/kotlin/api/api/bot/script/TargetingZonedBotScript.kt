@@ -237,6 +237,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                         "Abandoning $zone because no target was interactable and the area is crowded. " +
                                 "Viewable players: $visiblePlayers."
                     )
+                    resource?.let { bot.rememberCrowding(zone, it) }
                     return false
                 }
 

@@ -3,7 +3,11 @@ package api.bot.script
 import api.attr.Attr
 import api.bot.zone.SubZone
 import io.luna.game.model.Position
+import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -70,3 +74,35 @@ var Bot.lastEscape by Attr.nullableObj(BotEscape::class)
  * The bot's last escape from an attacker if it is recent enough to keep away from, otherwise `null`.
  */
 val Bot.recentEscape: BotEscape? get() = lastEscape?.takeIf { it.isRecent() }
+
+/**
+ * Records that the bot got away from [attacker] near [position]. It keeps away from there for [BotEscape.AVOID_FOR],
+ * remembers the work zone it happened in as more dangerous for days, and holds a small grudge against a player who
+ * drove it off. Another escape from the same attacker and zone while the last is recent is the same escape and only
+ * renews it.
+ */
+fun Bot.escapedFrom(attacker: Mob, position: Position, zone: SubZone?) {
+    if (!continuesEscape(attacker.toString(), zone)) {
+        workZoneAt(position)?.let { rememberPlace(it, BotPlacesMemory.Event.FLED) }
+        if (attacker is Player) memory.people.remember(attacker.username, BotPeopleMemory.Event.CHASED_ME)
+    }
+    lastEscape = BotEscape(position, attacker.toString(), System.currentTimeMillis(), zone)
+}
+
+/**
+ * Records that the bot left after seeing [attacker] attack someone near [position]. It keeps away from there for
+ * [BotEscape.AVOID_FOR] and remembers the work zone it happened in as a little more dangerous. The attacker didn't
+ * attack the bot, so nothing is held against them.
+ */
+fun Bot.leftWitnessedAttack(attacker: String, position: Position, zone: SubZone?) {
+    if (!continuesEscape(attacker, zone)) workZoneAt(position)?.let {
+        rememberPlace(it, BotPlacesMemory.Event.WITNESSED_ATTACK)
+    }
+    lastEscape = BotEscape(position, attacker, System.currentTimeMillis(), zone)
+}
+
+/**
+ * Whether an escape from [attacker] in [zone] is the recent one going on.
+ */
+private fun Bot.continuesEscape(attacker: String, zone: SubZone?): Boolean =
+    recentEscape?.let { it.attacker == attacker && it.zone == zone } == true

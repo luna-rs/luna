@@ -1,7 +1,6 @@
 package api.bot.script
 
 import api.bot.action.SUPPLY_TRIP_TIMEOUT
-import api.attr.Attr
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
@@ -25,11 +24,11 @@ import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import io.luna.game.model.`object`.GameObject
 import io.luna.util.GsonUtils
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -73,16 +72,16 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
     companion object {
 
-        private val activityDeaths = Attr.map<SubZone, ArrayDeque<Long>>()
-        private val deathCooldowns = Attr.map<SubZone, Long>()
-        private val DEATH_WINDOW = 10.minutes.inWholeMilliseconds
-        private const val MAX_ACTIVITY_DEATHS = 3
-
-
         /**
          * How many bank trips in a row, each with no work done since the one before, end a script.
          */
         const val MAX_FUTILE_BANK_TRIPS = 3
+
+        /**
+         * How near where a paused script stopped something must happen to belong to its zone. Farther away, the bot
+         * was on other work run on top of it, such as a PK trip.
+         */
+        const val PAUSED_WORK_RADIUS = 32
 
         /**
          * How many bank attempts in a row that fail outright end a script.
@@ -158,6 +157,13 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     protected var depositInventoryWhenBanking = true
 
     /**
+     * What this script works at that runs out and that other players can take first, or `null` when no one else can
+     * use it up, as with fishing spots, ranges and anvils. Only scripts with a resource remember a zone as crowded and
+     * skip it for that.
+     */
+    protected open val resource: BotPlacesMemory.Resource? = null
+
+    /**
      * The subzone currently selected as this script's working area.
      *
      * The bot keeps this zone until the script completes, the zone becomes unreachable, or [executeInZone] rejects
@@ -165,7 +171,15 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * only called once the bot is close enough to the zone.
      */
     protected var activeZone: SubZone? = null
-        private set
+        private set(value) {
+            if (value != field) creditWork()
+            field = value
+        }
+
+    /**
+     * When the bot started its current stretch of work in [activeZone], or `0` while it isn't working there.
+     */
+    private var workingSince = 0L
 
     /**
      * The candidate zone the bot is travelling to before it becomes [activeZone].
@@ -178,6 +192,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      */
     var interruptedZone: SubZone? = null
         private set
+
+    /**
+     * Where the bot was when this script was last paused.
+     */
+    private var interruptedAt: Position? = null
 
     /**
      * The zone whose bank trip the last pause interrupted. The trip carries on for it when the script resumes.
@@ -216,8 +235,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         }
 
         if (!awaitActionSafety()) return true
-        if (!avoidRepeatedDeaths()) {
-            bot.log("Every candidate zone has caused repeated deaths. Choosing another activity.")
+        if (!avoidRememberedPlaces()) {
+            bot.log("Every candidate zone is one the bot stays away from after dying there. Choosing another activity.")
             return true
         }
         if (duration <= Duration.ZERO) return true
@@ -261,7 +280,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 bot.log("Initial banking skipped. Banking request hook returned false.")
             }
 
-            zones.shuffle()
+            orderByRememberedPlaces()
             initialPreparationComplete = true
         }
 
@@ -280,7 +299,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         }
 
         if (!checkDuration()) {
-            return beforeLeavingZone()
+            val leaving = beforeLeavingZone()
+            if (leaving) creditWork()
+            return leaving
         }
 
         if (beforeZoneWork()) {
@@ -318,6 +339,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             val prepared = if (zone in ProductionZones.PORTABLE) preparePortableWorkArea(zone)
                 else prepareMarketplace(marketplace)
             if (!isActionSafe()) return !awaitActionSafety()
+            if (prepared && workingSince == 0L) workingSince = System.currentTimeMillis()
             val accepted = prepared && executeInZone()
             if (!isActionSafe()) return !awaitActionSafety()
             if (!accepted) {
@@ -350,6 +372,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         bot.log("Pausing script. Clearing cached bank and active zone.")
 
         interruptedZone = activeZone ?: travelZone
+        interruptedAt = bot.position
         interruptedBankTrip = if (forceBanking) interruptedZone else null
         cachedBank = null
         activeZone = null
@@ -371,34 +394,57 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     /**
-     * Records a death against the work destination, including deaths on the way there. Three deaths within ten
-     * minutes exclude that destination for ten minutes across this bot's activities. Idle queued work is not charged.
-     *
-     * @return Whether this death exhausted the destination's retry allowance.
+     * The zone that something at [position] happened in for this script: the zone it works in or travels to, or while
+     * paused, the zone it stopped at if [position] is inside it or within [PAUSED_WORK_RADIUS] tiles of where it stopped.
      */
-    fun recordActivityDeath(now: Long = System.currentTimeMillis()): Boolean {
-        val zone = activeZone ?: travelZone ?: interruptedZone ?: return false
-        val histories = bot.attributes()[activityDeaths.attr]
-        histories.entries.removeIf { (_, deaths) -> deaths.isEmpty() || now - deaths.last() >= DEATH_WINDOW }
-        val deaths = histories.getOrPut(zone) { ArrayDeque() }
-        while (deaths.isNotEmpty() && now - deaths.first() >= DEATH_WINDOW) deaths.removeFirst()
-        deaths.addLast(now)
-        if (deaths.size < MAX_ACTIVITY_DEATHS) return false
-        bot.attributes()[deathCooldowns.attr][zone] = now + DEATH_WINDOW
-        histories.remove(zone)
-        bot.log("Repeated deaths travelling to or working in $zone. Avoiding it for ten minutes.")
+    fun zoneOf(position: Position): SubZone? = activeZone ?: travelZone ?: interruptedZone?.takeIf {
+        it.area.contains(position) || interruptedAt?.isWithinDistance(position, PAUSED_WORK_RADIUS) == true
+    }
+
+    /**
+     * Records a death at [position] against the work destination in the bot's memory, including deaths on the way
+     * there. Two deaths close together keep the bot away from that destination across its activities, and three for
+     * days of play. Idle queued work, and work paused far from where the bot died, is not charged.
+     *
+     * @return Whether the bot now stays away from the destination.
+     */
+    fun recordActivityDeath(position: Position): Boolean {
+        val zone = zoneOf(position) ?: return false
+        if (!bot.rememberPlace(zone, BotPlacesMemory.Event.DIED)) return false
+        bot.log("Repeated deaths travelling to or working in $zone. Staying away from it.")
         return true
     }
 
     /**
-     * Applies the bot's destination cooldown before setup, so replacement activities cannot immediately retry it.
+     * Drops the candidate zones the bot remembers badly before setup: those it stays away from after dying there, and
+     * those where it recently found this script's [resource] taken while another candidate remains.
+     *
+     * @return `false` if that leaves no candidate zones.
      */
-    private fun avoidRepeatedDeaths(): Boolean {
-        val now = System.currentTimeMillis()
-        val cooldowns = bot.attributes()[deathCooldowns.attr]
-        cooldowns.entries.removeIf { it.value <= now }
-        zones.removeAll { it in cooldowns }
+    private fun avoidRememberedPlaces(): Boolean {
+        zones.removeAll { bot.findsDangerous(it) }
+        if (zones.any { !bot.findsPacked(it, resource) }) zones.removeAll { bot.findsPacked(it, resource) }
         return zones.isNotEmpty()
+    }
+
+    /**
+     * Orders the candidate zones at random, favouring places the bot knows well over ones that were dangerous or where
+     * this script's [resource] was crowded.
+     */
+    private fun orderByRememberedPlaces() {
+        val ordered = bot.byRememberedPlaces(zones, resource) { it }
+        zones.clear()
+        zones.addAll(ordered)
+    }
+
+    /**
+     * Credits the time since [workingSince] to the familiarity of [activeZone].
+     */
+    private fun creditWork() {
+        val zone = activeZone
+        val since = workingSince
+        workingSince = 0L
+        if (zone != null && since > 0L) bot.memory.places.worked(zone.name, System.currentTimeMillis() - since)
     }
 
     /**
@@ -613,10 +659,13 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     /**
-     * The default keeps the existing nearest/shuffled choice; resource scripts may retain a preferred mine.
+     * The default takes the first of the remembered-place order, or for a dextrous bot the nearest zone, a known one
+     * counting as nearer. Resource scripts may retain a preferred mine.
      */
     protected open fun selectWorkZone(): SubZone? =
-        if (bot.personality.isDextrous) zones.minByOrNull { bot.position.computeLongestDistance(it.inside) }
+        if (bot.personality.isDextrous) zones.minByOrNull {
+            bot.position.computeLongestDistance(it.inside) / bot.memory.places.preference(it.name, resource)
+        }
         else zones.firstOrNull()
 
     /**
@@ -665,7 +714,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 return false
             }
 
-            if ((bot.attributes()[deathCooldowns.attr][newZone] ?: 0L) > System.currentTimeMillis()) {
+            if (bot.findsDangerous(newZone)) {
                 zones.remove(newZone)
                 continue
             }
@@ -710,9 +759,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 }
 
                 val escape = bot.recentEscape
-                zones.addAll(originalZones.filterNot { escape?.avoids(it) == true || it.entryBlocker(bot) != null })
+                zones.addAll(originalZones.filterNot {
+                    escape?.avoids(it) == true || bot.findsDangerous(it) || it.entryBlocker(bot) != null
+                })
                 if (zones.size > 1) {
-                    zones.shuffle()
+                    orderByRememberedPlaces()
                 }
 
                 bot.log("Rebuilt candidate zone list for final retry pass. candidateZones=${zones.size}")
@@ -922,6 +973,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         forceBanking = false
         failedBankAttempts = 0
         leftBank = BankTripMark(bot)
+        creditWork()
 
         // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
         if (BotMarketplace.forZone(activeZone) == null && activeZone !in ProductionZones.PORTABLE)

@@ -1,5 +1,6 @@
 package game.bot.scripts
 
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.TargetingZonedBotScript
@@ -55,6 +56,8 @@ class HarvestBotScript(
     private var supplyDeadline: Long = 0L,
     val rawProfit: Boolean = false
 ) : TargetingZonedBotScript<GameObject>(bot, duration, zones) {
+    override val resource = BotPlacesMemory.Resource.CROPS
+
     init {
         require(targetAmount >= 0 && (targetAmount == 0 || harvestable == Harvestable.FLAX))
         require(!rawProfit || (harvestable == Harvestable.FLAX && targetAmount > 0))

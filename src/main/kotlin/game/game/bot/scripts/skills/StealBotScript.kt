@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import io.luna.game.model.mob.bot.Bot
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
@@ -73,6 +74,7 @@ class StealBotScript(
 
     // Move on if stalls remain unavailable or unsafe, rather than waiting until the entire script expires.
     override val targetSearchTimeout: Duration = 180.seconds
+    override val resource = BotPlacesMemory.Resource.STALLS
 
     // Keep running in combat, so the fights started by guards are answered here (see beforeZoneWork).
     override val actionSafety = ActionSafety.COMBAT

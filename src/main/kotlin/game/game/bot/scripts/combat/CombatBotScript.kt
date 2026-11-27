@@ -23,10 +23,9 @@ import api.bot.Suspendable.waitFor
 import api.drops.DropTableHandler
 import api.drops.SimpleDropTable
 import io.luna.game.model.mob.bot.Bot
-import api.bot.script.BotEscape
 import api.bot.script.DynamicBotScript
 import api.bot.script.ZonedBotScript
-import api.bot.script.lastEscape
+import api.bot.script.escapedFrom
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
@@ -905,7 +904,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         BotReactions.reactToEscape(bot)
         val attacker = chasedBy ?: return
         val zone = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)?.interruptedZone
-        bot.lastEscape = BotEscape(attackedAt, attacker.toString(), System.currentTimeMillis(), zone)
+        bot.escapedFrom(attacker, attackedAt, zone)
     }
 
     /**
@@ -916,7 +915,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private fun rememberEscape(attacker: Mob) {
         if (pkSession != null) return
         val zone = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)?.interruptedZone
-        bot.lastEscape = BotEscape(attackedAt, attacker.toString(), System.currentTimeMillis(), zone)
+        bot.escapedFrom(attacker, attackedAt, zone)
         if (restingSince == null && bot.runEnergy < REST_RUN_ENERGY) {
             bot.log("Will rest at home until run energy is back to $REST_RUN_ENERGY. runEnergy=${bot.runEnergy}")
             restingSince = System.currentTimeMillis()

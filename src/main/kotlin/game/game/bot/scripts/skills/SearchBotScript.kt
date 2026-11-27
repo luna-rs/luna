@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -91,6 +92,7 @@ class SearchBotScript(
 
     // Move on if chests stay unavailable or unreachable, rather than waiting until the entire script expires.
     override val targetSearchTimeout: Duration = 180.seconds
+    override val resource = BotPlacesMemory.Resource.CHESTS
 
     /**
      * One personality decision belongs to each actual gas object, including after later transformations.

@@ -120,7 +120,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
         deathLocation = null
 
         val abandoned = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)
-            ?.recordActivityDeath() == true
+            ?.recordActivityDeath(position) == true
         val killer = bot.lastKiller
         bot.lastKiller = null
         if (abandoned) {
