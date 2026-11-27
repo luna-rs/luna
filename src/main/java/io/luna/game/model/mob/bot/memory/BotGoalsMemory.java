@@ -200,6 +200,16 @@ public final class BotGoalsMemory implements BotMemoryPart {
     public static final String TRAINING_COMBAT = "TRAINING_COMBAT";
 
     /**
+     * The activity that makes money from skills, training them on the way.
+     */
+    public static final String PROFIT_SKILLS = "PROFIT_SKILLS";
+
+    /**
+     * The activity that makes money from combat, training it on the way.
+     */
+    public static final String PROFIT_COMBAT = "PROFIT_COMBAT";
+
+    /**
      * How long of the bot's time online a skill it gave up on is left alone.
      */
     public static final long DROPPED_FOR = hours(24);
@@ -518,7 +528,7 @@ public final class BotGoalsMemory implements BotMemoryPart {
 
     /**
      * @param activity The activity's name.
-     * @return The multiplier the aim puts on the bot's interest in the activity: above {@code 1.0} for the activity
+     * @return The multiplier the aim puts on the bot's interest in the activity: above {@code 1.0} for an activity
      * that trains the aim, rising as the aim gets close.
      */
     public double interestIn(String activity) {
@@ -767,14 +777,21 @@ public final class BotGoalsMemory implements BotMemoryPart {
     /**
      * @param activity The activity's name.
      * @param skill The skill.
-     * @return Whether the activity trains the skill. Prayer is trained by skilling, Magic by both.
+     * @return Whether the activity trains the skill, on purpose or while making money. Prayer is trained only by
+     * skill training, and Magic by skilling and by combat training.
      */
     static boolean trains(String activity, int skill) {
-        if (skill == Skill.MAGIC) {
-            return activity.equals(TRAINING_SKILLS) || activity.equals(TRAINING_COMBAT);
+        if (skill == Skill.PRAYER) {
+            return activity.equals(TRAINING_SKILLS);
         }
-        boolean combat = Skill.isCombatSkill(skill) && skill != Skill.PRAYER;
-        return activity.equals(combat ? TRAINING_COMBAT : TRAINING_SKILLS);
+        if (skill == Skill.MAGIC) {
+            return activity.equals(TRAINING_SKILLS) || activity.equals(PROFIT_SKILLS) ||
+                    activity.equals(TRAINING_COMBAT);
+        }
+        if (Skill.isCombatSkill(skill)) {
+            return activity.equals(TRAINING_COMBAT) || activity.equals(PROFIT_COMBAT);
+        }
+        return activity.equals(TRAINING_SKILLS) || activity.equals(PROFIT_SKILLS);
     }
 
     private void record(int subject, int level) {

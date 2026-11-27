@@ -312,8 +312,9 @@ object BotGoals {
 
     /**
      * @return Whether the bot can aim for a level in [skill]: the account still trains it, something the bot does
-     * trains it, and it is not Hitpoints or Farming. Attack and Strength are aims only for a bot that fights in melee,
-     * and Ranged only for one that fights at range, since combat training follows the bot's main style.
+     * trains it, on purpose or while making money, and it is not Hitpoints or Farming. Attack and Strength are aims only
+     * for a bot that fights in melee, and Ranged only for one that fights at range, since combat follows the bot's main
+     * style. Prayer is trained only on purpose.
      */
     internal fun canAim(bot: Bot, skill: Int): Boolean {
         if (skill == Skill.HITPOINTS || skill == Skill.FARMING || skill !in LADDERS) {
@@ -327,12 +328,15 @@ object BotGoals {
             val interest = preferences.activities[activity] ?: return false
             return interest.isFinite() && interest > 0.0 && preferences.canChooseActivity(activity)
         }
+        val skilling = open(BotActivity.TRAINING_SKILLS) || open(BotActivity.PROFIT_SKILLS)
+        val combat = open(BotActivity.TRAINING_COMBAT) || open(BotActivity.PROFIT_COMBAT)
         return when (skill) {
-            Skill.MAGIC -> open(BotActivity.TRAINING_SKILLS) || open(BotActivity.TRAINING_COMBAT)
-            Skill.RANGED -> fightsAtRange(bot) && open(BotActivity.TRAINING_COMBAT)
-            Skill.ATTACK, Skill.STRENGTH -> !fightsAtRange(bot) && open(BotActivity.TRAINING_COMBAT)
-            Skill.DEFENCE -> open(BotActivity.TRAINING_COMBAT)
-            else -> skill in SkillingCoordinator.factories && open(BotActivity.TRAINING_SKILLS)
+            Skill.MAGIC -> skilling || open(BotActivity.TRAINING_COMBAT)
+            Skill.RANGED -> fightsAtRange(bot) && combat
+            Skill.ATTACK, Skill.STRENGTH -> !fightsAtRange(bot) && combat
+            Skill.DEFENCE -> combat
+            Skill.PRAYER -> skill in SkillingCoordinator.factories && open(BotActivity.TRAINING_SKILLS)
+            else -> skill in SkillingCoordinator.factories && skilling
         }
     }
 
