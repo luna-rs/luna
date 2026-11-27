@@ -28,7 +28,7 @@ To get started, visit the [wiki](https://github.com/luna-rs/luna/wiki) and follo
 # Follow our development
 
 - [Benchmarks](https://github.com/luna-rs/luna/tree/master/data/benchmarks) 
-- [Join the Discord](https://discord.gg/cpqFaHMdv9)
+- [Join the Discord](https://discord.gg/PyMpDMqp4j)
 
 # Support our development
 
