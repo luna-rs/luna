@@ -62,9 +62,15 @@ class DropPartyBotScript(bot: Bot, private val partyId: Long, private val deadli
         bot.actions.interruptWeak()
         bot.combat.target = null
         val arrived = withTimeoutOrNull(120_000) {
-            handler.widgets.clickCloseInterface() && handler.webWalkTo(SubZone.PARTY_ROOM)
+            // The doors are two tiles from the anchor, so a walk that may end near it can stop outside them.
+            handler.widgets.clickCloseInterface() && handler.webWalkTo(SubZone.PARTY_ROOM, radius = 0)
         } == true
-        return !arrived || ended()
+        if (!arrived || ended()) return true
+        // Wait on the party floor and leave the doorway clear for whoever arrives next.
+        withTimeoutOrNull(15_000) {
+            handler.webWalkTo(DropPartyOption.BALLOON_LOCS.random().randomPosition(), fallback = false)
+        }
+        return ended()
     }
 
     override suspend fun run(): Boolean {
