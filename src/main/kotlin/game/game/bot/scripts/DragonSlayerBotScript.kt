@@ -317,10 +317,10 @@ class DragonSlayerBotScript(bot: Bot, private val data: DragonSlayerData = Drago
     }
 
     private suspend fun maze(): Boolean {
-        if (bot.mazeDoorsUsed == 0) {
+        if (bot.mazeDoorsUsed == 0 || !inMaze()) {
             val key = Dialogue.MAZE_KEY
             if (!bot.inventory.contains(key) && !talk(Quest.OZIACH, oziach, Dialogue.MAZE) { bot.inventory.contains(key) }) return false
-            if (!useDoor(MapPieces.MAZE_ENTRANCE, MapPieces.mazeEntranceTile, key) { bot.mazeDoorsUsed >= 1 }) return false
+            if (!useDoor(MapPieces.MAZE_ENTRANCE, MapPieces.mazeEntranceTile, key) { inMaze() }) return false
             if (!walk(Position(2939, 3248), 1)) return false
         }
         for (index in MapPieces.colouredKeys.indices) {
@@ -330,17 +330,16 @@ class DragonSlayerBotScript(bot: Bot, private val data: DragonSlayerData = Drago
             if (!bot.inventory.contains(key) && !fightForKey(index, key)) return false
             if (!crossMazeDoor(index, key)) return false
         }
-        return enterMazeChestRoom() &&
-            search(MapPieces.MAZE_CHEST, MapPieces.MAZE_CHEST_OPEN, MapPieces.mazeChestTile, Quest.MAZE_MAP_PART)
+        return search(MapPieces.MAZE_CHEST, MapPieces.MAZE_CHEST_OPEN, MapPieces.mazeChestTile, Quest.MAZE_MAP_PART)
     }
 
-    private suspend fun enterMazeChestRoom(): Boolean {
-        val door = mazeDoors.last()
-        if (bot.z != door.z || !bot.position.isWithinDistance(door, 8) || bot.y > door.y) return true
-        return crossMazeDoor(mazeDoors.lastIndex)
-    }
+    /**
+     * Whether the bot is inside Melzar's Maze. Outside it, the doors in [mazeDoorsUsed] are locked to it again.
+     */
+    private fun inMaze(): Boolean =
+        bot.x in 2922..2940 && bot.y in 3237..3257 || bot.z == 0 && bot.x in 2921..2941 && bot.y in 9639..9659
 
-    private suspend fun crossMazeDoor(index: Int, key: Int? = null): Boolean {
+    private suspend fun crossMazeDoor(index: Int, key: Int): Boolean {
         val at = mazeDoors[index]
         val stand = mazeDoorStands[index]
         val id = MapPieces.mazeDoors[index]
@@ -348,27 +347,24 @@ class DragonSlayerBotScript(bot: Bot, private val data: DragonSlayerData = Drago
         val door = objectAt(id, at) ?: return false
         val opposite = at.translate(1, door.direction.toNormalDirection())
         val exit = if (stand == at) opposite else at
-        if (key == null && bot.position == exit) return true
         if (!walkToMazeTile(stand)) return false
-        val packetSent = if (key != null && bot.mazeDoorsUsed <= index + 1) {
-            val slot = bot.inventory.computeIndexForId(key)
-            slot >= 0 && bot.output.useItemOnObject(slot, key, door)
-        } else bot.output.sendObjectInteraction(1, door)
-        return packetSent && await(6_000) { bot.position == exit && bot.mazeDoorsUsed > index + 1 }
+        val slot = bot.inventory.computeIndexForId(key)
+        return slot >= 0 && bot.output.useItemOnObject(slot, key, door) &&
+            await(6_000) { bot.position == exit && bot.mazeDoorsUsed > index + 1 }
     }
 
     private suspend fun walkToMazeTile(at: Position): Boolean =
         (bot.position.isWithinDistance(at, 24) && bot.navigator.navigate(at, false).await() == NavigationResult.REACHED) || walk(at)
 
-    private suspend fun climbFromMazeRoom(index: Int, stand: Position, ladder: Position): Boolean {
-        if (!walkToMazeTile(stand) && (!crossMazeDoor(index - 1) || !walkToMazeTile(stand))) return false
+    private suspend fun climbFromMazeRoom(stand: Position, ladder: Position): Boolean {
+        if (!walkToMazeTile(stand)) return false
         return click(1747, ladder) { bot.z > ladder.z }
     }
 
     private suspend fun mazeLevel(index: Int): Boolean {
         return when {
-            index == 1 && bot.z == 0 -> climbFromMazeRoom(index, Position(2927, 3256), Position(2928, 3256))
-            index == 2 && bot.z == 1 -> climbFromMazeRoom(index, Position(2933, 3254, 1), Position(2934, 3254, 1))
+            index == 1 && bot.z == 0 -> climbFromMazeRoom(Position(2927, 3256), Position(2928, 3256))
+            index == 2 && bot.z == 1 -> climbFromMazeRoom(Position(2933, 3254, 1), Position(2934, 3254, 1))
             index == 3 && bot.y < 9_600 -> {
                 if (bot.z == 2 && (!walk(Position(2939, 3240, 2)) ||
                         !click(1746, Position(2940, 3240, 2)) { bot.z == 1 })) return false

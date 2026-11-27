@@ -92,9 +92,8 @@ object QuestDoors {
         2427 to 2428, 2429 to 2428, 2430 to 2428, 2431 to 2428,
         // TODO The Grand Tree: the shipyard password.
         2438 to 2438, 2439 to 2439,
-        // Dragon Slayer records key uses and offerings separately from ordinary passage.
-        2586 to 1535, 2595 to 1535, 2596 to 9464, 2597 to 9465, 2598 to 9466, 2599 to 9467, 2600 to 9468,
-        2601 to 9469, 2602 to 1535, 2606 to 1588, 2607 to 1563, 2608 to 1562,
+        // Dragon Slayer: the Crandor secret door and Elvarg's gate.
+        2606 to 1588, 2607 to 1563, 2608 to 1562,
         // TODO Heroes' Quest: the gang hideouts and Scarface Pete's keys.
         2621 to 1534, 2622 to 1534, 2626 to 1534, 2627 to 1534, 2628 to 1534,
         // TODO The Tourist Trap: the mining camp disguise and cell key.
@@ -157,6 +156,13 @@ object QuestDoors {
         12816 to 12818, 12817 to 12819) + fortressDoors
 
     /**
+     * Melzar's Maze and the Oracle's magic door. Dragon Slayer locks these itself and calls [cross] once a player may
+     * pass, so they are not in [doors].
+     */
+    val dragonSlayerDoors = mapOf(2586 to 1535, 2595 to 1535, 2596 to 9464, 2597 to 9465, 2598 to 9466, 2599 to 9467,
+        2600 to 9468, 2601 to 9469, 2602 to 1535)
+
+    /**
      * The doors that sound like a metal grate.
      */
     private val grates = setOf(
@@ -184,7 +190,7 @@ object QuestDoors {
      * Takes [plr] through [door], together with its partner leaf if it has one.
      */
     fun cross(plr: Player, door: GameObject) {
-        val open = doors[door.id] ?: return
+        val open = doors[door.id] ?: dragonSlayerDoors[door.id] ?: return
         cross(plr, door, open)
     }
 

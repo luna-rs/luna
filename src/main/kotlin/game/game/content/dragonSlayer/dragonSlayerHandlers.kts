@@ -34,19 +34,25 @@ useItem(DragonSlayerShip.PLANK).onObject(DragonSlayerShip.HOLE) { DragonSlayerSh
 npc1(DragonSlayerMap.WORMBRAIN, { _, _ -> InteractionPolicy(InteractionType.LINE_OF_SIGHT, 3) }) {
     DragonSlayerMap.wormbrain(plr, targetNpc)
 }
+for (id in DragonSlayerMap.mazeDoors + DragonSlayerMap.MAZE_ENTRANCE) {
+    object1(id) { DragonSlayerMap.lockedMazeDoor(plr, gameObject) }
+}
+object1(DragonSlayerMap.MAZE_EXIT) { DragonSlayerMap.mazeExit(plr, gameObject) }
 useItem(DragonSlayerDialogue.MAZE_KEY).onObject(DragonSlayerMap.MAZE_ENTRANCE) {
     DragonSlayerMap.useMazeKey(plr, gameObject, DragonSlayerDialogue.MAZE_KEY)
 }
 for ((index, key) in DragonSlayerMap.colouredKeys.withIndex()) {
     useItem(key).onObject(DragonSlayerMap.mazeDoors[index]) { DragonSlayerMap.useMazeKey(plr, gameObject, key) }
 }
-// The rat, ghost and Melzar already drop their keys in Luna's native drop tables.
+// The rat, ghost and Melzar drop their keys from their own drop tables. These three share theirs with others of
+// their kind.
 for (index in listOf(2, 3, 5)) {
     DeathHookHandler.addNpcHook(DragonSlayerMap.mazeKeyNpcs[index]) {
         death { (source as? Player)?.let { DragonSlayerMap.mazeKeyDrop(it, victim, index) } }
         DeathHookHandler.defaultNpcHook?.invoke(this)
     }
 }
+object1(DragonSlayerMap.MAGIC_DOOR) { DragonSlayerMap.openMagicDoor(plr, gameObject) }
 for (item in DragonSlayerMap.offerings) {
     useItem(item.id).onObject(DragonSlayerMap.MAGIC_DOOR) { DragonSlayerMap.offer(plr, gameObject) }
 }

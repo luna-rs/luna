@@ -11,6 +11,7 @@ import api.predef.ext.addItem
 import api.predef.ext.addObject
 import api.predef.ext.removeObject
 import api.predef.ext.scheduleOnce
+import game.obj.doors.Doors
 import game.obj.doors.QuestDoors
 import game.player.Sound
 import io.luna.game.model.EntityState
@@ -26,12 +27,14 @@ import io.luna.game.model.mob.varp.PersistentVarp.DRAGON_SLAYER_WORMBRAIN
 import io.luna.game.model.`object`.GameObject
 
 /**
- * Records the map challenges for the character who uses a key or makes an offering. Ordinary doors stay usable.
+ * The map piece challenges. Melzar's Maze doors open only with their keys and the magic door only for the Oracle's
+ * offerings.
  *
  * @author lare96
  */
 object DragonSlayerMap {
     const val MAZE_ENTRANCE = 2595
+    const val MAZE_EXIT = 2602
     const val MAGIC_DOOR = 2586
     const val MAZE_CHEST = 2603
     const val MAZE_CHEST_OPEN = 2604
@@ -50,36 +53,67 @@ object DragonSlayerMap {
     val magicDoorTile = Position(3051, 9840)
     val mazeEntranceTile = Position(2941, 3248)
 
+    /**
+     * The maze doors unlocked in order since the player last used the entrance key. The quest bot reads its progress
+     * from this.
+     */
     var Player.mazeDoorsUsed by Attr.int().persist("dragon_slayer_maze_doors_used")
         private set
 
     private val wormbrainPrice = Item(995, 10_000)
 
     /**
-     * Records an entrance key use followed by the six coloured keys in their original order.
+     * Opens a maze door with its key, from either side. The entrance key is kept and each coloured key is used up.
      */
     fun useMazeKey(player: Player, door: GameObject, key: Int) {
-        if (!DragonSlayer.collectingMap(player) || !player.inventory.contains(key)) return
-        val step = if (door.id == MAZE_ENTRANCE) 0 else mazeDoors.indexOf(door.id) + 1
-        if (step > player.mazeDoorsUsed) {
-            player.sendMessage("Use the maze keys in order, starting with the entrance key.")
-            return
-        }
-        if (step == player.mazeDoorsUsed) {
-            if (step > 0) player.inventory.remove(key)
-            player.mazeDoorsUsed = step + 1
-            player.sendMessage(if (step == 0) "You use the key Oziach gave you." else "The key crumbles as you turn it.")
+        if (!player.inventory.contains(key)) return
+        if (door.id == MAZE_ENTRANCE) {
+            player.mazeDoorsUsed = 1
+            player.sendMessage("You use the key Oziach gave you.")
+        } else {
+            val index = mazeDoors.indexOf(door.id)
+            player.inventory.remove(key)
+            if (player.mazeDoorsUsed == index + 1) player.mazeDoorsUsed = index + 2
+            player.sendMessage("The key disintegrates as it unlocks the door...")
         }
         QuestDoors.cross(player, door)
     }
 
+    fun lockedMazeDoor(player: Player, door: GameObject) {
+        if (door.id == MAZE_ENTRANCE) {
+            player.playSound(Sound.LOCKED)
+            player.sendMessage("The door is securely locked.")
+        } else {
+            player.sendMessage("This door is securely locked.")
+        }
+    }
+
     /**
-     * The maze monster drops its own key when it is the next key this player needs.
+     * The maze's exit doors only open from inside, the side of the door's own tile.
      */
-    fun mazeKeyDrop(player: Player, npc: Npc, index: Int) {
-        if (!DragonSlayer.collectingMap(player) || player.mazeDoorsUsed != index + 1) return
-        val key = colouredKeys[index]
-        if (!owns(player, key)) drop(player, npc, key)
+    fun mazeExit(player: Player, door: GameObject) {
+        if (Doors.isEntering(door.position, door.direction, player.position)) QuestDoors.cross(player, door)
+        else player.sendMessage("The door is locked.")
+    }
+
+    /**
+     * Every maze monster drops its key, whether or not its killer is on the quest.
+     */
+    fun mazeKeyDrop(player: Player, npc: Npc, index: Int) = drop(player, npc, colouredKeys[index])
+
+    /**
+     * The magic door opens freely from inside and once the offerings are made. Otherwise opening it makes the
+     * offerings if the player carries all four.
+     */
+    fun openMagicDoor(player: Player, door: GameObject) {
+        if (oracleOfferingMade(player) || Doors.isEntering(door.position, door.direction, player.position)) {
+            QuestDoors.cross(player, door)
+        } else if (DragonSlayer.collectingMap(player) && player.varpManager.getValue(DRAGON_SLAYER_ORACLE) == 2 &&
+            player.inventory.containsAll(offerings)) {
+            offer(player, door)
+        } else {
+            player.sendMessage("The door is locked.")
+        }
     }
 
     fun offer(player: Player, door: GameObject) {
@@ -129,14 +163,8 @@ object DragonSlayerMap {
             player.sendMessage("You find nothing else in the chest.")
             return
         }
-        val unlocked = when (piece) {
-            DragonSlayer.MAZE_MAP_PART -> player.mazeDoorsUsed > mazeDoors.size
-            DragonSlayer.ORACLE_MAP_PART -> oracleOfferingMade(player)
-            else -> false
-        }
-        if (!unlocked) {
-            player.sendMessage(if (piece == DragonSlayer.MAZE_MAP_PART) "Use all the maze keys before taking the map piece."
-                else "Make the Oracle's four offerings before taking the map piece.")
+        if (piece == DragonSlayer.ORACLE_MAP_PART && !oracleOfferingMade(player)) {
+            player.sendMessage("Make the Oracle's four offerings before taking the map piece.")
             return
         }
         if (player.inventory.add(Item(piece))) player.sendMessage("You find a piece of the Crandor map.")
