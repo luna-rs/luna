@@ -4,6 +4,8 @@ import api.bot.isRealBot
 
 import api.attr.Attr
 import api.bot.action.BotCombatThreat
+import api.bot.script.BotGoals
+import api.bot.script.BotGoals.goalLine
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
@@ -207,22 +209,36 @@ object BotReactions {
      * Makes a bot react after gaining a level.
      *
      * Higher levels can produce a stronger happiness gain, and social bots may queue a [ReactionSpeech.LEVEL_UP] line.
+     * A level that meets a goal is announced more readily, with a [ReactionSpeech.GOAL_REACHED] line, and one that
+     * brings an aim close sometimes gets a [ReactionSpeech.GOAL_CLOSE] line instead.
      *
      * @param bot The bot that gained a level.
      * @param skill The skill that advanced.
      * @param newLevel The newly reached level.
+     * @param goal What the level meant for the bot's goals, or `null`.
      */
-    fun reactToLevelUp(bot: Bot, skill: Skill, newLevel: Int) {
+    fun reactToLevelUp(bot: Bot, skill: Skill, newLevel: Int, goal: BotGoals.LevelNews? = null) {
         bot.lastSkillAdvanced = skill.name.lowercase() to newLevel
 
         val minMaxHappiness = newLevel / 100.0
         val amount = rand(minMaxHappiness * 0.50, minMaxHappiness)
         bot.emotions.add(EmotionalTrigger(EmotionType.HAPPY, amount))
 
-        if (rand(bot.personality.social)) {
-            val text = BotReactionSpeechPool.take(bot, ReactionSpeech.LEVEL_UP)
+        val social = bot.personality.social
+        val reached = goal?.news == BotGoals.News.REACHED
+        if (rand(if (reached) 0.5 + 0.5 * social else social)) {
+            val kind = when {
+                reached -> ReactionSpeech.GOAL_REACHED
+                goal != null && randBoolean() -> ReactionSpeech.GOAL_CLOSE
+                else -> null
+            }
+            if (kind != null) {
+                bot.goalLine = goal!!.line
+            }
+            val text = kind?.let { BotReactionSpeechPool.take(bot, it, BotGoals::complete) }
+                ?: BotReactionSpeechPool.take(bot, ReactionSpeech.LEVEL_UP)
             val delay = rand(2, 6)
-            bot.speechStack.pushHead(BotSpeech(text, delay))
+            text?.let { bot.speechStack.pushHead(BotSpeech(it, delay)) }
         }
     }
 

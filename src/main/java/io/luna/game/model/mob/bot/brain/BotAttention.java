@@ -33,7 +33,12 @@ public final class BotAttention {
         /**
          * A real player greeted this bot or the people around it.
          */
-        GREETING;
+        GREETING,
+
+        /**
+         * A real player asked this bot or the people around it what they are working toward.
+         */
+        QUESTION;
 
         /**
          * All kinds, read once.

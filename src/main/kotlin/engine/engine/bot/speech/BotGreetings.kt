@@ -294,14 +294,14 @@ object BotGreetings : BotChatHandler {
      * Whether a bot is free to chat: not an event bot, muted, fighting a player, in the Wilderness, trading, in the
      * middle of a reflex or in a conversation of its own. Skilling, walking and fighting monsters don't stop it.
      */
-    private fun canTalk(bot: Bot): Boolean = bot.isAlive && !bot.isEventBot && !bot.speechStack.isAllDisabled &&
+    internal fun canTalk(bot: Bot): Boolean = bot.isAlive && !bot.isEventBot && !bot.speechStack.isAllDisabled &&
         bot.combat.target !is Player && !bot.inWilderness() && bot.reflex.activeReflex == null &&
         bot.tradingWith == -1 && !BotConversations.engaged(bot) && !BotSocialInteractions.engaged(bot)
 
     /**
-     * Says one line to [source] if the bot is free to chat, or leaves the notice waiting if it isn't.
+     * Whether a bot is free to chat and holds no grudge against [speaker].
      */
-    private fun onSpeakingTerms(bot: Bot, speaker: Player): Boolean =
+    internal fun onSpeakingTerms(bot: Bot, speaker: Player): Boolean =
         canTalk(bot) && !bot.memory.people.holdsGrudge(speaker.username)
 
     private fun say(bot: Bot, source: Mob, kind: ReactionSpeech): Boolean {

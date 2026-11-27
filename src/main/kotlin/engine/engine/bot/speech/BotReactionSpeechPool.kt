@@ -1,5 +1,6 @@
 package engine.bot.speech
 
+import api.bot.script.BotGoals.goalLine
 import engine.bot.speech.BotGreetings.lastGreetedBy
 import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
 import engine.bot.speech.BotReactions.lastImpressedBy
@@ -68,6 +69,34 @@ object BotReactionSpeechPool :
         IMPRESSED,
 
         /**
+         * Lines a bot may say when a real player asks what it is going for.
+         *
+         * Supports the goal tags: `<skill>`, `<level>`, `<target>`, `<left>`, `<unlock>` and `<ambition>`.
+         */
+        GOAL_ANSWER,
+
+        /**
+         * Lines a bot may say after gaining a level that leaves its aim a few levels off.
+         *
+         * Supports the goal tags.
+         */
+        GOAL_CLOSE,
+
+        /**
+         * Lines a bot may say when asked what it is going for, if it has no aim.
+         *
+         * This category does not currently define any runtime tags.
+         */
+        GOAL_NONE,
+
+        /**
+         * Lines a bot may say after reaching a level it was working toward.
+         *
+         * Supports the goal tags.
+         */
+        GOAL_REACHED,
+
+        /**
          * Lines a bot may say after gaining a level.
          *
          * Supports `<skill>` for the advanced skill name and `<level>` for the new level.
@@ -117,6 +146,14 @@ object BotReactionSpeechPool :
         setTag(ReactionSpeech.GREETED, "<name>") { it.lastGreetedBy }
         setTag(ReactionSpeech.GREETED_AGAIN, "<name>") { it.lastGreetedBy }
         setTag(ReactionSpeech.IMPRESSED, "<name>") { it.lastImpressedBy }
+        for (goal in listOf(ReactionSpeech.GOAL_ANSWER, ReactionSpeech.GOAL_CLOSE, ReactionSpeech.GOAL_REACHED)) {
+            setTag(goal, "<skill>") { it.goalLine.skill }
+            setTag(goal, "<level>") { it.goalLine.level }
+            setTag(goal, "<target>") { it.goalLine.target }
+            setTag(goal, "<left>") { it.goalLine.left }
+            setTag(goal, "<unlock>") { it.goalLine.unlock }
+            setTag(goal, "<ambition>") { it.goalLine.ambition }
+        }
         setTag(ReactionSpeech.LEVEL_UP, "<skill>") { it.lastSkillAdvanced.first }
         setTag(ReactionSpeech.LEVEL_UP, "<level>") { it.lastSkillAdvanced.second }
         setTag(ReactionSpeech.OTHER_LEVEL_UP, "<name>") { it.lastWitnessedSkillAdvance }

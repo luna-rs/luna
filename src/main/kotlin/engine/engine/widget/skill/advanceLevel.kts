@@ -1,6 +1,7 @@
 package engine.widget.skill
 
 import api.bot.isRealBot
+import api.bot.script.BotGoals
 import api.predef.*
 import engine.bot.gear.BotGearProgression
 import engine.bot.speech.BotReactions
@@ -111,7 +112,8 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
             else -> newLevel
         }
         if (plr.isRealBot()) {
-            BotReactions.reactToLevelUp(plr, skill, newLevel)
+            val goal = BotGoals.onLevelUp(plr, skillId, newLevel)
+            BotReactions.reactToLevelUp(plr, skill, newLevel, goal)
             BotGearProgression.onLevelUp(plr, skillId, oldLevel, newLevel)
         }
 

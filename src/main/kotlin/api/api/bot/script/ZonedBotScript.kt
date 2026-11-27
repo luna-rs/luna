@@ -130,6 +130,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      */
     private var timestamp = 0L
 
+    /**
+     * Whether this script has already run past its time once to reach the bot's aim.
+     */
+    private var ranOn = false
+
     /** A paused initializer must finish its gear and banking work before a resumed session can run. */
     private var initialPreparationComplete = false
 
@@ -651,11 +656,29 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         remainingDuration()
 
         if (duration <= Duration.ZERO) {
+            val more = if (ranOn) null else BotGoals.runOn(bot)
+            if (more != null) {
+                ranOn = true
+                duration = more
+                bot.log("Duration expired close to the bot's aim. Running on for $more.")
+                return true
+            }
             bot.log("Duration expired. Completing script normally. elapsed=${previous - duration}")
             return false
         }
 
         return true
+    }
+
+    /**
+     * Ends this script within [within] at the latest, as when the bot has just reached what it was working toward.
+     * The usual end of the script still follows, so it leaves its zone and banks as it would.
+     */
+    fun windDown(within: Duration) {
+        if (remainingDuration() > within) {
+            duration = within
+            bot.log("Winding down within $within.")
+        }
     }
 
     /**
