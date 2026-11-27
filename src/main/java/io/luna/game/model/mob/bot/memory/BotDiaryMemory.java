@@ -376,7 +376,8 @@ public final class BotDiaryMemory implements BotMemoryPart {
         long now = memory.now();
         long lasted = Math.max(0, now - ended.startedAt);
         long experience = Math.max(0, standing.experience() - ended.start.experience());
-        if (lasted < STARTED_NOTHING && experience == 0 && ended.kills == 0 && ended.deaths == 0) {
+        long wealthChange = standing.wealth() - ended.start.wealth();
+        if (lasted < STARTED_NOTHING && experience == 0 && wealthChange == 0 && ended.kills == 0 && ended.deaths == 0) {
             // With a skill named it was the skill that would not start, and the activity may still have others.
             if (ended.skill != NO_SKILL) {
                 putOff(key(ended.skill), 1.0);
@@ -393,7 +394,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
         session.minutes = (int) Math.min(Integer.MAX_VALUE, lasted / 60_000L);
         session.experience = experience;
         session.levels = Math.max(0, standing.levels() - ended.start.levels());
-        session.coins = standing.wealth() - ended.start.wealth();
+        session.coins = wealthChange;
         session.kills = ended.kills;
         session.deaths = ended.deaths;
         session.went = went(session, ended.start.wealth());
