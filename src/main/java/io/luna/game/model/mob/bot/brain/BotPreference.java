@@ -15,6 +15,7 @@ import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplate;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType;
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory;
 import io.luna.util.GsonUtils;
 import io.luna.util.RandomUtils;
 
@@ -68,7 +69,6 @@ public final class BotPreference {
         private final Set<Integer> skills = new HashSet<>();
         private final Map<Integer, WantedItemDefinition> wantedItems = new HashMap<>();
         private final Set<BotGearSet> gear = new HashSet<>();
-        private final Map<String, Double> playerFeelings = new HashMap<>();
 
         private BotPkPreference pk;
 
@@ -148,18 +148,6 @@ public final class BotPreference {
          */
         public Builder addWantedItem(WantedItemDefinition item) {
             wantedItems.put(item.id(), item);
-            return this;
-        }
-
-        /**
-         * Sets a player's initial feeling, clamped to {@code 0.0..1.0}.
-         *
-         * @param username The player's username.
-         * @param feeling The feeling value to store.
-         * @return This builder for chaining.
-         */
-        public Builder setFeelingsFor(String username, double feeling) {
-            playerFeelings.put(username, Math.min(1.0, Math.max(feeling, 0.0)));
             return this;
         }
 
@@ -379,8 +367,7 @@ public final class BotPreference {
                     new HashMap<>(activities),
                     new HashSet<>(generateSkills()),
                     new HashMap<>(wantedItems),
-                    new HashSet<>(generateGear()),
-                    new HashMap<>(playerFeelings));
+                    new HashSet<>(generateGear()));
             preference.pk = skiller ? null : pk != null ? pk :
                     personality.getType() == PersonalityTemplateType.PKER ||
                     preference.likesActivity(BotActivity.PKING) ? BotPkPreference.generate(null) : null;
@@ -521,14 +508,6 @@ public final class BotPreference {
     private final Set<BotGearSet> gear;
 
     /**
-     * The mutable feelings toward players, keyed by username.
-     * <p>
-     * A value of {@code 0.0} represents strong dislike, {@code 0.5} neutrality, and {@code 1.0}
-     * strong approval. Unknown players are treated as neutral by {@link #getFeelingsToward(String)}.
-     */
-    private final Map<String, Double> playerFeelings;
-
-    /**
      * Creates a preference profile from the supplied collections.
      * <p>
      * Inserts default general-activity and general-profit weights and missing default wanted items into the
@@ -538,13 +517,11 @@ public final class BotPreference {
      * @param skills The preferred skill IDs.
      * @param wantedItems The wanted-item definitions, keyed by item ID.
      * @param gear The preferred gear sets.
-     * @param playerFeelings The player feelings, keyed by username.
      */
     public BotPreference(Map<BotActivity, Double> activities,
                          Set<Integer> skills,
                          Map<Integer, WantedItemDefinition> wantedItems,
-                         Set<BotGearSet> gear,
-                         Map<String, Double> playerFeelings) {
+                         Set<BotGearSet> gear) {
 
         // New and legacy profiles participate in general activities unless an explicit weight is provided.
         activities.putIfAbsent(BotActivity.GENERAL_ACTIVITIES, 0.25);
@@ -559,14 +536,13 @@ public final class BotPreference {
         this.skills = skills;
         this.wantedItems = wantedItems;
         this.gear = gear;
-        this.playerFeelings = playerFeelings;
     }
 
     /**
      * Serializes this preference profile into JSON.
      * <p>
-     * Saves activity weights, preferred skills and gear, custom wanted-item definitions, explicit shopping requests,
-     * and player feelings. Unchanged wanted-item defaults are restored during construction.
+     * Saves activity weights, preferred skills and gear, custom wanted-item definitions and explicit shopping
+     * requests. Unchanged wanted-item defaults are restored during construction.
      * The associated bot is not serialized.
      *
      * @return The JSON representation of this preference profile.
@@ -622,15 +598,6 @@ public final class BotPreference {
         gear.forEach(it -> gearJson.add(it.name()));
         preferences.add("gear", gearJson);
 
-        // Serialize feelings towards players.
-        JsonArray playerFeelingsJson = new JsonArray();
-        for (var entry : playerFeelings.entrySet()) {
-            JsonObject feelingsJson = new JsonObject();
-            feelingsJson.addProperty("username", entry.getKey());
-            feelingsJson.addProperty("feeling", entry.getValue());
-            playerFeelingsJson.add(feelingsJson);
-        }
-        preferences.add("player_feelings", playerFeelingsJson);
         preferences.add("pk", pk == null ? com.google.gson.JsonNull.INSTANCE : pk.save());
         preferences.add("scavenging", scavenging.save());
         preferences.add("runeRunning", runeRunning.save());
@@ -681,7 +648,7 @@ public final class BotPreference {
             activities.put(activity, weight);
         }
 
-        // Deserialize preferred skills and gear, wanted items, and feelings towards players.
+        // Deserialize preferred skills and gear, and wanted items.
         // A returning bot is built with a throwaway personality, whose rolled favourites would pile up on each login.
         skills.clear();
         object.getAsJsonArray("skills").forEach(it -> skills.add(it.getAsInt()));
@@ -715,10 +682,6 @@ public final class BotPreference {
         }
         gear.clear();
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
-        object.getAsJsonArray("player_feelings").forEach(it -> {
-            JsonObject feelingsJson = it.getAsJsonObject();
-            playerFeelings.put(feelingsJson.get("username").getAsString(), feelingsJson.get("feeling").getAsDouble());
-        });
         // load() runs after PlayerData restores the actual personality and skills.
         if (object.has("pk")) {
             pk = object.get("pk").isJsonNull() ? null : BotPkPreference.load(object.getAsJsonObject("pk"));
@@ -881,28 +844,17 @@ public final class BotPreference {
     }
 
     /**
-     * Gets the stored feeling toward a player, defaulting to {@code 0.5}.
+     * Gets the current feeling toward a player, defaulting to {@code 0.5}.
+     * <p>
+     * Feelings are held by the bot's {@link BotPeopleMemory}, which also changes them. A value of {@code 0.0}
+     * represents strong dislike, {@code 0.5} neutrality, and {@code 1.0} strong approval, and a feeling drifts back
+     * toward {@code 0.5} as it fades.
      *
      * @param username The player's username.
-     * @return The stored feeling value, or {@code 0.5} if no entry exists.
+     * @return The feeling value, or {@code 0.5} if the bot holds nothing about them.
      */
     public double getFeelingsToward(String username) {
-        return playerFeelings.getOrDefault(username, 0.5);
-    }
-
-    /**
-     * Adjusts the feeling toward a player, clamping the result to {@code 0.0..1.0}.
-     * <p>
-     * Players without a stored feeling begin at {@code 0.5}.
-     *
-     * @param username The player's username.
-     * @param amount The amount to add to the existing feeling.
-     */
-    public void adjustFeelingsToward(String username, double amount) {
-        playerFeelings.compute(username, (k, v) -> {
-            double current = v == null ? 0.5 : v;
-            return Math.max(0.0, Math.min(1.0, current + amount));
-        });
+        return bot == null ? BotPeopleMemory.NEUTRAL : bot.getMemory().getPeople().feeling(username);
     }
 
     /**
@@ -1155,12 +1107,14 @@ public final class BotPreference {
     }
 
     /**
-     * Gets the mutable player-feeling map.
+     * Gets the current feeling toward every player the bot does not feel neutral about.
+     * <p>
+     * The map is a copy taken from the bot's {@link BotPeopleMemory}.
      *
      * @return The player feeling values keyed by username.
      */
     public Map<String, Double> getPlayerFeelings() {
-        return playerFeelings;
+        return bot == null ? Map.of() : bot.getMemory().getPeople().feelings();
     }
 
 

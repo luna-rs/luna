@@ -238,6 +238,7 @@ object DeveloperItemHandler {
             "View script queue" to { p -> if (available(p, target)) report(p, "${target.username}: scripts",
                 target.scriptStack.scripts.let { scripts -> DeveloperInspection.productionLines(target, scripts) +
                     scripts.mapIndexed { index, script -> "$index: ${script.javaClass.simpleName} (running=${script.isRunning()})" } }) },
+            "View memory" to { p -> if (available(p, target)) report(p, "${target.username}: memory", target.memory.describe()) },
             "Stop current" to { p -> if (available(p, target)) { target.scriptStack.stopCurrent(); p.sendMessage("Current script stopped.") } },
             "Clear pending queue" to { p -> if (available(p, target)) { target.scriptStack.clear(); p.sendMessage("Pending queue cleared; running script retained.") } }))
     }

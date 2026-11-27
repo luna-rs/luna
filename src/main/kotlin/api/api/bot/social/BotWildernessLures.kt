@@ -21,6 +21,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.minutes
@@ -133,8 +134,8 @@ object BotWildernessLures {
         if (source !== fight.killer || !lostItems || fight.recorded || !fight.recent() || levelAt(victim.position) <= 0) return
         fight.recorded = true
         bot.lastScammedBy = fight.lurer
-        bot.preferences.adjustFeelingsToward(fight.lurer, -0.5)
-        if (fight.killer.username != fight.lurer) bot.preferences.adjustFeelingsToward(fight.killer.username, -0.5)
+        bot.memory.people.remember(fight.lurer, Event.LURED_ME)
+        if (fight.killer.username != fight.lurer) bot.memory.people.remember(fight.killer.username, Event.LURED_ME)
         BotReactions.reactToScammed(bot)
     }
 

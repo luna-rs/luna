@@ -73,6 +73,7 @@ public class PlayerData {
     public List<BotScriptSnapshot> scripts;
     public BotPersonality personality;
     public JsonObject preferences;
+    public JsonObject memory;
     public transient Boolean isBot; // We use boxed version to ensure its set by save()/load()
 
     /**
@@ -135,6 +136,7 @@ public class PlayerData {
         if (player.isBot()) {
             Bot bot = (Bot) player;
             bot.setPersonality(personality);
+            bot.getMemory().load(memory);
             bot.getPreferences().load(preferences);
             bot.getScriptStack().load(scripts);
             isBot = true;
@@ -191,6 +193,7 @@ public class PlayerData {
             scripts = bot.getScriptStack().save();
             personality = bot.getPersonality();
             preferences = bot.getPreferences().save();
+            memory = bot.getMemory().save();
             isBot = true;
         } else {
             isBot = false;
