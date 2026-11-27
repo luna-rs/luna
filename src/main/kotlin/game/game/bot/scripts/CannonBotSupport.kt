@@ -10,6 +10,7 @@ import api.bot.script.BotScript.ActionSafety
 import api.bot.script.DynamicBotScript
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
+import api.predef.ext.totalItemAmount
 import api.predef.world
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
@@ -36,6 +37,8 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 object CannonBotSupport {
+    internal const val RESTOCK_BELOW = 100
+
     /**
      * The complete user-approved deployment allowlist. Native placement and firing rules still apply.
      */
@@ -72,14 +75,14 @@ object CannonBotSupport {
 
     /**
      * Uses 0.5–2% of locally owned economy value per outing, capped at 1,000 owned balls.
-     * Confidence and combat affinity increase spending; intelligence favors conserving supplies.
+     * Confidence, intelligence and combat affinity increase spending within this outing limit.
      * Invalid prices disable optional cannon use rather than inventing an ammunition price.
      */
     internal fun allowance(wealth: Double, price: Double, owned: Int, confidence: Double,
                            intelligence: Double, likesCombat: Boolean): Int {
         if (!wealth.isFinite() || wealth <= 0 || !price.isFinite() || price <= 0 || owned <= 0) return 0
         val fraction = 0.005 + 0.0075 * confidence.coerceIn(0.0, 1.0) +
-            0.005 * (1 - intelligence.coerceIn(0.0, 1.0)) + if (likesCombat) 0.0025 else 0.0
+            0.005 * intelligence.coerceIn(0.0, 1.0) + if (likesCombat) 0.0025 else 0.0
         return minOf(owned, 1000, (wealth * fraction / price).toInt().coerceAtLeast(0))
     }
 
@@ -88,39 +91,63 @@ object CannonBotSupport {
      * Compatible sessions opt in only when Ranged is their discipline or a preferred skill.
      */
     internal fun eligible(bot: Bot, purpose: BotGearPurpose): Boolean =
-        bot.personality.type != PersonalityTemplateType.SKILLER &&
-            BotCombatActionHandler.mayGainExperience(bot, Skill.RANGED) &&
+        compatibleBuild(bot) &&
             (purpose == BotGearPurpose.RANGED || Skill.RANGED in bot.preferences.skills)
+
+    internal fun compatibleBuild(bot: Bot): Boolean =
+        bot.personality.type != PersonalityTemplateType.SKILLER &&
+            BotCombatActionHandler.mayGainExperience(bot, Skill.RANGED)
+
+    internal fun hasCannonOut(bot: Bot): Boolean =
+        needsRecovery(bot) || bot.cannonPosition != null || bot.cannonStage != null || Cannon.ALL[bot.username] != null
+
+    internal fun ammoTarget(rangedLevel: Int): Int =
+        750 + (5_000 - 750) * (rangedLevel.coerceIn(1, 99) - 1) / 98
+
+    internal fun ammoTarget(bot: Bot): Int = ammoTarget(bot.skill(Skill.RANGED).staticLevel)
+
+    internal fun retainedAmmo(bot: Bot): Int =
+        if (bot.totalItemAmount(DwarfMulticannon.CANNONBALL) > 0 && compatibleBuild(bot) &&
+            (hasCannonOut(bot) || CannonStage.PARTS.any { bot.totalItemAmount(it) > 0 })) ammoTarget(bot) else 0
+
+    internal fun canPrepare(bot: Bot, zones: List<SubZone>, purpose: BotGearPurpose): Boolean =
+        eligible(bot, purpose) && zones.any { it in camps } && !hasCannonOut(bot) &&
+            ActionSafety.NON_COMBAT.allows(bot) && bot.bank.isOpen &&
+            CannonStage.PARTS.all { bot.totalItemAmount(it) > 0 }
 
     /**
      * Prepares only owned hardware and ammunition at an already-open bank. Failure leaves ordinary combat available.
      * The outing carries no more balls than its budget, since the native loading menu fills the magazine at once.
      */
     suspend fun prepare(bot: Bot, zones: List<SubZone>, purpose: BotGearPurpose): Boolean {
-        if (!eligible(bot, purpose) || zones.none { it in camps } || needsRecovery(bot) ||
-            bot.cannonPosition != null || Cannon.ALL[bot.username] != null ||
-            !ActionSafety.NON_COMBAT.allows(bot) || !bot.bank.isOpen ||
-            !CannonStage.PARTS.all { bot.itemTracker.contains(it) }) return false
+        if (!canPrepare(bot, zones, purpose)) return false
         val price = world.economy.getRealPrice(DwarfMulticannon.CANNONBALL)
         val wealth = bot.itemTracker.entrySet().sumOf {
             val value = if (it.element == 995) 1.0 else world.economy.getRealPrice(it.element)
             if (value.isFinite() && value > 0) value * it.count else 0.0
         }
-        val count = allowance(wealth, price, bot.itemTracker.count(DwarfMulticannon.CANNONBALL),
+        val count = allowance(wealth, price, bot.totalItemAmount(DwarfMulticannon.CANNONBALL),
             bot.personality.confidence, bot.personality.intelligence,
             bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
                 bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT))
         if (count < DwarfMulticannon.MAX_AMMO) return false
-        val supplies = CannonStage.PARTS.map { Item(it) } + Item(DwarfMulticannon.CANNONBALL, count)
-        if (!bot.inventory.hasSpaceForAll(supplies)) return false
         val handler = bot.actionHandler
-        handler.banking.clickBankingMode(false)
-        for (item in supplies) {
-            if (!ActionSafety.NON_COMBAT.allows(bot)) return false
-            val missing = item.amount - bot.inventory.computeAmountForId(item.id)
-            if (missing > 0 && !handler.banking.withdraw(Item(item.id, missing))) return false
+        val ammo = DwarfMulticannon.CANNONBALL
+        val excess = bot.inventory.computeAmountForId(ammo) - count
+        if (excess > 0 && !handler.banking.deposit(Item(ammo, excess))) return false
+        val supplies = CannonStage.PARTS.map { Item(it) } + Item(ammo, count)
+        val missing = supplies.mapNotNull { item ->
+            val amount = item.amount - bot.inventory.computeAmountForId(item.id)
+            if (amount > 0) item.withAmount(amount) else null
         }
-        if (bot.inventory.computeAmountForId(DwarfMulticannon.CANNONBALL) > count) return false
+        if (!bot.inventory.hasSpaceForAll(missing)) return false
+        handler.banking.clickBankingMode(false)
+        for (item in missing) {
+            if (!ActionSafety.NON_COMBAT.allows(bot)) return false
+            if (!handler.banking.withdraw(item)) return false
+        }
+        if (CannonStage.PARTS.any { it !in bot.inventory } ||
+            bot.inventory.computeAmountForId(ammo) != count) return false
         bot.cannonAllowance = count
         return true
     }

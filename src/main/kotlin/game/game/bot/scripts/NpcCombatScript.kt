@@ -1,5 +1,8 @@
 package game.bot.scripts
 
+import game.content.dwarfMulticannon.DwarfMulticannon
+import api.predef.ext.totalItemAmount
+
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.boss.BossTarget
 import api.bot.boss.BossReadiness
@@ -725,6 +728,8 @@ open class NpcCombatScript(bot: Bot,
      * Optional cannon supplies are selected once at each bank visit and never manufactured by this session.
      */
     private var cannonPrepared = false
+    private val allowsCannon: Boolean
+        get() = !queenTrip && !ownedCombatSuppliesOnly && !magicOnly && slayerTask == null
 
     private val socialCamp: Boolean get() = !queenTrip && !chaosTrip && activeZone != null && activeZone !in DRAGON_ZONES
 
@@ -895,6 +900,10 @@ open class NpcCombatScript(bot: Bot,
      */
     private val antiDragonShield = item("Anti-dragon shield")
     override suspend fun onBankOpen(initial: Boolean) {
+        if (allowsCannon && CannonBotSupport.canPrepare(bot, originalZones, purpose) &&
+            bot.totalItemAmount(DwarfMulticannon.CANNONBALL) < DwarfMulticannon.MAX_AMMO) {
+            CannonAmmoSupply.restock(bot, CannonBotSupport.ammoTarget(bot))
+        }
 
         if (purpose == BotGearPurpose.MAGIC && slayerTask == null) {
             if (!prepareMagicSupplies()) {
@@ -1052,8 +1061,7 @@ open class NpcCombatScript(bot: Bot,
                 return
             }
         }
-        if (!queenTrip) cannonPrepared = !ownedCombatSuppliesOnly && !magicOnly && slayerTask == null &&
-            CannonBotSupport.prepare(bot, originalZones, purpose)
+        cannonPrepared = allowsCannon && CannonBotSupport.prepare(bot, originalZones, purpose)
         if (!wieldAtBank(weapon, ammo, thrown) ||
             (slayerTask == SlayerTaskType.ZYGOMITE && !refillFungicide()) || !configureCombat()) {
             stop()

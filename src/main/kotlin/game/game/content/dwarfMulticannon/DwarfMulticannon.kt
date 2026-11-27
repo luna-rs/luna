@@ -40,6 +40,12 @@ object DwarfMulticannon {
     const val NULODION = 209
 
     /**
+     * Nulodion's shop title and native dialogue price for a full set.
+     */
+    const val SHOP_NAME = "Multi cannon parts for sale:"
+    const val SET_PRICE = 750_000
+
+    /**
      * The most cannonballs a cannon holds.
      */
     const val MAX_AMMO = 30

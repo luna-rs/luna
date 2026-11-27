@@ -1,5 +1,7 @@
 package api.bot.action.trading
 
+import game.content.dwarfMulticannon.DwarfMulticannon.CANNONBALL
+
 import api.bot.action.BotPotionTrip
 import api.attr.Attr
 import api.predef.ext.canUseWantedItem
@@ -71,6 +73,7 @@ object BotTradeBuyingPolicy {
         val base = definition.unnotedId.orElse(id)
         if (base == 995 || !definition.isTradeable) return null
         val active = BotTradeIntentions.supplyDemand(bot, base)
+        if (base == CANNONBALL && active == null) return null
         if (BotTradeIntentions.hasLiteralSupplyDemand(bot, base))
             return active?.takeIf { bot.totalItemAmount(base) < it.target }
         if (base in Food.ID_TO_FOOD) return BotFoodDemand.demand(bot, base)

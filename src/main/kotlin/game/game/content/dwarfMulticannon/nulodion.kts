@@ -5,6 +5,8 @@ import api.shop.dsl.ShopHandler
 import game.content.dwarfMulticannon.DwarfMulticannon.AMMO_MOULD
 import game.content.dwarfMulticannon.DwarfMulticannon.INSTRUCTION_MANUAL
 import game.content.dwarfMulticannon.DwarfMulticannon.NULODION
+import game.content.dwarfMulticannon.DwarfMulticannon.SET_PRICE
+import game.content.dwarfMulticannon.DwarfMulticannon.SHOP_NAME
 import game.content.dwarfMulticannon.DwarfMulticannon.cannonPosition
 import game.content.dwarfMulticannon.DwarfMulticannon.cannonStage
 import io.luna.game.model.item.Item
@@ -14,16 +16,6 @@ import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.Expression
-
-/**
- * The shop's name, shown as its title.
- */
-val SHOP_NAME = "Multi cannon parts for sale:"
-
-/**
- * The price of a full cannon.
- */
-val CANNON_PRICE = 750_000
 
 /**
  * The coins item ID.
@@ -65,12 +57,12 @@ fun buyCannon(plr: Player) {
         // The ANGRY animations are a shifty look.
         .npc(NULODION, Expression.ANGRY,"Ok then, but keep it quiet...", "This thing is top secret!")
         .then {
-            if (plr.inventory.computeAmountForId(COINS) < CANNON_PRICE) {
+            if (plr.inventory.computeAmountForId(COINS) < SET_PRICE) {
                 plr.newDialogue()
                     .player(Expression.SAD, "Oops, I don't have enough money.")
                     .npc(NULODION, "Sorry, I can't go any lower than that.")
                     .open()
-            } else if (plr.inventory.remove(Item(COINS, CANNON_PRICE))) {
+            } else if (plr.inventory.remove(Item(COINS, SET_PRICE))) {
                 CannonStage.entries.forEach { plr.giveItem(Item(it.partId)) }
                 plr.giveItem(Item(AMMO_MOULD))
                 plr.giveItem(Item(INSTRUCTION_MANUAL))
