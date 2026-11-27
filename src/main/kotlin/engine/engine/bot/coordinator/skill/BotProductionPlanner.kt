@@ -15,6 +15,7 @@ import api.predef.*
 import api.predef.ext.totalItemAmount
 import game.bot.scripts.skills.HerbloreVialRefill
 import game.bot.scripts.skills.CutTreeBotScript
+import game.skill.fletching.attachArrow.Arrow
 import game.skill.woodcutting.Woodcutting
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
@@ -288,7 +289,8 @@ object BotProductionPlanner {
                 if (ownedLogs.isNotEmpty() && trainingLogId(recipe)?.let { it !in ownedLogs } == true) continue
                 val paths = if (directOnly || singlePurchaseBatch) listOf(listOf(ProductionStage(recipe, 1)))
                 else ProductionRecipePaths.forRecipe(recipe, ::describe, allowOtherSkills,
-                    trainingPrerequisites = training && ProductionTrainingPrerequisites.input(recipe) != null) {
+                    trainingPrerequisites = training && ProductionTrainingPrerequisites.input(recipe) != null,
+                    balanceShafts = training && skill == SKILL_FLETCHING) {
                     allowOtherSkills || skill != SKILL_COOKING || it.experience == 0.0
                 }
                 for (path in paths) {
@@ -329,6 +331,7 @@ object BotProductionPlanner {
         }
         val prices = HashMap<Int, Long>()
         val runecrafting = skill == SKILL_RUNECRAFTING
+        val fundedRunecrafting = runecrafting && merchantOutput != null && directOnly && !training
         val bankedRunecrafting = runecrafting && training
         val operationLimit = ProductionEconomics.operationLimit(skill, training)
         val workMillis = minOf(duration.inWholeMilliseconds, deadlineLimit - now)
@@ -407,7 +410,9 @@ object BotProductionPlanner {
                 lastRejection = Reason.MATERIALS_UNAVAILABLE
                 return@mapNotNull null
             }
-            val fixedTrainingBatch = training && ProductionTrainingPrerequisites.input(path.stages.last().recipe) != null
+            val finalStage = path.stages.last()
+            val fixedTrainingBatch = training && (finalStage.operations > 1 ||
+                ProductionTrainingPrerequisites.input(finalStage.recipe) != null)
             val stockLimit = goals.operations[native.key]?.div(path.stages.first().operations)
             if (!training && stockLimit == null && recipe.products.any { (id, amount) ->
                     count(id) >= amount.toLong() * 56 }) return@mapNotNull null
@@ -502,7 +507,8 @@ object BotProductionPlanner {
                 recipe.valuedProducts.getValue(merchantOutput)
             } else 0
             if (merchantOutput != null) {
-                requested = minOf(requested, 4 + (8 * bot.personality.intelligence.coerceIn(0.0, 1.0)).toInt())
+                if (!fundedRunecrafting)
+                    requested = minOf(requested, 4 + (8 * bot.personality.intelligence.coerceIn(0.0, 1.0)).toInt())
                 for ((id, amount) in recipe.materials) {
                     val limit = inputPrices.getValue(id)
                     val reserved = retained[id] ?: 0
@@ -536,7 +542,9 @@ object BotProductionPlanner {
                 val bid = funded.mapNotNull { depth ->
                     val count = minOf(requested, (depth.quantity - existing).coerceAtLeast(0) / merchantAmount)
                     val margin = depth.unitPrice.toDouble() * merchantAmount * recipe.productProbability - cost
-                    if (count < 1 || margin <= 0) null else Triple(depth.unitPrice, count, margin * count)
+                    val gross = depth.unitPrice.toDouble() * merchantAmount * count
+                    if (count < 1 || margin <= 0 || fundedRunecrafting && gross < BotTradeManager.MINIMUM_OFFER_VALUE)
+                        null else Triple(depth.unitPrice, count, margin * count)
                 }.maxByOrNull { it.third } ?: return@mapNotNull null
                 merchantPrice = bid.first
                 requested = bid.second
@@ -559,11 +567,11 @@ object BotProductionPlanner {
                     ProductionEconomics.saturatingMultiply(quote.inputValue, quote.operations.toLong()))
                 val units = (merchantAmount * quote.operations * recipe.productProbability).toLong()
                 val profitFloor = ProductionSaleGuard.minimumGross(batchCost, units, taxed = false)
-                val floor = if (singlePurchaseBatch)
+                val floor = if (singlePurchaseBatch || fundedRunecrafting)
                     maxOf(profitFloor, (BotTradeManager.MINIMUM_OFFER_VALUE + units - 1L) / units)
                 else profitFloor
                 if (floor > minOf(merchantPrice, Int.MAX_VALUE.toLong()) ||
-                    (!singlePurchaseBatch && !BotTradeManager.hasNativeSaleStock(bot, id, units.toInt())))
+                    (!singlePurchaseBatch && !fundedRunecrafting && !BotTradeManager.hasNativeSaleStock(bot, id, units.toInt())))
                     return@mapNotNull null
                 if (singlePurchaseBatch && !hasSingleBatchBuyer(bot, id, units.toInt(), floor)) return@mapNotNull null
                 ProductionSaleGuard(id, floor, batchCost, now)
@@ -598,10 +606,23 @@ object BotProductionPlanner {
         val available = if (smithingCandidates.isNotEmpty()) smithingCandidates else if (compared.any(::soldLog)) compared.filter {
             trainingLogId(it.path.stages.first().recipe) == null || soldLog(it)
         } else compared
-        val preferred = if (merchantOutput != null) available else {
-            val suppliedPaths = available.filter { it.stocked }.groupBy { it.path.stages.last().recipe.key }
-            val executable = if (available.any { it.refillVials })
-                available.filter { it.stocked || it.refillVials } else available
+        val trainingChoices = if (training && skill == SKILL_FLETCHING && merchantOutput == null) {
+            val intermediates = setOf(Arrow.HEADLESS_ARROW.tip, Arrow.HEADLESS_ARROW.id)
+            val arrowDemand = HashMap<Int, List<NativeOutputDemand.Depth>>()
+            val finished = available.filter { candidate ->
+                (candidate.stocked || candidate.fixedTrainingBatch) && candidate.path.economy.products.all { (id, yield) ->
+                    id !in intermediates && (id !in Arrow.IDS || id in candidate.usePrices ||
+                        arrowDemand.getOrPut(id) { NativeOutputDemand.depth(bot, id, now) }
+                            .any { it.quantity.toLong() >= yield.toLong() * candidate.quote.operations })
+                }
+            }
+            val usesStock = finished.filter { it.stocked && it.path.economy.materials.keys.any { id -> id in intermediates } }
+            usesStock.ifEmpty { finished }.ifEmpty { available }
+        } else available
+        val preferred = if (merchantOutput != null) trainingChoices else {
+            val suppliedPaths = trainingChoices.filter { it.stocked }.groupBy { it.path.stages.last().recipe.key }
+            val executable = if (trainingChoices.any { it.refillVials })
+                trainingChoices.filter { it.stocked || it.refillVials } else trainingChoices
             executable.filterNot { candidate ->
                 !candidate.fixedTrainingBatch && ProductionRecipePaths.hasSuppliedSuffix(candidate.path.stages,
                     suppliedPaths[candidate.path.stages.last().recipe.key].orEmpty().map { it.path.stages })
