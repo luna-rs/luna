@@ -97,21 +97,16 @@ object AliDialogue {
     }
 
     /**
-     * Ali asks for a rune supplier, if [plr] knows Aubury.
+     * Ali asks [plr] to find a rune supplier.
      */
     private fun runeIdea(plr: Player) {
-        if (!RogueTrader.canAskAubury(plr)) {
-            goodbye(plr)
-            return
-        }
         plr.newDialogue()
             .npc(ALI, "I think I need just one more product type, something", "magical ... now what could I stock that's magical, has",
                  "large demand and a pretty good profit margin...")
             .player("How about runes?")
             .npc(ALI, "Yes, that would be perfect, but who could I get that", "would supply? There really seems to be a gap in the",
                  "market in the desert but I don't know anyone in that", "line of business.")
-            .player("Hang on, I know somebody called Aubury, decent fella. I", "helped him out a while back. Perhaps I could approach",
-                    "him about the idea.")
+            .player("Aubury sells runes in Varrock. Perhaps I could ask him about it.")
             .npc(ALI, "Oh yes, the rune seller from Varrock. That would be", "perfect. He's far enough away that he wouldn't end up",
                  "competing with himself.")
             .player("What do you mean?")
@@ -281,8 +276,8 @@ object AliDialogue {
                 .player("Right, so I'll go see Siamun of Sophanem.")
                 .npc(ALI, "Good, good.")
         }
-        if (plr.runeDeal == Runes.NONE && RogueTrader.canAskAubury(plr)) {
-            builder.npc(ALI, "Could you talk to your friend Aubury in Varrock about", "supplying me with runes?")
+        if (plr.runeDeal == Runes.NONE) {
+            builder.npc(ALI, "Could you talk to Aubury in Varrock about", "supplying me with runes?")
                 .player("Hmm, that could work out quite well. Varrock is always", "quite busy, so I might try to get a couple of other",
                         "things done while I'm there.")
                 .npc(ALI, "Don't tarry there too long, I'm quite anxious to get a", "rune store open before anyone else in this area.")

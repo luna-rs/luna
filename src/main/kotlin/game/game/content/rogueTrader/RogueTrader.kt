@@ -106,11 +106,6 @@ object RogueTrader {
     fun canStart(plr: Player) = !plr.isBot && QuestGates.passes(plr, Quest.THE_FEUD)
 
     /**
-     * Whether Aubury can be asked about runes, which needs Rune Mysteries.
-     */
-    fun canAskAubury(plr: Player) = QuestGates.passes(plr, Quest.RUNE_MYSTERIES)
-
-    /**
      * Whether Siamun can be asked about clothes, which needs Icthlarin's Little Helper.
      */
     fun canAskSiamun(plr: Player) = QuestGates.passes(plr, Quest.ICTHLARINS_LITTLE_HELPER)

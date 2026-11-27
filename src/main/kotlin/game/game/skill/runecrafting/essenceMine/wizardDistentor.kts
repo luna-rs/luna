@@ -10,8 +10,6 @@ val WIZARD_DISTENTOR = EssenceMineWizard.WIZARD_DISTENTOR.npcId
 
 npc1(WIZARD_DISTENTOR) {
     val distentor = targetNpc
-    // TODO Rune Mysteries: until it's complete, he skips the options and the player says "Nothing thanks, I'm just
-    //  looking around."
     plr.newDialogue()
         .npc(WIZARD_DISTENTOR, "Welcome to the Magicians' Guild!")
         .player("Hello there.")

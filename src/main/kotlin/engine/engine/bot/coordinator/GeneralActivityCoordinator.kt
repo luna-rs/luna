@@ -7,6 +7,7 @@ import game.bot.scripts.BuyInitiateArmourBotScript
 import game.bot.scripts.ChampionsChallengeBotScript
 import game.bot.scripts.DragonSlayerBotScript
 import game.bot.scripts.RomeoJulietBotScript
+import game.bot.scripts.RuneMysteriesBotScript
 import game.bot.scripts.TempleTrekkingBotScript
 import game.bot.scripts.GodBookBotScript
 import game.bot.scripts.TreasureTrailBotScript
@@ -99,6 +100,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
         if (RomeoJulietBotScript.eligible(bot)) return RomeoJulietBotScript(bot)
+        if (RuneMysteriesBotScript.eligible(bot)) return RuneMysteriesBotScript(bot)
         ChampionsChallengeBotScript.select(bot)?.let { return it }
         TempleTrekkingBotScript.select(bot)?.let { return it }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {

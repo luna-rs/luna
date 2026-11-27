@@ -3,6 +3,7 @@ package game.npc.spawn.varrock
 import api.predef.*
 import api.shop.dsl.ShopHandler
 import game.content.rogueTrader.Suppliers
+import game.content.runeMysteries.RuneMysteriesDialogue
 import game.skill.runecrafting.essenceMine.EssenceMine
 import io.luna.game.model.Position
 import io.luna.game.model.item.shop.BuyPolicy
@@ -97,5 +98,6 @@ npc1(AUBURY_ID) {
     if (Suppliers.canPropose(plr)) {
         options += DialogueOption(Suppliers.PROPOSAL) { Suppliers.propose(plr) }
     }
+    RuneMysteriesDialogue.auburyOption(plr, targetNpc)?.let { options += it }
     builder.options(options).open()
 }

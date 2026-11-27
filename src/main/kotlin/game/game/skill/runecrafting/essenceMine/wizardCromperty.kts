@@ -104,7 +104,6 @@ fun askAboutInventions(plr: Player, cromperty: Npc) {
 
 npc1(WIZARD_CROMPERTY) {
     val cromperty = targetNpc
-    // TODO Rune Mysteries: until it's complete, he doesn't offer "Can you teleport me to the Rune Essence?".
     plr.newDialogue()
         .npc(WIZARD_CROMPERTY, "Hello there.", "My name is Cromperty.", "I am a Wizard, and an inventor.")
         .options(

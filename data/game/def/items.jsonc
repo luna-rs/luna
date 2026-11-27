@@ -267,7 +267,11 @@
   {
     "id": 290, // Research package
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 291, // Notes
+    "tradeable": false
   },
   {
     "id": 301, // Lobster pot

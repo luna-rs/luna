@@ -721,11 +721,6 @@
     "initial_popularity": 5
   },
   {
-    "id": 290, // Research package
-    "initial_price": 25,
-    "initial_popularity": 5
-  },
-  {
     "id": 295, // Glarial's amulet
     "initial_price": 25,
     "initial_popularity": 10

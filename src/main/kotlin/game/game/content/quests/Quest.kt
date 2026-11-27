@@ -2,6 +2,7 @@ package game.content.quests
 
 import game.content.dragonSlayer.DragonSlayer
 import game.content.lostCity.LostCity
+import game.content.runeMysteries.RuneMysteries
 import io.luna.game.model.mob.Player
 
 /**
@@ -53,8 +54,7 @@ enum class Quest(private val completion: ((Player) -> Boolean)?) {
     // TODO Icthlarin's Little Helper: read its completion once the quest exists.
     ICTHLARINS_LITTLE_HELPER(null),
 
-    // TODO Rune Mysteries: read its completion once the quest exists.
-    RUNE_MYSTERIES(null),
+    RUNE_MYSTERIES({ RuneMysteries.stage(it) == RuneMysteries.COMPLETE }),
 
     // TODO The Feud: read its completion once the quest exists.
     THE_FEUD(null);

@@ -1,5 +1,8 @@
 package game.content.dragonSlayer
 
+import game.content.runeMysteries.RuneMysteriesDialogue
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
+
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -96,8 +99,15 @@ object DragonSlayerDialogue {
 
     fun duke(player: Player, npc: Npc) {
         val dialogue = player.newDialogue().npc(npc.id, "Welcome to Lumbridge Castle.")
+        val options = arrayListOf(
+            RuneMysteriesDialogue.dukeOption(npc),
+            DialogueOption("Where can I find money?") {
+                it.newDialogue().npc(npc.id, "The smiths seem to do well for themselves. You could try your hand at that.").open()
+            },
+            DialogueOption("Good day.") { }
+        )
         if (player.varpManager.getValue(DRAGON_SLAYER_SHIELD) == 1 || DragonSlayer.stage(player) == DragonSlayer.COMPLETE) {
-            dialogue.options(SHIELD, { p ->
+            options.add(0, DialogueOption(SHIELD) { p ->
                 if (DragonSlayer.nearby(p, npc)) {
                     val shield = DragonSlayer.ANTI_DRAGON_SHIELD
                     val text = when {
@@ -108,8 +118,8 @@ object DragonSlayerDialogue {
                     }
                     p.newDialogue().npc(npc.id, text).open()
                 }
-            }, "Good day.", { })
+            })
         }
-        dialogue.open()
+        dialogue.options(options).open()
     }
 }

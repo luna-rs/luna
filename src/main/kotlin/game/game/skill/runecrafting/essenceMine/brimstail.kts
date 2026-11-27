@@ -21,7 +21,6 @@ val CAVE_LANDING = Position(2409, 9819)
 
 npc1(BRIMSTAIL) {
     val brimstail = targetNpc
-    // TODO Rune Mysteries: until it's complete, he skips the options and the player says "Nothing for now, thanks!"
     plr.newDialogue()
         .npc(BRIMSTAIL, "Hello adventurer, what can I do for you?")
         .options(

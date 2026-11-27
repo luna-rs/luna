@@ -43,7 +43,7 @@ object Suppliers {
      * Whether Aubury can be asked about Ali's rune stall.
      */
     fun canPropose(plr: Player) =
-        plr.rogueTraderStarted && plr.runeDeal == Runes.NONE && RogueTrader.canAskAubury(plr)
+        plr.rogueTraderStarted && plr.runeDeal == Runes.NONE
 
     /**
      * Whether Aubury has agreed but Ali hasn't heard yet, which Aubury mentions first.

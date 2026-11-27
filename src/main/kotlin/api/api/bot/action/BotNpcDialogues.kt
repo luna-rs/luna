@@ -30,7 +30,7 @@ object BotNpcDialogues {
      *
      * @param bot The bot using its existing interaction and widget handlers.
      * @param npc The exact NPC targeted by the initiating player action.
-     * @param responses Exact option text in native conversation order.
+     * @param responses Exact option text in native conversation order, empty for a conversation with no choices.
      * @param timeout Complete interaction budget, including any approach performed by [start].
      * @param allowed Additional live activity permission checked before every option.
      * @param completed Real inventory or world-state result that completes the conversation.
@@ -66,7 +66,6 @@ object BotNpcDialogues {
                                          allowed: () -> Boolean, completed: () -> Boolean,
                                          playerSpeech: Set<String>, advanceSpeech: Boolean,
                                          start: suspend () -> Boolean): Boolean {
-        require(responses.isNotEmpty())
         val previous = bot.dialogues
         var queue: DialogueQueue? = null
         var page: DialogueInterface? = null

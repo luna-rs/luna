@@ -68,9 +68,6 @@ ShopHandler.create(SHOP_NAME) {
 }
 
 npc1(WILDERNESS_MAGE) {
-    // TODO Rune Mysteries and Enter the Abyss: before Rune Mysteries the mage turns the player away. Before Enter the
-    //  Abyss he says "Meet me in Varrock's Chaos Temple. Here is not the place to talk.", then "I already told you!
-    //  Meet me in the Varrock Chaos Temple!"
     val mage = targetNpc
     plr.newDialogue()
         .npc(WILDERNESS_MAGE_SHOWN, Expression.ANGRY, "This is no place to talk!",

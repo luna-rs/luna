@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player;
  */
 public enum PersistentVarp {
     COAL_TRUCKS(6),
+    RUNE_MYSTERIES(63),
     MUSIC_UNLOCKS_1(20),
     MUSIC_UNLOCKS_2(21),
     MUSIC_UNLOCKS_3(22),

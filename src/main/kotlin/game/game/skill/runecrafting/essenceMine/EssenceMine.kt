@@ -51,8 +51,6 @@ object EssenceMine {
      */
     fun teleport(wizard: Npc, plr: Player) {
         val type = EssenceMineWizard.forNpc(wizard.id) ?: return
-        // TODO Rune Mysteries: only players who have completed it may be teleported. The rest get "You need to have
-        //  completed the Rune Mysteries Quest to use this feature."
         plr.essenceMineExit = type
         teleOther(wizard, plr, SubZone.ESSENCE_MINE.inside) {
             NpcTeleOtherAction(wizard, plr, SubZone.ESSENCE_MINE.inside, message = null,
