@@ -8,6 +8,7 @@ import api.combat.death.PlayerDeathItems
 import api.bot.social.BotWildernessLures
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.speech.BotPkDeathMessages
 import engine.bot.speech.BotReactions
 import engine.bot.speech.BotPkingSpeechPool
 import engine.controllers.Controllers.inWilderness
@@ -79,6 +80,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
 
     postDeath {
         if (source.isRealBot() && victim.inWilderness()) BotPkingSpeechPool.knockout(source, victim)
+        BotPkDeathMessages.live.onDeath(victim, source)
         victim.move(RespawnPoint.position(victim))
     }
 }

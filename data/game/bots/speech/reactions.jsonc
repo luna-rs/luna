@@ -10,6 +10,12 @@
  * DIED:
  * Lines a bot may say shortly after dying and losing items.
  *
+ * PK_DEATH_PM:
+ * First private message to a player who killed the bot in the Wilderness.
+ *
+ * PK_DEATH_PM_FOLLOWUP:
+ * Later private messages to the same player, when the bot remembers the earlier PM.
+ *
  * GOAL_ANSWER:
  * Lines a bot may say when a real player asks what it is going for. The goal tags are <skill> (the skill's name, or
  * combat or total), <level> (the level now), <target> (the level aimed for), <left> (the levels to go), <unlock> (what
@@ -1113,6 +1119,30 @@
     "woo <target> <skill>",
     "<target> <skill>, that took ages",
     "done with that, <target> <skill>"
+  ],
+  "PK_DEATH_PM": [
+    "fk you, i hope your mouse rolls off the desk",
+    "hope u misclick a cow next fight",
+    "grats on killing me, hope your next drop is a bucket",
+    "eat my bones you absolute cabbage",
+    "you fight like a rat that found a scimmy",
+    "u absolute spoon im actually fuming",
+    "nice kill. i hope every door you click shuts in your face",
+    "oh fk off, im gonna go kick a chicken",
+    "hope your next kill is a man in lumby and he wins",
+    "enjoy the kill you walking pile of bronze"
+  ],
+  "PK_DEATH_PM_FOLLOWUP": [
+    "yo i remember you killed me last time too, fk you",
+    "you again? fk off and find another hobby",
+    "remember my last pm? still applies, you cabbage",
+    "again? at this point just put me on your slayer task",
+    "last time was bad enough. go bother a greater demon",
+    "oh its you again. i was having a perfectly good day you little rat",
+    "fancy seeing you again. thats a lie, fk off",
+    "i remembered your name and still managed to die to you. ffs",
+    "you want me to copy my last pm or can u read it yourself",
+    "same idiot, same death. i mean you btw"
   ],
   "GREETED": [
     "hi",

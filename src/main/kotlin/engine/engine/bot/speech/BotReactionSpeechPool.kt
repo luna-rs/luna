@@ -29,7 +29,7 @@ object BotReactionSpeechPool :
      * Enumerates event-triggered bot reaction speech categories.
      *
      * Each category corresponds to a top-level key in `reactions.jsonc`. The lines in each category are intended to be
-     * short, casual, and suitable for public chat after the matching event occurs.
+     * short and casual, with delivery determined by the matching event.
      */
     enum class ReactionSpeech {
 
@@ -46,6 +46,16 @@ object BotReactionSpeechPool :
          * This category does not currently define any runtime tags.
          */
         DIED,
+
+        /**
+         * Lines a bot may privately send to the player who killed it in the Wilderness.
+         */
+        PK_DEATH_PM,
+
+        /**
+         * Private follow-ups for a killer the bot previously messaged after a PK.
+         */
+        PK_DEATH_PM_FOLLOWUP,
 
         /**
          * Lines a bot may say back to a real player who greets it or the people around it.

@@ -14,9 +14,9 @@ import java.util.Map;
  * Who a bot knows, and how it feels about each of them.
  * <p>
  * Every person is held under their username with two strengths: a grudge and a liking. Both fade by half over a set
- * stretch of the bot's time online, and a person with neither left is forgotten. The feeling other code asks for is
- * {@code 0.5 + liking - grudge}, so {@code 0.0} is strong dislike, {@code 0.5} is neutral and {@code 1.0} is strong
- * approval, and someone the bot has never met is neutral.
+ * stretch of the bot's time online. A person with neither left is forgotten unless the bot remembers messaging them
+ * after a PK. The feeling other code asks for is {@code 0.5 + liking - grudge}, so {@code 0.0} is strong dislike,
+ * {@code 0.5} is neutral and {@code 1.0} is strong approval. Someone the bot has never met is neutral.
  * <p>
  * A grudge from being killed or chased off is {@link #GRUDGE_HALF_LIFE ordinary}: one kill is held for about a week of
  * play. A grudge from being cheated is {@link #DEEP_GRUDGE_HALF_LIFE deep} and lasts months. Kind bots let go sooner.
@@ -151,6 +151,11 @@ public final class BotPeopleMemory implements BotMemoryPart {
          */
         private long lastAt;
 
+        /**
+         * Whether the bot previously sent this person a message after they killed it.
+         */
+        private boolean pkDeathMessageSent;
+
         private Person(String name) {
             this.name = name;
         }
@@ -277,6 +282,27 @@ public final class BotPeopleMemory implements BotMemoryPart {
     }
 
     /**
+     * @param username Who to ask about.
+     * @return Whether the bot remembers sending this person a PK death message.
+     */
+    public boolean hasSentPkDeathMessage(String username) {
+        Person person = people.get(username);
+        return person != null && person.pkDeathMessageSent;
+    }
+
+    /**
+     * Remembers a delivered PK death message independently of the bot's last dealing and feelings.
+     *
+     * @param username Who received the message.
+     */
+    public void rememberPkDeathMessage(String username) {
+        Person person = person(username);
+        if (person != null) {
+            person.pkDeathMessageSent = true;
+        }
+    }
+
+    /**
      * Records something that happened between a person and the bot.
      * <p>
      * An event that only settles a grudge does nothing for someone the bot does not know.
@@ -353,7 +379,7 @@ public final class BotPeopleMemory implements BotMemoryPart {
         for (Person person : people.values()) {
             double grudge = grudge(person, now);
             double liking = liking(person, now);
-            if (Math.max(grudge, liking) < FORGOTTEN) {
+            if (Math.max(grudge, liking) < FORGOTTEN && !person.pkDeathMessageSent) {
                 continue;
             }
             JsonObject entry = new JsonObject();
@@ -370,6 +396,9 @@ public final class BotPeopleMemory implements BotMemoryPart {
             if (person.last != null) {
                 entry.addProperty("last", person.last.name());
                 entry.addProperty("last_at", person.lastAt);
+            }
+            if (person.pkDeathMessageSent) {
+                entry.addProperty("pk_death_pm", true);
             }
             known.add(entry);
         }
@@ -403,7 +432,10 @@ public final class BotPeopleMemory implements BotMemoryPart {
             }
             double grudge = clamp(number(entry, "grudge", 0.0));
             double liking = clamp(number(entry, "liking", 0.0));
-            if (Math.max(grudge, liking) < FORGOTTEN) {
+            JsonElement pkDeathPm = entry.get("pk_death_pm");
+            boolean pkDeathMessageSent = pkDeathPm != null && pkDeathPm.isJsonPrimitive() &&
+                    pkDeathPm.getAsJsonPrimitive().isBoolean() && pkDeathPm.getAsBoolean();
+            if (Math.max(grudge, liking) < FORGOTTEN && !pkDeathMessageSent) {
                 continue;
             }
             Person person = new Person(name);
@@ -414,6 +446,7 @@ public final class BotPeopleMemory implements BotMemoryPart {
             person.deep = entry.has("deep") && entry.get("deep").isJsonPrimitive() && entry.get("deep").getAsBoolean();
             person.last = event(text(entry, "last"));
             person.lastAt = (long) number(entry, "last_at", 0.0);
+            person.pkDeathMessageSent = pkDeathMessageSent;
             people.put(name, person);
         }
         int capacity = capacity();
@@ -469,7 +502,7 @@ public final class BotPeopleMemory implements BotMemoryPart {
             return known;
         }
         long now = memory.now();
-        people.values().removeIf(person -> weight(person, now) < FORGOTTEN);
+        people.values().removeIf(person -> weight(person, now) < FORGOTTEN && !person.pkDeathMessageSent);
         if (people.size() >= capacity()) {
             people.remove(weakest(now).name);
         }
