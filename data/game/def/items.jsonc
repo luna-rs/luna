@@ -1055,6 +1055,16 @@
     "tradeable": true
   },
   {
+    "id": 755, // Juliet's message
+    "weight": 0.02,
+    "tradeable": false
+  },
+  {
+    "id": 756, // Cadava potion
+    "weight": 0.025,
+    "tradeable": false
+  },
+  {
     "id": 763, // Broken shield
     "weight": 2.7,
     "tradeable": true
