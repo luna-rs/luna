@@ -176,7 +176,7 @@ internal object RomeoJulietScenes {
             phillipa.walking.addForcedStep(Direction.WEST)
             phillipa.face(romeo.position)
             romeo.face(phillipa.position)
-            camera(Position(2328, 4643), Position(2325, 4645), 235)
+            camera(Position(2325, 4646), Position(2326, 4644), 460)
             player.newDialogue()
                 .npc(PHILLIPA, "Romeo? I came to see how my cousin was doing.")
                 .npc(ROMEO, Expression.HAPPY, "Phillipa! Why haven't we spent more time together?")
