@@ -13,6 +13,7 @@ import api.predef.ext.removeObject
 import api.predef.ext.scheduleOnce
 import game.obj.doors.QuestDoors
 import game.player.Sound
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.DeathGroundItem
@@ -109,7 +110,10 @@ object DragonSlayerMap {
         player.playSound(Sound.CHEST_OPEN, 1)
         val opened = world.addObject(openId, closed.position, closed.objectType, closed.direction)
         world.scheduleOnce(300) {
-            if (world.removeObject(opened)) world.addObject(closed)
+            // A map object that was removed stays hidden if it is added back, so a new closed chest is placed.
+            if (opened.state == EntityState.ACTIVE && world.removeObject(opened)) {
+                world.addObject(closed.id, closed.position, closed.objectType, closed.direction)
+            }
         }
     }
 
