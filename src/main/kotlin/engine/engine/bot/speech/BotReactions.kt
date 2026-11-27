@@ -63,13 +63,6 @@ object BotReactions {
     var Bot.lastRareDrop by Attr.obj { "null" }
 
     /**
-     * The most recent player or bot that successfully scammed this bot.
-     *
-     * This value is used by [ReactionSpeech.SCAMMED] lines to resolve the `<name>` placeholder.
-     */
-    var Bot.lastScammedBy by Attr.obj { "null" }
-
-    /**
      * When the scare from the last threat that attacked this bot wears off. See [reactToThreat].
      */
     private var Bot.threatScareEnds by Attr.obj { Instant.EPOCH }
@@ -162,6 +155,9 @@ object BotReactions {
      * @param victim The mob it killed.
      */
     fun reactToKill(killer: Bot, victim: Mob) {
+        if (victim is Player) {
+            killer.memory.people.remember(victim.username, Event.KILLED_THEM)
+        }
         if (victim is Player || killer.actionHandler.combat.isThreat(victim, BotCombatThreat.Context.ACHIEVEMENT)) {
             val playerKill = victim is Player
             val expire = minutesFromNow(if (playerKill) 60 else 10)

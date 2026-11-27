@@ -13,13 +13,17 @@ import java.util.Map;
 /**
  * Who a bot knows, and how it feels about each of them.
  * <p>
- * Every person is held under their username with the grudge the bot bears them. A grudge fades by half over a set
- * stretch of the bot's time online, and a person with none left is forgotten. The feeling other code asks for is
- * {@code 0.5 - grudge}, so {@code 0.0} is strong dislike and {@code 0.5} is neutral, and someone the bot has never
- * met is neutral.
+ * Every person is held under their username with two strengths: a grudge and a liking. Both fade by half over a set
+ * stretch of the bot's time online, and a person with neither left is forgotten. The feeling other code asks for is
+ * {@code 0.5 + liking - grudge}, so {@code 0.0} is strong dislike, {@code 0.5} is neutral and {@code 1.0} is strong
+ * approval, and someone the bot has never met is neutral.
  * <p>
  * A grudge from being killed is {@link #GRUDGE_HALF_LIFE ordinary}: one kill is held for about a week of play. A
- * grudge from being cheated is {@link #DEEP_GRUDGE_HALF_LIFE deep} and lasts months. Kind bots let go sooner.
+ * grudge from being cheated is {@link #DEEP_GRUDGE_HALF_LIFE deep} and lasts months. Kind bots let go sooner. Killing
+ * someone back settles as much grudge as one kill leaves.
+ * <p>
+ * Liking comes in small steps from good dealings, and each kind of dealing can only raise it so far. None of them
+ * reaches the level other code reads as love.
  * <p>
  * The number of people is limited by how social the bot is. When the limit is reached, the person the bot feels
  * least about makes room.
@@ -36,20 +40,40 @@ public final class BotPeopleMemory implements BotMemoryPart {
         /**
          * They killed the bot.
          */
-        KILLED_ME(0.25, false),
+        KILLED_ME(0.25, false, 0.0, 0.0),
 
         /**
          * They cheated the bot in a trade.
          */
-        SCAMMED_ME(0.50, true),
+        SCAMMED_ME(0.50, true, 0.0, 0.0),
 
         /**
          * They led the bot somewhere to be killed for its items.
          */
-        LURED_ME(0.50, true);
+        LURED_ME(0.50, true, 0.0, 0.0),
 
         /**
-         * How much grudge the event adds.
+         * The bot killed them, which settles one kill's worth of grudge.
+         */
+        KILLED_THEM(-0.25, false, 0.0, 0.0),
+
+        /**
+         * They greeted the bot or spoke to it by name.
+         */
+        GREETED_ME(0.0, false, 0.03, 0.10),
+
+        /**
+         * They and the bot completed a trade.
+         */
+        TRADED(0.0, false, 0.05, 0.25),
+
+        /**
+         * They and the bot worked together for pay.
+         */
+        PARTNERED(0.0, false, 0.05, 0.25);
+
+        /**
+         * How much grudge the event adds, or settles if below zero.
          */
         private final double grudge;
 
@@ -58,9 +82,21 @@ public final class BotPeopleMemory implements BotMemoryPart {
          */
         private final boolean deep;
 
-        Event(double grudge, boolean deep) {
+        /**
+         * How much liking the event adds.
+         */
+        private final double liking;
+
+        /**
+         * The most liking this kind of event can build up to.
+         */
+        private final double likingLimit;
+
+        Event(double grudge, boolean deep, double liking, double likingLimit) {
             this.grudge = grudge;
             this.deep = deep;
+            this.liking = liking;
+            this.likingLimit = likingLimit;
         }
     }
 
@@ -90,7 +126,17 @@ public final class BotPeopleMemory implements BotMemoryPart {
         private boolean deep;
 
         /**
-         * The last thing they did that the bot holds on to, or {@code null}.
+         * The liking held at {@link #likingAt}.
+         */
+        private double liking;
+
+        /**
+         * When {@link #liking} was last set.
+         */
+        private long likingAt;
+
+        /**
+         * The last thing that happened between them and the bot, or {@code null}.
          */
         private Event last;
 
@@ -120,7 +166,17 @@ public final class BotPeopleMemory implements BotMemoryPart {
     public static final long DEEP_GRUDGE_HALF_LIFE = hours(720);
 
     /**
-     * A grudge weaker than this is gone.
+     * The time online over which liking halves.
+     */
+    public static final long LIKING_HALF_LIFE = hours(168);
+
+    /**
+     * A grudge at least this strong is one the bot acts on. It is where a feeling leaves the neutral band.
+     */
+    public static final double GRUDGE_HELD = 0.10;
+
+    /**
+     * A grudge or liking weaker than this is gone.
      */
     private static final double FORGOTTEN = 0.02;
 
@@ -153,7 +209,8 @@ public final class BotPeopleMemory implements BotMemoryPart {
      * @return How the bot feels about them now, from {@code 0.0} to {@code 1.0}.
      */
     public double feeling(String username) {
-        return clamp(NEUTRAL - grudge(username));
+        Person person = people.get(username);
+        return person == null ? NEUTRAL : feeling(person, memory.now());
     }
 
     /**
@@ -166,24 +223,85 @@ public final class BotPeopleMemory implements BotMemoryPart {
     }
 
     /**
-     * Records something a person did to the bot.
+     * @param username Who to ask about.
+     * @return Whether the bot bears them a grudge strong enough to act on.
+     */
+    public boolean holdsGrudge(String username) {
+        return grudge(username) >= GRUDGE_HELD;
+    }
+
+    /**
+     * @param username Who to ask about.
+     * @return The bot's time online since anything last happened between them, or {@code -1} for a stranger.
+     */
+    public long sinceLast(String username) {
+        Person person = people.get(username);
+        return person == null || person.last == null ? -1 : Math.max(0, memory.now() - person.lastAt);
+    }
+
+    /**
+     * @param username Who to ask about.
+     * @param within How far back to look, in milliseconds of the bot's time online.
+     * @return Whether the last thing between them was a good dealing, no longer ago than {@code within}.
+     */
+    public boolean dealtWellWith(String username, long within) {
+        Person person = people.get(username);
+        return person != null && person.last != null && person.last.liking > 0.0 &&
+                memory.now() - person.lastAt < within;
+    }
+
+    /**
+     * @param events The events to look for.
+     * @return The username of whoever most recently did one of {@code events} as their last act, or {@code null}.
+     */
+    public String latest(Event... events) {
+        Person latest = null;
+        for (Person person : people.values()) {
+            if (person.last == null || latest != null && person.lastAt < latest.lastAt) {
+                continue;
+            }
+            for (Event event : events) {
+                if (person.last == event) {
+                    latest = person;
+                    break;
+                }
+            }
+        }
+        return latest == null ? null : latest.name;
+    }
+
+    /**
+     * Records something that happened between a person and the bot.
+     * <p>
+     * An event that only settles a grudge does nothing for someone the bot does not know.
      *
-     * @param username Who did it.
-     * @param event What they did.
+     * @param username Who it happened with.
+     * @param event What happened.
      */
     public void remember(String username, Event event) {
-        Person person = person(username);
+        boolean adds = event.grudge > 0.0 || event.liking > 0.0;
+        Person person = adds ? person(username) : people.get(username);
         if (person == null) {
             return;
         }
         long now = memory.now();
-        double held = grudge(person, now);
-        // A deep grudge stays deep for as long as any of it is left.
-        person.deep = event.deep || person.deep && held >= FORGOTTEN;
-        person.grudge = Math.min(1.0, held + event.grudge);
-        person.grudgeAt = now;
+        if (event.grudge != 0.0) {
+            double held = grudge(person, now);
+            // A deep grudge stays deep for as long as any of it is left.
+            person.deep = event.deep || person.deep && held >= FORGOTTEN;
+            person.grudge = clamp(held + event.grudge);
+            person.grudgeAt = now;
+        }
+        if (event.liking > 0.0) {
+            double liked = liking(person, now);
+            person.liking = Math.max(liked, Math.min(event.likingLimit, liked + event.liking));
+            person.likingAt = now;
+        }
         person.last = event;
         person.lastAt = now;
+        // The most recent dealings come last, which settles ties in time.
+        people.remove(person.name);
+        people.put(person.name, person);
     }
 
     /**
@@ -193,9 +311,9 @@ public final class BotPeopleMemory implements BotMemoryPart {
         Map<String, Double> feelings = new LinkedHashMap<>();
         long now = memory.now();
         for (Person person : people.values()) {
-            double grudge = grudge(person, now);
-            if (grudge >= FORGOTTEN) {
-                feelings.put(person.name, clamp(NEUTRAL - grudge));
+            double feeling = feeling(person, now);
+            if (Math.abs(feeling - NEUTRAL) >= FORGOTTEN) {
+                feelings.put(person.name, feeling);
             }
         }
         return feelings;
@@ -223,19 +341,25 @@ public final class BotPeopleMemory implements BotMemoryPart {
 
     @Override
     public JsonElement save() {
-        // Fading has no memory of its own, so the faded grudges and one shared time say everything.
+        // Fading has no memory of its own, so the faded strengths and one shared time say everything.
         long now = memory.now();
         JsonArray known = new JsonArray();
         for (Person person : people.values()) {
             double grudge = grudge(person, now);
-            if (grudge < FORGOTTEN) {
+            double liking = liking(person, now);
+            if (Math.max(grudge, liking) < FORGOTTEN) {
                 continue;
             }
             JsonObject entry = new JsonObject();
             entry.addProperty("name", person.name);
-            entry.addProperty("grudge", rounded(grudge));
-            if (person.deep) {
-                entry.addProperty("deep", true);
+            if (grudge >= FORGOTTEN) {
+                entry.addProperty("grudge", rounded(grudge));
+                if (person.deep) {
+                    entry.addProperty("deep", true);
+                }
+            }
+            if (liking >= FORGOTTEN) {
+                entry.addProperty("liking", rounded(liking));
             }
             if (person.last != null) {
                 entry.addProperty("last", person.last.name());
@@ -272,12 +396,15 @@ public final class BotPeopleMemory implements BotMemoryPart {
                 continue;
             }
             double grudge = clamp(number(entry, "grudge", 0.0));
-            if (grudge < FORGOTTEN) {
+            double liking = clamp(number(entry, "liking", 0.0));
+            if (Math.max(grudge, liking) < FORGOTTEN) {
                 continue;
             }
             Person person = new Person(name);
             person.grudge = grudge;
             person.grudgeAt = asOf;
+            person.liking = liking;
+            person.likingAt = asOf;
             person.deep = entry.has("deep") && entry.get("deep").isJsonPrimitive() && entry.get("deep").getAsBoolean();
             person.last = event(text(entry, "last"));
             person.lastAt = (long) number(entry, "last_at", 0.0);
@@ -300,12 +427,18 @@ public final class BotPeopleMemory implements BotMemoryPart {
         List<String> lines = new ArrayList<>();
         lines.add("People: " + people.size() + " of " + capacity());
         people.values().stream()
-                .sorted(Comparator.comparingDouble((Person person) -> grudge(person, now)).reversed())
+                .sorted(Comparator.comparingDouble((Person person) -> weight(person, now)).reversed())
                 .forEach(person -> {
-                    double grudge = grudge(person, now);
                     StringBuilder line = new StringBuilder(person.name).append(": feeling ")
-                            .append(rounded(clamp(NEUTRAL - grudge)))
-                            .append(person.deep ? ", deep grudge " : ", grudge ").append(rounded(grudge));
+                            .append(rounded(feeling(person, now)));
+                    double grudge = grudge(person, now);
+                    if (grudge >= FORGOTTEN) {
+                        line.append(person.deep ? ", deep grudge " : ", grudge ").append(rounded(grudge));
+                    }
+                    double liking = liking(person, now);
+                    if (liking >= FORGOTTEN) {
+                        line.append(", liking ").append(rounded(liking));
+                    }
                     if (person.last != null) {
                         line.append(", ").append(person.last).append(' ')
                                 .append(Math.max(0, now - person.lastAt) / hours(1)).append(" h ago");
@@ -330,7 +463,7 @@ public final class BotPeopleMemory implements BotMemoryPart {
             return known;
         }
         long now = memory.now();
-        people.values().removeIf(person -> grudge(person, now) < FORGOTTEN);
+        people.values().removeIf(person -> weight(person, now) < FORGOTTEN);
         if (people.size() >= capacity()) {
             people.remove(weakest(now).name);
         }
@@ -346,13 +479,32 @@ public final class BotPeopleMemory implements BotMemoryPart {
         Person weakest = null;
         double least = Double.MAX_VALUE;
         for (Person person : people.values()) {
-            double grudge = grudge(person, now);
-            if (grudge < least) {
-                least = grudge;
+            double weight = weight(person, now);
+            if (weight < least) {
+                least = weight;
                 weakest = person;
             }
         }
         return weakest;
+    }
+
+    /**
+     * @return How much the bot still feels about a person, either way.
+     */
+    private double weight(Person person, long now) {
+        return Math.max(grudge(person, now), liking(person, now));
+    }
+
+    private double feeling(Person person, long now) {
+        return clamp(NEUTRAL + liking(person, now) - grudge(person, now));
+    }
+
+    /**
+     * @return A person's liking after halving once for every half-life since it was set.
+     */
+    private double liking(Person person, long now) {
+        return person.liking <= 0.0 ? 0.0 :
+                person.liking * Math.pow(0.5, Math.max(0, now - person.likingAt) / (double) LIKING_HALF_LIFE);
     }
 
     /**

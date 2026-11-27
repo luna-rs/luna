@@ -9,7 +9,6 @@ import api.bot.webwalk.plan.BankAccess
 import api.combat.death.PlayerDeathItems
 import api.predef.*
 import engine.bot.speech.BotReactions
-import engine.bot.speech.BotReactions.lastScammedBy
 import engine.bot.speech.BotScamSpeechPool
 import engine.bot.speech.BotScamSpeechPool.ScamSpeech
 import engine.controllers.WildernessLocatableController.levelAt
@@ -133,9 +132,8 @@ object BotWildernessLures {
         bot.lureFight = null
         if (source !== fight.killer || !lostItems || fight.recorded || !fight.recent() || levelAt(victim.position) <= 0) return
         fight.recorded = true
-        bot.lastScammedBy = fight.lurer
-        bot.memory.people.remember(fight.lurer, Event.LURED_ME)
         if (fight.killer.username != fight.lurer) bot.memory.people.remember(fight.killer.username, Event.LURED_ME)
+        bot.memory.people.remember(fight.lurer, Event.LURED_ME)
         BotReactions.reactToScammed(bot)
     }
 

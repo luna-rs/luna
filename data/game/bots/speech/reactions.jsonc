@@ -14,6 +14,10 @@
  * Lines a bot may say back to a real player who greets it or the people around it. Use <name> to reference the
  * player being greeted.
  *
+ * GREETED_AGAIN:
+ * Lines a bot may say back to a real player it remembers, in place of a GREETED line. Use <name> to reference the
+ * player being greeted.
+ *
  * IMPRESSED:
  * Lines a bot may say when reacting positively to another player, item, achievement, or display of wealth.  Use <name>
  * to reference the name of the person being complimented.
@@ -30,6 +34,9 @@
  *
  * RARE_DROP:
  * Lines a bot may say after receiving a rare or valuable drop. Use <drop> as the drop-name placeholder.
+ *
+ * REVENGE:
+ * Lines a bot may say as it attacks a player it holds a grudge against.
  *
  * SCAMMED:
  * Lines a bot may say after being scammed. Use <name> as the scammer-name placeholder.
@@ -1041,6 +1048,20 @@
     "sup <name>",
     "yo <name>",
     "hiya <name>"
+  ],
+  "GREETED_AGAIN": [
+    "hey again",
+    "hi again",
+    "hello again",
+    "oh hey <name>",
+    "hey <name> again",
+    "oh its <name>",
+    "hi again <name>",
+    "wb",
+    "wb <name>",
+    "sup again",
+    "yo <name> again",
+    "back again <name>?"
   ],
   "IMPRESSED": [
     "hey nice gear <name>",
@@ -38854,6 +38875,16 @@
     "lets gooo, finally pulled my <drop>!!",
     "lets gooo, finally pulled the <drop>!",
     "lets gooo, finally pulled this <drop>"
+  ],
+  "REVENGE": [
+    "remember me?",
+    "payback",
+    "payback time",
+    "this is for last time",
+    "u killed me before",
+    "not this time",
+    "ur turn now",
+    "i owe u one"
   ],
   "SCAMMED": [
     "ATTENTION !!!! <name> is a scammer!!",
