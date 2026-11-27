@@ -14,6 +14,7 @@ import game.obj.doors.Doors
 import game.obj.doors.GnomeStrongholdGate
 import game.obj.doors.GrandTreeDoors
 import game.obj.doors.JewellersDoor
+import game.obj.doors.QuestDoors
 import game.obj.doors.TaverleyJailDoor
 import game.obj.doors.TrollArenaGates
 import game.obj.doors.TenzingDoors
@@ -40,7 +41,8 @@ object ConditionalDoorCrossing : CrossingHandler {
             id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != BrassKeyDoor.DOOR &&
             id != TaverleyJailDoor.DUSTY_KEY_GATE.closed && id != GnomeBall.GATE &&
             id != GnomeStrongholdGate.GATE && id != FishingGuild.DOOR && !hardwood &&
-            TrollArenaGates.GATES.none { it.id == id } && id !in TenzingDoors.IDS && treeDoor == null) {
+            TrollArenaGates.GATES.none { it.id == id } && id !in TenzingDoors.IDS &&
+            id !in QuestDoors.fortressDoors && treeDoor == null) {
             return "unsupported conditional door $id"
         }
         if (treeDoor != null && (position != treeDoor.position ||

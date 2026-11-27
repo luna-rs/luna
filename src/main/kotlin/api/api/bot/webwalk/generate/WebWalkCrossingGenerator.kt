@@ -9,6 +9,7 @@ import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.GnomeStrongholdGate
 import game.obj.doors.GrandTreeDoors
+import game.obj.doors.QuestDoors
 import game.content.miningGuild.MiningGuild
 import game.content.fishingGuild.FishingGuild
 import game.obj.doors.BrassKeyDoor
@@ -287,10 +288,12 @@ object SpecialCrossings {
             CrossingPlacement(MortMyreBridge.TREE, it.tree, it.bank, it.opposite.bank)
         })
 
+    private val FORTRESS = CrossingSpec(ConditionalDoorCrossing.ID, QuestDoors.fortressDoors.keys, cost = 4)
+
     /**
      * Every spec.
      */
-    val ALL = listOf(BORDER_GATE, HARDWOOD_GROVE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
+    val ALL = listOf(FORTRESS, BORDER_GATE, HARDWOOD_GROVE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
         GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, GRAND_TREE_DOORS, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
         ARDOUGNE_STILES, MORT_MYRE_BRIDGE, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,

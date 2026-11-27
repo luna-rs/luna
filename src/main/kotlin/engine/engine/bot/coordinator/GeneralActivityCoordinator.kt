@@ -5,6 +5,7 @@ import api.predef.*
 import game.bot.scripts.BuyCannonBotScript
 import game.bot.scripts.BuyInitiateArmourBotScript
 import game.bot.scripts.ChampionsChallengeBotScript
+import game.bot.scripts.BlackKnightsFortressBotScript
 import game.bot.scripts.DragonSlayerBotScript
 import game.bot.scripts.RomeoJulietBotScript
 import game.bot.scripts.RuneMysteriesBotScript
@@ -99,6 +100,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         }
         bot.actionHandler.prayerRestoration.preparation()?.let { return it }
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
+        if (BlackKnightsFortressBotScript.eligible(bot)) return BlackKnightsFortressBotScript(bot)
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
         if (RomeoJulietBotScript.eligible(bot)) return RomeoJulietBotScript(bot)
         if (RuneMysteriesBotScript.eligible(bot)) return RuneMysteriesBotScript(bot)

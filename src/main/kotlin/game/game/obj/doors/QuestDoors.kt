@@ -41,6 +41,11 @@ object QuestDoors {
     private const val MAX_TICKS = 30
 
     /**
+     * Public fortress passages. The quest checks the disguise at the grill.
+     */
+    val fortressDoors = mapOf(2337 to 1535, 2338 to 1532, 2339 to 1535, 2341 to 1588)
+
+    /**
      * Every quest door, mapped to the object that is shown while it stands open. A door mapped to itself has no
      * separate open object, so the same one is shown turned.
      */
@@ -81,8 +86,6 @@ object QuestDoors {
         // TODO Shilo Village: Rashiliyia's tomb, the bone key and village entry.
         2246 to 2246, 2247 to 2247, 2255 to 2255, 2256 to 2256, 2259 to 2259, 2260 to 2260, 2261 to 2261,
         2262 to 2262,
-        // TODO Black Knights' Fortress: the guard disguise.
-        2337 to 1535, 2338 to 1532, 2339 to 1535,
         // TODO Shield of Arrav: gang membership.
         2397 to 1534, 2398 to 1534, 2399 to 1534,
         // TODO Family Crest: the lever puzzle.
@@ -151,7 +154,7 @@ object QuestDoors {
         // TODO Recipe for Disaster: the Lumbridge dining room and Evil Dave's pen.
         12348 to 7260, 12349 to 12349, 12350 to 12350, 12467 to 12469, 12468 to 12470,
         // TODO In Aid of the Myreque: the Burgh de Rott gate.
-        12816 to 12818, 12817 to 12819)
+        12816 to 12818, 12817 to 12819) + fortressDoors
 
     /**
      * The doors that sound like a metal grate.
@@ -212,6 +215,7 @@ object QuestDoors {
     private fun soundOf(id: Int): Sound? = when (id) {
         in grates -> Sound.GRATE_OPEN
         in gates -> Sound.GATE_OPEN
+        2341 -> Sound.COFFIN_OPEN
         else -> null
     }
 
@@ -293,7 +297,7 @@ object QuestDoors {
     /**
      * Takes the player through a door that stands alone, using the shared passage.
      */
-    private class Single(plr: Player, door: GameObject, type: DoorType) : DoorPassageAction(plr, door, type) {
+    private class Single(plr: Player, door: GameObject, private val type: DoorType) : DoorPassageAction(plr, door, type) {
 
         private val leafTile = across(door)
 
@@ -301,6 +305,7 @@ object QuestDoors {
         override fun checkAccess(entering: Boolean): Boolean = true
 
         override fun onPassage(entering: Boolean) {
+            if (type.closed == 2341) mob.sendMessage("You push against the wall and find a secret passage.")
             swung += leafTile
             world.scheduleOnce(OPEN_TICKS) { swung -= leafTile }
         }
