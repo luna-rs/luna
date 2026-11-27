@@ -1,36 +1,13 @@
 package game.bot.scripts.skills
 
-import api.attr.Attr
-import api.attr.getValue
-import api.attr.setValue
-import api.bot.zone.SubZone
 import game.skill.mining.Ore
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonality
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.exp
 import kotlin.math.roundToInt
 import kotlin.random.Random
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-
-/**
- * A mine the bot gave up on because it found no free rock. The next mining pick skips it for [SKIP_FOR], so bots
- * that always take the top option don't walk straight back to the same crowded mine.
- */
-internal class FullMine(val zone: SubZone, val time: Long = System.currentTimeMillis()) {
-    fun isRecent(now: Long = System.currentTimeMillis()) = now - time < SKIP_FOR.inWholeMilliseconds
-
-    companion object {
-        val SKIP_FOR = 5.minutes
-    }
-}
-
-internal var Bot.lastFullMine by Attr.nullableObj(FullMine::class)
-
-/** Whether the bot recently gave up on [zone] because every rock was taken or empty. */
-internal fun Bot.recentlyFull(zone: SubZone): Boolean = lastFullMine?.let { it.zone == zone && it.isRecent() } == true
 
 /**
  * Session preferences for ordinary 377 mining. Competition changes the choice of rock, never its ownership or rolls.

@@ -7,6 +7,7 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionRuneCosts
+import api.bot.script.rememberPlace
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.combat.death.PlayerDeathItems
@@ -30,6 +31,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -380,6 +382,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
             if (collector == bot.username) return false
             lostRace = true
             competitionLosses[zone] = (competitionLosses[zone] ?: 0) + 1
+            if (competitionLosses[zone] == competitionLimit) bot.rememberPlace(zone, BotPlacesMemory.Event.CROWDED)
             return true
         }
         attemptProduction(itemId, available = selected != null, progressCondition = {

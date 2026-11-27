@@ -18,9 +18,9 @@ import java.util.Map;
  * {@code 0.5 + liking - grudge}, so {@code 0.0} is strong dislike, {@code 0.5} is neutral and {@code 1.0} is strong
  * approval, and someone the bot has never met is neutral.
  * <p>
- * A grudge from being killed is {@link #GRUDGE_HALF_LIFE ordinary}: one kill is held for about a week of play. A
- * grudge from being cheated is {@link #DEEP_GRUDGE_HALF_LIFE deep} and lasts months. Kind bots let go sooner. Killing
- * someone back settles as much grudge as one kill leaves.
+ * A grudge from being killed or chased off is {@link #GRUDGE_HALF_LIFE ordinary}: one kill is held for about a week of
+ * play. A grudge from being cheated is {@link #DEEP_GRUDGE_HALF_LIFE deep} and lasts months. Kind bots let go sooner.
+ * Killing someone back settles as much grudge as one kill leaves.
  * <p>
  * Liking comes in small steps from good dealings, and each kind of dealing can only raise it so far. None of them
  * reaches the level other code reads as love.
@@ -41,6 +41,12 @@ public final class BotPeopleMemory implements BotMemoryPart {
          * They killed the bot.
          */
         KILLED_ME(0.25, false, 0.0, 0.0),
+
+        /**
+         * They attacked the bot and drove it off. It takes two of these within a few days of play to make a grudge
+         * the bot acts on.
+         */
+        CHASED_ME(0.06, false, 0.0, 0.0),
 
         /**
          * They cheated the bot in a trade.

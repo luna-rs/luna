@@ -7,13 +7,13 @@ import api.bot.action.trading.ProfitGatheringDemand
 import game.skill.Skills
 import game.skill.mining.Pickaxe
 import game.skill.mining.Mining
+import api.bot.script.findsPacked
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.MineBotScript
 import game.bot.scripts.skills.MiningBehavior
 import game.bot.scripts.skills.MiningBehavior.Style
-import game.bot.scripts.skills.recentlyFull
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
@@ -82,7 +82,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
             bot.recentEscape?.avoids(zone) != true
         val available = activities(bot, minOf(level, bot.mining.level), false).filter {
             it.zones.any(::reachable)
-        }.let { all -> all.filterNot { method -> method.zones.all { bot.recentlyFull(it) } }.ifEmpty { all } }
+        }.let { all -> all.filterNot { method -> method.zones.all { bot.findsPacked(it) } }.ifEmpty { all } }
         val quotes = linkedMapOf<Ore, ProfitGatheringDemand.Quote>()
         for (ore in available.flatMap { it.tokens }.distinct()) {
             if (ore == GEM_ROCK || ore.sizes.isNotEmpty() || mine != null && ore !in rocks[mine].orEmpty()) continue
@@ -115,9 +115,9 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
      */
     private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): MineBotScript {
         val powerMining = training && level >= IRON.level && MiningBehavior.styleOf(bot.personality) == Style.POWER_MINER
-        // A mine the bot just left for lack of free rocks is skipped while another option remains.
+        // A mine the bot recently left for lack of free rocks is skipped while another option remains.
         val options = activities(bot, level, training).let { all ->
-            all.filterNot { method -> method.zones.all { bot.recentlyFull(it) } }.ifEmpty { all }
+            all.filterNot { method -> method.zones.all { bot.findsPacked(it) } }.ifEmpty { all }
         }
         val guild = options.firstOrNull { SubZone.MINING_GUILD in it.zones && prefersGuild(bot, training) }
         val powerMethod = if (powerMining) options

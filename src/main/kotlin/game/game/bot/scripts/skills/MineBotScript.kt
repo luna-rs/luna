@@ -1,6 +1,8 @@
 package game.bot.scripts.skills
 
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
+import api.bot.script.rememberPlace
 import api.bot.script.BotScriptData
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
@@ -444,8 +446,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         // Leaving from inside the mine with time left means the rock search gave up, not the session ending.
         val zone = activeZone
         if (zone != null && duration > Duration.ZERO && !forceBanking && zone.area.contains(bot.position)) {
-            bot.lastFullMine = FullMine(zone)
-            bot.log("Leaving $zone without a free rock; skipping it for ${FullMine.SKIP_FOR}.")
+            bot.rememberPlace(zone, BotPlacesMemory.Event.CROWDED)
+            bot.log("Leaving $zone without a free rock; remembering it as packed.")
         }
         if (!powerMining && Ore.COAL in ores && (zone == SubZone.COAL_TRUCKS_MINE || coalTrucks.haulPending) &&
             (CoalTrucks.storedCoal(bot) > 0 || coalTrucks.haulPending) && coalTrucks.ready()) {

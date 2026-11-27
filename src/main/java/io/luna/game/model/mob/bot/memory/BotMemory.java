@@ -18,8 +18,9 @@ import static java.util.Objects.requireNonNull;
  * a limited, personal picture of its past and not a log. Parts are written where something happens to the bot and
  * read where it makes a choice. Nothing here runs every tick.
  * <p>
- * Everything fades by the bot's own time online, which is saved with the account. World ticks restart at zero on
- * every boot and are never stored here. Entries hold names and ids, never live players.
+ * Almost everything fades by the bot's own time online, which is saved with the account. What a bot saw of the world
+ * rather than of itself, such as a crowded place, fades by real time instead. World ticks restart at zero on every boot
+ * and are never stored here. Entries hold names and ids, never live players.
  *
  * @author TheLining
  */
@@ -36,6 +37,11 @@ public final class BotMemory {
     private final LongSupplier clock;
 
     /**
+     * The real time, in milliseconds since the epoch.
+     */
+    private final LongSupplier realClock;
+
+    /**
      * The personality that sets how much the bot keeps and how fast it lets go.
      */
     private final Supplier<BotPersonality> personality;
@@ -44,6 +50,11 @@ public final class BotMemory {
      * Who the bot knows.
      */
     private final BotPeopleMemory people;
+
+    /**
+     * Which places the bot knows.
+     */
+    private final BotPlacesMemory places;
 
     /**
      * Every part, in the order they are saved.
@@ -56,20 +67,23 @@ public final class BotMemory {
      * @param bot The bot that remembers.
      */
     public BotMemory(Bot bot) {
-        this(() -> bot.getTimePlayed().toMillis(), bot::getPersonality);
+        this(() -> bot.getTimePlayed().toMillis(), System::currentTimeMillis, bot::getPersonality);
     }
 
     /**
-     * Creates a memory from its two inputs.
+     * Creates a memory from its three inputs.
      *
      * @param clock The owner's time online, in milliseconds.
+     * @param realClock The real time, in milliseconds since the epoch.
      * @param personality The owner's personality, read whenever it is needed.
      */
-    public BotMemory(LongSupplier clock, Supplier<BotPersonality> personality) {
+    public BotMemory(LongSupplier clock, LongSupplier realClock, Supplier<BotPersonality> personality) {
         this.clock = requireNonNull(clock);
+        this.realClock = requireNonNull(realClock);
         this.personality = requireNonNull(personality);
         people = new BotPeopleMemory(this);
-        parts = List.of(people);
+        places = new BotPlacesMemory(this);
+        parts = List.of(people, places);
     }
 
     /**
@@ -77,6 +91,13 @@ public final class BotMemory {
      */
     public long now() {
         return Math.max(0, clock.getAsLong());
+    }
+
+    /**
+     * @return The real time, in milliseconds since the epoch. Memory of the world rather than of the bot fades by it.
+     */
+    public long realTime() {
+        return realClock.getAsLong();
     }
 
     /**
@@ -92,6 +113,13 @@ public final class BotMemory {
      */
     public BotPeopleMemory getPeople() {
         return people;
+    }
+
+    /**
+     * @return Which places the bot knows.
+     */
+    public BotPlacesMemory getPlaces() {
+        return places;
     }
 
     /**

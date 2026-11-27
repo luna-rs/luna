@@ -4,6 +4,8 @@ import api.bot.boss.BossRecruitment
 import api.bot.boss.BossTarget
 import api.bot.boss.BossReadiness
 
+import api.bot.script.byRememberedPlaces
+import api.bot.script.findsDangerous
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
@@ -294,6 +296,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 if (current >= goal.stockCap || world.economy.getPrice(goal.itemId) <= 0) continue
                 val available = dropCamps.filter { it.zone in goal.zones && it.minimum <= readiness &&
                     (zone == null || zone == it.zone && bot.recentEscape?.avoids(zone) != true) &&
+                    !bot.findsDangerous(it.zone) &&
                     canUseCamp(it.zone, BotGearPurpose.MELEE, shieldReady) &&
                     it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }
                 val options = campGroups(available).shuffled().take(3).flatten()
@@ -319,7 +322,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 SubZone.SOUTH_FALADOR_FARM_WEST_CHICKENS, SubZone.SOUTH_FALADOR_FARM_EAST_CHICKENS)
             fun options(zones: Set<SubZone>) = camps.filter {
                 it.zone in zones && it.minimum <= readiness && it.zone.entryBlocker(bot) == null &&
-                    bot.recentEscape?.avoids(it.zone) != true && NpcCombatScript.campSuppliesOwned(bot, it.zone)
+                    bot.recentEscape?.avoids(it.zone) != true && !bot.findsDangerous(it.zone) &&
+                    NpcCombatScript.campSuppliesOwned(bot, it.zone)
             }.sortedBy { bot.position.computeLongestDistance(it.zone.inside) }.take(3)
 
             val higher = if (bot.personality.isDextrous) options(giants) else emptyList()
@@ -372,11 +376,11 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 moleReady = GiantMoleTrip.ready(bot))
                 .filter { camp ->
                     val boss = BossTarget.entries.firstOrNull { it.zone == camp.zone }
-                    camp.zone.entryBlocker(bot) == null &&
+                    camp.zone.entryBlocker(bot) == null && !bot.findsDangerous(camp.zone) &&
                         (if (boss != null) BossReadiness.ready(bot, boss, false, purpose)
                         else NpcCombatScript.campSuppliesOwned(bot, camp.zone))
                 }
-            val groups = campGroups(candidates).shuffled()
+            val groups = bot.byRememberedPlaces(campGroups(candidates)) { it.first().zone }
             val first = groups.firstOrNull()?.first()?.zone
             if (first in RockCrabBotScript.CAMPS) {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,

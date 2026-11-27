@@ -4,6 +4,7 @@ import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import api.bot.zone.SubZone
 import api.predef.*
 import io.luna.game.action.ActionType
@@ -237,6 +238,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                         "Abandoning $zone because no target was interactable and the area is crowded. " +
                                 "Viewable players: $visiblePlayers."
                     )
+                    bot.rememberPlace(zone, BotPlacesMemory.Event.CROWDED)
                     return false
                 }
 

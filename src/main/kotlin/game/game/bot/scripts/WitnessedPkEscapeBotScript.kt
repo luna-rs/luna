@@ -1,11 +1,10 @@
 package game.bot.scripts
 
 import api.bot.Suspendable.delay
-import api.bot.script.BotEscape
 import api.bot.script.BotScript
 import api.bot.script.DynamicBotScript
 import api.bot.script.ZonedBotScript
-import api.bot.script.lastEscape
+import api.bot.script.leftWitnessedAttack
 import engine.controllers.Controllers.inWilderness
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -81,7 +80,7 @@ class WitnessedPkEscapeBotScript(bot: Bot, private val observedAt: Position, pri
         bot.walking.isRunning = true
         bot.reflex.isDisableCombatReflex = true
         val zone = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)?.interruptedZone
-        bot.lastEscape = BotEscape(observedAt, attacker, System.currentTimeMillis(), zone)
+        bot.leftWitnessedAttack(attacker, observedAt, zone)
         bot.log("Leaving a witnessed Wilderness attack by $attacker near $observedAt.")
         return false
     }
