@@ -32,13 +32,13 @@ internal class BotPkDeathMessages(ticker: Ticker = Ticker.systemTicker(),
     /**
      * The most recent death PMs received by each player, from any bot.
      */
-    private val recentByPlayer = CacheBuilder.newBuilder().ticker(ticker).expireAfterWrite(30, TimeUnit.MINUTES)
+    private val recentByPlayer = CacheBuilder.newBuilder().ticker(ticker).expireAfterWrite(10, TimeUnit.MINUTES)
         .build<Long, Unit>()
 
     /**
      * The most recent death PMs from each bot to each player.
      */
-    private val recentByPair = CacheBuilder.newBuilder().ticker(ticker).expireAfterWrite(10, TimeUnit.MINUTES)
+    private val recentByPair = CacheBuilder.newBuilder().ticker(ticker).expireAfterWrite(30, TimeUnit.MINUTES)
         .build<Pair<Long, Long>, Unit>()
 
     /**
