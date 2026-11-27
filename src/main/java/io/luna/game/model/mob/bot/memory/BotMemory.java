@@ -18,6 +18,9 @@ import static java.util.Objects.requireNonNull;
  * a limited, personal picture of its past and not a log. Parts are written where something happens to the bot and
  * read where it makes a choice. Nothing here runs every tick.
  * <p>
+ * Memory changes what a bot chooses only by multiplying its usual interest, between {@link #LEAST_INTEREST} and
+ * {@link #MOST_INTEREST} for everything it remembers together. It never rules a choice in or out.
+ * <p>
  * Almost everything fades by the bot's own time online, which is saved with the account. What a bot saw of the world
  * rather than of itself, such as a crowded place, fades by real time instead. World ticks restart at zero on every boot
  * and are never stored here. Entries hold names and ids, never live players.
@@ -30,6 +33,16 @@ public final class BotMemory {
      * The layout of the saved data.
      */
     private static final int VERSION = 1;
+
+    /**
+     * The lowest multiplier memory can put on a bot's interest in something.
+     */
+    public static final double LEAST_INTEREST = 0.25;
+
+    /**
+     * The highest multiplier memory can put on a bot's interest in something.
+     */
+    public static final double MOST_INTEREST = 3.0;
 
     /**
      * The bot's time online, in milliseconds.
@@ -55,6 +68,11 @@ public final class BotMemory {
      * Which places the bot knows.
      */
     private final BotPlacesMemory places;
+
+    /**
+     * What the bot has been doing.
+     */
+    private final BotDiaryMemory diary;
 
     /**
      * Every part, in the order they are saved.
@@ -83,7 +101,8 @@ public final class BotMemory {
         this.personality = requireNonNull(personality);
         people = new BotPeopleMemory(this);
         places = new BotPlacesMemory(this);
-        parts = List.of(people, places);
+        diary = new BotDiaryMemory(this);
+        parts = List.of(people, places, diary);
     }
 
     /**
@@ -120,6 +139,31 @@ public final class BotMemory {
      */
     public BotPlacesMemory getPlaces() {
         return places;
+    }
+
+    /**
+     * @return What the bot has been doing.
+     */
+    public BotDiaryMemory getDiary() {
+        return diary;
+    }
+
+    /**
+     * @param activity The activity's name.
+     * @param liking How much the bot likes the activity, from {@code 0.0} to {@code 1.0}.
+     * @return The multiplier everything the bot remembers puts on its interest in the activity.
+     */
+    public double interestIn(String activity, double liking) {
+        return Math.clamp(diary.interestIn(activity, liking), LEAST_INTEREST, MOST_INTEREST);
+    }
+
+    /**
+     * @param skill The skill's id.
+     * @param preferred Whether it is one of the bot's preferred skills.
+     * @return The multiplier everything the bot remembers puts on its interest in the skill.
+     */
+    public double interestIn(int skill, boolean preferred) {
+        return Math.clamp(diary.interestIn(skill, preferred), LEAST_INTEREST, MOST_INTEREST);
     }
 
     /**

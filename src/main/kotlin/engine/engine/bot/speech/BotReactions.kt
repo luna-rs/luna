@@ -157,6 +157,7 @@ object BotReactions {
     fun reactToKill(killer: Bot, victim: Mob) {
         if (victim is Player) {
             killer.memory.people.remember(victim.username, Event.KILLED_THEM)
+            killer.memory.diary.killed()
         }
         if (victim is Player || killer.actionHandler.combat.isThreat(victim, BotCombatThreat.Context.ACHIEVEMENT)) {
             val playerKill = victim is Player

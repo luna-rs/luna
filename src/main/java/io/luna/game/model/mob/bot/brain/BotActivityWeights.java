@@ -17,6 +17,8 @@ import static api.predef.ext.BotPreferenceExtKt.totalItemAmount;
  * Combat progression raises PK interest; combat or skilling progression raises minigame interest.
  * Progression makes only a small adjustment: training retains at least ninety-five percent of its weight,
  * while PKing and minigames gain at most ten percent. Exhausted training activities are excluded.
+ * What the bot remembers of its recent sessions then scales each weight: down after a lot of the same activity, a bad
+ * run or a failed start, up after a good run.
  *
  * @author lare96
  */
@@ -71,6 +73,7 @@ public final class BotActivityWeights {
                 case MINIGAMES -> interest * (1.0 + 0.10 * minigameProgress);
                 default -> interest;
             };
+            weight *= bot.getMemory().interestIn(activity.name(), interest);
             if (Double.isFinite(weight) && weight > 0.0) weights.put(activity, weight);
         });
         return weights;

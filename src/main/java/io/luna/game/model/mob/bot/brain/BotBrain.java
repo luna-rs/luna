@@ -15,10 +15,13 @@ import game.bot.scripts.BankRecoveryWaitBotScript;
 import game.bot.scripts.BlastFurnaceBotScript;
 import game.bot.scripts.skills.FarmingReturnBotScript;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.memory.BotDiaryMemory;
 import io.luna.util.RandomUtils;
 
 import java.util.function.Consumer;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static api.bot.script.BotDiaryKt.standing;
 
 /**
  * The high-level decision-making center for a {@link Bot}.
@@ -29,6 +32,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p>
  * This class should remain a lightweight decision layer. It should inspect the bot, choose the next behavior domain,
  * and delegate execution to coordinators or scripts instead of performing detailed gameplay logic directly.
+ * <p>
+ * Each activity the brain chooses is a session in the bot's {@link BotDiaryMemory diary}, from the choice until the
+ * brain is next asked for work.
  *
  * @author lare96
  */
@@ -84,6 +90,11 @@ public class BotBrain {
      * making up its mind.
      */
     public BotCoordinator process(Bot bot) {
+        // The brain is only asked while the script stack is empty, so whatever the last choice started is over.
+        BotDiaryMemory diary = bot.getMemory().getDiary();
+        if (diary.isOpen()) {
+            diary.end(standing(bot));
+        }
         if (stillDeciding(bot)) {
             return null;
         }
@@ -128,13 +139,13 @@ public class BotBrain {
                     ThreadLocalRandom.current().nextDouble() < 0.25) {
                 BotScript starterProfit = GeneralProfitCoordinator.INSTANCE.starterVials(bot);
                 if (starterProfit != null) {
-                    return owner -> owner.getScriptStack().push(starterProfit);
+                    return session(BotActivity.GENERAL_PROFIT, owner -> owner.getScriptStack().push(starterProfit));
                 }
             }
         }
         BotScript coverage = PkCoverage.idleScript(bot);
         if (coverage != null) {
-            return owner -> owner.getScriptStack().push(coverage);
+            return session(BotActivity.PKING, owner -> owner.getScriptStack().push(coverage));
         }
         BotScript foodRestock = FoodSupplyAcquisition.idleScript(bot);
         if (foodRestock != null) {
@@ -143,9 +154,25 @@ public class BotBrain {
         var map = BotActivityWeights.weights(bot);
         BotActivity activity = RandomUtils.weightedRoll(map);
         if (activity == null) {
-            return BotActivity.SOCIALIZING.getCoordinator();
+            activity = BotActivity.SOCIALIZING;
         }
-        return activity.getCoordinator();
+        return session(activity, activity.getCoordinator());
+    }
+
+    /**
+     * Opens a diary session for an activity before its coordinator starts the work.
+     *
+     * @param activity The activity the bot is about to do.
+     * @param coordinator What starts the work, or {@code null} if nothing does.
+     * @return A coordinator that does both.
+     */
+    private static BotCoordinator session(BotActivity activity, BotCoordinator coordinator) {
+        return owner -> {
+            owner.getMemory().getDiary().begin(activity.name(), standing(owner));
+            if (coordinator != null) {
+                coordinator.accept(owner);
+            }
+        };
     }
 
     /**
