@@ -34,6 +34,7 @@ BotChatRouter.add(PlayerTradeAdvertisementMarket.live)
 BotChatRouter.add(BotPriceChecks)
 BotChatRouter.add(CombatCampBehavior)
 BotChatRouter.add(BossRecruitment)
+BotChatRouter.add(BotGreetings)
 on(ChatEvent::class) { BotChatRouter.route(this) }
 on(CombatDamageReceivedEvent::class) {
     CombatCampBehavior.nearDeath(plr, damage.rawAmount)
