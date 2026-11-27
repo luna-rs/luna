@@ -223,6 +223,13 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
     open suspend fun completed() {}
 
     /**
+     * Handles the funded output of a normally completed profit-gathering trip.
+     */
+    protected open fun completedProfitGathering(goal: ProfitGatheringGoal) {
+        goal.completed(bot)
+    }
+
+    /**
      * Called immediately before a running script is paused.
      *
      * This hook is invoked by [pause] before the active coroutine is cancelled. Subclasses can override it to save
@@ -313,7 +320,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     }
                     if (normalExit && !productionSaleQueued) {
                         val gathering = profitGathering
-                        if (gathering != null) gathering.completed(bot) else completed()
+                        if (gathering != null) completedProfitGathering(gathering) else completed()
                     }
                 }
             }

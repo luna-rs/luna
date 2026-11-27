@@ -291,8 +291,9 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             destinations[tool] = locations
         }
         val tool = ProfitGatheringDemand.select(bot, choices) ?: return null
-        return GatheringOpportunity(choices.getValue(tool), destinations.getValue(tool), bot, getDuration(bot, skillId),
-            tool.fish.mapTo(linkedSetOf()) { fish -> fish.id }) { duration, zones ->
+        val quote = choices.getValue(tool)
+        val outputs = if (tool == HARPOON) setOf(quote.itemId) else tool.fish.mapTo(linkedSetOf()) { it.id }
+        return GatheringOpportunity(quote, destinations.getValue(tool), bot, getDuration(bot, skillId), outputs) { duration, zones ->
             FishBotScript(bot, tool, duration, zones)
         }
     }
