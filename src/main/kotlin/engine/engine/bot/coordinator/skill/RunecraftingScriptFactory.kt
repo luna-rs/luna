@@ -1,5 +1,6 @@
 package engine.bot.coordinator.skill
 
+import api.bot.action.trading.NativeOutputDemand
 import api.bot.script.BotScript
 import api.bot.script.ProductionPlan
 import api.bot.script.VoidBotScript
@@ -32,7 +33,8 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
      * @author lare96
      */
     private data class Candidate(val rune: CraftableRune, val essence: Int, val owned: Boolean,
-                                 val access: Boolean, val score: Double, val purchasePrice: Long) {
+                                 val access: Boolean, val score: Double, val purchasePrice: Long,
+                                 val fundedScore: Double) {
         val key get() = recipeKey(rune, essence)
     }
 
@@ -63,6 +65,8 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
                        previous: ProductionPlan? = null, altarUnavailable: Boolean = false): CraftRuneBotScript? {
         val currentLevel = minOf(level, bot.runecrafting.level)
         val supply = HashMap<Int, BotProductionPlanner.RuneSupply?>()
+        val canSell = !training && previous == null
+        val funded = HashMap<Int, List<NativeOutputDemand.Depth>>()
         fun source(id: Int): BotProductionPlanner.RuneSupply? {
             if (!supply.containsKey(id)) supply[id] = BotProductionPlanner.runeSupply(bot, id)
             return supply[id]
@@ -85,29 +89,52 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
                         (altarUnavailable || essence in previous?.recipe?.materials.orEmpty())) continue
                     val onHand = owned(essence)
                     val offered = if (onHand) null else source(essence) ?: continue
-                    val score = if (training) rune.exp else
-                        bot.world.economy.getPrice(rune.id).toDouble() * rune.outputMultiplier(currentLevel) -
-                            (offered?.unitPrice ?: bot.world.economy.getPrice(essence))
-                    if (score > 0.0) add(Candidate(rune, essence, onHand, hasAccess, score, offered?.unitPrice ?: 0L))
+                    val yield = rune.outputMultiplier(currentLevel)
+                    val cost = offered?.unitPrice ?: if (training) 0L else bot.world.economy.getPrice(essence)
+                    val score = if (training) rune.exp else bot.world.economy.getPrice(rune.id).toDouble() * yield - cost
+                    val fundedScore = if (canSell) {
+                        val marketCost = offered?.unitPrice ?: source(essence)?.unitPrice ?: cost
+                        funded.getOrPut(rune.id) { NativeOutputDemand.depth(bot, rune.id) }
+                            .asSequence().filter { it.quantity >= yield }
+                            .maxOfOrNull { it.unitPrice.toDouble() * yield - marketCost } ?: 0.0
+                    } else 0.0
+                    if (score > 0.0 || fundedScore > 0.0)
+                        add(Candidate(rune, essence, onHand, hasAccess, score, offered?.unitPrice ?: 0L, fundedScore))
                 }
             }
         }.sortedWith(compareByDescending<Candidate> { it.owned }.thenByDescending { it.access }
             .thenByDescending { it.score }.thenBy { it.purchasePrice }.thenByDescending { it.rune.level })
-        val preferred = selectRankedActivity(bot, candidates.takeWhile {
-            it.owned == candidates.first().owned && it.access == candidates.first().access
-        }.distinctBy { it.rune }) ?: return null
-        for (candidate in (listOf(preferred) + candidates.filter { it != preferred }).take(MAX_PLANS)) {
+        fun script(candidate: Candidate, plan: ProductionPlan): CraftRuneBotScript {
             val rune = candidate.rune
+            val viaAbyss = canUseAbyss && (rune.altar == Altar.DEATH ||
+                rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5))
+            return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss, profit = !training).also {
+                it.planProduction(plan)
+            }
+        }
+
+        val selling = candidates.filter { it.fundedScore > 0.0 }
+            .sortedWith(compareByDescending<Candidate> { it.owned }.thenByDescending { it.access }
+                .thenByDescending { it.fundedScore }.thenBy { it.purchasePrice })
+        val preferredSale = selectRankedActivity(bot, selling.takeWhile {
+            it.owned == selling.first().owned && it.access == selling.first().access
+        }.distinctBy { it.rune })
+        for (candidate in (listOfNotNull(preferredSale) + selling.filter { it != preferredSale }).take(MAX_PLANS)) {
+            val plan = BotProductionPlanner.select(bot, skillId, currentLevel, false, duration,
+                candidate.key, merchantOutput = candidate.rune.id, directOnly = true)?.productionPlan ?: continue
+            return script(candidate, plan)
+        }
+
+        val ordinary = candidates.filter { it.score > 0.0 }
+        val preferred = selectRankedActivity(bot, ordinary.takeWhile {
+            it.owned == ordinary.first().owned && it.access == ordinary.first().access
+        }.distinctBy { it.rune }) ?: return null
+        for (candidate in (listOf(preferred) + ordinary.filter { it != preferred }).take(MAX_PLANS)) {
             val plan = BotProductionPlanner.select(bot, skillId, currentLevel, training, duration, candidate.key,
                 maximumCoinsLimit = previous?.remainingCoins ?: Long.MAX_VALUE,
                 deadlineLimit = previous?.deadline ?: Long.MAX_VALUE)?.productionPlan
                 ?: continue
-            val viaAbyss = canUseAbyss && (rune.altar == Altar.DEATH ||
-                rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5))
-            return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss, profit = !training).also {
-                it.trainingGoal = if (training) skillId else null
-                it.planProduction(plan)
-            }
+            return script(candidate, plan)
         }
         return null
     }

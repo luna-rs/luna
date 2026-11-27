@@ -4,6 +4,8 @@ import api.bot.script.ProductionChainEconomics
 import api.bot.script.ProductionEconomics
 import api.bot.script.ProductionRecipe
 import api.bot.script.ProductionStage
+import api.predef.SKILL_FLETCHING
+import game.skill.fletching.attachArrow.Arrow
 
 /**
  * Enumerates short native preparation paths through the existing recipe indexes.
@@ -24,10 +26,11 @@ internal object ProductionRecipePaths {
                   describe: (ProductionCatalogue.Entry) -> ProductionRecipe?,
                   allowOtherSkills: Boolean = false,
                   trainingPrerequisites: Boolean = false,
+                  balanceShafts: Boolean = false,
                   preparation: (ProductionRecipe) -> Boolean = { true }): List<List<ProductionStage>> =
         expand(listOf(recipe), { id ->
             nativeRecipes(id, recipe.skill.takeUnless { allowOtherSkills || trainingPrerequisites }, describe)
-        }, allowOtherSkills, preparation, trainingPrerequisites)
+        }, allowOtherSkills, preparation, trainingPrerequisites, balanceShafts)
 
     /**
      * Shares one traversal allowance across alternative native recipes for the exact requested output.
@@ -51,7 +54,8 @@ internal object ProductionRecipePaths {
     internal fun expand(recipes: List<ProductionRecipe>, nativeRecipes: (Int) -> List<ProductionRecipe>,
                         allowOtherSkills: Boolean = false,
                         preparation: (ProductionRecipe) -> Boolean = { true },
-                        trainingPrerequisites: Boolean = false): List<List<ProductionStage>> {
+                        trainingPrerequisites: Boolean = false,
+                        balanceShafts: Boolean = false): List<List<ProductionStage>> {
         val result = ArrayList<List<ProductionStage>>()
         val queue = ArrayDeque<List<ProductionStage>>()
         val seen = HashSet<List<Pair<String, Int>>>()
@@ -78,9 +82,11 @@ internal object ProductionRecipePaths {
                         path.any { it.recipe.key == prefix.key } ||
                         prefix.materials.keys.any { id -> path.any { id in it.recipe.products } }) continue
                     val yield = prefix.products.entries.singleOrNull()?.takeIf { it.key == input }?.value ?: continue
+                    val shaftBatch = balanceShafts && prefix.skill == SKILL_FLETCHING && input == Arrow.HEADLESS_ARROW.tip &&
+                        consumers.all { it.recipe.key == "arrow:${Arrow.HEADLESS_ARROW.name}" }
                     val scale = when {
                         amount % yield == 0 -> 1
-                        explicit -> yield / gcd(amount, yield)
+                        explicit || shaftBatch -> yield / gcd(amount, yield)
                         else -> continue
                     }
                     val nativeOperations = amount.toLong() * scale / yield
