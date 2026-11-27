@@ -11,7 +11,6 @@ import api.predef.ext.*
 import api.predef.rand
 import api.predef.world
 import engine.bot.speech.BotReactions
-import engine.bot.speech.BotReactions.lastScammedBy
 import engine.bot.speech.BotScamSpeechPool
 import engine.bot.speech.BotScamSpeechPool.ScamSpeech
 import engine.trade.ConfirmTradeInterface
@@ -229,7 +228,6 @@ object BotTradeScams {
         private fun recordCompletion() {
             if (recorded || confirms.size != 2 || !confirms.values.all { it.completed }) return
             recorded = true
-            victim.lastScammedBy = actor.username
             victim.memory.people.remember(actor.username, Event.SCAMMED_ME)
             BotReactions.reactToScammed(victim)
             victim.preferences.rebalanceWantedItems()

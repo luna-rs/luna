@@ -4,9 +4,9 @@ import engine.bot.speech.BotGreetings.lastGreetedBy
 import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
 import engine.bot.speech.BotReactions.lastImpressedBy
 import engine.bot.speech.BotReactions.lastRareDrop
-import engine.bot.speech.BotReactions.lastScammedBy
 import engine.bot.speech.BotReactions.lastSkillAdvanced
 import engine.bot.speech.BotReactions.lastWitnessedSkillAdvance
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import io.luna.game.model.mob.bot.speech.BotSpeechPool
 import java.nio.file.Paths
 
@@ -54,6 +54,13 @@ object BotReactionSpeechPool :
         GREETED,
 
         /**
+         * Lines a bot may say back to a real player it remembers, in place of a [GREETED] line.
+         *
+         * Supports `<name>` for the name of the player being greeted.
+         */
+        GREETED_AGAIN,
+
+        /**
          * Lines a bot may say when reacting positively to another player, item, achievement, or display of wealth.
          *
          * Supports `<name>` for the name of the player or entity that impressed the bot.
@@ -89,6 +96,13 @@ object BotReactionSpeechPool :
         RARE_DROP,
 
         /**
+         * Lines a bot may say as it attacks a player it holds a grudge against.
+         *
+         * This category does not currently define any runtime tags.
+         */
+        REVENGE,
+
+        /**
          * Lines a bot may say after being scammed.
          *
          * Supports `<name>` for the name of the bot that scammed this bot.
@@ -101,11 +115,14 @@ object BotReactionSpeechPool :
      */
     init {
         setTag(ReactionSpeech.GREETED, "<name>") { it.lastGreetedBy }
+        setTag(ReactionSpeech.GREETED_AGAIN, "<name>") { it.lastGreetedBy }
         setTag(ReactionSpeech.IMPRESSED, "<name>") { it.lastImpressedBy }
         setTag(ReactionSpeech.LEVEL_UP, "<skill>") { it.lastSkillAdvanced.first }
         setTag(ReactionSpeech.LEVEL_UP, "<level>") { it.lastSkillAdvanced.second }
         setTag(ReactionSpeech.OTHER_LEVEL_UP, "<name>") { it.lastWitnessedSkillAdvance }
         setTag(ReactionSpeech.RARE_DROP, "<drop>") { it.lastRareDrop }
-        setTag(ReactionSpeech.SCAMMED, "<name>") { it.lastScammedBy }
+        setTag(ReactionSpeech.SCAMMED, "<name>") {
+            it.memory.people.latest(Event.SCAMMED_ME, Event.LURED_ME) ?: "null"
+        }
     }
 }

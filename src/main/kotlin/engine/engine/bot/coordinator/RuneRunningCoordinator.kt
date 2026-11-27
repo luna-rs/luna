@@ -20,10 +20,10 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import io.luna.util.RandomUtils
 import org.apache.logging.log4j.LogManager
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -47,12 +47,11 @@ object RuneRunningCoordinator : BotCoordinator {
     private const val PREFER_ACTIVE_MILLIS = 8_000L
     private const val ACTIVE_OFFER_MILLIS = 45_000L
     private const val HOST_RETRY_MILLIS = 90_000L
+    private const val FAMILIAR_PARTNER_MILLIS = 4 * 60 * 60_000L
 
     private val logger = LogManager.getLogger(RuneRunningCoordinator::class.java)
     private var nextDeliveryId = 0L
     private var Bot.nextHostConsideration by Attr.long()
-    private var Bot.lastRunePartner by Attr.string()
-    private var Bot.lastRunePartnerUntil by Attr.long()
 
     /**
      * The exact essence form used for a particular native altar. Pure essence is also valid at the early altars.
@@ -224,7 +223,7 @@ object RuneRunningCoordinator : BotCoordinator {
             val distance = bot.position.computeLongestDistance(route.altar.exit).coerceAtMost(600)
             val margin = RuneRunningEconomics.forecast(bot, route).coerceIn(0, 2_000)
             val introductory = if (owner.introductory && route.rune.level <= 20) 2.0 else 1.0
-            val familiar = if (ready != null && prefers(bot, ready.script.bot, now)) 2.0 else 1.0
+            val familiar = if (ready != null && prefers(bot, ready.script.bot)) 2.0 else 1.0
             val weight = introductory * familiar * (1.0 + margin / 400.0) /
                 ((1 + waiting.getValue(route).size) * (1.0 + distance / 200.0))
             candidates += Triple(route, priority, weight)
@@ -449,8 +448,8 @@ object RuneRunningCoordinator : BotCoordinator {
         return indexed
     }
 
-    private fun prefers(bot: Bot, partner: Bot, now: Long): Boolean = bot.lastRunePartnerUntil > now &&
-        bot.lastRunePartner == partner.username && bot.personality.social >= 0.5
+    private fun prefers(bot: Bot, partner: Bot): Boolean = bot.personality.social >= 0.5 &&
+        bot.memory.people.dealtWellWith(partner.username, FAMILIAR_PARTNER_MILLIS)
 
     private fun compatiblePartners(runner: Bot, crafter: Bot): Boolean =
         runner.preferences.getFeelingsToward(crafter.username) >= 0.20 &&
@@ -462,8 +461,8 @@ object RuneRunningCoordinator : BotCoordinator {
                 it.partnerships.size < it.terms.capacity && crafterEligible(it.script.bot, route) &&
                 compatiblePartners(bot, it.script.bot) && admitting(it, now)
         }.maxByOrNull {
-            (if (it.active) 8.0 else 0.0) + (if (prefers(bot, it.script.bot, now) ||
-                prefers(it.script.bot, bot, now)) 4.0 else 0.0) +
+            (if (it.active) 8.0 else 0.0) + (if (prefers(bot, it.script.bot) ||
+                prefers(it.script.bot, bot)) 4.0 else 0.0) +
                 bot.preferences.getFeelingsToward(it.script.bot.username) +
                 it.script.bot.preferences.getFeelingsToward(bot.username) - it.partnerships.size
         }
@@ -571,11 +570,8 @@ object RuneRunningCoordinator : BotCoordinator {
         lease.runner.paidTrips++
         val now = System.currentTimeMillis()
         lease.expires = tripDeadline(delivery.route, now)
-        val until = now + 4.hours.inWholeMilliseconds
-        delivery.runner.lastRunePartner = delivery.crafter.username
-        delivery.runner.lastRunePartnerUntil = until
-        delivery.crafter.lastRunePartner = delivery.runner.username
-        delivery.crafter.lastRunePartnerUntil = until
+        delivery.runner.memory.people.remember(delivery.crafter.username, Event.PARTNERED)
+        delivery.crafter.memory.people.remember(delivery.runner.username, Event.PARTNERED)
         logger.info("Rune running paid: delivery={} altar={} essence={} quantity={} fee={}",
             delivery.id, delivery.route.altar, delivery.route.essenceId, BATCH, delivery.fee)
     }

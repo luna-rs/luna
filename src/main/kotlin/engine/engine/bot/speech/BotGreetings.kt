@@ -14,6 +14,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotAttention
 import io.luna.game.model.mob.bot.brain.BotAttention.Notice
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -26,6 +27,9 @@ import kotlin.random.Random
  * on their social trait and haven't greeted anyone for a while. A bot that hears its own name at the start or end of
  * a message, with or without the digits on the end, answers more readily. One player is heard at most once every
  * [SPEAKER_COOLDOWN] ticks.
+ *
+ * A bot remembers who greeted it. It greets someone it has met before as someone it knows, and it does not answer
+ * a player it holds a grudge against.
  *
  * Each answer goes to the bot's [BotAttention], so it waits a few ticks, is dropped if the speaker has gone by then,
  * and is said through the speech stack. The script the bot is running is never paused.
@@ -97,6 +101,12 @@ object BotGreetings : BotChatHandler {
     private val GREETING_ALONE = Regex(GREETING_WORD)
 
     /**
+     * How long of a bot's time online must pass since it last dealt with a player before it greets them as someone
+     * it has met before, in milliseconds.
+     */
+    private const val MET_BEFORE_MILLIS = 30 * 60_000L
+
+    /**
      * Words that may follow a greeting meant for everyone: "hi all", "hey guys", "sup every1", "hi how are you".
      */
     private val AUDIENCE = setOf("all", "guys", "every1", "everyone", "everybody", "every", "one", "body", "ppl",
@@ -135,7 +145,8 @@ object BotGreetings : BotChatHandler {
     private var Bot.nextNamedReply by Attr.long()
 
     /**
-     * The player this bot is answering, for the `<name>` tag of [ReactionSpeech.GREETED] lines.
+     * The player this bot is answering, for the `<name>` tag of [ReactionSpeech.GREETED] and
+     * [ReactionSpeech.GREETED_AGAIN] lines.
      */
     var Bot.lastGreetedBy by Attr.string { "null" }
 
@@ -167,9 +178,13 @@ object BotGreetings : BotChatHandler {
         speaker.nextGreetingHeard = now + SPEAKER_COOLDOWN
 
         val willing = if (general) {
-            message.hearers.filter { now >= it.nextGreetingReply && canTalk(it) && rand(social(it)) }
+            message.hearers.filter {
+                now >= it.nextGreetingReply && onSpeakingTerms(it, speaker) && rand(social(it))
+            }
         } else {
-            named.filter { now >= it.nextNamedReply && canTalk(it) && rand(0.5 + 0.5 * social(it)) }
+            named.filter {
+                now >= it.nextNamedReply && onSpeakingTerms(it, speaker) && rand(0.5 + 0.5 * social(it))
+            }
         }
         val limit = if (general && !rand(SECOND_REPLY_CHANCE)) 1 else MAX_REPLIES
         var delay = 0
@@ -286,6 +301,9 @@ object BotGreetings : BotChatHandler {
     /**
      * Says one line to [source] if the bot is free to chat, or leaves the notice waiting if it isn't.
      */
+    private fun onSpeakingTerms(bot: Bot, speaker: Player): Boolean =
+        canTalk(bot) && !bot.memory.people.holdsGrudge(speaker.username)
+
     private fun say(bot: Bot, source: Mob, kind: ReactionSpeech): Boolean {
         if (source !is Player) {
             return true
@@ -293,8 +311,12 @@ object BotGreetings : BotChatHandler {
         if (!canTalk(bot)) {
             return false
         }
+        val people = bot.memory.people
+        val metBefore = people.sinceLast(source.username) >= MET_BEFORE_MILLIS
+        people.remember(source.username, Event.GREETED_ME)
         bot.lastGreetedBy = shortName(source.username)
-        BotReactionSpeechPool.take(bot, kind)?.let { bot.speechStack.pushHead(BotSpeech(it, 0)) }
+        val line = if (kind == ReactionSpeech.GREETED && metBefore) ReactionSpeech.GREETED_AGAIN else kind
+        BotReactionSpeechPool.take(bot, line)?.let { bot.speechStack.pushHead(BotSpeech(it, 0)) }
         return true
     }
 }

@@ -44,6 +44,7 @@ import io.luna.game.model.mob.PlayerContextMenuOption.TRADE
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import io.luna.game.model.mob.varp.PersistentVarp
 import java.time.Instant
 import io.luna.util.NumberUtils
@@ -2743,6 +2744,7 @@ class TradeBotScript(bot: Bot,
                 humanTradeBlocker(offer.other, own, receiving, mine, theirs, validate)
             }, settle = {
                 settleNativeTrade(own, receiving, autonomous = false)
+                bot.memory.people.remember(offer.other.username, Event.TRADED)
                 for ((id, cost, owner) in productionSpending) {
                     BotTradeIntentions.recordProductionPurchase(bot, id, cost, owner)
                 }
@@ -2753,6 +2755,7 @@ class TradeBotScript(bot: Bot,
             bot.scriptStack.current() === this && unchanged()
         }, settle = {
             settleNativeTrade(own, receiving)
+            bot.memory.people.remember(offer.other.username, Event.TRADED)
             onCompleted()
         })
         val confirm = offer.offerAndAwait {

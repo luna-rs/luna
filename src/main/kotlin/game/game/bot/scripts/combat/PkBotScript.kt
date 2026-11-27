@@ -18,6 +18,8 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotGearPurpose
+import engine.bot.speech.BotReactionSpeechPool
+import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
@@ -31,6 +33,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
+import io.luna.game.model.mob.bot.speech.BotSpeech
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
@@ -658,9 +661,22 @@ class PkBotScript(bot: Bot, val duration: Duration,
         }
         if (!isGenericSession()) return true
         if (isKindGenericSession()) return target.skullIcon != SkullIcon.NONE ||
-            observations.canProtectAgainst(target) || combatPolicy.canRetaliateAgainst(target)
-        return !bot.personality.isUncertain || combatPolicy.canRetaliateAgainst(target)
+            observations.canProtectAgainst(target) || combatPolicy.canRetaliateAgainst(target) || avenges(target)
+        return !bot.personality.isUncertain || combatPolicy.canRetaliateAgainst(target) || avenges(target)
     }
+
+    /**
+     * Whether the bot holds a grudge against [target] that it acts on when a patrol runs into them. A grudge only
+     * widens who a GENERIC patrol may start on and who is picked first; the bot never travels to find anyone.
+     * Event fights and skillers are left out.
+     */
+    private fun avenges(target: Player): Boolean = event == null && !bot.preferences.isSkiller &&
+        bot.memory.people.holdsGrudge(target.username)
+
+    /**
+     * The players this patrol has already told why it is after them.
+     */
+    private val revengeSaid = HashSet<String>()
 
     /**
      * Gives patrol a minute to choose another opponent after a fight made no attack progress.
@@ -746,6 +762,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Non-kind uncertain bots only retaliate. Other non-kind bots can initiate, with vulnerability preference
      * applied separately unless they are stupidly confident. Clan sessions challenge other capes and witnessed
      * friendly initiators, requiring their own cape and an online clanmate unless this is a solo outing.
+     * Any GENERIC bot may start on a player it holds a grudge against.
      */
     internal fun wantsToAttack(target: Player): Boolean = wantsToAttack(target, null)
 
@@ -758,7 +775,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 (clanReady ?: clanReadyToHunt()) &&
                 insidePatrolArea(bot.position) && insidePatrolArea(target.position) &&
                 (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target))
-            Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
+            Purpose.GENERIC -> avenges(target) || if (isKindGenericSession()) observations.canProtectAgainst(target) ||
                 (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null)
                 else !bot.personality.isUncertain && !bot.preferences.isSkiller
             else -> false
@@ -784,6 +801,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Preserves ordinary patrol ordering for reckless challengers. Other non-kind GENERIC bots prefer visible
      * vulnerability, while kind bots prioritize a witnessed victim's aggressor over ordinary skull challenges.
      * This ranks an already legal candidate list; it never grants permission to interfere in single combat.
+     * Outside a clan outing, a player the bot holds a grudge against comes before everyone else.
      */
     internal fun orderTargets(targets: List<Player>): List<Player> = when {
         clan.clanOuting -> {
@@ -797,7 +815,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         isGenericSession() && !bot.personality.isStupidlyConfident && !bot.personality.isUncertain ->
             targets.sortedByDescending { combatPolicy.pkTargetVulnerability(it, observations.isFleeing(it)) }
         else -> targets
-    }
+    }.let { ordered -> if (clan.clanOuting) ordered else ordered.sortedByDescending(::avenges) }
 
     /**
      * Cooperates with nearby clanmates during a multi fight. Losing the old focus can expose a replacement at
@@ -1023,6 +1041,9 @@ class PkBotScript(bot: Bot, val duration: Duration,
 
     private fun queueFight(target: Player) {
         val participant = event
+        if (avenges(target) && revengeSaid.add(target.username)) {
+            BotReactionSpeechPool.take(bot, ReactionSpeech.REVENGE)?.let { bot.speechStack.pushHead(BotSpeech(it, 0)) }
+        }
         val fight = if (participant == null) CombatBotScript(bot, target, pkSession = this) else {
             if (!participant.canStart()) return
             eventFightQueued = true
