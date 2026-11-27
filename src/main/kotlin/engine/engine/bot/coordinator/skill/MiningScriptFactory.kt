@@ -8,6 +8,7 @@ import game.skill.Skills
 import game.skill.mining.Pickaxe
 import game.skill.mining.Mining
 import api.bot.script.findsPacked
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory.Resource
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
@@ -82,7 +83,9 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
             bot.recentEscape?.avoids(zone) != true
         val available = activities(bot, minOf(level, bot.mining.level), false).filter {
             it.zones.any(::reachable)
-        }.let { all -> all.filterNot { method -> method.zones.all { bot.findsPacked(it) } }.ifEmpty { all } }
+        }.let { all ->
+            all.filterNot { method -> method.zones.all { bot.findsPacked(it, Resource.ROCKS) } }.ifEmpty { all }
+        }
         val quotes = linkedMapOf<Ore, ProfitGatheringDemand.Quote>()
         for (ore in available.flatMap { it.tokens }.distinct()) {
             if (ore == GEM_ROCK || ore.sizes.isNotEmpty() || mine != null && ore !in rocks[mine].orEmpty()) continue
@@ -117,7 +120,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         val powerMining = training && level >= IRON.level && MiningBehavior.styleOf(bot.personality) == Style.POWER_MINER
         // A mine the bot recently left for lack of free rocks is skipped while another option remains.
         val options = activities(bot, level, training).let { all ->
-            all.filterNot { method -> method.zones.all { bot.findsPacked(it) } }.ifEmpty { all }
+            all.filterNot { method -> method.zones.all { bot.findsPacked(it, Resource.ROCKS) } }.ifEmpty { all }
         }
         val guild = options.firstOrNull { SubZone.MINING_GUILD in it.zones && prefersGuild(bot, training) }
         val powerMethod = if (powerMining) options

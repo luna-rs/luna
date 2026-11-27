@@ -1,5 +1,6 @@
 package game.bot.scripts
 
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import api.bot.script.TargetingZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.action.trading.BotMarketCooldown
@@ -94,6 +95,7 @@ class CollectGroundItemBotScript(
         data.zones, data.sellOnCompletion, data.persistentOnly)
 
     override val targetSearchTimeout = 2.minutes
+    override val resource = BotPlacesMemory.Resource.GROUND_ITEMS
 
     override fun wildernessNotingItems(): Set<Int> = setOf(itemId)
 

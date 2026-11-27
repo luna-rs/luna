@@ -8,23 +8,31 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
- * The places a bot knows: where it has worked, where it found no room and where it nearly or actually died.
+ * The places a bot knows: where it has worked, where others took what it came for and where it nearly or actually
+ * died.
  * <p>
- * Every place is held under its zone name with three strengths. Familiarity grows with time spent working there.
- * Crowding is set when the bot gives up on a place because others had taken it. Danger grows with each death or
- * escape there. All three fade by half over a set stretch of time, and a place with none left is forgotten.
+ * Every place is held under its zone name. Familiarity grows with time spent working there. Danger grows with each
+ * death or escape there. Crowding is held for each {@link Resource} and is set when the bot gives up on a place
+ * because others had taken the rocks, trees or stalls it came for. All of them fade by half over a set stretch of
+ * time, and a place with none left is forgotten.
+ * <p>
+ * Only resources that run out can be crowded. Work that any number of players share at once, such as fishing,
+ * cooking or smithing, never is, and a mine full of miners says nothing about the fishing spots or ranges in the same
+ * zone.
  * <p>
  * Familiarity and danger fade by the bot's time online, like everything else it remembers. Crowding is about the
  * world, not the bot, so it fades by real time: a mine packed an hour ago may have room now whether or not the bot
  * played in between.
  * <p>
  * A place the bot finds {@link #dangerous(String) dangerous} is one it stays away from. Two deaths close together
- * are enough, and three keep it away for days of play. A place it finds {@link #packed(String) packed} is skipped
- * for about half an hour while it has somewhere else to go. Below those lines a place only ranks lower, and familiar
- * places rank higher, by {@link #preference(String)}.
+ * are enough, and three keep it away for days of play. A place whose resource it finds
+ * {@link #packed(String, Resource) packed} is skipped for that resource for about half an hour while it has somewhere
+ * else to go. Below those lines a place only ranks lower, and familiar places rank higher, by
+ * {@link #preference(String, Resource)}.
  * <p>
  * The number of places is limited by how intelligent the bot is. When the limit is reached, the place the bot
  * remembers least makes room.
@@ -51,12 +59,7 @@ public final class BotPlacesMemory implements BotMemoryPart {
         /**
          * The bot left after seeing someone else attacked there.
          */
-        WITNESSED_ATTACK(0.10),
-
-        /**
-         * The bot gave up on finding room to work there.
-         */
-        CROWDED(0.0);
+        WITNESSED_ATTACK(0.10);
 
         /**
          * How much danger the event adds.
@@ -67,6 +70,25 @@ public final class BotPlacesMemory implements BotMemoryPart {
             this.danger = danger;
         }
     }
+
+    /**
+     * Something a bot works at that runs out when taken and comes back later, so other players can use it up first.
+     */
+    public enum Resource {
+        ROCKS,
+        TREES,
+        STALLS,
+        CHESTS,
+        CROPS,
+        GROUND_ITEMS;
+
+        /**
+         * The name the resource is saved under.
+         */
+        private final String key = name().toLowerCase(Locale.ROOT);
+    }
+
+    private static final Resource[] RESOURCES = Resource.values();
 
     /**
      * One place the bot knows.
@@ -89,14 +111,14 @@ public final class BotPlacesMemory implements BotMemoryPart {
         private long familiarAt;
 
         /**
-         * The crowding seen at {@link #crowdedAt}.
+         * The crowding seen for each resource at its {@link #crowdedAt} time.
          */
-        private double crowding;
+        private final double[] crowding = new double[RESOURCES.length];
 
         /**
-         * When {@link #crowding} was last set, in real time.
+         * When each resource's {@link #crowding} was last set, in real time.
          */
-        private long crowdedAt;
+        private final long[] crowdedAt = new long[RESOURCES.length];
 
         /**
          * The danger held at {@link #dangerAt}.
@@ -139,7 +161,7 @@ public final class BotPlacesMemory implements BotMemoryPart {
     public static final double AVOID_DANGER = 0.6;
 
     /**
-     * Crowding at least this strong makes the bot skip a place while it has another.
+     * Crowding at least this strong makes the bot skip a place for that resource while it has another.
      */
     public static final double AVOID_CROWDING = 0.7;
 
@@ -189,15 +211,25 @@ public final class BotPlacesMemory implements BotMemoryPart {
         if (place == null) {
             return false;
         }
-        if (event == Event.CROWDED) {
-            place.crowding = 1.0;
-            place.crowdedAt = memory.realTime();
-        } else {
-            long now = memory.now();
-            place.danger = clamp(danger(place, now) + event.danger);
-            place.dangerAt = now;
+        long now = memory.now();
+        place.danger = clamp(danger(place, now) + event.danger);
+        place.dangerAt = now;
+        return dangerous(place, now);
+    }
+
+    /**
+     * Records that the bot gave up on a place because others had taken the resource it came for.
+     *
+     * @param zone The zone's name.
+     * @param resource What others had taken.
+     */
+    public void crowded(String zone, Resource resource) {
+        Place place = resource == null ? null : place(zone);
+        if (place == null) {
+            return;
         }
-        return dangerous(place, memory.now());
+        place.crowding[resource.ordinal()] = 1.0;
+        place.crowdedAt[resource.ordinal()] = memory.realTime();
     }
 
     /**
@@ -231,26 +263,38 @@ public final class BotPlacesMemory implements BotMemoryPart {
 
     /**
      * @param zone The zone's name.
-     * @return Whether the bot found the place too crowded to work recently enough to skip it.
+     * @param resource What the bot would work at there, or {@code null} for work no one else can use up.
+     * @return Whether the bot found that resource at the place taken by others recently enough to skip it.
      */
-    public boolean packed(String zone) {
-        Place place = places.get(zone);
-        return place != null && crowding(place, memory.realTime()) >= AVOID_CROWDING;
+    public boolean packed(String zone, Resource resource) {
+        Place place = resource == null ? null : places.get(zone);
+        return place != null && crowding(place, resource, memory.realTime()) >= AVOID_CROWDING;
     }
 
     /**
      * @param zone The zone's name.
-     * @return How strongly the bot leans toward the place: {@code 1.0} for a place it knows nothing about, up to
-     * {@code 2.0} for one it knows well, and down to {@code 0.25} for one that was crowded or dangerous.
+     * @return How strongly the bot leans toward the place for work no one else can use up.
+     * @see #preference(String, Resource)
      */
     public double preference(String zone) {
+        return preference(zone, null);
+    }
+
+    /**
+     * @param zone The zone's name.
+     * @param resource What the bot would work at there, or {@code null} for work no one else can use up.
+     * @return How strongly the bot leans toward the place for that work: {@code 1.0} for a place it knows nothing
+     * about, up to {@code 2.0} for one it knows well, and down to {@code 0.25} for one that was dangerous or whose
+     * resource was crowded.
+     */
+    public double preference(String zone, Resource resource) {
         Place place = places.get(zone);
         if (place == null) {
             return 1.0;
         }
         long now = memory.now();
-        double preference = (1.0 + familiarity(place, now)) * (1.0 - danger(place, now)) *
-                (1.0 - crowding(place, memory.realTime()));
+        double crowding = resource == null ? 0.0 : crowding(place, resource, memory.realTime());
+        double preference = (1.0 + familiarity(place, now)) * (1.0 - danger(place, now)) * (1.0 - crowding);
         return Math.max(LEAST_PREFERENCE, preference);
     }
 
@@ -282,9 +326,8 @@ public final class BotPlacesMemory implements BotMemoryPart {
         JsonArray known = new JsonArray();
         for (Place place : places.values()) {
             double familiarity = familiarity(place, now);
-            double crowding = crowding(place, realTime);
             double danger = danger(place, now);
-            if (Math.max(familiarity, Math.max(crowding, danger)) < FORGOTTEN) {
+            if (Math.max(familiarity, Math.max(crowding(place, realTime), danger)) < FORGOTTEN) {
                 continue;
             }
             JsonObject entry = new JsonObject();
@@ -292,8 +335,15 @@ public final class BotPlacesMemory implements BotMemoryPart {
             if (familiarity >= FORGOTTEN) {
                 entry.addProperty("familiarity", rounded(familiarity));
             }
-            if (crowding >= FORGOTTEN) {
-                entry.addProperty("crowding", rounded(crowding));
+            JsonObject crowding = new JsonObject();
+            for (Resource resource : RESOURCES) {
+                double crowded = crowding(place, resource, realTime);
+                if (crowded >= FORGOTTEN) {
+                    crowding.addProperty(resource.key, rounded(crowded));
+                }
+            }
+            if (!crowding.entrySet().isEmpty()) {
+                entry.add("crowding", crowding);
             }
             if (danger >= FORGOTTEN) {
                 entry.addProperty("danger", rounded(danger));
@@ -329,19 +379,21 @@ public final class BotPlacesMemory implements BotMemoryPart {
             if (name == null || name.isEmpty()) {
                 continue;
             }
-            double familiarity = clamp(number(entry, "familiarity", 0.0));
-            double crowding = clamp(number(entry, "crowding", 0.0));
-            double danger = clamp(number(entry, "danger", 0.0));
-            if (Math.max(familiarity, Math.max(crowding, danger)) < FORGOTTEN) {
+            Place place = new Place(name);
+            place.familiarity = clamp(number(entry, "familiarity", 0.0));
+            place.familiarAt = asOf;
+            place.danger = clamp(number(entry, "danger", 0.0));
+            place.dangerAt = asOf;
+            JsonElement crowding = entry.get("crowding");
+            if (crowding != null && crowding.isJsonObject()) {
+                for (Resource resource : RESOURCES) {
+                    place.crowding[resource.ordinal()] = clamp(number(crowding.getAsJsonObject(), resource.key, 0.0));
+                    place.crowdedAt[resource.ordinal()] = asOfReal;
+                }
+            }
+            if (Math.max(place.familiarity, Math.max(crowding(place, asOfReal), place.danger)) < FORGOTTEN) {
                 continue;
             }
-            Place place = new Place(name);
-            place.familiarity = familiarity;
-            place.familiarAt = asOf;
-            place.crowding = crowding;
-            place.crowdedAt = asOfReal;
-            place.danger = danger;
-            place.dangerAt = asOf;
             places.put(name, place);
         }
         int capacity = capacity();
@@ -372,10 +424,13 @@ public final class BotPlacesMemory implements BotMemoryPart {
                     if (familiarity >= FORGOTTEN) {
                         line.append(", familiarity ").append(rounded(familiarity));
                     }
-                    double crowding = crowding(place, realTime);
-                    if (crowding >= FORGOTTEN) {
-                        line.append(crowding >= AVOID_CROWDING ? ", packed " : ", crowding ")
-                                .append(rounded(crowding));
+                    for (Resource resource : RESOURCES) {
+                        double crowding = crowding(place, resource, realTime);
+                        if (crowding >= FORGOTTEN) {
+                            line.append(", ").append(resource.key)
+                                    .append(crowding >= AVOID_CROWDING ? " packed " : " crowding ")
+                                    .append(rounded(crowding));
+                        }
                     }
                     double danger = danger(place, now);
                     if (danger >= FORGOTTEN) {
@@ -452,11 +507,24 @@ public final class BotPlacesMemory implements BotMemoryPart {
     }
 
     /**
-     * @return A place's crowding after halving once for every half-life of real time since it was seen.
+     * @return A resource's crowding at a place after halving once for every half-life of real time since it was seen.
+     */
+    private double crowding(Place place, Resource resource, long realTime) {
+        int index = resource.ordinal();
+        double crowding = place.crowding[index];
+        return crowding <= 0.0 ? 0.0 :
+                crowding * Math.pow(0.5, Math.max(0, realTime - place.crowdedAt[index]) / (double) CROWDING_HALF_LIFE);
+    }
+
+    /**
+     * @return The strongest crowding the bot remembers at a place, for any resource.
      */
     private double crowding(Place place, long realTime) {
-        return place.crowding <= 0.0 ? 0.0 :
-                place.crowding * Math.pow(0.5, Math.max(0, realTime - place.crowdedAt) / (double) CROWDING_HALF_LIFE);
+        double most = 0.0;
+        for (Resource resource : RESOURCES) {
+            most = Math.max(most, crowding(place, resource, realTime));
+        }
+        return most;
     }
 
     /**

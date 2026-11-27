@@ -1,5 +1,6 @@
 package engine.bot.coordinator.skill
 
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory.Resource
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
@@ -71,7 +72,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         stalls.add(stall(setOf(ThievingStallType.CRAFTING),
             SubZone.KELDAGRIM_CRAFTING_STALL, SubZone.APE_ATOLL_MARKET_STALLS))
         stalls.add(stall(setOf(ThievingStallType.MAGIC, ThievingStallType.SCIMITAR), SubZone.APE_ATOLL_MARKET_STALLS))
-        val activity = getBestSkillingActivity(bot, level, { it.level }, stalls)
+        val activity = getBestSkillingActivity(bot, level, { it.level }, stalls, Resource.STALLS)
         if (activity == null) {
             return createPickpocketScript(bot, level, zones, training = true)
         }

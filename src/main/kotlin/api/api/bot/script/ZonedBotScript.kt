@@ -157,6 +157,13 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     protected var depositInventoryWhenBanking = true
 
     /**
+     * What this script works at that runs out and that other players can take first, or `null` when no one else can
+     * use it up, as with fishing spots, ranges and anvils. Only scripts with a resource remember a zone as crowded and
+     * skip it for that.
+     */
+    protected open val resource: BotPlacesMemory.Resource? = null
+
+    /**
      * The subzone currently selected as this script's working area.
      *
      * The bot keeps this zone until the script completes, the zone becomes unreachable, or [executeInZone] rejects
@@ -410,22 +417,22 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
     /**
      * Drops the candidate zones the bot remembers badly before setup: those it stays away from after dying there, and
-     * those it recently found packed while another candidate remains.
+     * those where it recently found this script's [resource] taken while another candidate remains.
      *
      * @return `false` if that leaves no candidate zones.
      */
     private fun avoidRememberedPlaces(): Boolean {
         zones.removeAll { bot.findsDangerous(it) }
-        if (zones.any { !bot.findsPacked(it) }) zones.removeAll { bot.findsPacked(it) }
+        if (zones.any { !bot.findsPacked(it, resource) }) zones.removeAll { bot.findsPacked(it, resource) }
         return zones.isNotEmpty()
     }
 
     /**
-     * Orders the candidate zones at random, favouring places the bot knows well over ones that were crowded or
-     * dangerous.
+     * Orders the candidate zones at random, favouring places the bot knows well over ones that were dangerous or where
+     * this script's [resource] was crowded.
      */
     private fun orderByRememberedPlaces() {
-        val ordered = bot.byRememberedPlaces(zones) { it }
+        val ordered = bot.byRememberedPlaces(zones, resource) { it }
         zones.clear()
         zones.addAll(ordered)
     }
@@ -657,7 +664,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      */
     protected open fun selectWorkZone(): SubZone? =
         if (bot.personality.isDextrous) zones.minByOrNull {
-            bot.position.computeLongestDistance(it.inside) / bot.memory.places.preference(it.name)
+            bot.position.computeLongestDistance(it.inside) / bot.memory.places.preference(it.name, resource)
         }
         else zones.firstOrNull()
 

@@ -7,7 +7,7 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionRuneCosts
-import api.bot.script.rememberPlace
+import api.bot.script.rememberCrowding
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.combat.death.PlayerDeathItems
@@ -60,6 +60,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
                        private val herbloreContinuation: Boolean = false, private val ownedRunesOnly: Boolean = false) :
     InventoryBotScript(bot, duration, zones) {
     override val trainingSkill = SKILL_MAGIC
+    override val resource = BotPlacesMemory.Resource.GROUND_ITEMS
     override val verifiedProductionWithdrawals = true
     override val ownedSuppliesOnly get() = ownedRunesOnly
     override val actionSafety get() = if (itemId == WINE) ActionSafety.COMBAT else ActionSafety.NON_COMBAT
@@ -382,7 +383,7 @@ class TelegrabBotScript(bot: Bot, val itemId: Int, val profit: Boolean, duration
             if (collector == bot.username) return false
             lostRace = true
             competitionLosses[zone] = (competitionLosses[zone] ?: 0) + 1
-            if (competitionLosses[zone] == competitionLimit) bot.rememberPlace(zone, BotPlacesMemory.Event.CROWDED)
+            if (competitionLosses[zone] == competitionLimit) bot.rememberCrowding(zone, resource)
             return true
         }
         attemptProduction(itemId, available = selected != null, progressCondition = {

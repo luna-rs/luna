@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.memory.BotPlacesMemory
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
 import api.bot.webwalk.plan.BankAccess
@@ -73,6 +74,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         bot.walking.isEmpty && !bot.navigator.isActive && !bot.combat.inCombat() && bot.combat.target == null
 
     override val targetSearchTimeout: Duration = 180.seconds
+    override val resource = BotPlacesMemory.Resource.TREES
 
     companion object {
 

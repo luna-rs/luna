@@ -2,7 +2,7 @@ package game.bot.scripts.skills
 
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.memory.BotPlacesMemory
-import api.bot.script.rememberPlace
+import api.bot.script.rememberCrowding
 import api.bot.script.BotScriptData
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
@@ -86,6 +86,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         Style.BALANCED -> MiningVoice.BALANCED
     }
     override val targetSearchTimeout = behavior.searchTimeout
+    override val resource = BotPlacesMemory.Resource.ROCKS
     override val crowdedSearchLimit = behavior.crowdedSearchLimit
     override val reuseTargetOptions = false
 
@@ -448,7 +449,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         val zone = activeZone
         if (zone != null && duration > Duration.ZERO && !forceBanking && zone.area.contains(bot.position) &&
             visibleMiners().keys.any { zone.area.contains(it) }) {
-            bot.rememberPlace(zone, BotPlacesMemory.Event.CROWDED)
+            bot.rememberCrowding(zone, BotPlacesMemory.Resource.ROCKS)
             bot.log("Leaving $zone without a free rock while others mine it; remembering it as packed.")
         }
         if (!powerMining && Ore.COAL in ores && (zone == SubZone.COAL_TRUCKS_MINE || coalTrucks.haulPending) &&
