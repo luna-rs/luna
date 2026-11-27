@@ -1536,6 +1536,9 @@ public class Player extends Mob {
      * This method updates {@link #timePlayed} by adding the elapsed {@link #timeOnline} duration since the last call,
      * then resets and restarts the stopwatch. Avoid calling this too frequently if you need a stable snapshot of playtime.
      * </p>
+     * <p>
+     * Before login the stopwatch has not started, and the saved time is returned as it is.
+     * </p>
      *
      * @return The accumulated time played.
      */
@@ -1543,9 +1546,11 @@ public class Player extends Mob {
         if (timePlayed == null) {
             timePlayed = Duration.ZERO;
         }
-        // Update on the fly.
-        timePlayed = timePlayed.plus(timeOnline.elapsed());
-        timeOnline.reset().start();
+        // Update on the fly. Starting the stopwatch here would make the login's own start fail.
+        if (timeOnline.isRunning()) {
+            timePlayed = timePlayed.plus(timeOnline.elapsed());
+            timeOnline.reset().start();
+        }
         return timePlayed;
     }
 

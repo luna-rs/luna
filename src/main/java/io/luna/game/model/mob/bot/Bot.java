@@ -37,6 +37,7 @@ import io.luna.game.model.mob.bot.brain.BotReflex;
 import io.luna.game.model.mob.bot.io.BotClient;
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler;
+import io.luna.game.model.mob.bot.memory.BotMemory;
 import io.luna.game.model.mob.bot.script.BotScriptStack;
 import io.luna.game.model.mob.bot.speech.BotSpeechStack;
 import io.luna.game.persistence.PlayerData;
@@ -485,6 +486,11 @@ public final class Bot extends Player {
      * What the bot has noticed and not yet reacted to.
      */
     private final BotAttention attention = new BotAttention(this);
+
+    /**
+     * What the bot remembers across logouts.
+     */
+    private final BotMemory memory = new BotMemory(this);
 
     /**
      * The speech stack responsible for queued, contextual, and randomized bot chat.
@@ -1032,6 +1038,13 @@ public final class Bot extends Player {
      */
     public BotAttention getAttention() {
         return attention;
+    }
+
+    /**
+     * @return What the bot remembers across logouts.
+     */
+    public BotMemory getMemory() {
+        return memory;
     }
 
     /**

@@ -15,6 +15,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
+import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.util.StringUtils
 import java.time.Instant
@@ -130,7 +131,7 @@ object BotReactions {
         died.emotions.add(EmotionalTrigger(EmotionType.SCARED, 0.25 * (1.0 - died.personality.confidence),
                                            minutesFromNow(10)))
         if (killer is Player) {
-            died.preferences.adjustFeelingsToward(killer.username, -0.25)
+            died.memory.people.remember(killer.username, Event.KILLED_ME)
         }
 
         val text = BotReactionSpeechPool.take(died, ReactionSpeech.DIED)
