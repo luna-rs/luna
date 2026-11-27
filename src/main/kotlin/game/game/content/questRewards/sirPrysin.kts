@@ -1,6 +1,8 @@
 package game.content.questRewards
 
 import api.predef.*
+import game.content.demonSlayer.DemonSlayer
+import game.content.demonSlayer.DemonSlayerDialogue
 import game.content.questRewards.QuestRewards.owns
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.Expression
@@ -21,8 +23,23 @@ val SILVERLIGHT = 2402
 val SILVERLIGHT_PRICE = 500
 
 npc1(SIR_PRYSIN) {
-    // TODO Demon Slayer: before and during the quest he talks about Delrith and the three keys instead. Until the
-    //  quest exists every player has finished it.
+    when (DemonSlayer.stage(plr)) {
+        0 -> {
+            val dialogue = plr.newDialogue().npc(SIR_PRYSIN, "I'm Sir Prysin, one of the King's knights.")
+            if (!owns(plr, SILVERLIGHT)) {
+                dialogue.options(DemonSlayerDialogue.BUY_SWORD, ::borrow, "Goodbye.", { it.overlays.closeWindows() })
+            }
+            dialogue.open()
+        }
+        DemonSlayer.COMPLETE -> finishedQuest(plr)
+        else -> DemonSlayerDialogue.prysin(plr, ::borrow)
+    }
+}
+
+/**
+ * Greets [plr] after Delrith has been banished.
+ */
+fun finishedQuest(plr: Player) {
     val dialogue = plr.newDialogue()
         .npc(SIR_PRYSIN, Expression.HAPPY, "Hello. I've heard you stopped the demon, well done!")
     if (owns(plr, SILVERLIGHT)) {
@@ -63,12 +80,17 @@ fun lostSilverlight(plr: Player) {
  * Sir Prysin sells [plr] Silverlight.
  */
 fun borrow(plr: Player) {
-    plr.newDialogue()
-        .player("Is there any chance of me borrowing it again?")
-        .npc(SIR_PRYSIN, "I won't give it away that easily again. It's far too",
-             "important to be treated so disrespectfully.")
-        .npc(SIR_PRYSIN, "If you wish to make use of Silverlight again, it will cost",
-             "you 500 gold pieces. Maybe that will encourage you to", "look after it.")
+    val dialogue = plr.newDialogue()
+    if (DemonSlayer.stage(plr) == DemonSlayer.COMPLETE) {
+        dialogue.player("Is there any chance of me borrowing it again?")
+            .npc(SIR_PRYSIN, "I won't give it away that easily again. It's far too",
+                 "important to be treated so disrespectfully.")
+            .npc(SIR_PRYSIN, "If you wish to make use of Silverlight again, it will cost",
+                 "you 500 gold pieces. Maybe that will encourage you to", "look after it.")
+    } else {
+        dialogue.npc(SIR_PRYSIN, "You can borrow Silverlight for 500 gold pieces.")
+    }
+    dialogue
         .options("No way, it's not worth that much.", {
             it.newDialogue().player("No way, it's not worth that much.").open()
         }, "Okay, I'll pay.", {
