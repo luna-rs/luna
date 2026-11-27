@@ -244,7 +244,10 @@ object TreasureTrails {
             player.animation(Animation(536))
             val opened = world.addObject(openId, obj.position, obj.objectType, obj.direction)
             world.scheduleOnce(300) {
-                if (world.removeObject(opened)) world.addObject(obj)
+                // A map object that was removed stays hidden if it is added back, so a new closed drawer is placed.
+                if (opened.state == EntityState.ACTIVE && world.removeObject(opened)) {
+                    world.addObject(obj.id, obj.position, obj.objectType, obj.direction)
+                }
             }
             return true
         }
