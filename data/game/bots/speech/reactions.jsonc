@@ -4,8 +4,15 @@
  * Each top-level key is a constant-style category used by bot speech systems. The values are arrays of short chat
  * lines that can be selected randomly when the matching event occurs.
  *
+ * CALLED:
+ * Lines a bot may say when a real player says its name without greeting it.
+ *
  * DIED:
  * Lines a bot may say shortly after dying and losing items.
+ *
+ * GREETED:
+ * Lines a bot may say back to a real player who greets it or the people around it. Use <name> to reference the
+ * player being greeted.
  *
  * IMPRESSED:
  * Lines a bot may say when reacting positively to another player, item, achievement, or display of wealth.  Use <name>
@@ -28,6 +35,18 @@
  * Lines a bot may say after being scammed. Use <name> as the scammer-name placeholder.
  */
 {
+  "CALLED": [
+    "?",
+    "yes?",
+    "yeah?",
+    "hm?",
+    "huh?",
+    "what?",
+    "me?",
+    "ya?",
+    "sup?",
+    "wat?"
+  ],
   "DIED": [
     "can't believe i just died",
     "i actually died lol",
@@ -1003,6 +1022,25 @@
     "death is winning today",
     "i am losing to death today",
     "i'll get it back maybe"
+  ],
+  "GREETED": [
+    "hi",
+    "hello",
+    "hey",
+    "hi there",
+    "hello there",
+    "hey there",
+    "hi <name>",
+    "hello <name>",
+    "hey <name>",
+    "sup",
+    "yo",
+    "hiya",
+    "heya",
+    "howdy",
+    "sup <name>",
+    "yo <name>",
+    "hiya <name>"
   ],
   "IMPRESSED": [
     "hey nice gear <name>",

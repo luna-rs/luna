@@ -1,5 +1,6 @@
 package engine.bot.speech
 
+import engine.bot.speech.BotGreetings.lastGreetedBy
 import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
 import engine.bot.speech.BotReactions.lastImpressedBy
 import engine.bot.speech.BotReactions.lastRareDrop
@@ -32,11 +33,25 @@ object BotReactionSpeechPool :
     enum class ReactionSpeech {
 
         /**
+         * Lines a bot may say when a real player says its name without greeting it.
+         *
+         * This category does not currently define any runtime tags.
+         */
+        CALLED,
+
+        /**
          * Lines a bot may say after dying.
          *
          * This category does not currently define any runtime tags.
          */
         DIED,
+
+        /**
+         * Lines a bot may say back to a real player who greets it or the people around it.
+         *
+         * Supports `<name>` for the name of the player being greeted.
+         */
+        GREETED,
 
         /**
          * Lines a bot may say when reacting positively to another player, item, achievement, or display of wealth.
@@ -85,6 +100,7 @@ object BotReactionSpeechPool :
      * Registers runtime tag resolvers for reaction lines.
      */
     init {
+        setTag(ReactionSpeech.GREETED, "<name>") { it.lastGreetedBy }
         setTag(ReactionSpeech.IMPRESSED, "<name>") { it.lastImpressedBy }
         setTag(ReactionSpeech.LEVEL_UP, "<skill>") { it.lastSkillAdvanced.first }
         setTag(ReactionSpeech.LEVEL_UP, "<level>") { it.lastSkillAdvanced.second }

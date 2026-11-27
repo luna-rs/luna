@@ -27,6 +27,7 @@ import io.luna.game.model.mob.block.LocalMobRepository;
 import io.luna.game.model.mob.block.LocalHumanView;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.bot.brain.BotAttention;
 import io.luna.game.model.mob.bot.brain.BotBrain;
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
 import io.luna.game.model.mob.bot.brain.BotEmotion;
@@ -481,6 +482,11 @@ public final class Bot extends Player {
     private final BotEmotion emotions = new BotEmotion(this);
 
     /**
+     * What the bot has noticed and not yet reacted to.
+     */
+    private final BotAttention attention = new BotAttention(this);
+
+    /**
      * The speech stack responsible for queued, contextual, and randomized bot chat.
      */
     private final BotSpeechStack speechStack;
@@ -747,6 +753,7 @@ public final class Bot extends Player {
      *     <li>Run reflex behavior for immediate decisions.</li>
      *     <li>Process speech so the bot can speak while active.</li>
      *     <li>Inject contextual events from the bot injector manager.</li>
+     *     <li>React to at most one thing the bot has noticed, without pausing its script.</li>
      *     <li>Process the active script stack.</li>
      *     <li>Ask the brain for a new coordinator when no script work remains.</li>
      * </ol>
@@ -802,6 +809,7 @@ public final class Bot extends Player {
                 api.bot.social.BotAmbientConversations.INSTANCE.tick(this);
                 // Process context injectors before scripts so we can still react to events while doing stuff.
                 manager.getInjectorManager().injectEvents(this);
+                attention.process();
 
                 processScripts();
             }
@@ -1017,6 +1025,13 @@ public final class Bot extends Player {
      */
     public BotEmotion getEmotions() {
         return emotions;
+    }
+
+    /**
+     * @return What the bot has noticed and not yet reacted to.
+     */
+    public BotAttention getAttention() {
+        return attention;
     }
 
     /**
