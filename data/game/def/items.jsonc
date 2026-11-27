@@ -2374,6 +2374,11 @@
     "tradeable": true
   },
   {
+    "id": 1549, // Stake
+    "weight": 0.085,
+    "tradeable": false
+  },
+  {
     "id": 1580, // Ice gloves
     "weight": 0.2,
     "tradeable": false

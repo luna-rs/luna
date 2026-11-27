@@ -7,6 +7,7 @@ import game.bot.scripts.BuyInitiateArmourBotScript
 import game.bot.scripts.ChampionsChallengeBotScript
 import game.bot.scripts.BlackKnightsFortressBotScript
 import game.bot.scripts.DragonSlayerBotScript
+import game.bot.scripts.VampireSlayerBotScript
 import game.bot.scripts.RomeoJulietBotScript
 import game.bot.scripts.RuneMysteriesBotScript
 import game.bot.scripts.ErnestTheChickenBotScript
@@ -102,6 +103,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (BlackKnightsFortressBotScript.eligible(bot)) return BlackKnightsFortressBotScript(bot)
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
+        if (VampireSlayerBotScript.eligible(bot)) return VampireSlayerBotScript(bot)
         if (RomeoJulietBotScript.eligible(bot)) return RomeoJulietBotScript(bot)
         if (RuneMysteriesBotScript.eligible(bot)) return RuneMysteriesBotScript(bot)
         if (ErnestTheChickenBotScript.eligible(bot)) return ErnestTheChickenBotScript(bot)
