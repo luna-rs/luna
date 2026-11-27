@@ -1,5 +1,6 @@
 package game.bot.scripts
 
+import game.content.demonSlayer.Delrith
 import game.content.dwarfMulticannon.DwarfMulticannon
 import api.predef.ext.totalItemAmount
 
@@ -1511,6 +1512,7 @@ open class NpcCombatScript(bot: Bot,
 
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
+        if (npc.baseId == Delrith.DEMON && (npc.id != npc.baseId || !Delrith.canFight(bot))) return false
         if (exclusiveNpcIds?.contains(npc.id) == false) return false
         if (unsupportedFocus != null && !companyAvailable &&
             (npc !== unsupportedFocus || npc.spawnCount != unsupportedSpawn)) return false

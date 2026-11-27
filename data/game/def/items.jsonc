@@ -3594,6 +3594,21 @@
     "tradeable": true
   },
   {
+    "id": 2399, // Traiborn's Demon Slayer key
+    "weight": 1.0,
+    "tradeable": false
+  },
+  {
+    "id": 2400, // Rovin's Demon Slayer key
+    "weight": 1.0,
+    "tradeable": false
+  },
+  {
+    "id": 2401, // Demon Slayer drain key
+    "weight": 1.0,
+    "tradeable": false
+  },
+  {
     "id": 2402, // Silverlight
     "weight": 1.8,
     "tradeable": false
