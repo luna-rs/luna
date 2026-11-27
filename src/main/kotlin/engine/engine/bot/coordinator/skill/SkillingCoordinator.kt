@@ -32,7 +32,8 @@ import io.luna.util.RandomUtils
  * In training mode, lower-level skills are favored to encourage broader account progression. In profit
  * mode, higher-level skills are favored because they are more likely to unlock stronger money-making methods.
  *
- * Preferred skills receive an additional flat weight bonus in either mode.
+ * Preferred skills receive an additional flat weight bonus in either mode. What the bot remembers of its recent
+ * sessions then scales each skill, so it tires of one it has just worked on and avoids one that would not start.
  *
  * @param training Whether this coordinator should choose training scripts or profit scripts.
  * @author lare96
@@ -169,6 +170,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
                     STARTER_THIEVING_WEIGHT_MULTIPLIER else 1.0)
             weights.computeIfPresent(SKILL_THIEVING) { _, old -> old * thievingMultiplier }
         }
+        weights.replaceAll { skill, weight -> weight * bot.memory.interestIn(skill, skill in bot.preferences.skills) }
 
         return weights
     }
@@ -196,7 +198,10 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
                     if (script is VoidBotScript) RunecraftingStage.NO_PLAN else RunecraftingStage.PLAN)
                 if (script is VoidBotScript) continue
             }
-            if (training || script !is VoidBotScript) return script
+            if (training || script !is VoidBotScript) {
+                bot.memory.diary.training(selectedSkill)
+                return script
+            }
         }
         return null
     }
