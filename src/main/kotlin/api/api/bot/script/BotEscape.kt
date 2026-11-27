@@ -77,12 +77,13 @@ val Bot.recentEscape: BotEscape? get() = lastEscape?.takeIf { it.isRecent() }
 
 /**
  * Records that the bot got away from [attacker] near [position]. It keeps away from there for [BotEscape.AVOID_FOR],
- * remembers [zone] as more dangerous for days, and holds a small grudge against a player who drove it off. Another
- * escape from the same attacker and zone while the last is recent is the same escape and only renews it.
+ * remembers the work zone it happened in as more dangerous for days, and holds a small grudge against a player who
+ * drove it off. Another escape from the same attacker and zone while the last is recent is the same escape and only
+ * renews it.
  */
 fun Bot.escapedFrom(attacker: Mob, position: Position, zone: SubZone?) {
     if (!continuesEscape(attacker.toString(), zone)) {
-        zone?.let { rememberPlace(it, BotPlacesMemory.Event.FLED) }
+        workZoneAt(position)?.let { rememberPlace(it, BotPlacesMemory.Event.FLED) }
         if (attacker is Player) memory.people.remember(attacker.username, BotPeopleMemory.Event.CHASED_ME)
     }
     lastEscape = BotEscape(position, attacker.toString(), System.currentTimeMillis(), zone)
@@ -90,11 +91,13 @@ fun Bot.escapedFrom(attacker: Mob, position: Position, zone: SubZone?) {
 
 /**
  * Records that the bot left after seeing [attacker] attack someone near [position]. It keeps away from there for
- * [BotEscape.AVOID_FOR] and remembers [zone] as a little more dangerous. The attacker didn't attack the bot, so
- * nothing is held against them.
+ * [BotEscape.AVOID_FOR] and remembers the work zone it happened in as a little more dangerous. The attacker didn't
+ * attack the bot, so nothing is held against them.
  */
 fun Bot.leftWitnessedAttack(attacker: String, position: Position, zone: SubZone?) {
-    if (!continuesEscape(attacker, zone)) zone?.let { rememberPlace(it, BotPlacesMemory.Event.WITNESSED_ATTACK) }
+    if (!continuesEscape(attacker, zone)) workZoneAt(position)?.let {
+        rememberPlace(it, BotPlacesMemory.Event.WITNESSED_ATTACK)
+    }
     lastEscape = BotEscape(position, attacker, System.currentTimeMillis(), zone)
 }
 

@@ -443,11 +443,13 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     override suspend fun beforeLeavingZone(): Boolean {
         BotConversations.cancel(bot)
         profitOreContext = null
-        // Leaving from inside the mine with time left means the rock search gave up, not the session ending.
+        // Leaving from inside the mine with time left means the rock search gave up, not the session ending. It is only
+        // packed if others are mining it: alone, the bot was waiting on respawns or couldn't reach a rock.
         val zone = activeZone
-        if (zone != null && duration > Duration.ZERO && !forceBanking && zone.area.contains(bot.position)) {
+        if (zone != null && duration > Duration.ZERO && !forceBanking && zone.area.contains(bot.position) &&
+            visibleMiners().keys.any { zone.area.contains(it) }) {
             bot.rememberPlace(zone, BotPlacesMemory.Event.CROWDED)
-            bot.log("Leaving $zone without a free rock; remembering it as packed.")
+            bot.log("Leaving $zone without a free rock while others mine it; remembering it as packed.")
         }
         if (!powerMining && Ore.COAL in ores && (zone == SubZone.COAL_TRUCKS_MINE || coalTrucks.haulPending) &&
             (CoalTrucks.storedCoal(bot) > 0 || coalTrucks.haulPending) && coalTrucks.ready()) {

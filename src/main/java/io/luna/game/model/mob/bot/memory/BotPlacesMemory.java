@@ -18,13 +18,13 @@ import java.util.Map;
  * escape there. All three fade by half over a set stretch of time, and a place with none left is forgotten.
  * <p>
  * Familiarity and danger fade by the bot's time online, like everything else it remembers. Crowding is about the
- * world, not the bot, so it fades by real time: a mine packed this morning may be empty tonight whether or not the
- * bot played in between.
+ * world, not the bot, so it fades by real time: a mine packed an hour ago may have room now whether or not the bot
+ * played in between.
  * <p>
  * A place the bot finds {@link #dangerous(String) dangerous} is one it stays away from. Two deaths close together
  * are enough, and three keep it away for days of play. A place it finds {@link #packed(String) packed} is skipped
- * for a few hours while it has somewhere else to go. Below those lines a place only ranks lower, and familiar places
- * rank higher, by {@link #preference(String)}.
+ * for about half an hour while it has somewhere else to go. Below those lines a place only ranks lower, and familiar
+ * places rank higher, by {@link #preference(String)}.
  * <p>
  * The number of places is limited by how intelligent the bot is. When the limit is reached, the place the bot
  * remembers least makes room.
@@ -126,7 +126,7 @@ public final class BotPlacesMemory implements BotMemoryPart {
     /**
      * The real time over which crowding halves.
      */
-    public static final long CROWDING_HALF_LIFE = hours(12);
+    public static final long CROWDING_HALF_LIFE = hours(1);
 
     /**
      * The time online over which danger halves, for a bot of average confidence.

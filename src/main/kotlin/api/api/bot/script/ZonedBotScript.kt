@@ -78,6 +78,12 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         const val MAX_FUTILE_BANK_TRIPS = 3
 
         /**
+         * How near where a paused script stopped something must happen to belong to its zone. Farther away, the bot
+         * was on other work run on top of it, such as a PK trip.
+         */
+        const val PAUSED_WORK_RADIUS = 32
+
+        /**
          * How many bank attempts in a row that fail outright end a script.
          */
         const val MAX_FAILED_BANK_ATTEMPTS = 5
@@ -179,6 +185,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      */
     var interruptedZone: SubZone? = null
         private set
+
+    /**
+     * Where the bot was when this script was last paused.
+     */
+    private var interruptedAt: Position? = null
 
     /**
      * The zone whose bank trip the last pause interrupted. The trip carries on for it when the script resumes.
@@ -354,6 +365,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         bot.log("Pausing script. Clearing cached bank and active zone.")
 
         interruptedZone = activeZone ?: travelZone
+        interruptedAt = bot.position
         interruptedBankTrip = if (forceBanking) interruptedZone else null
         cachedBank = null
         activeZone = null
@@ -375,14 +387,22 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     /**
-     * Records a death against the work destination in the bot's memory, including deaths on the way there. Two deaths
-     * close together keep the bot away from that destination across its activities, and three for days of play.
-     * Idle queued work is not charged.
+     * The zone that something at [position] happened in for this script: the zone it works in or travels to, or while
+     * paused, the zone it stopped at if [position] is inside it or within [PAUSED_WORK_RADIUS] tiles of where it stopped.
+     */
+    fun zoneOf(position: Position): SubZone? = activeZone ?: travelZone ?: interruptedZone?.takeIf {
+        it.area.contains(position) || interruptedAt?.isWithinDistance(position, PAUSED_WORK_RADIUS) == true
+    }
+
+    /**
+     * Records a death at [position] against the work destination in the bot's memory, including deaths on the way
+     * there. Two deaths close together keep the bot away from that destination across its activities, and three for
+     * days of play. Idle queued work, and work paused far from where the bot died, is not charged.
      *
      * @return Whether the bot now stays away from the destination.
      */
-    fun recordActivityDeath(): Boolean {
-        val zone = activeZone ?: travelZone ?: interruptedZone ?: return false
+    fun recordActivityDeath(position: Position): Boolean {
+        val zone = zoneOf(position) ?: return false
         if (!bot.rememberPlace(zone, BotPlacesMemory.Event.DIED)) return false
         bot.log("Repeated deaths travelling to or working in $zone. Staying away from it.")
         return true

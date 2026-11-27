@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.zone.SubZone
 import api.predef.*
+import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.memory.BotPlacesMemory.Event
 import kotlin.math.pow
@@ -15,6 +16,12 @@ fun Bot.findsDangerous(zone: SubZone): Boolean = memory.places.dangerous(zone.na
  * Whether the bot gave up on [zone] for lack of room recently enough to skip it while it has somewhere else to go.
  */
 fun Bot.findsPacked(zone: SubZone): Boolean = memory.places.packed(zone.name)
+
+/**
+ * The zone of the bot's zoned work that something at [position] happened in, or `null` if it happened elsewhere.
+ */
+fun Bot.workZoneAt(position: Position): SubZone? =
+    scriptStack.findActive(ZonedBotScript::class.java).orElse(null)?.zoneOf(position)
 
 /**
  * Records [event] at [zone].
