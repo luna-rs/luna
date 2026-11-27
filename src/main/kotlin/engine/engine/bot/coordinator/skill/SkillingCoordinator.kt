@@ -4,6 +4,7 @@ import engine.bot.economy.BotProductionMetrics
 import engine.bot.economy.BotProductionMetrics.RunecraftingStage
 import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
+import api.bot.script.BotGoals
 import api.bot.script.BotScript
 import api.bot.script.VoidBotScript
 import api.bot.zone.SubZone
@@ -33,7 +34,8 @@ import io.luna.util.RandomUtils
  * mode, higher-level skills are favored because they are more likely to unlock stronger money-making methods.
  *
  * Preferred skills receive an additional flat weight bonus in either mode. What the bot remembers of its recent
- * sessions then scales each skill, so it tires of one it has just worked on and avoids one that would not start.
+ * sessions then scales each skill, so it tires of one it has just worked on and avoids one that would not start. The
+ * skill the bot is aiming for gets a share of the roll.
  *
  * @param training Whether this coordinator should choose training scripts or profit scripts.
  * @author lare96
@@ -171,6 +173,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
             weights.computeIfPresent(SKILL_THIEVING) { _, old -> old * thievingMultiplier }
         }
         weights.replaceAll { skill, weight -> weight * bot.memory.interestIn(skill, skill in bot.preferences.skills) }
+        BotGoals.pullSkillWeights(bot, weights)
 
         return weights
     }

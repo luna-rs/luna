@@ -10,6 +10,21 @@
  * DIED:
  * Lines a bot may say shortly after dying and losing items.
  *
+ * GOAL_ANSWER:
+ * Lines a bot may say when a real player asks what it is going for. The goal tags are <skill> (the skill's name, or
+ * combat or total), <level> (the level now), <target> (the level aimed for), <left> (the levels to go), <unlock> (what
+ * the target unlocks) and <ambition> (the bigger goal behind it, such as 99 fishing). A line whose <unlock> or
+ * <ambition> the bot doesn't have is skipped.
+ *
+ * GOAL_CLOSE:
+ * Lines a bot may say after a level that leaves its aim a few levels off. Uses the goal tags.
+ *
+ * GOAL_NONE:
+ * Lines a bot may say when asked what it is going for, if it has no aim.
+ *
+ * GOAL_REACHED:
+ * Lines a bot may say after reaching a level it was working toward. Uses the goal tags.
+ *
  * GREETED:
  * Lines a bot may say back to a real player who greets it or the people around it. Use <name> to reference the
  * player being greeted.
@@ -1029,6 +1044,75 @@
     "death is winning today",
     "i am losing to death today",
     "i'll get it back maybe"
+  ],
+  "GOAL_ANSWER": [
+    "<target> <skill>",
+    "going for <target> <skill>",
+    "<target> <skill>, <left> to go",
+    "trying to get <target> <skill>",
+    "working on <target> <skill>",
+    "aiming for <target> <skill>",
+    "<target> <skill> atm",
+    "just <target> <skill> for now",
+    "<target> <skill> hopefully",
+    "<target> <skill>, then we'll see",
+    "<level> <skill> now, going for <target>",
+    "<left> left till <target> <skill>",
+    "<target> <skill> for <unlock>",
+    "need <target> <skill> for <unlock>",
+    "<unlock>, need <target> <skill>",
+    "want <unlock>, so <target> <skill>",
+    "<target> <skill> then <ambition>",
+    "<ambition> eventually, <target> <skill> first",
+    "<ambition> one day",
+    "going for <ambition>, slowly",
+    "<target> <skill> on the way to <ambition>"
+  ],
+  "GOAL_CLOSE": [
+    "<left> to go for <target> <skill>",
+    "almost <target> <skill>",
+    "nearly <target> <skill>",
+    "<left> left till <target>",
+    "so close to <target> <skill>",
+    "<target> <skill> soon",
+    "getting there, <target> soon",
+    "<left> more till <unlock>",
+    "<unlock> soon",
+    "<level> <skill>, <target> soon",
+    "<level>, <left> to go",
+    "come on <target>",
+    "not long till <target> <skill>",
+    "almost at <unlock>",
+    "<level> <skill>, almost there"
+  ],
+  "GOAL_NONE": [
+    "nothing really",
+    "nothing atm",
+    "just training",
+    "no goal atm",
+    "nothing in particular",
+    "just playing",
+    "dunno yet",
+    "not sure yet",
+    "just whatever",
+    "nothing much"
+  ],
+  "GOAL_REACHED": [
+    "finally <target> <skill>",
+    "<target> <skill> at last",
+    "got my <target> <skill>",
+    "yes!! <target> <skill>",
+    "<target> <skill>!! been waiting for that",
+    "<target> <skill>, time for <unlock>",
+    "<unlock> here i come",
+    "<target> <skill> done",
+    "goal done, <target> <skill>",
+    "<target> <skill> finally, now for <ambition>",
+    "one step closer to <ambition>",
+    "<target> <skill> :D",
+    "woo <target> <skill>",
+    "<target> <skill>, that took ages",
+    "done with that, <target> <skill>"
   ],
   "GREETED": [
     "hi",

@@ -26,6 +26,7 @@ import api.bot.action.NpcPotionPolicy
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
+import api.bot.script.BotGoals
 import api.bot.script.TargetingZonedBotScript
 import api.bot.social.CombatCampBehavior
 import api.bot.social.SocialBotScript
@@ -668,6 +669,9 @@ open class NpcCombatScript(bot: Bot,
     private val magicSupplies = MagicSupplyPreparation(bot)
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
+
+    /** The melee skill the bot was aiming for when its style was chosen, so a new aim chooses again. */
+    private var styledForAim: Int? = null
 
     private val magicTactics = BotCombatMagic(bot, handler)
     private var ibanRechargeQueued = false
@@ -1900,7 +1904,9 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return false
         }
-        if (!combatConfigured || bot.combat.weapon.styleDef !in allowed) {
+        val aim = BotGoals.meleeAim(bot)
+        if (!combatConfigured || bot.combat.weapon.styleDef !in allowed || aim != styledForAim) {
+            styledForAim = aim
             bot.combat.weapon.changeStyle(selectCombatStyle(allowed).button)
             combatConfigured = true
         }
@@ -1944,6 +1950,12 @@ open class NpcCombatScript(bot: Bot,
         fun getDefaultStyle(): CombatStyleDefinition {
             return if (bot.personality.isIntelligent && randBoolean() && bot.strength.staticLevel < 99)
                 styles.firstOrNull { it.exp.contains(Skill.STRENGTH) } ?: styles.random() else styles.random()
+        }
+
+        // A bot working toward a melee level mostly trains that skill alone.
+        val aim = BotGoals.meleeAim(bot)
+        if (aim != null && rand(bot.memory.goals.focus())) {
+            styles.firstOrNull { it.exp.size == 1 && aim in it.exp }?.let { return it }
         }
 
         // Intelligent bots are more likely to use the controlled style.

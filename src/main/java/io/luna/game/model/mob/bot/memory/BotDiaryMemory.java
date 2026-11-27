@@ -51,6 +51,16 @@ public final class BotDiaryMemory implements BotMemoryPart {
     }
 
     /**
+     * A session that has just closed.
+     *
+     * @param activity The name of the activity the bot chose.
+     * @param skill The skill it was about, or {@link #NO_SKILL}.
+     * @param started Whether it started anything. One that did not is not kept as a session.
+     */
+    public record Closed(String activity, int skill, boolean started) {
+    }
+
+    /**
      * One finished session.
      */
     private static final class Session {
@@ -317,16 +327,51 @@ public final class BotDiaryMemory implements BotMemoryPart {
     }
 
     /**
+     * @return The skill the open session is about, or {@link #NO_SKILL}.
+     */
+    public int openSkill() {
+        return open == null ? NO_SKILL : open.skill;
+    }
+
+    /**
+     * @param experience The bot's experience in all skills together now.
+     * @return How fast the open session has been gaining experience, per minute online, or {@code 0.0}.
+     */
+    public double openRate(long experience) {
+        if (open == null) {
+            return 0.0;
+        }
+        double minutes = Math.max(0, memory.now() - open.startedAt) / 60_000.0;
+        long gained = experience - open.start.experience();
+        return minutes >= 1.0 && gained > 0 ? gained / minutes : 0.0;
+    }
+
+    /**
+     * @param skill The skill's id.
+     * @return The minutes of the sessions still in the diary that were about the skill.
+     */
+    public int minutesOn(int skill) {
+        int minutes = 0;
+        for (Session session : sessions) {
+            if (session.skill == skill) {
+                minutes += session.minutes;
+            }
+        }
+        return minutes;
+    }
+
+    /**
      * Closes the open session. It is kept, unless it was over at once with nothing to show, in which case the bot is
      * put off trying the same thing again for a while.
      *
      * @param standing Where the bot's account stands now.
+     * @return The session that closed, or {@code null} if none was open.
      */
-    public void end(Standing standing) {
+    public Closed end(Standing standing) {
         Open ended = open;
         open = null;
         if (ended == null || standing == null) {
-            return;
+            return null;
         }
         long now = memory.now();
         long lasted = Math.max(0, now - ended.startedAt);
@@ -339,7 +384,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
             } else {
                 putOff(ended.activity, 1.0);
             }
-            return;
+            return new Closed(ended.activity, ended.skill, false);
         }
         Session session = new Session(ended.activity);
         session.skill = ended.skill;
@@ -354,6 +399,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
         session.went = went(session, ended.start.wealth());
         sessions.addLast(session);
         trim();
+        return new Closed(ended.activity, ended.skill, true);
     }
 
     /**

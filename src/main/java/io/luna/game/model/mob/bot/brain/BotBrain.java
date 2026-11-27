@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.brain;
 
 import api.bot.action.FoodSupplyAcquisition;
+import api.bot.script.BotGoals;
 import api.bot.script.BotScript;
 import api.bot.action.BotBankSpace;
 import engine.bot.coordinator.BankResourceCoordinator;
@@ -34,7 +35,7 @@ import static api.bot.script.BotDiaryKt.standing;
  * and delegate execution to coordinators or scripts instead of performing detailed gameplay logic directly.
  * <p>
  * Each activity the brain chooses is a session in the bot's {@link BotDiaryMemory diary}, from the choice until the
- * brain is next asked for work.
+ * brain is next asked for work. Each time it is asked, the bot's goals are checked and set where it has none.
  *
  * @author lare96
  */
@@ -92,9 +93,8 @@ public class BotBrain {
     public BotCoordinator process(Bot bot) {
         // The brain is only asked while the script stack is empty, so whatever the last choice started is over.
         BotDiaryMemory diary = bot.getMemory().getDiary();
-        if (diary.isOpen()) {
-            diary.end(standing(bot));
-        }
+        BotDiaryMemory.Closed closed = diary.isOpen() ? diary.end(standing(bot)) : null;
+        BotGoals.review(bot, closed);
         if (stillDeciding(bot)) {
             return null;
         }

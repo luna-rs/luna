@@ -32,6 +32,7 @@ BotReactions.reactToOtherLevelUp()
 // Bots answer price checks in public chat, and ask them at the markets.
 BotChatRouter.add(PlayerTradeAdvertisementMarket.live)
 BotChatRouter.add(BotPriceChecks)
+BotChatRouter.add(BotGoalQuestions)
 BotChatRouter.add(CombatCampBehavior)
 BotChatRouter.add(BossRecruitment)
 BotChatRouter.add(BotGreetings)

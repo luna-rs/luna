@@ -6,6 +6,7 @@ import io.luna.game.model.mob.bot.brain.BotPersonality;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntToDoubleFunction;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
@@ -19,7 +20,8 @@ import static java.util.Objects.requireNonNull;
  * read where it makes a choice. Nothing here runs every tick.
  * <p>
  * Memory changes what a bot chooses only by multiplying its usual interest, between {@link #LEAST_INTEREST} and
- * {@link #MOST_INTEREST} for everything it remembers together. It never rules a choice in or out.
+ * {@link #MOST_INTEREST} for everything it remembers together. It never rules a choice in or out. The one larger pull is
+ * an aim, which may claim a share of the skill roll (see {@link BotGoalsMemory#aimWeight}).
  * <p>
  * Almost everything fades by the bot's own time online, which is saved with the account. What a bot saw of the world
  * rather than of itself, such as a crowded place, fades by real time instead. World ticks restart at zero on every boot
@@ -60,6 +62,11 @@ public final class BotMemory {
     private final Supplier<BotPersonality> personality;
 
     /**
+     * The bot's experience in a skill.
+     */
+    private final IntToDoubleFunction experience;
+
+    /**
      * Who the bot knows.
      */
     private final BotPeopleMemory people;
@@ -75,6 +82,11 @@ public final class BotMemory {
     private final BotDiaryMemory diary;
 
     /**
+     * What the bot is working toward.
+     */
+    private final BotGoalsMemory goals;
+
+    /**
      * Every part, in the order they are saved.
      */
     private final List<BotMemoryPart> parts;
@@ -85,24 +97,40 @@ public final class BotMemory {
      * @param bot The bot that remembers.
      */
     public BotMemory(Bot bot) {
-        this(() -> bot.getTimePlayed().toMillis(), System::currentTimeMillis, bot::getPersonality);
+        this(() -> bot.getTimePlayed().toMillis(), System::currentTimeMillis, bot::getPersonality,
+                skill -> bot.skill(skill).getExperience());
     }
 
     /**
-     * Creates a memory from its three inputs.
+     * Creates a memory from its inputs, for an owner whose skills are never read.
      *
      * @param clock The owner's time online, in milliseconds.
      * @param realClock The real time, in milliseconds since the epoch.
      * @param personality The owner's personality, read whenever it is needed.
      */
     public BotMemory(LongSupplier clock, LongSupplier realClock, Supplier<BotPersonality> personality) {
+        this(clock, realClock, personality, skill -> 0.0);
+    }
+
+    /**
+     * Creates a memory from its inputs.
+     *
+     * @param clock The owner's time online, in milliseconds.
+     * @param realClock The real time, in milliseconds since the epoch.
+     * @param personality The owner's personality, read whenever it is needed.
+     * @param experience The owner's experience in a skill, read whenever it is needed.
+     */
+    public BotMemory(LongSupplier clock, LongSupplier realClock, Supplier<BotPersonality> personality,
+                     IntToDoubleFunction experience) {
         this.clock = requireNonNull(clock);
         this.realClock = requireNonNull(realClock);
         this.personality = requireNonNull(personality);
+        this.experience = requireNonNull(experience);
         people = new BotPeopleMemory(this);
         places = new BotPlacesMemory(this);
         diary = new BotDiaryMemory(this);
-        parts = List.of(people, places, diary);
+        goals = new BotGoalsMemory(this);
+        parts = List.of(people, places, diary, goals);
     }
 
     /**
@@ -128,6 +156,15 @@ public final class BotMemory {
     }
 
     /**
+     * @param skill The skill's id.
+     * @return The bot's experience in the skill now.
+     */
+    public double experience(int skill) {
+        double value = experience.applyAsDouble(skill);
+        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+    }
+
+    /**
      * @return Who the bot knows.
      */
     public BotPeopleMemory getPeople() {
@@ -149,12 +186,20 @@ public final class BotMemory {
     }
 
     /**
+     * @return What the bot is working toward.
+     */
+    public BotGoalsMemory getGoals() {
+        return goals;
+    }
+
+    /**
      * @param activity The activity's name.
      * @param liking How much the bot likes the activity, from {@code 0.0} to {@code 1.0}.
      * @return The multiplier everything the bot remembers puts on its interest in the activity.
      */
     public double interestIn(String activity, double liking) {
-        return Math.clamp(diary.interestIn(activity, liking), LEAST_INTEREST, MOST_INTEREST);
+        return Math.clamp(diary.interestIn(activity, liking) * goals.interestIn(activity), LEAST_INTEREST,
+                MOST_INTEREST);
     }
 
     /**
