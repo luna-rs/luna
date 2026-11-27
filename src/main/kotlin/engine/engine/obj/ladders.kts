@@ -3,6 +3,8 @@ package engine.obj
 import api.predef.*
 import game.content.brimhavenArena.BrimhavenArena
 import game.content.dragonSlayer.DragonSlayerShip
+import game.content.ernestTheChicken.DraynorManor
+import game.content.ernestTheChicken.ManorLeverPuzzle
 import game.content.miningGuild.MiningGuild
 import io.luna.game.action.impl.ClimbAction
 import io.luna.game.event.impl.ObjectClickEvent
@@ -67,6 +69,9 @@ fun climb(plr: Player, ladder: GameObject, up: Boolean) {
     }
     val dir = Direction.between(plr.position, ladder.position)
     val message = if (up) "You climb up the ladder." else "You climb down the ladder."
+    if (ladder.id == DraynorManor.LADDER_UP || ladder.id == DraynorManor.LADDER_DOWN) {
+        ManorLeverPuzzle.reset(plr)
+    }
     plr.submitAction(ClimbAction(plr, destination, dir, message))
 }
 
