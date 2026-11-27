@@ -6,6 +6,9 @@ import api.bot.action.BotPotionTrip
 import api.bot.action.FoodSupplyAcquisition
 import api.bot.script.ProfitGatheringGoal
 import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotTradeManager
+import api.bot.action.trading.NativeOutputDemand
+import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.social.SocialBotScript
 import engine.bot.speech.BotConversationPool.ConversationSpeech
@@ -19,6 +22,7 @@ import com.google.common.collect.ImmutableSetMultimap
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.CookingScriptFactory
 import game.bot.scripts.GiantMoleTrip
+import game.bot.scripts.trading.NativeProductionSaleScript
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.fishing.catchFish.Fish
 import game.skill.fishing.catchFish.CatchFishAction
@@ -152,12 +156,16 @@ class FishBotScript(
 
             var gatherKarambwanBait = false
             var reserveCatchTarget = 0
+            var bycatchLanded = 0
+            var bycatchOpeningStock = 0
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 tool = Tool.valueOf(data.get("tool").asString)
                 gatherKarambwanBait = data.get("gatherKarambwanBait")?.asBoolean ?: false
                 reserveCatchTarget = data.get("reserveCatchTarget")?.asInt?.coerceIn(0, FoodSupplyAcquisition.TARGET) ?: 0
+                bycatchLanded = data.get("bycatchLanded")?.asInt?.coerceAtLeast(0) ?: 0
+                bycatchOpeningStock = data.get("bycatchOpeningStock")?.asInt?.coerceAtLeast(0) ?: 0
             }
 
             override fun save(data: JsonObject) {
@@ -165,6 +173,10 @@ class FishBotScript(
                 data.addProperty("tool", tool.name)
                 data.addProperty("gatherKarambwanBait", gatherKarambwanBait)
                 if (reserveCatchTarget > 0) data.addProperty("reserveCatchTarget", reserveCatchTarget)
+                if (bycatchLanded > 0) {
+                    data.addProperty("bycatchLanded", bycatchLanded)
+                    data.addProperty("bycatchOpeningStock", bycatchOpeningStock)
+                }
             }
         }
     }
@@ -173,7 +185,24 @@ class FishBotScript(
      * Restores a Fishing script from saved script data.
      */
     constructor(bot: Bot, data: FishData) :
-        this(bot, data.tool, data.duration, data.zones, data.gatherKarambwanBait, data.reserveCatchTarget)
+        this(bot, data.tool, data.duration, data.zones, data.gatherKarambwanBait, data.reserveCatchTarget) {
+        bycatchLanded = data.bycatchLanded
+        bycatchOpeningStock = data.bycatchOpeningStock
+    }
+
+    private var bycatchLanded = 0
+    private var bycatchOpeningStock = 0
+
+    /**
+     * Measures freshly landed harpoon bycatch without including the fish already owned when it arrives.
+     */
+    internal fun recordHarpoonBycatch(fish: Fish) {
+        val goal = profitGathering ?: return
+        if (selectedTool != Tool.HARPOON || fish.id == goal.itemId || bycatchLanded == Int.MAX_VALUE) return
+        if (bycatchLanded == 0)
+            bycatchOpeningStock = (BotTradeManager.transferableAmount(bot, fish.id) - 1).coerceAtLeast(0)
+        bycatchLanded++
+    }
 
     /**
      * All NPC ids that can be fished using [selectedTool].
@@ -402,6 +431,8 @@ class FishBotScript(
         data.tool = selectedTool
         data.gatherKarambwanBait = gatherKarambwanBait
         data.reserveCatchTarget = reserveCatchTarget
+        data.bycatchLanded = bycatchLanded
+        data.bycatchOpeningStock = bycatchOpeningStock
         return data
     }
 
@@ -425,6 +456,29 @@ class FishBotScript(
         continuationQueued = true
         bot.scriptStack.softPushHead(FishBotScript(bot, Tool.KARAMBWAN_VESSEL, remaining,
             mutableListOf(SubZone.KARAMJA_KARAMBWAN_FISHING)))
+    }
+
+    internal fun fundedHarpoonBycatch(goal: ProfitGatheringGoal): BotScript? {
+        if (selectedTool != Tool.HARPOON || bycatchLanded == 0) return null
+        val fish = selectedTool.fish.first { it.id != goal.itemId }
+        val owned = BotTradeManager.transferableAmount(bot, fish.id)
+        val available = minOf(bycatchLanded, (owned - bycatchOpeningStock).coerceAtLeast(0),
+            BotTradeManager.saleableAmount(bot, fish.id))
+        if (available == 0) return null
+        val now = System.currentTimeMillis()
+        val (amount, price) = NativeOutputDemand.depth(bot, fish.id, now).mapNotNull { depth ->
+            val quantity = minOf(available, depth.quantity)
+            if (BotTradeManager.hasNativeSaleStock(bot, fish.id, quantity) &&
+                depth.unitPrice >= (BotTradeManager.MINIMUM_OFFER_VALUE + quantity - 1L) / quantity)
+                quantity to depth.unitPrice else null
+        }.maxByOrNull { it.first } ?: return null
+        return NativeProductionSaleScript.createForOutput(bot, UUID.randomUUID().toString(), fish.id,
+            amount, price, now + 5.minutes.inWholeMilliseconds)
+    }
+
+    override fun completedProfitGathering(goal: ProfitGatheringGoal) {
+        fundedHarpoonBycatch(goal)?.let(bot.scriptStack::softPushHead)
+        super.completedProfitGathering(goal)
     }
 
     override suspend fun completed() {

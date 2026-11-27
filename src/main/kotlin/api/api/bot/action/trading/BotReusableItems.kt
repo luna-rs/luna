@@ -1,5 +1,6 @@
 package api.bot.action.trading
 
+import game.content.dwarfMulticannon.CannonStage
 import io.luna.game.model.def.ItemDefinition
 import java.util.Collections
 
@@ -16,7 +17,7 @@ object BotReusableItems {
         1592, 1597, 1595, 1599, 2976, 5523, 6747, 1594, 4200, 7649, // Native jewellery moulds.
         301, 303, 305, 307, 309, 311, // Ordinary fishing tools, excluding bait and loaded vessels.
         952, 5341, 5343, 5325, 5329 // Durable farming hand tools.
-    ))
+    ).apply { addAll(CannonStage.PARTS) })
 
     /**
      * Returns canonical ids without depending on loaded item definitions, including for offline maintenance.

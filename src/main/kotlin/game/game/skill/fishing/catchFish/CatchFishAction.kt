@@ -2,6 +2,7 @@ package game.skill.fishing.catchFish
 
 import api.predef.*
 import api.predef.ext.*
+import game.bot.scripts.skills.FishBotScript
 import game.player.Sound
 import game.content.randomEvents.RandomEvents
 import game.skill.fishing.fishingSpot.FishingSpotHandler
@@ -14,6 +15,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.block.Animation
 import io.luna.net.msg.out.SoundMessageWriter
 
@@ -231,6 +233,8 @@ class CatchFishAction(plr: Player,
         if (!mob.inventory.add(Item(fish.id))) {
             // A big net can catch more than the inventory has room for.
             world.addItem(fish.id, 1, mob.position, mob)
+        } else if (tool == Tool.HARPOON && mob is Bot) {
+            (mob.scriptStack.current() as? FishBotScript)?.recordHarpoonBycatch(fish)
         }
         mob.fishing.addExperience(fish.exp)
         mob.sendMessage(tool.catchMessages[fish] ?: fish.message)

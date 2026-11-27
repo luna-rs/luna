@@ -1,5 +1,8 @@
 package api.bot.action.trading
 
+import game.bot.scripts.CannonBotSupport
+import game.content.dwarfMulticannon.DwarfMulticannon.CANNONBALL
+
 import game.bot.scripts.skills.PrayerBoneStock
 import api.bot.action.BotPotionTrip
 
@@ -457,6 +460,7 @@ object BotTradeIntentions {
         val ownPlan = consumingPlan?.takeIf { bot.productionPlan === it && bot.productionOwner === consumingOwner }
         val retained = supplyPlans(bot, System.currentTimeMillis(), ownPlan).mapValuesTo(HashMap()) { it.value.target }
         retained[DRAGON_SQUARE_SHIELD] = maxOf(retained[DRAGON_SQUARE_SHIELD] ?: 0, dragonShieldReserve(bot))
+        retained.merge(CANNONBALL, CannonBotSupport.retainedAmmo(bot), ::maxOf)
         for ((id, amount) in PrayerBoneStock.reserves(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotGearDemand.retained(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
         for ((id, amount) in BotPotionDemand.retainedStock(bot)) retained[id] = maxOf(retained[id] ?: 0, amount)
@@ -547,6 +551,7 @@ object BotTradeIntentions {
             activeProductionPlan(bot, now)?.let { productionTarget(it, id) } ?: 0,
             explicitSupplyPlan(bot, id)?.target ?: 0, PrayerBoneStock.reserve(bot, id))
         if (id == DRAGON_SQUARE_SHIELD) target = maxOf(target, dragonShieldReserve(bot))
+        if (id == CANNONBALL) target = maxOf(target, CannonBotSupport.retainedAmmo(bot))
         val allocated = bot.scriptStack.findActive(AlchemyBotScript::class.java)
             .orElse(null)?.allocatedStock()?.takeIf { it.id == id }?.amount ?: 0
         target = (target.toLong() + allocated).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
