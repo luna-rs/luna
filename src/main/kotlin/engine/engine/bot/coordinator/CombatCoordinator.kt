@@ -127,7 +127,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.VARROCK_DARK_WIZARDS, 25, setOf("Dark wizard")),
             Camp(SubZone.AL_KHARID_MINE, 25, setOf("Scorpion")),
             Camp(SubZone.DWARVEN_MINE, 35, setOf("Scorpion")),
-            Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Cow", "Cow calf", HOBGOBLIN)),
+            Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf(HOBGOBLIN)),
             Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
             Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),

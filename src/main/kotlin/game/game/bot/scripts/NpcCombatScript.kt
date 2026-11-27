@@ -576,7 +576,14 @@ open class NpcCombatScript(bot: Bot,
                 val savedNames = data.get("names")?.takeUnless { it.isJsonNull }?.asJsonObject
                 savedNames?.entrySet()?.forEach { (zoneName, npcs) ->
                     val zone = SubZone.fromSavedName(zoneName) ?: return@forEach
-                    npcs.asJsonArray.forEach { builder.put(zone, it.asString) }
+                    val targets = npcs.asJsonArray.map { it.asString }.toSet()
+                    // Older ordinary outings saved cows alongside the hobgoblins here.
+                    if (zone == SubZone.CRAFTING_GUILD_COW_FIELD && slayerTask == null &&
+                        targets == setOf("Cow", "Cow calf", "Hobgoblin")) {
+                        builder.put(zone, "Hobgoblin")
+                    } else {
+                        builder.putAll(zone, targets)
+                    }
                 }
                 names = builder.build()
             }
