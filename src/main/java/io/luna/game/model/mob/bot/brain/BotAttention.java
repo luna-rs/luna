@@ -36,7 +36,8 @@ public final class BotAttention {
         GREETING,
 
         /**
-         * A real player asked this bot or the people around it what they are working toward.
+         * A real player asked this bot or the people around it about themselves: what they are working toward, or
+         * how they are doing.
          */
         QUESTION;
 

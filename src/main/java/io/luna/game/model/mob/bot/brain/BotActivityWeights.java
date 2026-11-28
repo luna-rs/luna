@@ -18,7 +18,8 @@ import static api.predef.ext.BotPreferenceExtKt.totalItemAmount;
  * Progression makes only a small adjustment: training retains at least ninety-five percent of its weight,
  * while PKing and minigames gain at most ten percent. Exhausted training activities are excluded.
  * What the bot remembers of its recent sessions then scales each weight: down after a lot of the same activity, a bad
- * run or a failed start, up after a good run.
+ * run or a failed start, up after a good run. Its outlook scales them too: dangerous work down after deaths, paying
+ * work up after losses.
  *
  * @author lare96
  */

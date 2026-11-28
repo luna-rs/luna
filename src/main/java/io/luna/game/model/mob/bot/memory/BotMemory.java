@@ -24,8 +24,9 @@ import static java.util.Objects.requireNonNull;
  * an aim, which may claim a share of the skill roll (see {@link BotGoalsMemory#aimWeight}).
  * <p>
  * Almost everything fades by the bot's own time online, which is saved with the account. What a bot saw of the world
- * rather than of itself, such as a crowded place, fades by real time instead. World ticks restart at zero on every boot
- * and are never stored here. Entries hold names and ids, never live players.
+ * rather than of itself, such as a crowded place, fades by real time instead, and so do its feelings: being tired of
+ * an activity and its outlook. World ticks restart at zero on every boot and are never stored here. Entries hold names
+ * and ids, never live players.
  *
  * @author TheLining
  */
@@ -87,6 +88,11 @@ public final class BotMemory {
     private final BotGoalsMemory goals;
 
     /**
+     * How things have been going for the bot.
+     */
+    private final BotOutlookMemory outlook;
+
+    /**
      * Every part, in the order they are saved.
      */
     private final List<BotMemoryPart> parts;
@@ -130,7 +136,8 @@ public final class BotMemory {
         places = new BotPlacesMemory(this);
         diary = new BotDiaryMemory(this);
         goals = new BotGoalsMemory(this);
-        parts = List.of(people, places, diary, goals);
+        outlook = new BotOutlookMemory(this);
+        parts = List.of(people, places, diary, goals, outlook);
     }
 
     /**
@@ -193,13 +200,20 @@ public final class BotMemory {
     }
 
     /**
+     * @return How things have been going for the bot.
+     */
+    public BotOutlookMemory getOutlook() {
+        return outlook;
+    }
+
+    /**
      * @param activity The activity's name.
      * @param liking How much the bot likes the activity, from {@code 0.0} to {@code 1.0}.
      * @return The multiplier everything the bot remembers puts on its interest in the activity.
      */
     public double interestIn(String activity, double liking) {
-        return Math.clamp(diary.interestIn(activity, liking) * goals.interestIn(activity), LEAST_INTEREST,
-                MOST_INTEREST);
+        return Math.clamp(diary.interestIn(activity, liking) * goals.interestIn(activity) *
+                outlook.interestIn(activity), LEAST_INTEREST, MOST_INTEREST);
     }
 
     /**

@@ -5,13 +5,14 @@ import com.google.common.collect.Multimap;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.memory.BotOutlookMemory;
 import io.luna.util.RandomUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -20,6 +21,12 @@ import java.util.function.Function;
  * <p>
  * Each emotion has a baseline score derived from the bot's {@link BotPersonality}. Temporary
  * {@link EmotionalTrigger}s can modify these scores in response to gameplay events.
+ * <p>
+ * Triggers for one emotion do not simply add up. The strongest counts in full and each one after it half as much as
+ * the one before, so one event moves a bot as far as its trigger says and a run of them cannot move it without end.
+ * <p>
+ * The bot's {@link BotOutlookMemory outlook} moves each score as well. It is the part of an emotion that lasts: how
+ * the last day has gone, kept in the bot's memory across logouts.
  * <p>
  * Emotional checks are probabilistic. A higher score makes the bot more likely to feel an emotion, but does not
  * guarantee that the emotion will be felt on every check.
@@ -146,6 +153,16 @@ public final class BotEmotion {
     private static final int MAXIMUM_HOLD_TICKS = 150;
 
     /**
+     * How much of a trigger counts when a stronger one for the same emotion is active, and again for each one after.
+     */
+    private static final double FOLLOWING = 0.5;
+
+    /**
+     * How far an outlook at its strongest moves an emotion's score.
+     */
+    private static final double OUTLOOK_SWAY = 0.25;
+
+    /**
      * The active temporary emotion modifiers grouped by emotion type.
      * <p>
      * Multiple triggers may affect the same emotion simultaneously.
@@ -205,8 +222,8 @@ public final class BotEmotion {
     /**
      * Determines whether the bot is currently feeling an emotion.
      * <p>
-     * The cached baseline score for {@code type} is combined with all active triggers before being compared against
-     * a random value. If {@code inverse} is enabled, the opposite of that result is returned.
+     * The {@link #score(EmotionType) score} for {@code type} is compared against a random value. If {@code inverse}
+     * is enabled, the opposite of that result is returned.
      * <p>
      * The roll stands for {@link #MINIMUM_HOLD_TICKS} to {@link #MAXIMUM_HOLD_TICKS} ticks, or until a trigger is
      * added for {@code type}. Repeated calls in that time return the same result. Rolling on every call would let
@@ -220,12 +237,25 @@ public final class BotEmotion {
         int index = type.ordinal();
         long now = bot.getWorld().getCurrentTick();
         if (now >= feelingUntil[index]) {
-            BotPersonality personality = bot.getPersonality();
-            double score = emotionMap.computeIfAbsent(type, it -> type.computeScore.apply(personality));
-            feeling[index] = checkTriggers(type, score) > RandomUtils.nextDouble();
+            feeling[index] = score(type) > RandomUtils.nextDouble();
             feelingUntil[index] = now + RandomUtils.inclusive(MINIMUM_HOLD_TICKS, MAXIMUM_HOLD_TICKS);
         }
         return feeling[index] != inverse;
+    }
+
+    /**
+     * Works out how likely the bot is to feel an emotion right now, without rolling.
+     * <p>
+     * The score is the baseline from the bot's personality, moved by its outlook and by its active triggers. It is
+     * used as a probability and is not clamped.
+     *
+     * @param type The emotion.
+     * @return The score.
+     */
+    public double score(EmotionType type) {
+        BotPersonality personality = bot.getPersonality();
+        double baseline = emotionMap.computeIfAbsent(type, it -> type.computeScore.apply(personality));
+        return baseline + OUTLOOK_SWAY * bot.getMemory().getOutlook().of(type) + checkTriggers(type);
     }
 
     /**
@@ -306,29 +336,52 @@ public final class BotEmotion {
     }
 
     /**
-     * Applies all active triggers for an emotion to its baseline score.
+     * Works out how far the active triggers for an emotion move its score.
      * <p>
-     * Expired triggers are removed while iterating. Each active trigger adds its value directly to the supplied
-     * score.
+     * Expired triggers are removed first.
      *
      * @param type The emotion whose triggers should be applied.
-     * @param value The baseline emotion score.
-     * @return The score after applying all active triggers.
+     * @return The amount the triggers add to the score, which is negative if they lower it.
      */
-    private double checkTriggers(EmotionType type, double value) {
-        Iterator<EmotionalTrigger> it = triggerMap.get(type).iterator();
-        while (it.hasNext()) {
-            EmotionalTrigger trigger = it.next();
-            Instant now = Instant.now();
-            if (now.isAfter(trigger.expire)) {
-                // Our bot doesn't care about what happened anymore. Lazy removals here.
-                it.remove();
-                continue;
-            }
-            // Modulate their emotional score.
-            value += trigger.value;
+    private double checkTriggers(EmotionType type) {
+        Collection<EmotionalTrigger> triggers = triggerMap.get(type);
+        if (triggers.isEmpty()) {
+            return 0.0;
         }
-        return value;
+        // Our bot doesn't care about what happened anymore. Lazy removals here.
+        Instant now = Instant.now();
+        triggers.removeIf(trigger -> now.isAfter(trigger.expire));
+
+        double[] values = new double[triggers.size()];
+        int index = 0;
+        for (EmotionalTrigger trigger : triggers) {
+            values[index++] = Double.isFinite(trigger.value) ? trigger.value : 0.0;
+        }
+        return stacked(values);
+    }
+
+    /**
+     * Adds up trigger values so that each further one counts for less. Values that raise the score and values that
+     * lower it are stacked apart: the strongest of each counts in full, the next half as much, the next a quarter,
+     * and so on. Neither side can pass twice its strongest value.
+     *
+     * @param values The trigger values, in any order. The array is sorted.
+     * @return The amount they move the score together.
+     */
+    static double stacked(double[] values) {
+        Arrays.sort(values);
+        double total = 0.0;
+        double share = 1.0;
+        for (int index = values.length - 1; index >= 0 && values[index] > 0.0; index--) {
+            total += values[index] * share;
+            share *= FOLLOWING;
+        }
+        share = 1.0;
+        for (int index = 0; index < values.length && values[index] < 0.0; index++) {
+            total += values[index] * share;
+            share *= FOLLOWING;
+        }
+        return total;
     }
 
     /**

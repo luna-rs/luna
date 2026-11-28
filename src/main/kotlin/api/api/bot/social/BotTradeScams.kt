@@ -19,6 +19,7 @@ import engine.trade.tradingWith
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.memory.BotOutlookMemory
 import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
@@ -229,6 +230,7 @@ object BotTradeScams {
             if (recorded || confirms.size != 2 || !confirms.values.all { it.completed }) return
             recorded = true
             victim.memory.people.remember(actor.username, Event.SCAMMED_ME)
+            victim.memory.outlook.felt(BotOutlookMemory.Event.SCAMMED)
             BotReactions.reactToScammed(victim)
             victim.preferences.rebalanceWantedItems()
             actor.preferences.rebalanceWantedItems()

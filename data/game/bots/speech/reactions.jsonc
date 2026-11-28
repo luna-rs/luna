@@ -10,6 +10,10 @@
  * DIED:
  * Lines a bot may say shortly after dying and losing items.
  *
+ * DIED_AGAIN:
+ * Lines a bot may say after dying when it has already died today, in place of a DIED line. Use <count> to reference
+ * how many times it has died today.
+ *
  * PK_DEATH_PM:
  * First private message to a player who killed the bot in the Wilderness.
  *
@@ -46,6 +50,26 @@
  * LEVEL_UP:
  * Lines a bot may say after it gains a level. Use <skill> and <level> to reference the skill and level that were
  * advanced, respectively.
+ *
+ * LEVEL_UP_BAD_RUN:
+ * Lines a bot may say after it gains a level while things have been going badly for it, in place of a LEVEL_UP line.
+ * Uses <skill> and <level>.
+ *
+ * LEVEL_UP_GOOD_RUN:
+ * Lines a bot may say after it gains a level while things have been going well for it, in place of a LEVEL_UP line.
+ * Uses <skill> and <level>.
+ *
+ * MOOD_BAD:
+ * Lines a bot may say when a real player asks how it is doing, if things have been going badly. Use <why> to reference
+ * the reason in a few words, such as "died twice" or "got scammed". A line whose <why> the bot doesn't have is skipped.
+ *
+ * MOOD_GOOD:
+ * Lines a bot may say when a real player asks how it is doing, if things have been going well. Use <why> to reference
+ * the reason in a few words, such as "hit my goal" or "got 2 kills". A line whose <why> the bot doesn't have is
+ * skipped.
+ *
+ * MOOD_OK:
+ * Lines a bot may say when a real player asks how it is doing, if nothing much has happened either way.
  *
  * OTHER_DIED:
  * Lines a bot may say after seeing another player die.
@@ -1050,6 +1074,38 @@
     "death is winning today",
     "i am losing to death today",
     "i'll get it back maybe"
+  ],
+  "DIED_AGAIN": [
+    "not again",
+    "again??",
+    "omg again",
+    "died again lol",
+    "thats <count> times today",
+    "<count> deaths today.. nice",
+    "<count> times now",
+    "died <count> times today lol",
+    "why do i keep dying",
+    "i keep dying",
+    "im having a terrible day",
+    "today is not my day",
+    "not my day",
+    "this is just not my day",
+    "i give up",
+    "ok im done dying for today",
+    "cant stop dying today",
+    "seriously again",
+    "ffs again",
+    "<count> deaths and counting",
+    "another one.. thats <count>",
+    "how many is that now.. <count>?",
+    "rip me again",
+    "im so bad today",
+    "worst day ever",
+    "what is going on today",
+    "i should just go skill",
+    "maybe i should stick to fishing",
+    "thats it im going skilling",
+    "death number <count>"
   ],
   "GOAL_ANSWER": [
     "<target> <skill>",
@@ -15464,6 +15520,118 @@
     "<level> <skill> bruh finally",
     "<level> <skill> took foreverrr",
     "<level> <skill> took so longgg"
+  ],
+  "LEVEL_UP_BAD_RUN": [
+    "finally something good, <level> <skill>",
+    "at least i got <level> <skill>",
+    "<level> <skill>.. at least thats something",
+    "well <level> <skill> makes up for it a bit",
+    "<level> <skill>, needed that",
+    "<level> <skill>. about time something went right",
+    "bad day but <level> <skill>",
+    "ok <level> <skill> cheers me up a little",
+    "<level> <skill>, first good thing today",
+    "got <level> <skill> at least",
+    "<level> <skill>.. still a bad day",
+    "something went right for once, <level> <skill>",
+    "<level> <skill>, ill take it",
+    "meh <level> <skill>",
+    "<level> <skill>, today isnt all bad then"
+  ],
+  "LEVEL_UP_GOOD_RUN": [
+    "<level> <skill>!! what a day",
+    "<level> <skill> too, today is great",
+    "and <level> <skill>! cant stop",
+    "<level> <skill>, im on a roll",
+    "another lvl! <level> <skill>",
+    "<level> <skill> :D best day",
+    "<level> <skill>, today just keeps getting better",
+    "woo <level> <skill>, good day",
+    "<level> <skill> on top of everything",
+    "<level> <skill>! everything is going right today",
+    "yes <level> <skill>, loving today",
+    "<level> <skill>, on fire today",
+    "<level> <skill>!! so happy today",
+    "<level> <skill> as well, what a day",
+    "good day gets better, <level> <skill>"
+  ],
+  "MOOD_BAD": [
+    "not great",
+    "not good tbh",
+    "bad day",
+    "been better",
+    "ive been better",
+    "terrible lol",
+    "awful",
+    "dont ask",
+    "dont even ask lol",
+    "rough day",
+    "not my day",
+    "having a bad day",
+    "pretty bad, u?",
+    "meh, bad day. u?",
+    "not great, <why>",
+    "terrible, <why> today",
+    "awful.. <why>",
+    "bad, <why> earlier",
+    "<why> so not great",
+    "<why> today so yeah.. bad",
+    "dont ask, <why>",
+    "rough, <why>",
+    "been better, <why> today",
+    "<why>.. so not good lol",
+    "annoyed, <why>",
+    "pretty mad, <why>",
+    "<why>, worst day"
+  ],
+  "MOOD_GOOD": [
+    "good thx",
+    "good, u?",
+    "great thx",
+    "great, u?",
+    "really good today",
+    "pretty good!",
+    "good day so far",
+    "having a good day",
+    "awesome",
+    "doing great",
+    "good good",
+    "great, <why>",
+    "good! <why>",
+    "really good, <why> today",
+    "awesome, <why>",
+    "<why> so im happy",
+    "<why> today so pretty good",
+    "great day, <why>",
+    "so good, <why> earlier",
+    "<why>! good day",
+    "happy, <why>",
+    "good thx, <why> today",
+    "<why> so yeah good day"
+  ],
+  "MOOD_OK": [
+    "not bad",
+    "not bad, u?",
+    "ok",
+    "im ok",
+    "im ok, u?",
+    "alright",
+    "alright thx",
+    "fine thx",
+    "fine, u?",
+    "good u?",
+    "same as always",
+    "same old",
+    "cant complain",
+    "ok i guess",
+    "meh",
+    "doing ok",
+    "yeah not bad",
+    "alright, just training",
+    "nm, u?",
+    "all good",
+    "busy lol",
+    "not much going on"
   ],
   "OTHER_DIED": [
     "damn! ill try and save your stuff...",
