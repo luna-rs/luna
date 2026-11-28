@@ -56,8 +56,10 @@ public final class BotDiaryMemory implements BotMemoryPart {
      * @param activity The name of the activity the bot chose.
      * @param skill The skill it was about, or {@link #NO_SKILL}.
      * @param started Whether it started anything. One that did not is not kept as a session.
+     * @param wealth How it changed the bot's wealth, where {@code 1.0} is a gain of a tenth of what the bot owned or
+     * more and {@code -1.0} a loss of as much.
      */
-    public record Closed(String activity, int skill, boolean started) {
+    public record Closed(String activity, int skill, boolean started, double wealth) {
     }
 
     /**
@@ -385,7 +387,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
             } else {
                 putOff(ended.activity, 1.0);
             }
-            return new Closed(ended.activity, ended.skill, false);
+            return new Closed(ended.activity, ended.skill, false, 0.0);
         }
         Session session = new Session(ended.activity);
         session.skill = ended.skill;
@@ -397,10 +399,11 @@ public final class BotDiaryMemory implements BotMemoryPart {
         session.coins = wealthChange;
         session.kills = ended.kills;
         session.deaths = ended.deaths;
-        session.went = went(session, ended.start.wealth());
+        double wealth = wealthShare(wealthChange, ended.start.wealth());
+        session.went = went(session, wealth);
         sessions.addLast(session);
         trim();
-        return new Closed(ended.activity, ended.skill, true);
+        return new Closed(ended.activity, ended.skill, true, wealth);
     }
 
     /**
@@ -645,15 +648,23 @@ public final class BotDiaryMemory implements BotMemoryPart {
      * Scores a session by what it changed for the bot.
      *
      * @param session The session, with everything but the score set.
-     * @param wealthBefore What the bot owned when it began.
+     * @param wealth How the session changed the bot's wealth, from {@link #wealthShare}.
      * @return The score, from {@code -1.0} to {@code 1.0}.
      */
-    private static double went(Session session, long wealthBefore) {
+    private static double went(Session session, double wealth) {
         double went = 0.25 * Math.min(2, session.levels) + 0.3 * Math.min(2, session.kills) -
                 0.4 * Math.min(2, session.deaths);
-        double share = session.coins / (WEALTH_SHARE * (Math.max(0, wealthBefore) + WEALTH_FLOOR));
-        went += 0.3 * Math.clamp(share, -1.0, 1.0);
+        went += 0.3 * wealth;
         return Math.clamp(went, -1.0, 1.0);
+    }
+
+    /**
+     * @param change How much the bot's wealth changed, in coins.
+     * @param wealthBefore What the bot owned before.
+     * @return The change as a share of what counts in full, from {@code -1.0} to {@code 1.0}.
+     */
+    private static double wealthShare(long change, long wealthBefore) {
+        return Math.clamp(change / (WEALTH_SHARE * (Math.max(0, wealthBefore) + WEALTH_FLOOR)), -1.0, 1.0);
     }
 
     /**

@@ -12,6 +12,7 @@ import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotEmotion
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.mob.overlay.TextInput
@@ -229,6 +230,13 @@ object DeveloperItemHandler {
         } }))
     }
 
+    /**
+     * The chance the bot feels each emotion right now, from its personality, outlook and triggers together.
+     */
+    private fun mood(target: Bot): String = "Mood now: " + BotEmotion.EmotionType.entries.joinToString {
+        "${it.name.lowercase()} ${"%.2f".format(target.emotions.score(it))}"
+    }
+
     private fun kernel(actor: Player, target: Bot) {
         if (!available(actor, target) || !target.isRealBot()) return
         menu(actor, listOf(
@@ -238,7 +246,7 @@ object DeveloperItemHandler {
             "View script queue" to { p -> if (available(p, target)) report(p, "${target.username}: scripts",
                 target.scriptStack.scripts.let { scripts -> DeveloperInspection.productionLines(target, scripts) +
                     scripts.mapIndexed { index, script -> "$index: ${script.javaClass.simpleName} (running=${script.isRunning()})" } }) },
-            "View memory" to { p -> if (available(p, target)) report(p, "${target.username}: memory", target.memory.describe()) },
+            "View memory" to { p -> if (available(p, target)) report(p, "${target.username}: memory", target.memory.describe() + mood(target)) },
             "Stop current" to { p -> if (available(p, target)) { target.scriptStack.stopCurrent(); p.sendMessage("Current script stopped.") } },
             "Clear pending queue" to { p -> if (available(p, target)) { target.scriptStack.clear(); p.sendMessage("Pending queue cleared; running script retained.") } }))
     }

@@ -13,6 +13,7 @@ import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.bot.memory.BotDiaryMemory
 import io.luna.game.model.mob.bot.memory.BotGoalsMemory
+import io.luna.game.model.mob.bot.memory.BotOutlookMemory
 import io.luna.game.model.mob.bot.memory.BotGoalsMemory.Kind
 import io.luna.util.RandomUtils
 import kotlin.math.sqrt
@@ -182,7 +183,11 @@ object BotGoals {
             val skill = goals.aimSkill()
             when {
                 bot.skill(skill).staticLevel >= goals.aimTarget() -> goals.aimReached()
-                goals.stalled() || !canAim(bot, skill) -> goals.dropAim()
+                goals.stalled() -> {
+                    goals.dropAim()
+                    bot.memory.outlook.felt(BotOutlookMemory.Event.GAVE_UP_GOAL)
+                }
+                !canAim(bot, skill) -> goals.dropAim()
             }
         }
         if (!goals.hasAmbition()) {

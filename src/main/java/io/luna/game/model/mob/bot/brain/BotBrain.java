@@ -35,7 +35,8 @@ import static api.bot.script.BotDiaryKt.standing;
  * and delegate execution to coordinators or scripts instead of performing detailed gameplay logic directly.
  * <p>
  * Each activity the brain chooses is a session in the bot's {@link BotDiaryMemory diary}, from the choice until the
- * brain is next asked for work. Each time it is asked, the bot's goals are checked and set where it has none.
+ * brain is next asked for work. A session that closes tells the bot's outlook how it left the bot's wealth. Each
+ * time the brain is asked, the bot's goals are checked and set where it has none.
  *
  * @author lare96
  */
@@ -94,6 +95,9 @@ public class BotBrain {
         // The brain is only asked while the script stack is empty, so whatever the last choice started is over.
         BotDiaryMemory diary = bot.getMemory().getDiary();
         BotDiaryMemory.Closed closed = diary.isOpen() ? diary.end(standing(bot)) : null;
+        if (closed != null) {
+            bot.getMemory().getOutlook().sessionEnded(closed.wealth());
+        }
         BotGoals.review(bot, closed);
         if (stillDeciding(bot)) {
             return null;

@@ -20,6 +20,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
+import io.luna.game.model.mob.bot.memory.BotOutlookMemory
 import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
@@ -134,6 +135,7 @@ object BotWildernessLures {
         fight.recorded = true
         if (fight.killer.username != fight.lurer) bot.memory.people.remember(fight.killer.username, Event.LURED_ME)
         bot.memory.people.remember(fight.lurer, Event.LURED_ME)
+        bot.memory.outlook.felt(BotOutlookMemory.Event.LURED)
         BotReactions.reactToScammed(bot)
     }
 

@@ -18,7 +18,7 @@ import java.nio.file.Paths
  * to a [ReactionSpeech] category and contains short chat lines that can be selected when the matching event occurs.
  *
  * Some reaction lines support runtime tags. These tags are replaced when the line is selected, allowing reactions to
- * reference the relevant player, skill, level, drop, or scammer.
+ * reference the relevant player, skill, level, drop, scammer, or the reason for the bot's mood.
  *
  * @author lare96
  */
@@ -46,6 +46,13 @@ object BotReactionSpeechPool :
          * This category does not currently define any runtime tags.
          */
         DIED,
+
+        /**
+         * Lines a bot may say after dying when it has already died today, in place of a [DIED] line.
+         *
+         * Supports `<count>` for how many times it has died today.
+         */
+        DIED_AGAIN,
 
         /**
          * Lines a bot may privately send to the player who killed it in the Wilderness.
@@ -114,6 +121,43 @@ object BotReactionSpeechPool :
         LEVEL_UP,
 
         /**
+         * Lines a bot may say after gaining a level while things have been going badly for it, in place of a
+         * [LEVEL_UP] line.
+         *
+         * Supports `<skill>` for the advanced skill name and `<level>` for the new level.
+         */
+        LEVEL_UP_BAD_RUN,
+
+        /**
+         * Lines a bot may say after gaining a level while things have been going well for it, in place of a
+         * [LEVEL_UP] line.
+         *
+         * Supports `<skill>` for the advanced skill name and `<level>` for the new level.
+         */
+        LEVEL_UP_GOOD_RUN,
+
+        /**
+         * Lines a bot may say when a real player asks how it is doing, if things have been going badly.
+         *
+         * Supports `<why>` for the reason in a few words.
+         */
+        MOOD_BAD,
+
+        /**
+         * Lines a bot may say when a real player asks how it is doing, if things have been going well.
+         *
+         * Supports `<why>` for the reason in a few words.
+         */
+        MOOD_GOOD,
+
+        /**
+         * Lines a bot may say when a real player asks how it is doing, if nothing much has happened either way.
+         *
+         * This category does not currently define any runtime tags.
+         */
+        MOOD_OK,
+
+        /**
          * Lines a bot may say after witnessing another player die.
          *
          * This category does not currently define any runtime tags.
@@ -153,6 +197,7 @@ object BotReactionSpeechPool :
      * Registers runtime tag resolvers for reaction lines.
      */
     init {
+        setTag(ReactionSpeech.DIED_AGAIN, "<count>") { BotReactions.deathsToday(it) }
         setTag(ReactionSpeech.GREETED, "<name>") { it.lastGreetedBy }
         setTag(ReactionSpeech.GREETED_AGAIN, "<name>") { it.lastGreetedBy }
         setTag(ReactionSpeech.IMPRESSED, "<name>") { it.lastImpressedBy }
@@ -164,8 +209,13 @@ object BotReactionSpeechPool :
             setTag(goal, "<unlock>") { it.goalLine.unlock }
             setTag(goal, "<ambition>") { it.goalLine.ambition }
         }
-        setTag(ReactionSpeech.LEVEL_UP, "<skill>") { it.lastSkillAdvanced.first }
-        setTag(ReactionSpeech.LEVEL_UP, "<level>") { it.lastSkillAdvanced.second }
+        for (levelUp in listOf(ReactionSpeech.LEVEL_UP, ReactionSpeech.LEVEL_UP_BAD_RUN,
+                               ReactionSpeech.LEVEL_UP_GOOD_RUN)) {
+            setTag(levelUp, "<skill>") { it.lastSkillAdvanced.first }
+            setTag(levelUp, "<level>") { it.lastSkillAdvanced.second }
+        }
+        setTag(ReactionSpeech.MOOD_BAD, "<why>") { BotMoodQuestions.why(it) }
+        setTag(ReactionSpeech.MOOD_GOOD, "<why>") { BotMoodQuestions.why(it) }
         setTag(ReactionSpeech.OTHER_LEVEL_UP, "<name>") { it.lastWitnessedSkillAdvance }
         setTag(ReactionSpeech.RARE_DROP, "<drop>") { it.lastRareDrop }
         setTag(ReactionSpeech.SCAMMED, "<name>") {

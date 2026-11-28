@@ -17,6 +17,8 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
+import io.luna.game.model.mob.bot.memory.BotOutlookMemory
+import io.luna.game.model.mob.bot.memory.BotOutlookMemory.Run
 import io.luna.game.model.mob.bot.memory.BotPeopleMemory.Event
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.util.StringUtils
@@ -75,6 +77,33 @@ object BotReactions {
     private const val MAX_RESPONDERS = 2
 
     /**
+     * How far back a bot counts its deaths as today's, in milliseconds of real time.
+     */
+    private const val TODAY_MILLIS = 12 * 3_600_000L
+
+    /**
+     * The chance a bot that has already died today says so when it dies again.
+     */
+    private const val DIED_AGAIN_CHANCE = 0.6
+
+    /**
+     * The chance a bot on a bad or a good run says so when it gains a level.
+     */
+    private const val RUN_LINE_CHANCE = 0.35
+
+    /**
+     * Counts the times a bot remembers dying today, for the `<count>` tag of [ReactionSpeech.DIED_AGAIN] lines.
+     *
+     * @param bot The bot.
+     * @return Its deaths in the last [TODAY_MILLIS].
+     */
+    internal fun deathsToday(bot: Bot): Int {
+        val outlook = bot.memory.outlook
+        return outlook.count(BotOutlookMemory.Event.KILLED_BY_PLAYER, TODAY_MILLIS) +
+            outlook.count(BotOutlookMemory.Event.KILLED_BY_MONSTER, TODAY_MILLIS)
+    }
+
+    /**
      * Picks which bots react to an event that many of them saw, so a crowd doesn't all answer at once. Every bot has
      * the same chance of being picked.
      *
@@ -111,8 +140,9 @@ object BotReactions {
      * Makes a bot react to its own death.
      *
      * Death reduces happiness, with lower-confidence bots having a chance to lose additional happiness. It also scares
-     * the bot for 10 minutes, the less confident the more. The bot then queues a [ReactionSpeech.DIED] line after a
-     * randomized delay.
+     * the bot for 10 minutes, the less confident the more, and stays in its outlook for the day. The bot then queues a
+     * [ReactionSpeech.DIED] line after a randomized delay, or sometimes a [ReactionSpeech.DIED_AGAIN] line if this
+     * isn't its first death of the day.
      *
      * @param died The bot that died.
      * @param killer The mob that killed this bot.
@@ -128,8 +158,11 @@ object BotReactions {
         if (killer is Player) {
             died.memory.people.remember(killer.username, Event.KILLED_ME)
         }
+        died.memory.outlook.felt(if (killer is Player) BotOutlookMemory.Event.KILLED_BY_PLAYER
+                                 else BotOutlookMemory.Event.KILLED_BY_MONSTER)
 
-        val text = BotReactionSpeechPool.take(died, ReactionSpeech.DIED)
+        val again = deathsToday(died) >= 2 && rand(DIED_AGAIN_CHANCE)
+        val text = BotReactionSpeechPool.take(died, if (again) ReactionSpeech.DIED_AGAIN else ReactionSpeech.DIED)
         val delay = rand(8, 20)
         died.speechStack.pushHead(BotSpeech(text, delay))
     }
@@ -149,7 +182,8 @@ object BotReactions {
     }
 
     /**
-     * Makes a bot react to a kill. Killing a player increases happiness by 0.25 and reduces greed by 0.10 for one hour.
+     * Makes a bot react to a kill. Killing a player increases happiness by 0.25 and reduces greed by 0.10 for one hour,
+     * and stays in its outlook for the day.
      * Killing a threatening NPC increases happiness by 0.10 and reduces greed by 0.10 for ten minutes.
      * Difficulty uses full-health capabilities so the dead victim and supplies spent winning cannot change the reward.
      *
@@ -160,6 +194,7 @@ object BotReactions {
         if (victim is Player) {
             killer.memory.people.remember(victim.username, Event.KILLED_THEM)
             killer.memory.diary.killed()
+            killer.memory.outlook.felt(BotOutlookMemory.Event.KILLED_PLAYER)
         }
         if (victim is Player || killer.actionHandler.combat.isThreat(victim, BotCombatThreat.Context.ACHIEVEMENT)) {
             val playerKill = victim is Player
@@ -171,13 +206,14 @@ object BotReactions {
 
     /**
      * Makes a bot react to getting away from a fight. Getting away alive under 20% health was a narrow escape, which
-     * scares it a little for 5 minutes.
+     * scares it a little for 5 minutes and leaves it a little warier for the day.
      *
      * @param bot The bot that got away.
      */
     fun reactToEscape(bot: Bot) {
         if (bot.isAlive && bot.healthPercent < 20) {
             bot.emotions.add(EmotionalTrigger(EmotionType.SCARED, 0.15, minutesFromNow(5)))
+            bot.memory.outlook.felt(BotOutlookMemory.Event.NARROW_ESCAPE)
         }
     }
 
@@ -210,7 +246,9 @@ object BotReactions {
      *
      * Higher levels can produce a stronger happiness gain, and social bots may queue a [ReactionSpeech.LEVEL_UP] line.
      * A level that meets a goal is announced more readily, with a [ReactionSpeech.GOAL_REACHED] line, and one that
-     * brings an aim close sometimes gets a [ReactionSpeech.GOAL_CLOSE] line instead.
+     * brings an aim close sometimes gets a [ReactionSpeech.GOAL_CLOSE] line instead. The level, and a goal it meets,
+     * lift the bot's outlook. A bot on a bad or a good run sometimes says so, with a
+     * [ReactionSpeech.LEVEL_UP_BAD_RUN] or [ReactionSpeech.LEVEL_UP_GOOD_RUN] line.
      *
      * @param bot The bot that gained a level.
      * @param skill The skill that advanced.
@@ -226,6 +264,13 @@ object BotReactions {
 
         val social = bot.personality.social
         val reached = goal?.news == BotGoals.News.REACHED
+        val outlook = bot.memory.outlook
+        // Read before this level lifts it, so the line is about the run the level came in.
+        val run = outlook.run()
+        outlook.levelled(newLevel)
+        if (reached) {
+            outlook.felt(BotOutlookMemory.Event.REACHED_GOAL)
+        }
         if (rand(if (reached) 0.5 + 0.5 * social else social)) {
             val kind = when {
                 reached -> ReactionSpeech.GOAL_REACHED
@@ -235,8 +280,13 @@ object BotReactions {
             if (kind != null) {
                 bot.goalLine = goal!!.line
             }
+            val plain = when {
+                run == Run.BAD && rand(RUN_LINE_CHANCE) -> ReactionSpeech.LEVEL_UP_BAD_RUN
+                run == Run.GOOD && rand(RUN_LINE_CHANCE) -> ReactionSpeech.LEVEL_UP_GOOD_RUN
+                else -> ReactionSpeech.LEVEL_UP
+            }
             val text = kind?.let { BotReactionSpeechPool.take(bot, it, BotGoals::complete) }
-                ?: BotReactionSpeechPool.take(bot, ReactionSpeech.LEVEL_UP)
+                ?: BotReactionSpeechPool.take(bot, plain)
             val delay = rand(2, 6)
             text?.let { bot.speechStack.pushHead(BotSpeech(it, delay)) }
         }
@@ -300,9 +350,9 @@ object BotReactions {
     /**
      * Makes a bot react after receiving a rare or valuable drop.
      *
-     * Rare drops make the receiving bot happier and slightly less greedy. The drop name is stored before speech is
-     * selected, allowing [ReactionSpeech.RARE_DROP] lines to resolve the `<drop>` placeholder. Social bots may use an
-     * item nickname instead of the full item name.
+     * Rare drops make the receiving bot happier and slightly less greedy, and lift its outlook for the day. The drop
+     * name is stored before speech is selected, allowing [ReactionSpeech.RARE_DROP] lines to resolve the `<drop>`
+     * placeholder. Social bots may use an item nickname instead of the full item name.
      *
      * Nearby unhappy bots become slightly greedier after seeing the drop, simulating jealousy and desire for valuable
      * loot.
@@ -313,6 +363,7 @@ object BotReactions {
     fun reactToRareDrop(bot: Bot, item: Item) {
         bot.emotions.add(EmotionalTrigger(EmotionType.GREEDY, -0.25))
         bot.emotions.add(EmotionalTrigger(EmotionType.HAPPY, 0.25))
+        bot.memory.outlook.felt(BotOutlookMemory.Event.RARE_DROP)
         bot.lastRareDrop =
             if (rand(bot.personality.social)) ItemNicknameDefinition.getNickname(item.id)
             else item.itemDef.name.lowercase()

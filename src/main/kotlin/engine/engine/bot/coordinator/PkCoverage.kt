@@ -143,8 +143,12 @@ internal class PkCoverage(
     private fun arrivalWindow(purpose: Purpose): Long =
         if (purpose == Purpose.CLAN) CLAN_ARRIVAL_WINDOW_MILLIS else ARRIVAL_WINDOW_MILLIS
 
+    /**
+     * A bot shaken by recent deaths is left out of calls and patrols until it is over them. It can still choose
+     * PKing itself.
+     */
     private fun recruitable(bot: Bot, now: Long): Boolean =
-        (retryAt[bot] ?: 0L) <= now && trip(bot) == null && safeToRecruit(bot)
+        (retryAt[bot] ?: 0L) <= now && trip(bot) == null && safeToRecruit(bot) && !bot.memory.outlook.isShaken
 
     private fun reserve(bot: Bot, purpose: Purpose, now: Long, cape: Int? = null,
                         answeringCall: Boolean = false): PkBotScript? {
