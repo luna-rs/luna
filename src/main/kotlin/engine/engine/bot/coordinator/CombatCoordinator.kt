@@ -382,16 +382,17 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 }
             val groups = bot.byRememberedPlaces(campGroups(candidates)) { it.first().zone }
             val first = groups.firstOrNull()?.first()?.zone
-            if (first in RockCrabBotScript.CAMPS) {
+            val (crabGroups, otherGroups) = groups.partition { it.first().zone in RockCrabBotScript.CAMPS }
+            val prefersCrabs = training && (bot.personality.isDextrous || bot.personality.isIntelligent)
+            if (crabGroups.isNotEmpty() && (first in RockCrabBotScript.CAMPS || prefersCrabs && rand(1.0 / 3.0))) {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
-                    zones = groups.flatten().filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList(),
+                    zones = crabGroups.flatten().map { it.zone }.toMutableList(),
                     magicOnly = magicOnly).also { if (training) it.trainingGoal = if (magicOnly) SKILL_MAGIC else -1 }
             }
             val dedicated = setOf(SubZone.KBD_LAIR, SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
                 SubZone.CHAOS_ELEMENTAL_WILDERNESS)
             val selected = if (first in dedicated) groups.first()
-                else groups.filter { it.first().zone !in dedicated && it.first().zone !in RockCrabBotScript.CAMPS }
-                    .take(4).flatten()
+                else otherGroups.filter { it.first().zone !in dedicated }.take(4).flatten()
             if (selected.isEmpty()) return null
             val names = HashMultimap.create<SubZone, String>()
             selected.forEach { names.putAll(it.zone, it.names) }
