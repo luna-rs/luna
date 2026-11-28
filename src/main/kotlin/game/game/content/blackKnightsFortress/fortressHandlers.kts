@@ -1,9 +1,10 @@
 package game.content.blackKnightsFortress
 
 import api.predef.*
-import io.luna.game.event.impl.LoginEvent
+import io.luna.game.event.impl.DefaultTabOpenedEvent
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
-on(LoginEvent::class) { BlackKnightsFortress.refresh(plr) }
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.QUEST }.then { BlackKnightsFortress.refresh(plr) }
 button(BlackKnightsFortress.JOURNAL_BUTTON) { BlackKnightsFortress.journal(plr) }
 npc1(BlackKnightsFortress.SIR_AMIK) { BlackKnightsFortress.speakToSirAmik(plr, targetNpc) }
 npc1(BlackKnightsFortress.FORTRESS_GUARD) { BlackKnightsFortress.speakToGuard(plr) }

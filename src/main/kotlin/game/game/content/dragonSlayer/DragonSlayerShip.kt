@@ -35,6 +35,7 @@ object DragonSlayerShip {
     const val HIRE_OPTION = "Will you captain my ship to Crandor?"
     const val MAP_OPTION = "I have the complete Crandor map."
     const val SAIL_OPTION = "Let's sail to Crandor."
+    const val PUBLIC_SAIL_OPTION = "Take the public crossing to Crandor."
     const val REPAIR_HOLD_OPTION = "Go down to the damaged hull."
     const val NED_HOLD_OPTION = "Go down to Ned."
 
@@ -124,11 +125,21 @@ object DragonSlayerShip {
             player.newDialogue().npc(npc.id, "The ship won't be sailing back. Look for a way through the caves.").open()
             return
         }
-        player.newDialogue().npc(npc.id, "Ready to cross to Crandor?")
-            .options(SAIL_OPTION, { p ->
-                if (DragonSlayer.nearby(p, npc)) {
+        val stage = DragonSlayer.stage(player)
+        val questVoyage = stage == DragonSlayer.MAP_GIVEN_TO_NED
+        val waitingForMap = stage in DragonSlayer.GUILD_MASTER_SPOKEN_TO until DragonSlayer.MAP_GIVEN_TO_NED
+        val dialogue = player.newDialogue()
+        if (waitingForMap) {
+            dialogue.npc(npc.id, "For your quest, bring the assembled Crandor chart",
+                "to my house in Draynor once the ship is repaired.",
+                "I can still take you as a passenger.")
+        } else {
+            dialogue.npc(npc.id, "Ready to cross to Crandor?")
+        }
+        dialogue.options(if (waitingForMap) PUBLIC_SAIL_OPTION else SAIL_OPTION, { p ->
+                if (DragonSlayer.nearby(p, npc) && DragonSlayer.stage(p) == stage) {
                     Sailing.sail(p, ShipRoute.PORT_SARIM_TO_CRANDOR, "The Lady Lumbridge puts out to sea.") { arrived ->
-                        if (DragonSlayer.stage(arrived) == DragonSlayer.MAP_GIVEN_TO_NED) {
+                        if (questVoyage && DragonSlayer.stage(arrived) == DragonSlayer.MAP_GIVEN_TO_NED) {
                             DragonSlayer.advance(arrived, DragonSlayer.SAILED_TO_CRANDOR)
                             arrived.varpManager.setAndSendValue(DRAGON_SLAYER_NED_HIRED, 0)
                             arrived.varpManager.setAndSendValue(PersistentVarp.DRAGON_SLAYER_SHIP_REPAIRS, 0)

@@ -4,14 +4,15 @@ import api.combat.death.DeathHookHandler
 import api.combat.npc.NpcCombatHandler.combat
 import api.combat.player.PlayerCombatHandler.playerStopAttack
 import api.predef.*
-import io.luna.game.event.impl.LoginEvent
+import io.luna.game.event.impl.DefaultTabOpenedEvent
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 
-on(LoginEvent::class) { DemonSlayer.refresh(plr) }
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.QUEST }.then { DemonSlayer.refresh(plr) }
 button(DemonSlayer.JOURNAL_BUTTON) { DemonSlayer.journal(plr) }
 
 npc1(DemonSlayer.ARIS) { DemonSlayerDialogue.aris(plr) }

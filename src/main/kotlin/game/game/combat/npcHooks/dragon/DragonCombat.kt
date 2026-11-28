@@ -2,10 +2,13 @@ package game.combat.npcHooks.dragon
 
 import api.attr.Attr
 import api.combat.npc.dsl.NpcAttackCombatHookReceiver
+import io.luna.game.model.Direction
+import io.luna.game.model.EntityType
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.combat.CombatAction
+import io.luna.game.model.mob.combat.PursuitAction
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
@@ -27,6 +30,7 @@ import java.util.concurrent.ThreadLocalRandom
  * @author lare96
  */
 object DragonCombat {
+    private val firePolicy = InteractionPolicy(InteractionType.LINE_OF_SIGHT, 5)
 
     /**
      * The source's operation mode, which pursues melee reach, and approach mode, which breathes from five tiles.
@@ -60,11 +64,11 @@ object DragonCombat {
     private var Npc.encounter by Attr.nullableObj(Encounter::class)
 
     /**
-     * Starts the source's default melee mode only after native retaliation accepts its target and action. Failed
+     * Starts the supplied mode only after native retaliation accepts its target and action. Failed
      * attempts cannot prepare state, and ordinary hits in an already engaged encounter retain their current mode.
      */
-    internal fun retaliate(npc: Npc, attacker: Mob, action: CombatAction) {
-        npc.encounter = Encounter(attacker, action, Mode.MELEE)
+    internal fun retaliate(npc: Npc, attacker: Mob, action: CombatAction, mode: Mode = Mode.MELEE) {
+        npc.encounter = Encounter(attacker, action, mode)
     }
 
     /**
@@ -102,7 +106,22 @@ object DragonCombat {
      */
     internal fun attack(receiver: NpcAttackCombatHookReceiver, metal: Boolean,
                         random: Random = ThreadLocalRandom.current(), elvarg: Boolean = false): CombatAttack<out Npc> = with(receiver) {
-        Attack(npc, other, metal, encounter(npc, other, metal), random, elvarg)
+        val encounter = encounter(npc, other, metal)
+        val mode = if (elvarg && encounter.mode == Mode.MELEE && meleePursuitBlocked(npc, other)) Mode.FIRE else encounter.mode
+        Attack(npc, other, metal, encounter, mode, random, elvarg)
+    }
+
+    /**
+     * Allows Elvarg to breathe across an obstacle if her normal melee pursuit has no step and the target is in sight.
+     * This also covers a target she was already hunting when the first hit landed.
+     */
+    private fun meleePursuitBlocked(npc: Npc, target: Mob): Boolean {
+        val collision = npc.world.collisionManager
+        if (npc.position == target.position || collision.reached(npc, target, InteractionPolicy.STANDARD_SIZE) ||
+            !collision.reached(npc, target, firePolicy)) return false
+        return PursuitAction.nextStep(npc.position, target.position, 1, false) { direction ->
+            collision.traversable(npc.position, EntityType.NPC, direction, npc.size(), npc.routeStrategy)
+        } == Direction.NONE
     }
 
     /**
@@ -113,17 +132,18 @@ object DragonCombat {
      * @author lare96
      */
     private class Attack(npc: Npc, victim: Mob, private val metal: Boolean,
-                         private val encounter: Encounter, private val random: Random, elvarg: Boolean) :
-        DragonFireCombatAttack(npc, victim, range = if (elvarg && encounter.mode == Mode.MELEE) 1 else 5,
-            elvarg = elvarg, distantElvargFire = elvarg && encounter.mode == Mode.FIRE) {
+                         private val encounter: Encounter, private val mode: Mode, private val random: Random,
+                         elvarg: Boolean) :
+        DragonFireCombatAttack(npc, victim, range = if (elvarg && mode == Mode.MELEE) 1 else 5,
+            elvarg = elvarg, distantElvargFire = elvarg && mode == Mode.FIRE) {
 
         /**
          * The current attack is captured during damage preparation; its next mode is committed by onAttack.
          */
-        private var choice = Choice(false, encounter.mode)
+        private var choice = Choice(false, mode)
 
         override fun getInteractionPolicy(): InteractionPolicy =
-            if (encounter.mode == Mode.FIRE) InteractionPolicy(InteractionType.LINE_OF_SIGHT, 5)
+            if (mode == Mode.FIRE) firePolicy
             else InteractionPolicy.STANDARD_SIZE
 
         override fun calculateDamage(other: Mob): CombatDamage {
@@ -131,7 +151,7 @@ object DragonCombat {
             val to = other.position
             val walk = from.z == to.z && LineOfSight.hasLineOfWalk(attacker.world.collisionManager.view(false),
                 from.z, from.x, from.y, to.x, to.y, 1, 1, 1, 1, 0)
-            choice = choose(encounter.mode, metal, from.computeLongestDistance(to) < 2, walk, random)
+            choice = choose(mode, metal, from.computeLongestDistance(to) < 2, walk, random)
             return if (choice.fire) super.calculateDamage(other)
             else CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE).build().resolve()
         }

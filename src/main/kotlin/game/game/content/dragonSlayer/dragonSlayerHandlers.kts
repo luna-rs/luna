@@ -2,12 +2,13 @@ package game.content.dragonSlayer
 
 import api.combat.death.DeathHookHandler
 import api.predef.*
-import io.luna.game.event.impl.LoginEvent
+import io.luna.game.event.impl.DefaultTabOpenedEvent
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 
-on(LoginEvent::class) { DragonSlayer.refresh(plr) }
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.QUEST }.then { DragonSlayer.refresh(plr) }
 button(DragonSlayer.JOURNAL_BUTTON) { DragonSlayer.journal(plr) }
 
 val clues = listOf("Melzar's Maze", "Wormbrain", "the Dwarven Mine")

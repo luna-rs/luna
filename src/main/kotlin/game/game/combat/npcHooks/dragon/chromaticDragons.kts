@@ -14,8 +14,8 @@ combat(941, 55, 53, 54) {
     attack { DragonCombat.attack(this, metal = false) }
 }
 
-// Elvarg uses the same approach and melee cycle, with her own breath and protection values.
+// Elvarg hunts in melee mode and uses npc_default_retaliate_ap when attacked.
 combat(DragonSlayer.ELVARG) {
-    afterRetaliate { enemy, action -> DragonCombat.retaliate(this, enemy, action) }
+    afterRetaliate { enemy, action -> DragonCombat.retaliate(this, enemy, action, DragonCombat.Mode.FIRE) }
     attack { DragonCombat.attack(this, metal = false, elvarg = true) }
 }

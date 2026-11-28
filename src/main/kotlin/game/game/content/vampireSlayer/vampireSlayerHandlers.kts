@@ -3,9 +3,10 @@ package game.content.vampireSlayer
 import api.combat.npc.NpcCombatHandler
 import api.combat.npc.dsl.NpcCombatReceiver
 import api.predef.*
-import io.luna.game.event.impl.LoginEvent
+import io.luna.game.event.impl.DefaultTabOpenedEvent
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
-on(LoginEvent::class) { VampireSlayer.refresh(plr) }
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.QUEST }.then { VampireSlayer.refresh(plr) }
 button(VampireSlayer.JOURNAL_BUTTON) { VampireSlayer.journal(plr) }
 npc1(VampireSlayer.MORGAN) { VampireDialogue.morgan(plr) }
 npc1(VampireSlayer.HARLOW) { VampireDialogue.harlow(plr) }

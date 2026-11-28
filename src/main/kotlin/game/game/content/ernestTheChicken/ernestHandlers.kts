@@ -2,12 +2,12 @@ package game.content.ernestTheChicken
 
 import api.predef.*
 import game.player.Sound
+import io.luna.game.event.impl.DefaultTabOpenedEvent
 import io.luna.game.event.impl.LoginEvent
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
-on(LoginEvent::class) {
-    ErnestTheChicken.refresh(plr)
-    ManorLeverPuzzle.refreshDoors(plr)
-}
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.QUEST }.then { ErnestTheChicken.refresh(plr) }
+on(LoginEvent::class) { ManorLeverPuzzle.refreshDoors(plr) }
 button(ErnestTheChicken.JOURNAL_BUTTON) { ErnestTheChicken.journal(plr) }
 npc1(ErnestTheChicken.VERONICA) { ErnestTheChicken.veronica(plr, targetNpc) }
 npc1(ErnestTheChicken.PROFESSOR) { ErnestTheChicken.professor(plr, targetNpc) }

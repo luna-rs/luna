@@ -7,7 +7,8 @@ package game.content.lostCity
 import api.combat.death.DeathHookHandler
 import api.predef.*
 import game.skill.woodcutting.cutTree.Axe
-import io.luna.game.event.impl.LoginEvent
+import io.luna.game.event.impl.DefaultTabOpenedEvent
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 import io.luna.game.event.impl.LogoutEvent
 import io.luna.game.model.mob.block.Animation
 
@@ -26,7 +27,7 @@ for (axe in Axe.entries) {
 for (herring in listOf(345, 347)) useItem(herring).onObject(LostCity.SHAMUS_TREE) {
     plr.sendMessage("This is not the mightiest tree in the forest.")
 }
-on(LoginEvent::class) { LostCity.refresh(plr) }
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.QUEST }.then { LostCity.refresh(plr) }
 on(LogoutEvent::class) { LostCity.clear(plr) }
 
 DeathHookHandler.addNpcHook(LostCity.SPIRIT) {

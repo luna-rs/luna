@@ -10,8 +10,10 @@ import engine.player.punishment.PunishmentHandler
 import game.content.partyRoom.dropParty.DropPartyOption.depositItems
 import io.luna.Luna
 import io.luna.game.event.EventPriority
+import io.luna.game.event.impl.DefaultTabOpenedEvent
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.SkillUpdateMessageWriter
@@ -27,7 +29,6 @@ on(LoginEvent::class, EventPriority.HIGH) {
     plr.contextMenu.show(OPTION_FOLLOW)
     plr.contextMenu.show(OPTION_TRADE)
 
-    plr.equipment.loadBonuses()
     plr.depositItems.setListeners(PlayerRefreshListener(plr, "You can only deposit 8 items at a time."))
 
     plr.inventory.updatePrimaryWidget(plr)
@@ -58,4 +59,8 @@ on(LoginEvent::class, EventPriority.HIGH) {
         SubZone.updateLocalSubZones(bot, bot.position.regionId)
         SubZone.updateSubZone(bot)
     }
+}
+
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.EQUIPMENT }.then {
+    plr.equipment.loadBonuses()
 }

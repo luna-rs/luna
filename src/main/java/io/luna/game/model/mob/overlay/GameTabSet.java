@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.overlay;
 
 import com.google.common.collect.ImmutableMap;
+import io.luna.game.event.impl.DefaultTabOpenedEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.ForceTabMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
@@ -120,6 +121,9 @@ public final class GameTabSet {
         if (currentId.isEmpty() || currentId.getAsInt() != id) {
             player.queue(new TabInterfaceMessageWriter(index, id));
             tabs.put(index, id);
+            if (id != -1 && id == index.getDefaultTabId()) {
+                player.getPlugins().post(new DefaultTabOpenedEvent(player, index));
+            }
             return true;
         }
         return false;

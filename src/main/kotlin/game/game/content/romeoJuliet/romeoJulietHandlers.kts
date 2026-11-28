@@ -1,9 +1,10 @@
 package game.content.romeoJuliet
 
 import api.predef.*
-import io.luna.game.event.impl.LoginEvent
+import io.luna.game.event.impl.DefaultTabOpenedEvent
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
-on(LoginEvent::class) { RomeoJuliet.refresh(plr) }
+on(DefaultTabOpenedEvent::class).filter { tab == TabIndex.QUEST }.then { RomeoJuliet.refresh(plr) }
 button(RomeoJuliet.JOURNAL_BUTTON) { RomeoJuliet.journal(plr) }
 
 npc1(RomeoJuliet.ROMEO) { RomeoJulietDialogue.romeo(plr, targetNpc) }
