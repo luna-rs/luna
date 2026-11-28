@@ -46,6 +46,11 @@ object QuestDoors {
     val fortressDoors = mapOf(2337 to 1535, 2338 to 1532, 2339 to 1535, 2341 to 1588)
 
     /**
+     * Public passages to the Cauldron of Thunder.
+     */
+    val cauldronDoors = mapOf(2143 to 1541, 2144 to 1546)
+
+    /**
      * Every quest door, mapped to the object that is shown while it stands open. A door mapped to itself has no
      * separate open object, so the same one is shown turned.
      */
@@ -77,8 +82,6 @@ object QuestDoors {
         2054 to 2055, 2526 to 2527, 2528 to 2529, 2535 to 2536, 2537 to 2538,
         // TODO Pirate's Treasure: Wydin's white apron.
         2069 to 2070,
-        // TODO Druidic Ritual: the suits of armour that attack at the cauldron doors.
-        2143 to 1541, 2144 to 1546,
         // TODO Tree Gnome Village: Khazard's stronghold.
         2184 to 1532,
         // TODO Observatory Quest: the keep key.
@@ -153,7 +156,7 @@ object QuestDoors {
         // TODO Recipe for Disaster: the Lumbridge dining room and Evil Dave's pen.
         12348 to 7260, 12349 to 12349, 12350 to 12350, 12467 to 12469, 12468 to 12470,
         // TODO In Aid of the Myreque: the Burgh de Rott gate.
-        12816 to 12818, 12817 to 12819) + fortressDoors
+        12816 to 12818, 12817 to 12819) + fortressDoors + cauldronDoors
 
     /**
      * Melzar's Maze and the Oracle's magic door. Dragon Slayer locks these itself and calls [cross] once a player may

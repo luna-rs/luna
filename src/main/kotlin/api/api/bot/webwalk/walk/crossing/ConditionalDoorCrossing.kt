@@ -42,7 +42,7 @@ object ConditionalDoorCrossing : CrossingHandler {
             id != TaverleyJailDoor.DUSTY_KEY_GATE.closed && id != GnomeBall.GATE &&
             id != GnomeStrongholdGate.GATE && id != FishingGuild.DOOR && !hardwood &&
             TrollArenaGates.GATES.none { it.id == id } && id !in TenzingDoors.IDS &&
-            id !in QuestDoors.fortressDoors && treeDoor == null) {
+            id !in QuestDoors.fortressDoors && id !in QuestDoors.cauldronDoors && treeDoor == null) {
             return "unsupported conditional door $id"
         }
         if (treeDoor != null && (position != treeDoor.position ||

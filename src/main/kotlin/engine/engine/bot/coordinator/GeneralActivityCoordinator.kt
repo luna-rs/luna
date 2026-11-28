@@ -9,6 +9,7 @@ import game.bot.scripts.CooksAssistantBotScript
 import game.bot.scripts.BlackKnightsFortressBotScript
 import game.bot.scripts.DemonSlayerBotScript
 import game.bot.scripts.DragonSlayerBotScript
+import game.bot.scripts.DruidicRitualBotScript
 import game.bot.scripts.VampireSlayerBotScript
 import game.bot.scripts.RomeoJulietBotScript
 import game.bot.scripts.SheepShearerBotScript
@@ -113,6 +114,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (CooksAssistantBotScript.eligible(bot)) return CooksAssistantBotScript(bot)
         if (RuneMysteriesBotScript.eligible(bot)) return RuneMysteriesBotScript(bot)
         if (ErnestTheChickenBotScript.eligible(bot)) return ErnestTheChickenBotScript(bot)
+        if (DruidicRitualBotScript.eligible(bot)) return DruidicRitualBotScript(bot)
         ChampionsChallengeBotScript.select(bot)?.let { return it }
         TempleTrekkingBotScript.select(bot)?.let { return it }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
