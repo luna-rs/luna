@@ -1,6 +1,7 @@
 package io.luna.net;
 
 import io.luna.net.client.Client;
+import io.luna.net.client.GameClient;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -48,7 +49,12 @@ public final class LunaUpstreamHandler extends ChannelInboundHandlerAdapter {
         boolean isIgnoredMessage = e.getMessage() != null && IGNORED.contains(e.getMessage());
 
         if (isReadTimeout) {
-            logger.info("Disconnecting {}, no incoming data received before the read timeout.", client);
+            if (client instanceof GameClient gameClient) {
+                logger.info("Disconnecting {} (account {}), no incoming data received before the read timeout.",
+                        client, gameClient.getUsername());
+            } else {
+                logger.info("Disconnecting {}, no incoming data received before the read timeout.", client);
+            }
         } else if (!isIgnoredMessage) {
             logger.warn("Disconnecting {}, upstream exception thrown.", client, e);
         }

@@ -275,6 +275,13 @@ public class GameClient extends Client<GameMessage> {
     }
 
     /**
+     * @return The username associated with this game connection.
+     */
+    public String getUsername() {
+        return player.getUsername();
+    }
+
+    /**
      * @return If the next logout should be forced (will logout while in combat, etc).
      */
     public boolean isForcedLogout() {

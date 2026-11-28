@@ -10,6 +10,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
@@ -21,6 +22,10 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
  */
 @Sharable
 public final class LunaChannelInitializer extends ChannelInitializer<SocketChannel> {
+
+    private static final String READ_TIMEOUT_HANDLER = "read-timeout";
+    private static final int LOGIN_READ_TIMEOUT_SECONDS = 5;
+    private static final int GAME_READ_TIMEOUT_SECONDS = 30;
 
     /**
      * Handles upstream messages from Netty.
@@ -80,9 +85,22 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
         ch.attr(Client.KEY).setIfAbsent(new IdleClient(ch));
         ch.attr(LunaChannelFilter.KEY).setIfAbsent(channelFilter);
 
-        ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(5));
+        ch.pipeline().addLast(READ_TIMEOUT_HANDLER, new ReadTimeoutHandler(LOGIN_READ_TIMEOUT_SECONDS));
         ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository));
         ch.pipeline().addLast("login-encoder", loginEncoder);
         ch.pipeline().addLast("upstream-handler", upstreamHandler);
+    }
+
+    /**
+     * Gives authenticated sessions time to recover from a temporary gap in client traffic.
+     * Call on the channel event loop when installing the game protocol.
+     *
+     * @param pipeline The authenticated connection's pipeline.
+     */
+    public static void useGameReadTimeout(ChannelPipeline pipeline) {
+        if (pipeline.get(READ_TIMEOUT_HANDLER) != null) {
+            pipeline.replace(READ_TIMEOUT_HANDLER, READ_TIMEOUT_HANDLER,
+                    new ReadTimeoutHandler(GAME_READ_TIMEOUT_SECONDS));
+        }
     }
 }

@@ -73,7 +73,7 @@ public final class WebSocketSettings {
 
     /**
      * Deadline in milliseconds for HTTP/WebSocket upgrade completion, from 1,000 through 60,000.
-     * The shared five-second game read timeout is installed only after the WebSocket upgrade.
+     * The shared login and game read deadlines apply after the WebSocket upgrade.
      */
     private long handshakeTimeoutMillis = 10000;
 

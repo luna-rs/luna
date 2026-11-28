@@ -9,6 +9,7 @@ import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.persistence.PlayerData;
 import io.luna.game.LoginService;
 import io.luna.game.LoginService.LoginRequest;
+import io.luna.net.LunaChannelInitializer;
 import io.luna.net.codec.game.GameMessageDecoder;
 import io.luna.net.codec.game.GameMessageEncoder;
 import io.luna.net.msg.login.LoginRequestMessage;
@@ -185,6 +186,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
             pipeline.replace("login-encoder", "game-encoder", new GameMessageEncoder(message.getEncryptor()));
             pipeline.replace("login-decoder", "game-decoder",
                     new GameMessageDecoder(message.getDecryptor(), messageRepository));
+            LunaChannelInitializer.useGameReadTimeout(pipeline);
             channel.flush();
         } catch (RuntimeException e) {
             gameClient.releasePendingMessages();
