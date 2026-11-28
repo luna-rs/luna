@@ -2,6 +2,7 @@ package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
 import api.bot.script.DynamicBotScript
+import api.bot.script.VoidBotScript
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.BotFarmingActionHandler
 import api.bot.action.trading.BotMerchantValuation
@@ -52,7 +53,7 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
         if (BotCombatActionHandler.wantsToTrain(bot, SKILL_FARMING)) select(bot, level, false) ?: empty(bot)
         else empty(bot)
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
-        select(bot, level, true) ?: empty(bot)
+        select(bot, level, true) ?: VoidBotScript(bot)
 
     /**
      * Selects existing crop/bin work or owned sapling intermediates without starting another ordinary seed plot.

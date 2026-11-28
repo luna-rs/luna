@@ -58,8 +58,9 @@ public final class BotDiaryMemory implements BotMemoryPart {
      * @param started Whether it started anything. One that did not is not kept as a session.
      * @param wealth How it changed the bot's wealth, where {@code 1.0} is a gain of a tenth of what the bot owned or
      * more and {@code -1.0} a loss of as much.
+     * @param jobSelected Whether General Profit put a job on the script stack.
      */
-    public record Closed(String activity, int skill, boolean started, double wealth) {
+    public record Closed(String activity, int skill, boolean started, double wealth, boolean jobSelected) {
     }
 
     /**
@@ -141,6 +142,11 @@ public final class BotDiaryMemory implements BotMemoryPart {
          * The skill it is working on, or {@link #NO_SKILL}.
          */
         private int skill = NO_SKILL;
+
+        /**
+         * Whether General Profit put a job on the script stack.
+         */
+        private boolean jobSelected;
 
         /**
          * When it began, in time online.
@@ -329,6 +335,15 @@ public final class BotDiaryMemory implements BotMemoryPart {
     }
 
     /**
+     * Records that General Profit selected a job for the open session.
+     */
+    public void markJobSelected() {
+        if (open != null) {
+            open.jobSelected = true;
+        }
+    }
+
+    /**
      * @return The skill the open session is about, or {@link #NO_SKILL}.
      */
     public int openSkill() {
@@ -387,7 +402,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
             } else {
                 putOff(ended.activity, 1.0);
             }
-            return new Closed(ended.activity, ended.skill, false, 0.0);
+            return new Closed(ended.activity, ended.skill, false, 0.0, ended.jobSelected);
         }
         Session session = new Session(ended.activity);
         session.skill = ended.skill;
@@ -403,7 +418,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
         session.went = went(session, wealth);
         sessions.addLast(session);
         trim();
-        return new Closed(ended.activity, ended.skill, true, wealth);
+        return new Closed(ended.activity, ended.skill, true, wealth, ended.jobSelected);
     }
 
     /**
@@ -478,6 +493,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
                 entry.addProperty("skill", open.skill);
             }
             entry.addProperty("started", open.startedAt);
+            addUnlessZero(entry, "job_selected", open.jobSelected ? 1 : 0);
             entry.addProperty("xp", open.start.experience());
             entry.addProperty("levels", open.start.levels());
             entry.addProperty("wealth", open.start.wealth());
@@ -544,6 +560,7 @@ public final class BotDiaryMemory implements BotMemoryPart {
             if (activity != null && !activity.isEmpty()) {
                 open = new Open(activity);
                 open.skill = skill(entry);
+                open.jobSelected = number(entry, "job_selected", 0.0) == 1.0;
                 open.startedAt = (long) number(entry, "started", memory.now());
                 open.start = new Standing((long) number(entry, "xp", 0.0), (int) number(entry, "levels", 0.0),
                         (long) number(entry, "wealth", 0.0));

@@ -116,6 +116,12 @@ cmd("botproductionsales", RIGHTS_DEV) {
     plr.sendMessage("Estimated profit ${sales.netCoins - sales.estimatedCost} GP, mean ${average}ms to sale")
 }
 
+cmd("botprofitstarts", RIGHTS_DEV) {
+    for ((outcome, count) in BotProductionMetrics.generalProfitStartCounts()) {
+        plr.sendMessage("General Profit ${outcome.name.lowercase().replace('_', ' ')} = $count")
+    }
+}
+
 cmd("botrunecrafting", RIGHTS_DEV) {
     for ((stage, count) in BotProductionMetrics.runecraftingCounts()) {
         plr.sendMessage("${stage.name.lowercase().replace('_', ' ')} = $count")

@@ -2,6 +2,7 @@ package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
 import api.bot.script.DynamicBotScript
+import api.bot.script.VoidBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.AgilityBotCourse
@@ -50,8 +51,6 @@ object AgilityScriptFactory : SkillingScriptFactory(SKILL_AGILITY) {
             zones += pyramid.zone
             return AgilityBotScript(bot, pyramid, getDuration(bot, skillId))
         }
-        return object : DynamicBotScript(bot) {
-            override suspend fun run() = true
-        }
+        return VoidBotScript(bot)
     }
 }

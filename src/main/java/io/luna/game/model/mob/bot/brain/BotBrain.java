@@ -9,6 +9,8 @@ import engine.bot.coordinator.GeneralProfitCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
 import engine.bot.coordinator.RuneRunningCoordinator;
 import engine.bot.coordinator.PkCoverage;
+import engine.bot.economy.BotProductionMetrics;
+import engine.bot.economy.BotProductionMetrics.GeneralProfitStart;
 import game.bot.scripts.CannonBotSupport;
 import game.bot.scripts.RecoverCannonBotScript;
 import game.bot.scripts.BankCleanupBotScript;
@@ -98,6 +100,9 @@ public class BotBrain {
         if (closed != null) {
             bot.getMemory().getOutlook().sessionEnded(closed.wealth());
         }
+        if (closed != null && !closed.started() && closed.jobSelected()) {
+            BotProductionMetrics.recordGeneralProfitStart(GeneralProfitStart.SELECTED_JOB_EXITED_EARLY);
+        }
         BotGoals.review(bot, closed);
         if (stillDeciding(bot)) {
             return null;
@@ -172,9 +177,17 @@ public class BotBrain {
      */
     private static BotCoordinator session(BotActivity activity, BotCoordinator coordinator) {
         return owner -> {
-            owner.getMemory().getDiary().begin(activity.name(), standing(owner));
+            BotDiaryMemory diary = owner.getMemory().getDiary();
+            diary.begin(activity.name(), standing(owner));
             if (coordinator != null) {
                 coordinator.accept(owner);
+            }
+            if (activity == BotActivity.GENERAL_PROFIT) {
+                if (owner.getScriptStack().size() == 0) {
+                    BotProductionMetrics.recordGeneralProfitStart(GeneralProfitStart.NO_ELIGIBLE_JOB);
+                } else {
+                    diary.markJobSelected();
+                }
             }
         };
     }

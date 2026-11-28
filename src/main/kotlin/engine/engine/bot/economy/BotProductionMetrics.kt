@@ -121,6 +121,25 @@ object BotProductionMetrics {
         RunecraftingStage.entries.associateWith { runecrafting[it.ordinal] }
 
     private val ledger = Ledger()
+    /**
+     * General Profit outcomes when a job cannot get underway.
+     *
+     * @author lare96
+     */
+    enum class GeneralProfitStart {
+        NO_ELIGIBLE_JOB, SELECTED_JOB_EXITED_EARLY
+    }
+
+    private val generalProfitStarts = LongArray(GeneralProfitStart.entries.size)
+
+    @JvmStatic
+    fun recordGeneralProfitStart(outcome: GeneralProfitStart) {
+        generalProfitStarts[outcome.ordinal]++
+    }
+
+    fun generalProfitStartCounts(): Map<GeneralProfitStart, Long> =
+        GeneralProfitStart.entries.associateWith { generalProfitStarts[it.ordinal] }
+
     private val decisions = DecisionCounts()
     private val latestDecision = Attr.nullableObj(Decision::class)
     private var merchantSales = MerchantSales(0, 0, 0, 0)
