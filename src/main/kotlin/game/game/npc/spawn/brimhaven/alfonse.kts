@@ -7,14 +7,17 @@ package game.npc.spawn.brimhaven
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
+import game.content.heroesQuest.HeroesGang
 import game.npc.spawn.GeneralStore
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.Shop
 
+val restaurant = "The Shrimp and Parrot"
+
 // Lost City inventory: fishrestaurant.
-ShopHandler.create("The Shrimp and Parrot") {
+ShopHandler.create(restaurant) {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.BALANCED
     currency = Currency.COINS
@@ -30,8 +33,12 @@ ShopHandler.create("The Shrimp and Parrot") {
     }
 
     open {
-        npc2 += 793
+        npc2 += HeroesGang.ALFONSE
     }
 }
 
-npc1(793) { GeneralStore.open(plr, "The Shrimp and Parrot") }
+npc1(HeroesGang.ALFONSE) {
+    if (!HeroesGang.alfonse(plr, targetNpc) { GeneralStore.open(it, restaurant) }) {
+        GeneralStore.open(plr, restaurant)
+    }
+}

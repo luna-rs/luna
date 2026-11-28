@@ -2,6 +2,9 @@ package game.npc.spawn.portSarim
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
+import game.content.heroesQuest.HeroesProofs
+import game.content.heroesQuest.HeroesQuest
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -41,16 +44,20 @@ ShopHandler.create("Gerrant's Fishy Business.") {
 
 npc1(shopkeeperId, {
     plr.newDialogue()
-        .npc(targetNpc.id, "Wecome! You can buy fishing equipment at my store.", "We'll also buy anything you catch off you.")
-        .options(
-            "Let's see what you've got then.", {
+        .npc(targetNpc.id, "Welcome! You can buy fishing equipment at my store.", "We'll also buy anything you catch off you.")
+        .options(buildList {
+            add(DialogueOption("Let's see what you've got then.") {
                 plr.newDialogue()
                     .player("Let's see what you've got then.")
                     .then({it.overlays.open(ShopInterface(world, "Gerrant's Fishy Business."))})
                     .open()
-            },
-            "Sorry, I'm not interested.", {
+            })
+            add(DialogueOption("Sorry, I'm not interested.") {
                 plr.newDialogue().player("Sorry, I'm not interested.").open()
             })
+            if (HeroesQuest.isInProgress(plr)) {
+                add(DialogueOption(HeroesProofs.ASK_ABOUT_EELS) { HeroesProofs.askAboutEels(it, targetNpc) })
+            }
+        })
         .open()
 })

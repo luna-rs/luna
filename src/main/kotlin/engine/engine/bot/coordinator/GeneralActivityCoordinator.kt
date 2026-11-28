@@ -15,6 +15,9 @@ import game.bot.scripts.PrinceAliRescueBotScript
 import game.bot.scripts.RomeoJulietBotScript
 import game.bot.scripts.SheepShearerBotScript
 import game.bot.scripts.RuneMysteriesBotScript
+import game.bot.scripts.quests.HeroesQuestBotScript
+import game.bot.scripts.quests.MerlinsCrystalBotScript
+import game.bot.scripts.quests.ShieldOfArravBotScript
 import game.bot.scripts.ErnestTheChickenBotScript
 import game.bot.scripts.ImpCatcherBotScript
 import game.bot.scripts.TempleTrekkingBotScript
@@ -117,6 +120,9 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (SheepShearerBotScript.eligible(bot)) return SheepShearerBotScript(bot)
         if (CooksAssistantBotScript.eligible(bot)) return CooksAssistantBotScript(bot)
         if (RuneMysteriesBotScript.eligible(bot)) return RuneMysteriesBotScript(bot)
+        if (HeroesQuestBotScript.eligible(bot)) return HeroesQuestBotScript(bot)
+        if (ShieldOfArravBotScript.eligible(bot)) return ShieldOfArravBotScript(bot)
+        if (MerlinsCrystalBotScript.eligible(bot)) return MerlinsCrystalBotScript(bot)
         if (ErnestTheChickenBotScript.eligible(bot)) return ErnestTheChickenBotScript(bot)
         if (DruidicRitualBotScript.eligible(bot)) return DruidicRitualBotScript(bot)
         ChampionsChallengeBotScript.select(bot)?.let { return it }

@@ -15,11 +15,8 @@ import io.luna.game.model.`object`.ObjectType
 import java.util.concurrent.CompletableFuture
 
 /**
- * Doors and gates that a quest keeps shut. Those quests don't exist yet, so for now each one lets every player
- * through: the clicked door swings open, the player steps across and it shuts again behind them. A leaf standing
- * beside a partner leaf opens together with it.
- *
- * Each group in [doors] names its quest and the check to restore once that quest is added.
+ * Door crossings used in quest locations. The clicked door opens, the player steps across, and the door shuts
+ * again behind them. A leaf standing beside a partner leaf opens together with it.
  *
  * @author TheLining
  */
@@ -49,6 +46,11 @@ object QuestDoors {
      * Public passages to the Cauldron of Thunder.
      */
     val cauldronDoors = mapOf(2143 to 1541, 2144 to 1546)
+
+    /**
+     * Public Brimhaven passages. Heroes' Quest checks its passwords and keys when awarding the proof.
+     */
+    val heroesDoors = mapOf(2621 to 1534, 2622 to 1534, 2626 to 1534, 2627 to 1534, 2628 to 1534, 2629 to 2629)
 
     /**
      * Every quest door, mapped to the object that is shown while it stands open. A door mapped to itself has no
@@ -89,7 +91,7 @@ object QuestDoors {
         // TODO Shilo Village: Rashiliyia's tomb, the bone key and village entry.
         2246 to 2246, 2247 to 2247, 2255 to 2255, 2256 to 2256, 2259 to 2259, 2260 to 2260, 2261 to 2261,
         2262 to 2262,
-        // TODO Shield of Arrav: gang membership.
+        // Shield of Arrav checks membership at the quest handovers. The hideouts stay open.
         2397 to 1534, 2398 to 1534, 2399 to 1534,
         // TODO Family Crest: the lever puzzle.
         2427 to 2428, 2429 to 2428, 2430 to 2428, 2431 to 2428,
@@ -97,8 +99,6 @@ object QuestDoors {
         2438 to 2438, 2439 to 2439,
         // Dragon Slayer: the Crandor secret door and Elvarg's gate.
         2606 to 1588, 2607 to 1563, 2608 to 1562,
-        // TODO Heroes' Quest: the gang hideouts and Scarface Pete's keys.
-        2621 to 1534, 2622 to 1534, 2626 to 1534, 2627 to 1534, 2628 to 1534,
         // TODO The Tourist Trap: the mining camp disguise and cell key.
         2673 to 1562, 2674 to 1563, 2685 to 1562, 2686 to 1563, 2687 to 1562, 2688 to 1563,
         // TODO Tribal Totem: the combination lock.
@@ -156,7 +156,7 @@ object QuestDoors {
         // TODO Recipe for Disaster: the Lumbridge dining room and Evil Dave's pen.
         12348 to 7260, 12349 to 12349, 12350 to 12350, 12467 to 12469, 12468 to 12470,
         // TODO In Aid of the Myreque: the Burgh de Rott gate.
-        12816 to 12818, 12817 to 12819) + fortressDoors + cauldronDoors
+        12816 to 12818, 12817 to 12819) + fortressDoors + cauldronDoors + heroesDoors
 
     /**
      * Melzar's Maze and the Oracle's magic door. Dragon Slayer locks these itself and calls [cross] once a player may

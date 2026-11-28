@@ -11,6 +11,8 @@ import io.luna.game.model.mob.Player;
  */
 public enum PersistentVarp {
     COAL_TRUCKS(6),
+    MERLINS_CRYSTAL(14),
+    MERLINS_CRYSTAL_COMPONENTS(15),
     RUNE_MYSTERIES(63),
     MUSIC_UNLOCKS_1(20),
     MUSIC_UNLOCKS_2(21),
@@ -35,6 +37,8 @@ public enum PersistentVarp {
     WITHDRAW_AS_NOTE(115),
     BLACK_KNIGHTS_FORTRESS(130),
     ROMEO_JULIET(144),
+    SHIELD_OF_ARRAV_PHOENIX(145),
+    SHIELD_OF_ARRAV_BLACK_ARM(146),
     LOST_CITY(147),
     IMP_CATCHER(160),
     BRIGHTNESS_LEVEL(166),
@@ -52,6 +56,7 @@ public enum PersistentVarp {
     DRAGON_SLAYER_ORACLE(184),
     DRAGON_SLAYER_SHIELD(186),
     DRAGON_SLAYER_WORMBRAIN(187),
+    HEROES_QUEST(188),
     DEMON_SLAYER(222),
     XP_LAMP(261),
     MAGE_ARENA(267),

@@ -18,6 +18,19 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 object RuneRunningTrade {
+    internal fun matches(items: Collection<Item?>, expected: List<Item>): Boolean = ExactBotTrade.matches(items, expected)
+
+    suspend fun exchange(bot: Bot, other: Bot, give: List<Item>, receive: List<Item>,
+                         onPaid: () -> Unit = {}, canContinue: () -> Boolean): Boolean =
+        give.isNotEmpty() && receive.isNotEmpty() && ExactBotTrade.exchange(bot, other, give, receive, onPaid, canContinue)
+}
+
+/**
+ * Uses both bots' own native trade screens to exchange prearranged items, including one-way quest handovers.
+ *
+ * @author lare96
+ */
+internal object ExactBotTrade {
 
     /**
      * Counts real item ids without merging notes with their unnoted counterparts or overflowing quantities.
@@ -45,7 +58,7 @@ object RuneRunningTrade {
      */
     suspend fun exchange(bot: Bot, other: Bot, give: List<Item>, receive: List<Item>,
                          onPaid: () -> Unit = {}, canContinue: () -> Boolean): Boolean {
-        if (bot === other || give.isEmpty() || receive.isEmpty()) return false
+        if (bot === other || (give.isEmpty() && receive.isEmpty())) return false
         val outgoing = quantities(give) ?: return false
         if (quantities(receive) == null || outgoing.any { (id, amount) ->
                 bot.inventory.computeAmountForId(id).toLong() < amount

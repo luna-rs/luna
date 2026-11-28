@@ -105,17 +105,18 @@ object Entrances {
      * already replaced it.
      */
     fun replace(obj: GameObject, id: Int, ticks: Int): Boolean {
-        if (!world.removeObject(obj)) {
-            return false
-        }
-        val replacement = world.addObject(id, obj.position, obj.objectType, obj.direction)
+        val replacement = replace(obj, id) ?: return false
         world.scheduleOnce(ticks) {
-            if (world.removeObject(replacement)) {
-                world.addObject(obj.id, obj.position, obj.objectType, obj.direction)
-            }
+            replace(replacement, obj.id)
         }
         return true
     }
+
+    /**
+     * Swaps the visible object at the same position and orientation if it is still active.
+     */
+    fun replace(obj: GameObject, id: Int): GameObject? =
+        if (world.removeObject(obj)) world.addObject(id, obj.position, obj.objectType, obj.direction) else null
 
     /**
      * Shows [plr] a picture of [itemId] with [text], without giving them the item, then runs [then] once they click

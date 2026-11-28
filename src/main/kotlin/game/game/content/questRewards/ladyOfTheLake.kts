@@ -1,9 +1,11 @@
 package game.content.questRewards
 
 import api.predef.*
+import game.content.merlinsCrystal.MerlinsCrystal
 import game.content.questRewards.QuestRewards.owns
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.Expression
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 
 /**
  * The Lady of the Lake, south of Taverley.
@@ -21,19 +23,16 @@ val EXCALIBUR = 35
 val EXCALIBUR_PRICE = 500
 
 npc1(LADY_OF_THE_LAKE) {
-    // TODO Merlin's Crystal: before the quest reaches Morgan Le Faye she never offers Excalibur, and during it she sets
-    //  the jeweller's test instead of selling it. Until the quest exists every player has finished it.
     val dialogue = plr.newDialogue()
         .npc(LADY_OF_THE_LAKE, "Good day to you ${if (plr.appearance.isFemale) "madam" else "sir"}.")
-    if (owns(plr, EXCALIBUR)) {
-        dialogue.options("Who are you?", { whoAreYou(it) },
-                         "Good day.", { it.newDialogue().player("Good day.").open() })
-    } else {
-        dialogue.options("Who are you?", { whoAreYou(it) },
-                         "Good day.", { it.newDialogue().player("Good day.").open() },
-                         "I seek the sword Excalibur.", { seekExcalibur(it) })
-    }
-    dialogue.open()
+    dialogue.options(buildList {
+        add(DialogueOption("Who are you?") { whoAreYou(it) })
+        add(DialogueOption("Good day.") { it.newDialogue().player("Good day.").open() })
+        if (!owns(plr, EXCALIBUR)) add(DialogueOption("I seek the sword Excalibur.") { seekExcalibur(it) })
+        if (MerlinsCrystal.stage(plr) == MerlinsCrystal.SPOKE_MORGAN) {
+            add(DialogueOption(MerlinsCrystal.TAKE_TRIAL) { MerlinsCrystal.offerTrial(it) })
+        }
+    }).open()
 }
 
 /**

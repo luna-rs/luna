@@ -1069,6 +1069,11 @@
     "tradeable": false
   },
   {
+    "id": 759, // Phoenix weapons store key
+    "weight": 0.01,
+    "tradeable": true
+  },
+  {
     "id": 763, // Broken shield
     "weight": 2.7,
     "tradeable": true
@@ -1081,6 +1086,11 @@
   {
     "id": 767, // Phoenix crossbow
     "weight": 3.0,
+    "tradeable": true
+  },
+  {
+    "id": 769, // Certificate for the Shield of Arrav
+    "weight": 0.02,
     "tradeable": true
   },
   {
@@ -2377,6 +2387,11 @@
     "id": 1549, // Stake
     "weight": 0.085,
     "tradeable": false
+  },
+  {
+    "id": 1577, // Pete's candlestick
+    "weight": 0.5,
+    "tradeable": true
   },
   {
     "id": 1580, // Ice gloves

@@ -1,5 +1,6 @@
 package game.obj.doors
 
+import game.content.merlinsCrystal.MerlinsCrystal
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 
@@ -19,12 +20,8 @@ object JewellersDoor {
      * Aligns the player with the door before crossing.
      */
     fun openDoor(plr: Player, door: GameObject) {
-        // todo when Merlin Crystal is added
-        // Spawn the lake beggar one tile north of the door here while the quest is started,
-        // but Excalibur has not been rewarded yet, if the beggar is not already there.
-        // Also open the beggar's dialogue if the player has not spoken to them yet.
-
         if (plr.actions.first(Crossing::class.java) == null) {
+            MerlinsCrystal.visitJeweller(plr)
             plr.submitAction(Crossing(plr, door))
         }
     }

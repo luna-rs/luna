@@ -83,6 +83,7 @@ object BotNpcDialogues {
         var selectedPage: OptionDialogue? = null
         var lastResponse: String? = null
         var next = 0
+        var retrySpeechAt = 0L
         val previousReflex = advanceSpeech && bot.reflex.isDisableDialogueReflex
         fun safe() = ActionSafety.NON_COMBAT.allows(bot) && allowed()
         fun speech(current: DialogueInterface): Boolean = when (current) {
@@ -104,8 +105,25 @@ object BotNpcDialogues {
                     if (completed()) return@withTimeoutOrNull true
                     val current = bot.overlays.getOverlay(DialogueInterface::class.java)
                     val currentQueue = bot.dialogues
+                    // The native builder opens single-page replies directly, outside the option's queue.
+                    if (advanceSpeech && selectedPage != null && current is PlayerDialogue &&
+                        current.lines.joinToString(" ") == lastResponse && currentQueue?.owns(current) != true) {
+                        if (current !== page || bot.world.currentTick >= retrySpeechAt) {
+                            if (!safe() || !bot.output.sendContinueDialogue()) return@withTimeoutOrNull false
+                            page = current
+                            retrySpeechAt = bot.world.currentTick + 2
+                        }
+                        delay(100.milliseconds)
+                        continue
+                    }
                     if (current != null && currentQueue != null && currentQueue !== previous) {
-                        if (!currentQueue.owns(current)) return@withTimeoutOrNull false
+                        if (!currentQueue.owns(current)) {
+                            if (selectedPage != null && current === selectedPage && currentQueue !== queue) {
+                                delay(100.milliseconds)
+                                continue
+                            }
+                            return@withTimeoutOrNull false
+                        }
                         if (queue == null) {
                             if (!speech(current)) return@withTimeoutOrNull false
                             queue = currentQueue
@@ -124,10 +142,11 @@ object BotNpcDialogues {
                             selectedPage = current
                             lastResponse = response
                             next++
-                        } else if (advanceSpeech && changed && speech(current)) {
+                        } else if (advanceSpeech && (changed || bot.world.currentTick >= retrySpeechAt) && speech(current)) {
                             if (!safe() || !bot.output.sendContinueDialogue()) return@withTimeoutOrNull false
+                            retrySpeechAt = bot.world.currentTick + 2
                         }
-                    } else if (queue != null && currentQueue != null && currentQueue !== queue) {
+                    } else if (queue != null && currentQueue != null && currentQueue !== queue && selectedPage == null) {
                         return@withTimeoutOrNull false
                     }
                     delay(100.milliseconds)

@@ -109,11 +109,12 @@ object BotTaverleyKeys {
         val velrak = bot.world.locator.findNearestNpc(VELRAK_ANCHOR, 12) {
             it.id == VELRAK && it.state == EntityState.ACTIVE && inCell(bot) && it.isViewableFrom(bot)
         }
-        if (velrak != null && safe()) {
+        if (velrak != null && safe() &&
+            handler.interactions.approach(velrak, canContinue = { safe() && inCell(bot) })) {
             BotNpcDialogues.respond(bot, velrak,
                 listOf("So... do you know anywhere good to explore?", "Yes please!"),
-                allowed = { safe() && inCell(bot) }, completed = ::hasDustyKey) {
-                handler.interactions.interact(1, velrak) { safe() && inCell(bot) }
+                allowed = { safe() && inCell(bot) }, completed = ::hasDustyKey, advanceSpeech = true) {
+                bot.output.sendNpcInteraction(1, velrak)
             }
         }
         val exited = leaveCell(bot, ::safe)

@@ -21,8 +21,6 @@ object QuestGates {
         "You need to complete the Dragon Slayer quest first."))
     private val lostCity = EquipGate(Quest.LOST_CITY, listOf("You have not earned the right to wear this yet.",
         "You need to complete the Lost City of Zanaris Quest."))
-    private val heroesQuest = EquipGate(Quest.HEROES_QUEST, listOf("You have not earned the right to wield this yet.",
-        "You need to complete the Heroes' Guild entry quest."))
     private val legendsQuest = EquipGate(Quest.LEGENDS_QUEST, listOf("You have not earned the right to wear this yet.",
         "You need to complete the Legends' Quest."))
     private val regicide = EquipGate(Quest.REGICIDE, listOf("You have not earned the right to wear this yet.",
@@ -32,13 +30,11 @@ object QuestGates {
 
     /**
      * Every rune platebody and the green d'hide body need Dragon Slayer, the dragon dagger and longsword Lost City,
-     * the dragon mace and battleaxe Heroes' Quest, the dragon sq shield Legends' Quest, the dragon halberd Regicide,
-     * and the Fremennik helms The Fremennik Trials.
+     * the dragon sq shield Legends' Quest, the dragon halberd Regicide, and the Fremennik helms The Fremennik Trials.
      */
     private val equipment: Map<Int, EquipGate> =
         listOf(1127, 2615, 2623, 2653, 2661, 2669, 3481, 1135).associateWith { dragonSlayer } +
             listOf(1215, 1231, 5680, 5698, 1305).associateWith { lostCity } +
-            listOf(1434, 1377).associateWith { heroesQuest } +
             mapOf(1187 to legendsQuest, 3204 to regicide) +
             listOf(3749, 3751, 3753, 3755).associateWith { fremennikTrials }
 

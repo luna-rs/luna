@@ -49,7 +49,6 @@ object BlackCandle {
             askForWax(plr)
             return
         }
-        // TODO Once Merlin's Crystal is added, only players Morgan Le Faye has sent for a black candle may ask.
         plr.newDialogue()
             .npc(CANDLE_MAKER, Expression.HAPPY, "Hi! Would you be interested in some of my fine candles?")
             .options("Have you got any black candles?", { askForBlackCandle(it) }, "Yes please.", {

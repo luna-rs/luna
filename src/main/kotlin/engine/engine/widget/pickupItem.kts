@@ -2,6 +2,8 @@ package engine.widget
 
 import api.predef.*
 import game.content.mageArena.MageArena
+import game.content.heroesQuest.HeroesProofs
+import game.content.heroesQuest.HeroesQuest
 import game.content.treasureTrails.TreasureTrails
 import game.player.Messages
 import game.player.Sound
@@ -44,6 +46,7 @@ on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.GROUND_ITEM_PIC
         pickupItem.id == WEREWOLF_STICK && plr.inventory.contains(WEREWOLF_STICK) ->
             plr.sendMessage("That's somebody else's stick!")
         !TreasureTrails.canAcquire(plr, pickupItem.id) -> Unit
+        pickupItem.id == HeroesQuest.FIRE_FEATHER && !HeroesProofs.canTakeFeather(plr) -> Unit
         ZamorakWine.onPickup(plr, groundItem) -> Unit
 
         !plr.inventory.hasSpaceFor(pickupItem) -> plr.sendMessage(Messages.inventoryFull())
