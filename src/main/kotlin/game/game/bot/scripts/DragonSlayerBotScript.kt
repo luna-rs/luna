@@ -202,8 +202,6 @@ class DragonSlayerBotScript(bot: Bot, private val data: DragonSlayerData = Drago
                 !talk(Quest.OZIACH, oziach, Dialogue.MAZE) { bot.inventory.contains(Dialogue.MAZE_KEY) }) return false
             if (!bot.inventory.contains(Quest.WORMBRAIN_MAP_PART) &&
                 !hint(DRAGON_SLAYER_WORMBRAIN, Dialogue.WORMBRAIN_HINT)) return false
-            if (!bot.inventory.contains(Quest.ORACLE_MAP_PART) &&
-                !hint(DRAGON_SLAYER_ORACLE, Dialogue.ORACLE_HINT)) return false
         }
         if (!bot.equipment.contains(Quest.ANTI_DRAGON_SHIELD) && !owns(bot, Quest.ANTI_DRAGON_SHIELD) &&
             !hint(DRAGON_SLAYER_SHIELD, Dialogue.SHIELD_HINT)) return false
@@ -389,8 +387,7 @@ class DragonSlayerBotScript(bot: Bot, private val data: DragonSlayerData = Drago
 
     private suspend fun oraclePiece(): Boolean {
         if (!MapPieces.oracleOfferingMade(bot)) {
-            if (!hint(DRAGON_SLAYER_ORACLE, Dialogue.ORACLE_HINT) ||
-                !talk(Dialogue.ORACLE, oracle, Dialogue.ORACLE_MAP) { flag(DRAGON_SLAYER_ORACLE) >= 2 } ||
+            if (!talk(Dialogue.ORACLE, oracle, Dialogue.ORACLE_MAP) { flag(DRAGON_SLAYER_ORACLE) >= 2 } ||
                 !useDoor(MapPieces.MAGIC_DOOR, MapPieces.magicDoorTile, MapPieces.offerings.first().id) {
                     MapPieces.oracleOfferingMade(bot)
                 }) return false

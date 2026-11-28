@@ -82,10 +82,10 @@ object DragonSlayerDialogue {
 
     fun oracle(player: Player, npc: Npc) {
         val dialogue = player.newDialogue().npc(npc.id, "What knowledge do you seek?")
-        if (DragonSlayer.collectingMap(player) && player.varpManager.getValue(DRAGON_SLAYER_ORACLE) >= 1) {
+        if (DragonSlayer.collectingMap(player)) {
             dialogue.options(ORACLE_MAP, { p ->
                 if (DragonSlayer.nearby(p, npc) && DragonSlayer.collectingMap(p)) {
-                    if (p.varpManager.getValue(DRAGON_SLAYER_ORACLE) == 1) {
+                    if (p.varpManager.getValue(DRAGON_SLAYER_ORACLE) < 2) {
                         p.varpManager.setAndSendValue(DRAGON_SLAYER_ORACLE, 2)
                     }
                     p.newDialogue().npc(npc.id, "A chest in the Dwarven Mine holds the piece.",
