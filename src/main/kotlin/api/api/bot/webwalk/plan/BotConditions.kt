@@ -4,6 +4,7 @@ import api.bot.webwalk.walk.crossing.AltarCrossing
 import api.bot.webwalk.walk.crossing.AbyssCrossing
 import api.bot.webwalk.walk.crossing.CanoeCrossing
 import api.bot.webwalk.walk.crossing.BillTeachCrossing
+import api.bot.webwalk.walk.crossing.BorderGateCrossing
 import api.bot.webwalk.walk.crossing.JarvaldCrossing
 import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
 import game.content.waterbirth.Jarvald
@@ -40,6 +41,7 @@ import game.skill.agility.GnomeStrongholdRocks
 import game.obj.entrances.BrimhavenDungeonAccess
 import game.obj.entrances.IceQueenRockSlide
 import game.obj.entrances.Zanaris
+import game.npc.spawn.alKharid.BorderGate
 import game.skill.thieving.lockedDoor.ArdougneHouseDoorAction
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
@@ -99,6 +101,7 @@ object BotConditions {
         }, CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
                       FISHING_GUILD_ENTRY to { bot: Bot -> FishingGuild.canEnter(bot) },
                       BillTeachCrossing.ADMISSION to BillTeach::canSail,
+                      BorderGateCrossing.FREE_PASSAGE to BorderGate::isFree,
                       BARBARIAN_PIPE_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= 35 },
                       AbyssCrossing.ENTRY_ALLOWED to { bot: Bot -> AbyssCrossing.optedIn(bot) },
                       AbyssCrossing.LAW_ALLOWED to { bot: Bot -> AbyssCrossing.lawAllowed(bot) },

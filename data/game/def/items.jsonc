@@ -3654,9 +3654,34 @@
     "tradeable": false
   },
   {
+    "id": 2418, // Bronze key (Prince Ali Rescue)
+    "weight": 0.01,
+    "tradeable": false
+  },
+  {
+    "id": 2419, // Blonde wig
+    "weight": 0.454,
+    "tradeable": false
+  },
+  {
     "id": 2420, // Brass monkey
     "weight": 0.4,
     "tradeable": true
+  },
+  {
+    "id": 2421, // Plain wig
+    "weight": 0.01,
+    "tradeable": false
+  },
+  {
+    "id": 2423, // Key print
+    "weight": 0.01,
+    "tradeable": false
+  },
+  {
+    "id": 2424, // Skin paste
+    "weight": 0.015,
+    "tradeable": false
   },
   {
     "id": 2425, // Orbital knife

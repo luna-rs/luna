@@ -10,12 +10,11 @@ import io.luna.game.model.mob.dialogue.OptionDialogue
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Crosses the toll gate between Lumbridge and Al Kharid, by clicking a leaf of the gate and agreeing to pay the border guard
- * in the dialogue, as a player does (see [BorderGate]).
+ * Crosses the toll gate between Lumbridge and Al Kharid through the guard's native dialogue.
  *
  * The dialogue is: the bot asks, the guard answers, and then three options are shown, of which the last, "Yes, ok.", pays.
- * The first two lines are continued by the reflex of the bot. The gate takes the toll, opens, and walks the bot through in a
- * single step. If another player is going through, the leaf is not there, so the bot waits for the gate to close again.
+ * The bot's reflex continues the dialogue. After Prince Ali's rescue, the guard lets the bot through without asking for a fare.
+ * If another player is going through, the bot waits for the closed leaf to return.
  *
  * @author Hydrozoa
  */
@@ -25,6 +24,7 @@ object BorderGateCrossing : CrossingHandler {
      * The name that the data gives this handler.
      */
     const val ID = "border_gate"
+    const val FREE_PASSAGE = "al_kharid_free_passage"
 
     /**
      * The number of the dialogue option that agrees to pay the toll, see [BorderGate.talk].
@@ -58,7 +58,8 @@ object BorderGateCrossing : CrossingHandler {
                 return null
             }
             val coins = bot.inventory.computeAmountForId(CapabilitySnapshot.COINS)
-            if (coins < BorderGate.TOLL) {
+            val free = BorderGate.isFree(bot)
+            if (!free && coins < BorderGate.TOLL) {
                 return "the bot has $coins coins, but the toll is ${BorderGate.TOLL}"
             }
             val walked = context.walk(leg.from, 0)
@@ -78,13 +79,15 @@ object BorderGateCrossing : CrossingHandler {
                 lastProblem = "could not reach the gate $closedId at $position"
                 return@repeat
             }
-            if (!waitFor(LegContext.ACTION_TIMEOUT) { OptionDialogue::class in bot.overlays }) {
-                lastProblem = "the guard did not offer the toll"
-                return@repeat
-            }
-            if (!context.handler.widgets.clickDialogueOption(AGREE_OPTION)) {
-                lastProblem = "could not agree to pay the toll"
-                return@repeat
+            if (!free) {
+                if (!waitFor(LegContext.ACTION_TIMEOUT) { OptionDialogue::class in bot.overlays }) {
+                    lastProblem = "the guard did not offer the toll"
+                    return@repeat
+                }
+                if (!context.handler.widgets.clickDialogueOption(AGREE_OPTION)) {
+                    lastProblem = "could not agree to pay the toll"
+                    return@repeat
+                }
             }
             if (waitFor(CROSS_TIMEOUT) { bot.position == leg.to && !bot.isLocked }) {
                 return null

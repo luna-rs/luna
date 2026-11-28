@@ -4,12 +4,15 @@
  */
 package game.content.dragonSlayer
 
+import game.content.princeAliRescue.PrinceAliRescue
+import game.content.princeAliRescue.PrinceAliSupplies
 import game.content.sailing.Sailing
 import game.content.sailing.ShipRoute
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.varp.PersistentVarp.DRAGON_SLAYER_NED_HIRED
@@ -87,22 +90,28 @@ object DragonSlayerShip {
         player.overlays.getOverlay(StandardInterface::class.java)?.id == Sailing.JOURNEY_INTERFACE
 
     fun nedInDraynor(player: Player, npc: Npc) {
-        val dialogue = player.newDialogue().npc(npc.id, "I've been looking for a reason to go back to sea.")
         val stage = DragonSlayer.stage(player)
-        when {
-            stage == DragonSlayer.SHIP_REPAIRED && hired(player) -> dialogue.options(MAP_OPTION, {
-                giveMap(it, npc)
-            }, "I'll come back later.", { })
-            stage in DragonSlayer.OZIACH_SPOKEN_TO until DragonSlayer.MAP_GIVEN_TO_NED && !hired(player) ->
-                dialogue.options(HIRE_OPTION, { p ->
-                    if (DragonSlayer.nearby(p, npc) && DragonSlayer.collectingMap(p)) {
-                        p.varpManager.setAndSendValue(DRAGON_SLAYER_NED_HIRED, 1)
-                        p.newDialogue().npc(npc.id, "Bring me the chart once you have a seaworthy ship.").open()
-                    }
-                }, "I'll come back later.", { })
-            stage == DragonSlayer.MAP_GIVEN_TO_NED -> dialogue.npc(npc.id, "Meet me below deck at Port Sarim.")
+        val dialogue = player.newDialogue().npc(npc.id, "My friends call me Ned. I used to be a sailor.",
+            "Could I make or sell you some rope?")
+        val options = buildList {
+            when {
+                stage == DragonSlayer.SHIP_REPAIRED && hired(player) -> add(DialogueOption(MAP_OPTION) { giveMap(it, npc) })
+                stage in DragonSlayer.OZIACH_SPOKEN_TO until DragonSlayer.MAP_GIVEN_TO_NED && !hired(player) ->
+                    add(DialogueOption(HIRE_OPTION) { p ->
+                        if (DragonSlayer.nearby(p, npc) && DragonSlayer.collectingMap(p)) {
+                            p.varpManager.setAndSendValue(DRAGON_SLAYER_NED_HIRED, 1)
+                            p.newDialogue().npc(npc.id, "Bring me the chart once you have a seaworthy ship.").open()
+                        }
+                    })
+                stage == DragonSlayer.MAP_GIVEN_TO_NED -> dialogue.npc(npc.id, "Meet me below deck at Port Sarim.")
+            }
+            if (PrinceAliRescue.helping(player)) {
+                add(DialogueOption(PrinceAliSupplies.ASK_WIG) { PrinceAliSupplies.wig(it, npc) })
+            }
+            add(DialogueOption(PrinceAliSupplies.ASK_ROPE) { PrinceAliSupplies.rope(it, npc) })
+            add(DialogueOption("I'll come back later.") { })
         }
-        dialogue.open()
+        dialogue.options(options).open()
     }
 
     fun giveMap(player: Player, npc: Npc) {

@@ -107,7 +107,7 @@ object QuestDoors {
         2786 to 1562, 2787 to 1563, 2788 to 1562, 2789 to 1563, 2814 to 2814, 2815 to 2815,
         // TODO Witch's House: the door key, the gloves and the shed key.
         2861 to 1534, 2862 to 1535, 2863 to 1532, 2865 to 1562, 2866 to 1563,
-        // TODO Prince Ali Rescue: the bronze key.
+        // Draynor jail stays open to ordinary passage. The rescue handles the bronze key separately.
         2881 to 1541,
         // TODO Legends' Quest: the lock-pick and strength trials.
         2912 to 2914, 2913 to 2915, 2922 to 2924, 2923 to 2925,

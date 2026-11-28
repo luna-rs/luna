@@ -1,11 +1,14 @@
 package game.npc.spawn.draynor
 
 import api.predef.*
+import game.content.princeAliRescue.PrinceAliRescue
+import game.content.princeAliRescue.PrinceAliSupplies
 import game.player.Sound
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.game.model.mob.dialogue.Expression
 
 /**
@@ -58,12 +61,12 @@ enum class AggieDye(val colour: String, val dye: Int, val ingredient: Int, val a
 }
 
 npc1(AGGIE) {
-    // TODO Prince Ali Rescue: while the player is helping Prince Ali (after speaking to Osman, before he's saved),
-    //  "Could you think of a way to make skin paste?" comes first. Until the quest exists nobody is at that stage.
     val aggie = targetNpc
-    plr.newDialogue()
-        .npc(AGGIE, Expression.HAPPY, "What can I help you with?")
-        .options("What could you make for me?", {
+    val options = buildList {
+        if (PrinceAliRescue.helping(plr)) {
+            add(DialogueOption(PrinceAliSupplies.ASK_PASTE) { PrinceAliSupplies.paste(it, aggie) })
+        }
+        add(DialogueOption("What could you make for me?") {
             it.newDialogue()
                 .player(Expression.QUIZZICAL, "What could you make for me?")
                 .npc(AGGIE, "I mostly just make what I find pretty. I sometimes",
@@ -71,25 +74,32 @@ npc1(AGGIE) {
                      "I can make red, yellow and blue dyes. Would you like", "some?")
                 .then { plr -> dyes(plr) }
                 .open()
-        }, "Cool, do you turn people into frogs?", {
+        })
+        add(DialogueOption("Cool, do you turn people into frogs?") {
             it.newDialogue()
                 .player(Expression.HAPPY, "Cool, do you turn people into frogs?")
                 .npc(AGGIE, "Oh, not for years, but if you meet a talking chicken,",
                      "you have probably met the professor in the manor north",
                      "of here. A few years ago it was flying fish. That", "machine is a menace.")
                 .open()
-        }, "You mad old witch, you can't help me.", {
+        })
+        add(DialogueOption("You mad old witch, you can't help me.") {
             it.newDialogue()
                 .player(Expression.ANGRY, "You mad old witch, you can't help me.")
                 .then { plr -> fine(plr, aggie) }
                 .open()
-        }, "Can you make dyes for me please?", {
+        })
+        add(DialogueOption("Can you make dyes for me please?") {
             it.newDialogue()
                 .player(Expression.QUIZZICAL, "Can you make dyes for me please?")
                 .npc(AGGIE, Expression.QUIZZICAL, "What sort of dye would you like? Red, yellow or blue?")
                 .then { plr -> dyes(plr) }
                 .open()
         })
+    }
+    plr.newDialogue()
+        .npc(AGGIE, Expression.HAPPY, "What can I help you with?")
+        .options(options)
         .open()
 }
 

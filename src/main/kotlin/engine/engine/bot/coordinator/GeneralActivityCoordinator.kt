@@ -11,6 +11,7 @@ import game.bot.scripts.DemonSlayerBotScript
 import game.bot.scripts.DragonSlayerBotScript
 import game.bot.scripts.DruidicRitualBotScript
 import game.bot.scripts.VampireSlayerBotScript
+import game.bot.scripts.PrinceAliRescueBotScript
 import game.bot.scripts.RomeoJulietBotScript
 import game.bot.scripts.SheepShearerBotScript
 import game.bot.scripts.RuneMysteriesBotScript
@@ -109,6 +110,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (DemonSlayerBotScript.eligible(bot)) return DemonSlayerBotScript(bot)
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
         if (VampireSlayerBotScript.eligible(bot)) return VampireSlayerBotScript(bot)
+        if (PrinceAliRescueBotScript.eligible(bot)) return PrinceAliRescueBotScript(bot)
         if (RomeoJulietBotScript.eligible(bot)) return RomeoJulietBotScript(bot)
         if (SheepShearerBotScript.eligible(bot)) return SheepShearerBotScript(bot)
         if (CooksAssistantBotScript.eligible(bot)) return CooksAssistantBotScript(bot)

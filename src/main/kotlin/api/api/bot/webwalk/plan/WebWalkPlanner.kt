@@ -10,6 +10,7 @@ import api.bot.webwalk.model.TeleportKind
 import api.bot.webwalk.model.WebWalkEdge
 import api.bot.webwalk.model.WebWalkGraph
 import api.bot.webwalk.model.WebWalkNode
+import api.bot.webwalk.walk.crossing.BorderGateCrossing
 import engine.controllers.WildernessLocatableController
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -601,12 +602,16 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
             } else {
                 for (indexed in outgoing[node]) {
                     val edge = indexed.edge
-                    if (!request.snapshot.meets(edge.requirements, here)) {
+                    val requirements = if (edge.action?.handler == BorderGateCrossing.ID &&
+                        BorderGateCrossing.FREE_PASSAGE in request.snapshot.flags) {
+                        edge.requirements.copy(coins = 0)
+                    } else edge.requirements
+                    if (!request.snapshot.meets(requirements, here)) {
                         continue
                     }
                     val ticks = baseTicks(edge, node, indexed.to)
-                    step(label, indexed.to, edge.type, ticks, edge.requirements.coins * costs.coinWeight, edge.action,
-                         requirements = edge.requirements)
+                    step(label, indexed.to, edge.type, ticks, requirements.coins * costs.coinWeight, edge.action,
+                         requirements = requirements)
                 }
                 request.endLinks[node]?.forEach { step(label, end, EdgeType.WALK, it.ticks.toDouble(), 0.0, target = it.destination) }
                 ringByNode[node]?.let { ring ->

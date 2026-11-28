@@ -2,6 +2,7 @@ package game.npc.spawn.alKharid
 
 import api.predef.*
 import api.predef.ext.*
+import game.content.princeAliRescue.PrinceAliRescue
 import game.obj.doors.DoorSide
 import game.obj.doors.DoorType
 import game.obj.doors.Doors
@@ -135,11 +136,7 @@ object BorderGate {
     /**
      * Determines if [plr] may pass without paying.
      */
-    fun isFree(plr: Player): Boolean {
-        // TODO Return true once the player has completed Prince Ali Rescue.
-        // There is no quest system yet, so for now everybody pays.
-        return false
-    }
+    fun isFree(plr: Player): Boolean = PrinceAliRescue.hasRescuedAli(plr)
 
     /**
      * Determines if [position] is on the Lumbridge side of the gate, as opposed to the Al Kharid side.
