@@ -21,6 +21,14 @@ internal object SkillingSessionDuration {
     fun sample(bot: Bot, skill: Int? = null): Duration = sampleMinutes(bot.personality.dexterity,
         skill != null && skill in bot.preferences.skills, rand(0.0, 1.0), rand(0.0, 1.0)).minutes
 
+    internal fun expectedMinutes(bot: Bot, preferred: Boolean): Double {
+        val focus = bot.personality.dexterity.coerceIn(0.0, 1.0)
+        val short = 0.31 - focus * 0.12 - if (preferred) 0.05 else 0.0
+        val ordinary = 0.55
+        val extended = if (preferred) 0.01 + focus * 0.02 else 0.0
+        return short * 15.0 + ordinary * 32.5 + (1.0 - short - ordinary - extended) * 67.5 + extended * 105.0
+    }
+
     /**
      * Resolves independent band and minute rolls without a sharp personality threshold or a duration multiplier.
      * At neutral dexterity the four chances for a preferred skill are 20%, 55%, 23% and 2%.

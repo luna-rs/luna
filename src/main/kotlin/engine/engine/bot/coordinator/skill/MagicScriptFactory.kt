@@ -69,6 +69,9 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
     /**
      * Runes are acquired by the inventory lifecycle after selection; profit alone requires a positive guide margin.
      */
+    internal fun getRegularProfitScript(bot: Bot, level: Int): BotScript =
+        selectScript(bot, level, profit = true, includeProduction = false)
+
     internal fun getTelegrabScript(bot: Bot, profit: Boolean): TelegrabBotScript? =
         TelegrabBotScript(bot, TelegrabBotScript.WINE, profit, getDuration(bot, skillId), TelegrabBotScript.wineZones(bot, profit))
             .takeIf { it.isEligible() }
@@ -96,9 +99,10 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
      * Resolves at most one candidate per method, retaining each method's native eligibility checks.
      * Expensive gear and reserve planning runs only when its method is actually drawn.
      */
-    private fun selectScript(bot: Bot, level: Int, profit: Boolean): BotScript {
+    private fun selectScript(bot: Bot, level: Int, profit: Boolean, includeProduction: Boolean = true): BotScript {
         getIbanRechargeScript(bot)?.let { return it }
         val remaining = methodWeights(bot, level, profit).toMutableMap()
+        if (!includeProduction) remaining.keys.removeAll(setOf(Method.ORBS, Method.ENCHANTING, Method.SUPERHEAT, Method.BONES))
         while (remaining.isNotEmpty()) {
             val method = RandomUtils.weightedRoll(remaining) ?: break
             remaining.remove(method)

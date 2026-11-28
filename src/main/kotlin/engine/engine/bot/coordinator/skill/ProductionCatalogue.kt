@@ -5,6 +5,7 @@ import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.ProductionZones
 import api.bot.zone.SubZone
 import api.predef.*
+import game.bot.scripts.FillWaterBotScript
 import game.bot.scripts.skills.*
 import game.player.item.consume.potion.PotionFamily
 import game.obj.resource.fillable.WaterResource
@@ -203,6 +204,9 @@ internal object ProductionCatalogue {
                     listOf(herb.idItem), herb.identified, herb.exp),
                     { bot, duration -> IdentifyHerbBotScript(bot, herb, duration, allowAcquisition = false) }))
             }
+            add(fixed(recipe("fill-vial", SKILL_HERBLORE, 1, listOf(Item(229)), 227, 0.0)) { bot, duration ->
+                FillWaterBotScript(bot, 229, Int.MAX_VALUE, duration)
+            })
             UnfPotion.entries.forEach { potion ->
                 add(fixed(recipe("unfinished:${potion.name}", SKILL_HERBLORE, potion.level,
                     listOf(potion.herbItem, Item(UnfPotion.VIAL_OF_WATER)), potion.id, 0.0),

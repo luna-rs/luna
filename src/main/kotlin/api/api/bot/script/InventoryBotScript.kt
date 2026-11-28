@@ -718,6 +718,16 @@ abstract class InventoryBotScript(
             } else stopPlannedProduction(Reason.CONTINUATION_UNAVAILABLE)
             return false
         }
+        if (plan.remainingOperations == 0 && plan.stockGoal != null) {
+            val next = BotProductionPlanner.nextBatch(bot, plan, remainingDuration())
+            if (next != null) {
+                productionHandedOff = true
+                BotTradeIntentions.clearProductionPlan(bot, plan, this)
+                bot.scriptStack.softPushHead(next)
+                stop()
+            } else stopPlannedProduction(Reason.COMPLETED)
+            return false
+        }
         if (plan.remainingOperations > 0 && plan.deadline > System.currentTimeMillis() &&
             hasPlannedLevel(plan) &&
             BotCombatActionHandler.mayGainExperience(bot, plan.recipe.skill) &&
@@ -775,7 +785,8 @@ abstract class InventoryBotScript(
         if (!normalizeNotes()) return false
         val bankedRunecrafting = plan.training && plan.recipe.skill == SKILL_RUNECRAFTING
         fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
-        fun supplied() = if (plan.recipes.size > 1 || plan.fixedTrainingBatch) plan.targets().all { (id, amount) -> owned(id) >= amount }
+        fun supplied() = if (plan.recipes.size > 1 || plan.fixedTrainingBatch || plan.mode == ProductionMode.PRODUCTION)
+            plan.targets().all { (id, amount) -> owned(id) >= amount }
             else plan.recipe.materials.all { (id, amount) -> owned(id) >= amount } &&
                 plan.recipe.tools.all { owned(it) > 0L }
         fun ready(): Boolean {
@@ -830,6 +841,8 @@ abstract class InventoryBotScript(
             if (ready()) return true
         }
         if (bankedRunecrafting && isActionSafe() && ready()) return true
+        if (isActionSafe() && plan.useOwnedProductionBatch(::owned, minOf(plan.remainingCoins, owned(995))) && ready())
+            return true
         if (queueMissingPlannedPreparation(plan)) return false
         if (isActionSafe() && !supplied() && BotProductionPlanner.remainsUseful(bot, plan))
             BotProductionPlanner.unavailable(bot, plan)

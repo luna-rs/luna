@@ -4,6 +4,9 @@ import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.script.ProductionMode
+import api.bot.script.ProductionPlan
+import api.bot.script.ProductionRecipe
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.predef.*
@@ -13,6 +16,7 @@ import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.CookingScriptFactory
 import engine.bot.coordinator.skill.SkillingScriptFactory
 import engine.bot.coordinator.skill.BotProductionPlanner
+import engine.bot.coordinator.skill.ProductionVisitEconomics
 import api.bot.action.BotCombatActionHandler
 import game.content.flourMill.FlourMill
 import game.content.flourMill.FlourMill.flourInBin
@@ -54,7 +58,8 @@ class MillFlourBotScript(
     private val ownedInputsOnly: Boolean = false,
     private val flourTarget: Int = 0,
     private val goalDeadline: Long = 0L,
-    private var supplyDeadline: Long = 0L
+    private var supplyDeadline: Long = 0L,
+    private val production: ProductionPlan? = null
 ) : BotScript(bot) {
 
     companion object {
@@ -142,6 +147,7 @@ class MillFlourBotScript(
             var flourTarget = 0
             var goalDeadline = 0L
             var supplyDeadline = 0L
+            var production: ProductionPlan? = null
 
             override fun load(data: JsonObject) {
                 mill = BotMill.valueOf(data.get("mill").asString)
@@ -151,6 +157,7 @@ class MillFlourBotScript(
                 flourTarget = data.get("flour_target")?.asInt ?: 0
                 goalDeadline = data.get("goal_deadline")?.asLong ?: 0L
                 supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
+                production = data.getAsJsonObject("production")?.let(ProductionPlan::load)
             }
 
             override fun save(data: JsonObject) {
@@ -161,6 +168,7 @@ class MillFlourBotScript(
                 data.addProperty("flour_target", flourTarget)
                 data.addProperty("goal_deadline", goalDeadline)
                 data.addProperty("supply_deadline", supplyDeadline)
+                production?.let { data.add("production", it.save()) }
             }
         }
 
@@ -201,6 +209,31 @@ class MillFlourBotScript(
             return MillFlourBotScript(bot, pickMill(bot), duration, ownedInputsOnly = true,
                 flourTarget = (flour + amount).toInt(), goalDeadline = deadline)
         }
+        /**
+         * Quotes wheat and pots as one batch, keeping the mill's own hopper and bank trips.
+         */
+        internal fun sharedSession(bot: Bot, mode: ProductionMode, duration: Duration,
+                                   deficit: Int): MillFlourBotScript? {
+            val production = mode == ProductionMode.PRODUCTION
+            if (duration <= Duration.ZERO || !BotCombatActionHandler.mayGainExperience(bot, SKILL_COOKING)) return null
+            val requested = if (production) minOf(deficit, (duration.inWholeSeconds / 6).toInt())
+                else minOf(TRIP_SIZE, bot.totalItemAmount(FlourMill.GRAIN), bot.totalItemAmount(FlourMill.POT))
+            if (requested < 1) return null
+            val recipe = ProductionRecipe("mill-flour", SKILL_COOKING, 1,
+                mapOf(FlourMill.GRAIN to 1, FlourMill.POT to 1), emptySet(), mapOf(FlourMill.POT_OF_FLOUR to 1), 0.0)
+            val quote = ProductionVisitEconomics.quote(bot, recipe, mode, requested) {
+                bot.totalItemAmount(it).toLong() + if (it == FlourMill.GRAIN && production)
+                    bot.flourInBin + (if (bot.hopperFull) 1 else 0) else 0
+            } ?: return null
+            val target = (bot.totalItemAmount(FlourMill.POT_OF_FLOUR).toLong() + quote.operations)
+                .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            val deadline = System.currentTimeMillis() + duration.inWholeMilliseconds
+            val plan = ProductionPlan(recipe, false, quote.operations, quote.maximumCoins, quote.maximumUnitPrices,
+                deadline, mode = mode)
+            return MillFlourBotScript(bot, pickMill(bot), duration, ownedInputsOnly = true, flourTarget = target,
+                goalDeadline = deadline, production = plan)
+        }
+
     }
 
     /**
@@ -217,12 +250,13 @@ class MillFlourBotScript(
      * If this session has finished a trip, so running out of grain ends it instead of picking more.
      */
     private var milled = false
+    private var boughtSupplies = false
 
     /**
      * Restores the mill, remaining session time and retry budget.
      */
     constructor(bot: Bot, data: MillData) : this(bot, data.mill, data.duration,
-        data.ownedInputsOnly, data.flourTarget, data.goalDeadline, data.supplyDeadline) {
+        data.ownedInputsOnly, data.flourTarget, data.goalDeadline, data.supplyDeadline, data.production) {
         failures = data.failures
     }
 
@@ -231,7 +265,8 @@ class MillFlourBotScript(
     /**
      * Total of [id] across the inventory and bank.
      */
-    private fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
+    private fun owned(id: Int) = if (production != null) bot.totalItemAmount(id).toLong()
+        else bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
 
     private fun remainingFlour(): Long = if (!ownedInputsOnly) Long.MAX_VALUE else
         (flourTarget.toLong() - owned(FlourMill.POT_OF_FLOUR)).coerceAtLeast(0L)
@@ -254,6 +289,21 @@ class MillFlourBotScript(
             return true
         if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) return false
         if (mill == BotMill.COOKS_GUILD && !guildEligible(bot)) return true
+        val plan = production
+        if (plan != null && !boughtSupplies) {
+            if (plan.mode == ProductionMode.PROFIT &&
+                ProductionVisitEconomics.quote(bot, plan.recipe, ProductionMode.PROFIT,
+                    remainingFlour().coerceIn(1L, TRIP_SIZE.toLong()).toInt()) == null) return true
+            val grain = (remainingFlour() - bot.flourInBin - if (bot.hopperFull) 1 else 0).coerceAtLeast(0L)
+            val purchase = mapOf(FlourMill.GRAIN to grain.toInt(), FlourMill.POT to remainingFlour().toInt())
+                .filter { (id, amount) -> amount > owned(id) }
+            if (purchase.isNotEmpty() && plan.remainingCoins > 0L) {
+                handler.shop.obtainWantedItems(purchase, plan.remainingCoins.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                    plan.maximumUnitPrices) { plan.recordSpending(it.toLong()) }
+                if (isPaused()) return false
+            }
+            boughtSupplies = true
+        }
         val needsGrain = owned(FlourMill.GRAIN) == 0L && bot.flourInBin == 0 &&
             (!ownedInputsOnly || !bot.hopperFull)
         val needsPots = owned(FlourMill.POT) == 0L
@@ -398,6 +448,7 @@ class MillFlourBotScript(
         world.locator.findObjectsOnTile(position) { it.id in ids }.firstOrNull()
 
     override suspend fun completed() {
+        if (production != null) return
         if (ownedInputsOnly) {
             val remaining = minOf((duration - started.elapsedNow()).coerceAtLeast(Duration.ZERO),
                 (goalDeadline - System.currentTimeMillis()).coerceAtLeast(0L).milliseconds)
@@ -421,5 +472,6 @@ class MillFlourBotScript(
         it.flourTarget = flourTarget
         it.goalDeadline = goalDeadline
         it.supplyDeadline = supplyDeadline
+        it.production = production
     }
 }

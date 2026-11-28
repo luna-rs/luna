@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
 import engine.bot.coordinator.GeneralActivityCoordinator;
 import engine.bot.coordinator.GeneralProfitCoordinator;
+import engine.bot.coordinator.skill.ProductionCoordinator;
 import engine.bot.coordinator.MerchantingCoordinator;
 import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.MinigameCoordinator;
@@ -72,7 +73,12 @@ public enum BotActivity {
     /**
      * Useful errands and general content, such as filling containers and processing or using crystal keys.
      */
-    GENERAL_ACTIVITIES(GeneralActivityCoordinator.INSTANCE);
+    GENERAL_ACTIVITIES(GeneralActivityCoordinator.INSTANCE),
+
+    /**
+     * Produces and replenishes supplies through native skilling methods.
+     */
+    GENERAL_PRODUCTION(ProductionCoordinator.INSTANCE);
 
     /**
      * All {@link BotActivity} types in this enum.

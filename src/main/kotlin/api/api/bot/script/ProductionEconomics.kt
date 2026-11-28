@@ -53,6 +53,7 @@ object ProductionEconomics {
      * A single plan cannot purchase an indefinite training or resale stockpile.
      */
     const val MAX_OPERATIONS = 100
+    internal const val MAX_PRODUCTION_OPERATIONS = 10_000
 
     private const val MAX_RUNECRAFTING_TRAINING_OPERATIONS = 1_000
 
@@ -93,6 +94,7 @@ object ProductionEconomics {
         recoverableOutputPrices: Map<Int, Long>,
         personalUsePrices: Map<Int, Long> = emptyMap(),
         allowLoss: Boolean = false,
+        operationLimit: Int = operationLimit(recipe.skill, training),
         rejected: ((Reason) -> Unit)? = null
     ): Quote? {
         fun reject(reason: Reason): Quote? {
@@ -122,7 +124,9 @@ object ProductionEconomics {
             } else if (output <= input) return reject(Reason.UNECONOMIC)
         }
 
-        val maximumOperations = operationLimit(recipe.skill, training)
+        val maximumOperations = operationLimit
+        if (maximumOperations !in 1..MAX_PRODUCTION_OPERATIONS ||
+            !allowLoss && maximumOperations > operationLimit(recipe.skill, training)) return reject(Reason.INVALID_REQUEST)
         var limit = requestedOperations.coerceAtMost(maximumOperations)
         if (training) limit = minOf(limit,
             ceil(remainingExperience / recipe.experience).coerceIn(1.0, maximumOperations.toDouble()).toInt())

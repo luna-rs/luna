@@ -2,6 +2,7 @@ package engine.bot.coordinator.skill
 
 import api.bot.action.trading.NativeOutputDemand
 import api.bot.script.BotScript
+import api.bot.script.ProductionMode
 import api.bot.script.ProductionPlan
 import api.bot.script.VoidBotScript
 import api.bot.script.recentEscape
@@ -57,15 +58,23 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
         } ?: VoidBotScript(bot)
     }
 
+    internal fun getProductionScript(bot: Bot, mode: ProductionMode, duration: Duration,
+                                     deficits: Map<Int, Int>): CraftRuneBotScript? =
+        choose(bot, bot.runecrafting.staticLevel, false, duration, mode = mode, deficits = deficits)
+
     internal fun alternative(bot: Bot, plan: ProductionPlan, duration: Duration,
                              altarUnavailable: Boolean): CraftRuneBotScript? =
-        choose(bot, bot.runecrafting.staticLevel, plan.training, duration, plan, altarUnavailable)
+        choose(bot, bot.runecrafting.staticLevel, plan.training, duration, plan, altarUnavailable,
+            mode = plan.mode, deficits = if (plan.mode == ProductionMode.PRODUCTION)
+                ProductionCoordinator.outputDeficits(bot) else emptyMap())
 
     private fun choose(bot: Bot, level: Int, training: Boolean, duration: Duration,
-                       previous: ProductionPlan? = null, altarUnavailable: Boolean = false): CraftRuneBotScript? {
+                       previous: ProductionPlan? = null, altarUnavailable: Boolean = false,
+                       mode: ProductionMode? = null, deficits: Map<Int, Int> = emptyMap()): CraftRuneBotScript? {
+        val production = mode == ProductionMode.PRODUCTION
         val currentLevel = minOf(level, bot.runecrafting.level)
         val supply = HashMap<Int, BotProductionPlanner.RuneSupply?>()
-        val canSell = !training && previous == null
+        val canSell = !training && !production && previous == null
         val funded = HashMap<Int, List<NativeOutputDemand.Depth>>()
         fun source(id: Int): BotProductionPlanner.RuneSupply? {
             if (!supply.containsKey(id)) supply[id] = BotProductionPlanner.runeSupply(bot, id)
@@ -77,6 +86,7 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
             bot.health >= 30 && Food.values().any { it.heal >= 8 && bot.itemTracker.count(it.id) >= 4 }
         val candidates = buildList {
             for (rune in CraftableRune.entries) {
+                if (production && rune.id !in deficits) continue
                 if (rune.level > currentLevel || bot.recentEscape?.avoids(rune.altar.zone) == true) continue
                 val talisman = rune.altar.talisman
                 val hasAccess = owned(talisman)
@@ -91,7 +101,11 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
                     val offered = if (onHand) null else source(essence) ?: continue
                     val yield = rune.outputMultiplier(currentLevel)
                     val cost = offered?.unitPrice ?: if (training) 0L else bot.world.economy.getPrice(essence)
-                    val score = if (training) rune.exp else bot.world.economy.getPrice(rune.id).toDouble() * yield - cost
+                    val score = when (mode) {
+                        ProductionMode.PRODUCTION -> deficits.getValue(rune.id).toDouble()
+                        ProductionMode.PROFIT -> maxOf(1.0, bot.world.economy.getPrice(rune.id).toDouble() * yield - cost)
+                        null -> if (training) rune.exp else bot.world.economy.getPrice(rune.id).toDouble() * yield - cost
+                    }
                     val fundedScore = if (canSell) {
                         val marketCost = offered?.unitPrice ?: source(essence)?.unitPrice ?: cost
                         funded.getOrPut(rune.id) { NativeOutputDemand.depth(bot, rune.id) }
@@ -108,7 +122,7 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
             val rune = candidate.rune
             val viaAbyss = canUseAbyss && (rune.altar == Altar.DEATH ||
                 rand(0.25 + bot.personality.confidence.coerceIn(0.0, 1.0) * 0.5))
-            return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss, profit = !training).also {
+            return CraftRuneBotScript(bot, rune.altar, duration, viaAbyss, profit = !training && !production).also {
                 it.planProduction(plan)
             }
         }
@@ -121,18 +135,18 @@ object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
         }.distinctBy { it.rune })
         for (candidate in (listOfNotNull(preferredSale) + selling.filter { it != preferredSale }).take(MAX_PLANS)) {
             val plan = BotProductionPlanner.select(bot, skillId, currentLevel, false, duration,
-                candidate.key, merchantOutput = candidate.rune.id, directOnly = true)?.productionPlan ?: continue
+                candidate.key, merchantOutput = candidate.rune.id, directOnly = true, mode = mode)?.productionPlan ?: continue
             return script(candidate, plan)
         }
 
         val ordinary = candidates.filter { it.score > 0.0 }
-        val preferred = selectRankedActivity(bot, ordinary.takeWhile {
+        val preferred = (if (production) ordinary.firstOrNull() else selectRankedActivity(bot, ordinary.takeWhile {
             it.owned == ordinary.first().owned && it.access == ordinary.first().access
-        }.distinctBy { it.rune }) ?: return null
+        }.distinctBy { it.rune })) ?: return null
         for (candidate in (listOf(preferred) + ordinary.filter { it != preferred }).take(MAX_PLANS)) {
             val plan = BotProductionPlanner.select(bot, skillId, currentLevel, training, duration, candidate.key,
                 maximumCoinsLimit = previous?.remainingCoins ?: Long.MAX_VALUE,
-                deadlineLimit = previous?.deadline ?: Long.MAX_VALUE)?.productionPlan
+                deadlineLimit = previous?.deadline ?: Long.MAX_VALUE, mode = mode, outputDeficits = deficits)?.productionPlan
                 ?: continue
             return script(candidate, plan)
         }

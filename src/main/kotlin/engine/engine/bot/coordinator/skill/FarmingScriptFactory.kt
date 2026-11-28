@@ -1,6 +1,8 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
+import api.bot.script.ProductionMode
+import api.bot.script.ProductionRecipe
 import api.bot.script.DynamicBotScript
 import api.bot.script.VoidBotScript
 import api.bot.action.BotCombatActionHandler
@@ -16,11 +18,13 @@ import game.bot.scripts.skills.FarmingBotScript
 import game.bot.scripts.skills.MakeCompostBotScript
 import game.bot.scripts.skills.PrepareSaplingBotScript
 import game.skill.farming.Farming
+import game.skill.farming.compostBin.CompostBin
 import game.skill.farming.compostBin.CompostBinType
 import game.skill.farming.herb.HerbPatchLocation
 import game.skill.farming.patch.CompostType
 import game.skill.farming.patch.Crop
 import game.skill.farming.patch.FarmingPatch
+import game.skill.farming.patch.HealthCheckPatch
 import game.skill.farming.special.BelladonnaPatch
 import game.skill.farming.seedling.TreeSeedling
 import game.skill.farming.tree.AbstractTreePatch
@@ -29,6 +33,7 @@ import game.skill.woodcutting.cutTree.Axe
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.bot.Bot
 import kotlin.math.ceil
+import kotlin.math.pow
 import kotlin.time.Duration
 
 /**
@@ -55,6 +60,94 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
         select(bot, level, true) ?: VoidBotScript(bot)
 
+    internal fun getProfitHarvestScript(bot: Bot): BotScript =
+        select(bot, bot.farming.staticLevel, profit = true, returning = true, harvestOnly = true) ?: VoidBotScript(bot)
+
+    /**
+     * Quotes the actual planting or preparation basket before using the ordinary farming visit.
+     * Native state owns plot and bin timers, and return visits handle their harvests.
+     */
+    internal fun getProductionScript(bot: Bot, mode: ProductionMode, duration: Duration,
+                                     deficits: Map<Int, Int>): BotScript? {
+        Farming.update(bot)
+        val production = mode == ProductionMode.PRODUCTION
+        val level = minOf(bot.farming.level, bot.farming.staticLevel)
+        val pots = Farming.FILLED_PLANT_POTS.firstOrNull { BotFarmingActionHandler.stock(bot, it) > 0L }
+            ?: Farming.PLANT_POT
+        val opportunities = buildList<() -> BotScript?> {
+            for (location in FarmingBotScript.SITES.keys.shuffled()) {
+                val patch = Farming.patches(bot).getValue(location)
+                if (patch.isOccupied() && !patch.dead) continue
+                for (crop in patch.crops.shuffled()) {
+                    if (crop.level > level || (production && crop.produce.id !in deficits)) continue
+                    if (!production && BotFarmingActionHandler.stock(bot, crop.seedId) < patch.seedsRequired(crop)) continue
+                    add {
+                        val script = FarmingBotScript(bot, location, crop.seedId, duration)
+                        if (!script.canPrepare()) null else {
+                            val supplies = script.preparationSupplies().associate { it.id to it.amount }
+                            // Price disease and the basic native harvest lives conservatively before planting.
+                            val lives = if (patch is HealthCheckPatch || patch is AbstractTreePatch) 1
+                                else FarmingPatch.BASE_HARVEST_LIVES
+                            val probability = (1.0 - crop.baseDiseaseChance.coerceIn(0, 128) / 128.0)
+                                .pow((crop.stages - 1).coerceAtLeast(0))
+                            val requirements = supplies + (crop.seedId to patch.seedsRequired(crop))
+                            val consumed = requirements.filterKeys { it == crop.seedId || it == Farming.PLANT_CURE ||
+                                it == CompostType.COMPOST.itemId || it == CompostType.SUPERCOMPOST.itemId }
+                            val recipe = ProductionRecipe("plant:${crop.seedId}", skillId, crop.level,
+                                consumed, requirements.keys - consumed.keys,
+                                mapOf(crop.produce.id to (crop.produce.amount * lives)), crop.plantXp, probability)
+                            ProductionVisitEconomics.quote(bot, recipe, mode, 1) {
+                                BotFarmingActionHandler.stock(bot, it)
+                            }?.let { script.limitPurchases(it.maximumCoins, it.maximumUnitPrices) }
+                        }
+                    }
+                }
+            }
+            for (seedling in TreeSeedling.entries.shuffled()) {
+                val available = FarmingBotScript.SITES.keys.count { location ->
+                    val patch = Farming.patches(bot).getValue(location)
+                    (!patch.isOccupied() || patch.dead) && patch.findCrop(seedling.sapling) != null
+                }
+                if (seedling.level > level) continue
+                val owned = BotFarmingActionHandler.stock(bot, seedling.sapling)
+                val target = if (production) maxOf(available.toLong(), owned + (deficits[seedling.sapling] ?: 0))
+                    else owned + 1
+                if (target <= owned) continue
+                add {
+                    val script = PrepareSaplingBotScript(bot, seedling, target.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                        duration, returnProfit = true)
+                    if (!script.canPrepare()) null else {
+                        val recipe = ProductionRecipe("sapling:${seedling.sapling}", skillId, seedling.level,
+                            mapOf(seedling.seed to 1, pots to 1), emptySet(), mapOf(seedling.sapling to 1), 0.0)
+                        script.takeIf { production || ProductionVisitEconomics.quote(bot, recipe, mode, 1) != null }
+                    }
+                }
+            }
+            for (location in MakeCompostBotScript.SITES.keys.shuffled()) {
+                for (type in listOf(CompostBinType.COMPOST, CompostBinType.SUPERCOMPOST)) {
+                    val missing = deficits[type.product] ?: 0
+                    if (production && missing < 1) continue
+                    val target = BotFarmingActionHandler.stock(bot, type.product) +
+                        if (production) missing else CompostBin.MAX_ITEMS
+                    add {
+                        val script = MakeCompostBotScript(bot, location, type, duration,
+                            target.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), returnProfit = true)
+                        val supplies = script.preparationSupplies()
+                        if (script.bin.amount != 0 || supplies.isNullOrEmpty()) null else {
+                            val inputs = supplies.associate { it.id to it.amount }.toMutableMap()
+                            inputs[Farming.BUCKET] = CompostBin.MAX_ITEMS
+                            val recipe = ProductionRecipe("compost:${type.name}", skillId, 1, inputs,
+                                emptySet(), mapOf(type.product to CompostBin.MAX_ITEMS), type.experience)
+                            script.takeIf { ProductionVisitEconomics.quote(bot, recipe, mode, 1) != null }
+                        }
+                    }
+                }
+            }
+        }
+        // A full plot, a crop being protected, and a bin still rotting cannot start another batch.
+        return opportunities.shuffled().firstNotNullOfOrNull { it() }
+    }
+
     /**
      * Selects existing crop/bin work or owned sapling intermediates without starting another ordinary seed plot.
      * Eligibility remains in the native visit scripts, including flower protection and stored-tool requirements.
@@ -69,14 +162,16 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
     /**
      * Builds one visit from current native state, with real elapsed growth processed before eligibility checks.
      */
-    private fun select(bot: Bot, level: Int, profit: Boolean, returning: Boolean = false): BotScript? {
+    private fun select(bot: Bot, level: Int, profit: Boolean, returning: Boolean = false,
+                       harvestOnly: Boolean = false): BotScript? {
         Farming.update(bot)
         val duration = getDuration(bot, skillId)
         val training = if (!profit && !returning) TrainingBudget(bot) else null
         val saplings = TreeSeedling.entries.mapTo(HashSet()) { it.sapling }
         val candidates = FarmingBotScript.SITES.keys.mapNotNull { location ->
             val patch = Farming.patches(bot).getValue(location)
-            val seeds = patch.crops.filter { crop ->
+            if (harvestOnly && !patch.isOccupied()) return@mapNotNull null
+            val seeds = if (harvestOnly) emptyList() else patch.crops.filter { crop ->
                 if (training != null) crop.level <= minOf(level, bot.farming.level) && training.affordable(patch, crop)
                 else bot.bank.computeAmountForId(crop.seedId).toLong() + bot.inventory.computeAmountForId(crop.seedId) >=
                     patch.seedsRequired(crop)
@@ -87,7 +182,7 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
         }.filter { it.canPrepare() }
         val urgent = candidates.filter { it.patch.dead || it.patch.diseased || it.patch.harvestReady() }.ifEmpty { candidates }
         val preferred = if (profit) urgent.filter { it.location is HerbPatchLocation }.ifEmpty { urgent } else urgent
-        val compost = MakeCompostBotScript.SITES.keys.flatMap { location ->
+        val compost = if (harvestOnly) null else MakeCompostBotScript.SITES.keys.flatMap { location ->
             CompostBinType.entries.map {
                 MakeCompostBotScript(bot, location, it, duration,
                     target = if (it == CompostBinType.TOMATOES) 15 else 30, returnProfit = profit)
@@ -104,6 +199,7 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
         val selected = getBestActivity(bot, 99,
             { it.patch.crop?.level ?: it.patch.findCrop(it.seedId)?.level ?: 1 }, preferred)
         if (selected != null) return grouped(bot, selected, candidates, duration, profit, training)
+        if (harvestOnly) return null
         return compost ?: getBestActivity(bot, minOf(level, bot.farming.level), { it.seedling.level },
                 TreeSeedling.entries.mapNotNull { seedling ->
                     if (returning && bot.bank.computeAmountForId(seedling.seedling).toLong() +

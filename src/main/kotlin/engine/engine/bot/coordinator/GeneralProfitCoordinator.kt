@@ -4,6 +4,9 @@ import api.bot.action.trading.BotMarketplace
 import api.bot.action.trading.BotMerchantCapital
 import api.bot.action.trading.MerchantStoreBargains
 import api.bot.script.BotScript
+import api.bot.script.DynamicBotScript
+import api.bot.script.ProductionMode
+import api.bot.script.VoidBotScript
 import api.bot.script.ProfitGatheringGoal
 import api.bot.action.trading.ProfitGatheringDemand
 import api.bot.script.BotScript.ActionSafety
@@ -12,6 +15,9 @@ import api.bot.zone.SubZone
 import api.predef.rand
 import api.predef.SKILL_HERBLORE
 import api.predef.world
+import com.google.common.collect.ImmutableMultiset
+import engine.bot.coordinator.skill.ProductionCoordinator
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.coordinator.skill.BotProductionPlanner
 import engine.bot.coordinator.skill.NativeProductionOpportunities
 import engine.controllers.Controllers.inWilderness
@@ -77,19 +83,37 @@ object GeneralProfitCoordinator : BotCoordinator {
         if (VialWaterProfitBotScript.eligible(bot)) VialWaterProfitBotScript(bot) else null
 
     /**
-     * Sells available surplus first for low-cash bots, then shuffles independent profit opportunities.
+     * Queues existing jobs in their normal order, with production available after every failed start.
      */
-    internal fun getScript(bot: Bot): BotScript? {
-        if (!ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness()) return null
-        val dragonShieldReady = JoinDragonShieldBotScript.eligible(bot)
-        if (dragonShieldReady && owned(bot, DRAGON_SQUARE_SHIELD) == 0L) return JoinDragonShieldBotScript(bot, 20.minutes)
-        if (BotActivityWeights.needsStarterCoins(bot)) {
-            MerchantingCoordinator.getSellingScript(bot)?.let { return it }
-        }
+    internal fun getScript(bot: Bot): BotScript? = getOuting(bot)
+
+    /**
+     * Gives the early-account vial visit its usual priority while retaining the rest of the outing.
+     */
+    fun starterOuting(bot: Bot): BotScript? = starterVials(bot)?.let { getOuting(bot, it) }
+
+    private fun getOuting(bot: Bot, starter: BotScript? = null): BotScript? {
+        if (!canWork(bot)) return null
         val duration = rand(30, 90).minutes
+        return outing(bot, regularJobs(bot, duration, starter)) {
+            ProductionCoordinator.select(bot, ProductionMode.PROFIT, duration)
+        }
+    }
+
+    private fun canWork(bot: Bot): Boolean = ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness()
+
+    private fun regularJobs(bot: Bot, duration: Duration, starter: BotScript?): List<() -> BotScript?> {
+        val first = mutableListOf<() -> BotScript?>()
+        starter?.let { first += { it } }
+        val dragonShieldReady = JoinDragonShieldBotScript.eligible(bot)
+        val prioritizeShield = dragonShieldReady && owned(bot, DRAGON_SQUARE_SHIELD) == 0L
+        if (prioritizeShield) first += { JoinDragonShieldBotScript(bot, 20.minutes).takeIf { JoinDragonShieldBotScript.eligible(bot) } }
+        val needsCoins = BotActivityWeights.needsStarterCoins(bot)
+        val sell = { MerchantingCoordinator.getSellingScript(bot) }
+        if (needsCoins) first += sell
+
         val candidates = mutableListOf<() -> BotScript?>(
             { MerchantStoreBargains.poll(bot)?.let { BuyStoreBargainBotScript(bot, it) } },
-            { MerchantingCoordinator.getSellingScript(bot) },
             {
                 if (!bot.preferences.isMerchant && (bot.personality.isDumb ||
                         MerchantingCoordinator.sellingPurpose(bot) == null &&
@@ -98,11 +122,12 @@ object GeneralProfitCoordinator : BotCoordinator {
                 else null
             }
         )
+        if (!needsCoins) candidates += sell
         if (bot.isEarlyGame()) {
             candidates += listOf(
                 { RuneRunningCoordinator.profitScript(bot) },
                 { decantStarterPotions(bot, duration) },
-                { starterVials(bot) },
+                { if (starter == null) starterVials(bot) else null },
                 { if (BucketSandProfitBotScript.eligible(bot)) BucketSandProfitBotScript(bot) else null },
                 { fillOwnedContainers(bot) },
                 { rawFlax(bot) },
@@ -122,7 +147,7 @@ object GeneralProfitCoordinator : BotCoordinator {
             }
         }
         candidates += { MakeCrystalKeyBotScript(bot, duration).takeIf { it.isEligible() } }
-        if (dragonShieldReady) candidates += { JoinDragonShieldBotScript(bot, 20.minutes) }
+        if (dragonShieldReady && !prioritizeShield) candidates += { JoinDragonShieldBotScript(bot, 20.minutes) }
         candidates += { TradeMolePartsBotScript(bot, duration).takeIf { it.isEligible() } }
         candidates += { HerbloreSecondaryActivities.profit(bot, duration) }
         for (container in OpenContainerBotScript.Container.entries) {
@@ -133,10 +158,52 @@ object GeneralProfitCoordinator : BotCoordinator {
                 candidates += { SearchNestBotScript(bot, nest, duration) }
             }
         }
-        for (candidate in candidates.shuffled()) {
-            candidate()?.let { return it }
+        return first + candidates.shuffled()
+    }
+
+    /**
+     * Invokes each regular factory at most once. Startup is known to have worked if the child continues its
+     * work loop or changes ownership or experience, including work completed in one pass.
+     */
+    internal fun outing(bot: Bot, regular: List<() -> BotScript?>, fallback: () -> BotScript?): BotScript? {
+        val choices = regular.iterator()
+        fun nextRegular(): BotScript? {
+            while (choices.hasNext()) {
+                val candidate = choices.next()()
+                if (candidate != null && candidate !is VoidBotScript) return candidate
+            }
+            return null
         }
-        return null
+        val first = nextRegular() ?: return fallback()
+        return object : DynamicBotScript(bot) {
+            private var next = first
+            private var attempted = false
+            private var experience = 0.0
+            private var stock = ImmutableMultiset.of<Int>()
+
+            override val actionSafety = ActionSafety.NON_COMBAT
+
+            override suspend fun run(): Boolean {
+                if (!canWork(bot)) return true
+                if (attempted) {
+                    if (next.workContinued || experience != accountExperience() || stock != bot.itemTracker)
+                        return true
+                    val regular = nextRegular()
+                    if (regular == null) {
+                        fallback()?.let { bot.scriptStack.softPushHead(it) }
+                        return true
+                    }
+                    next = regular
+                }
+                attempted = true
+                experience = accountExperience()
+                stock = ImmutableMultiset.copyOf(bot.itemTracker)
+                bot.scriptStack.pushHead(next)
+                return false
+            }
+
+            private fun accountExperience(): Double = bot.skills.sumOf { it.experience }
+        }
     }
 
     private fun decantStarterPotions(bot: Bot, duration: Duration): BotScript? {

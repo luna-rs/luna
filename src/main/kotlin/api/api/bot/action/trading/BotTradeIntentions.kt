@@ -661,6 +661,12 @@ object BotTradeIntentions {
         return SupplyPlan(minOf(target, wanted.min().coerceAtLeast(1)), target, Long.MAX_VALUE)
     }
 
+    /**
+     * Reads supplies already committed to specific work before adding reserves for later use.
+     */
+    internal fun committedSupplyMinimums(bot: Bot, now: Long): Map<Int, Int> =
+        livePlans(bot, now).mapValues { (_, plan) -> plan.minimum }
+
     private fun livePlans(bot: Bot, now: Long): HashMap<Int, SupplyPlan> {
         val current = bot.attributes()[plans.attr]
         current.entries.removeIf { it.value.expires <= now }

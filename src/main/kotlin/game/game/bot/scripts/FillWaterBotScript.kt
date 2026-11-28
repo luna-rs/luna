@@ -52,7 +52,7 @@ class FillWaterBotScript(
     private val goalDeadline: Long = 0L
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
-    override val ownedSuppliesOnly = true
+    override val ownedSuppliesOnly: Boolean get() = productionPlan == null
     /**
      * Supported native resources and their default processing areas. A bucket can be filled with any of
      * these resources; saved source identity prevents a resumed task from selecting the wrong product.
@@ -170,7 +170,8 @@ class FillWaterBotScript(
             }
             if (!started) return@attemptProduction false
             if (MakeItemDialogue::class in bot.overlays) {
-                val amount = minOf(bot.inventory.computeAmountForId(empty), remaining())
+                val amount = minOf(bot.inventory.computeAmountForId(empty), remaining(),
+                    productionPlan?.remainingOperations ?: Int.MAX_VALUE)
                 if (amount < 1) return@attemptProduction false
                 handler.widgets.clickMakeItem(0, amount)
             }

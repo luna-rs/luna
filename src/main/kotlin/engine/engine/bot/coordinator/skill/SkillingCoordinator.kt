@@ -6,9 +6,14 @@ import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
 import api.bot.script.BotGoals
 import api.bot.script.BotScript
+import api.bot.script.ProductionMode
 import api.bot.script.VoidBotScript
 import api.bot.zone.SubZone
 import api.predef.SKILL_MAGIC
+import api.predef.SKILL_FARMING
+import api.predef.SKILL_FISHING
+import api.predef.SKILL_MINING
+import api.predef.SKILL_WOODCUTTING
 import api.predef.SKILL_PRAYER
 import api.predef.SKILL_RUNECRAFTING
 import api.predef.SKILL_THIEVING
@@ -65,6 +70,8 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
      */
 
     companion object {
+        private const val PRODUCTION = -1
+        private val rawGathering = setOf(SKILL_MINING, SKILL_FISHING, SKILL_WOODCUTTING)
 
         /**
          * Base skilling session duration, in minutes.
@@ -186,16 +193,37 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
      * Selects a concrete activity without changing script-stack ownership, so another activity can queue a follow-up.
      */
     internal fun getScript(bot: Bot): BotScript? {
-        val remaining = skillWeights(bot).toMutableMap()
+        val skills = skillWeights(bot)
+        val remaining = skills.toMutableMap()
+        val productionDuration = if (training) kotlin.time.Duration.ZERO else SkillingScriptFactory.getDuration(bot)
+        if (!training) {
+            remaining.keys.removeAll(ProductionCoordinator.productionSkills - setOf(SKILL_MAGIC, SKILL_FARMING))
+            val gatherTimeWeight = remaining.entries.filter { it.key in rawGathering }.sumOf { (skill, weight) ->
+                weight * SkillingSessionDuration.expectedMinutes(bot, skill in bot.preferences.skills)
+            }
+            if (skills.keys.any { it in ProductionCoordinator.productionSkills }) {
+                remaining[PRODUCTION] = maxOf(0.1, 1.5 * gatherTimeWeight / productionDuration.inWholeMinutes)
+            }
+        }
         while (remaining.isNotEmpty()) {
             val selectedSkill = RandomUtils.weightedRoll(remaining) ?: return null
+            if (selectedSkill == PRODUCTION) {
+                remaining.remove(selectedSkill)
+                ProductionCoordinator.select(bot, ProductionMode.PROFIT, productionDuration, skills)?.let { return it }
+                continue
+            }
             BotProductionMetrics.recordRunecrafting(RunecraftingStage.SKILL_ROLL)
             if (selectedSkill == SKILL_RUNECRAFTING)
                 BotProductionMetrics.recordRunecrafting(RunecraftingStage.SELECTED)
             remaining.remove(selectedSkill)
             val factory = factories[selectedSkill] ?: continue
             bot.profitMode = !training
-            val script = factory.getScript(bot, bot.skill(selectedSkill).staticLevel, ArrayList(), training)
+            val level = bot.skill(selectedSkill).staticLevel
+            val script = when {
+                !training && selectedSkill == SKILL_MAGIC -> MagicScriptFactory.getRegularProfitScript(bot, level)
+                !training && selectedSkill == SKILL_FARMING -> FarmingScriptFactory.getProfitHarvestScript(bot)
+                else -> factory.getScript(bot, level, ArrayList(), training)
+            }
             if (selectedSkill == SKILL_RUNECRAFTING) {
                 BotProductionMetrics.recordRunecrafting(
                     if (script is VoidBotScript) RunecraftingStage.NO_PLAN else RunecraftingStage.PLAN)

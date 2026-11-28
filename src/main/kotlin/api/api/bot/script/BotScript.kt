@@ -58,6 +58,12 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
     var profitGathering: ProfitGatheringGoal? = null
 
     /**
+     * Whether [run] has committed to another work pass after startup.
+     */
+    internal var workContinued = false
+        private set
+
+    /**
      * Whether the web walker may spend coins while this script owns part of the stack.
      */
     open val allowsPaidTravel: Boolean = true
@@ -298,6 +304,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                             terminated = true
                             break
                         }
+                        workContinued = true
                     }
                 } catch (e: CancellationException) {
                     // An externally cancelled job may be paused, or already replaced by a resumed job.

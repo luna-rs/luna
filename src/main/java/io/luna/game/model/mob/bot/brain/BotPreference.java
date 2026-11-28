@@ -526,6 +526,7 @@ public final class BotPreference {
         // New and legacy profiles participate in general activities unless an explicit weight is provided.
         activities.putIfAbsent(BotActivity.GENERAL_ACTIVITIES, 0.25);
         activities.putIfAbsent(BotActivity.GENERAL_PROFIT, 0.30);
+        activities.putIfAbsent(BotActivity.GENERAL_PRODUCTION, 0.65);
 
         // Load default wanted items.
         for (WantedItemDefinition def : WantedItemDefinition.DEFAULT) {
@@ -640,6 +641,7 @@ public final class BotPreference {
             scavenging.completeIntroduction();
         }
         // Deserialize activities and their weightings.
+        activities.put(BotActivity.GENERAL_PRODUCTION, 0.65);
         JsonArray activitiesJson = object.getAsJsonArray("activities");
         for (JsonElement activityJson : activitiesJson) {
             JsonObject activityJsonObj = activityJson.getAsJsonObject();

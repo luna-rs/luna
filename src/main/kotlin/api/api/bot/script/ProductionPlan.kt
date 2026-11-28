@@ -5,6 +5,17 @@ import com.google.gson.JsonObject
 import io.luna.game.model.mob.Skill
 
 /**
+ * The desired stock to reach before the production outing ends.
+ *
+ * @author lare96
+ */
+data class ProductionStockGoal(val itemId: Int, val target: Int) {
+    init {
+        require(itemId >= 0 && target > 0)
+    }
+}
+
+/**
  * A finite production goal whose purchase budget survives banking, child trades and saved sessions.
  * All mutations belong to the game thread. Native actions still own material consumption and XP.
  *
@@ -29,7 +40,11 @@ class ProductionPlan(
     val refillVials: Boolean = false,
     val fixedTrainingBatch: Boolean = false,
     val allowAcquisition: Boolean = true,
-    val barPurchase: Int? = null
+    val barPurchase: Int? = null,
+    val mode: ProductionMode? = null,
+    val stockGoal: ProductionStockGoal? = null,
+    val sessionMaximumCoins: Long = maximumCoins,
+    val priorSessionSpent: Long = 0L
 ) {
     val recipes = (listOf(recipe) + continuationRecipes).map { native -> native.copy(
         materials = native.materials.toMap(), tools = native.tools.toSet(), products = native.products.toMap(),
@@ -63,15 +78,21 @@ class ProductionPlan(
     var operations = operations
         private set
     val remainingCoins: Long get() = (maximumCoins - spentCoins).coerceAtLeast(0L)
+    val remainingSessionCoins: Long get() = (sessionMaximumCoins - priorSessionSpent - spentCoins).coerceAtLeast(0L)
+
 
     init {
-        val operationLimit = ProductionEconomics.operationLimit(goalSkill, training)
+        require(mode == null || !training)
+        require(stockGoal == null || mode == ProductionMode.PRODUCTION)
+        val operationLimit = if (mode == ProductionMode.PRODUCTION) ProductionEconomics.MAX_PRODUCTION_OPERATIONS
+            else ProductionEconomics.operationLimit(goalSkill, training)
         require(operations in 1..operationLimit)
         require(!refillVials || training && recipes.size == 2 && ratios.all { it == 1 } &&
             recipes.first().key.startsWith("unfinished:") && recipes.last().key.startsWith("potion:"))
         require(!fixedTrainingBatch || training && !refillVials)
         require(!singlePurchaseBatch || operations == 1 && !training && recipes.size == 1 && saleGuard != null)
         require(maximumCoins >= 0L && spentCoins >= 0L)
+        require(priorSessionSpent in 0..sessionMaximumCoins && maximumCoins <= sessionMaximumCoins - priorSessionSpent)
         require(deadline > 0L && maximumUnitPrices.size <= 64)
         require(maximumUnitPrices.all { (id, price) -> id >= 0 && price > 0L })
         require(recipes.size <= ProductionChainEconomics.MAX_STAGES && currentStageIndex in recipes.indices)
@@ -128,6 +149,23 @@ class ProductionPlan(
         limitUnstartedBatch(usable)
     }
 
+    /**
+     * Keeps a useful complete partial batch after the normal purchase routes have been exhausted.
+     */
+    internal fun useOwnedProductionBatch(owned: (Int) -> Long, coins: Long): Boolean {
+        if (mode != ProductionMode.PRODUCTION || currentStageIndex != 0 || completedOperations != 0) return false
+        val unit = ProductionChainEconomics.aggregate(recipes.mapIndexed { index, native ->
+            ProductionStage(native, ratios[index])
+        }) ?: return false
+        if (unit.tools.any { owned(it) < 1L }) return false
+        var usable = operations.toLong()
+        for ((id, amount) in unit.materials) usable = minOf(usable, owned(id) / amount)
+        if (unit.coinCost > 0L) usable = minOf(usable, coins / unit.coinCost)
+        if (usable < 1L) return false
+        limitUnstartedBatch(usable.toInt())
+        return true
+    }
+
     private fun limitUnstartedBatch(usable: Int) {
         require(currentStageIndex == 0 && completedOperations == 0 && usable in 1..operations)
         if (usable == operations) return
@@ -182,6 +220,15 @@ class ProductionPlan(
         } })
         data.addProperty("stage", currentStageIndex)
         data.addProperty("training", training)
+        mode?.let { data.addProperty("production_mode", it.name) }
+        stockGoal?.let {
+            data.addProperty("stock_item", it.itemId)
+            data.addProperty("stock_target", it.target)
+        }
+        if (mode == ProductionMode.PRODUCTION) {
+            data.addProperty("session_maximum_coins", sessionMaximumCoins)
+            data.addProperty("prior_session_spent", priorSessionSpent)
+        }
         data.addProperty("operations", operations)
         if (ratios.any { it != 1 }) data.add("stage_ratios", JsonArray().also { array ->
             ratios.forEach { array.add(it) }
@@ -237,7 +284,11 @@ class ProductionPlan(
                 data.get("single_purchase_batch")?.asBoolean ?: false,
                 data.get("refill_vials")?.asBoolean ?: false,
                 data.get("fixed_training_batch")?.asBoolean ?: false,
-                data.get("allow_acquisition")?.asBoolean ?: true, data.get("bar_purchase")?.asInt).also {
+                data.get("allow_acquisition")?.asBoolean ?: true, data.get("bar_purchase")?.asInt,
+                data.get("production_mode")?.asString?.let(ProductionMode::valueOf),
+                data.get("stock_item")?.let { ProductionStockGoal(it.asInt, data.get("stock_target").asInt) },
+                data.get("session_maximum_coins")?.asLong ?: data.get("maximum_coins").asLong,
+                data.get("prior_session_spent")?.asLong ?: 0L).also {
                 it.supplyDeadline = data.get("supply_deadline")?.asLong ?: 0L
                 it.shopAttempted = data.get("shop_attempted")?.asBoolean ?: false
                 it.guardedOutputProduced = data.get("guarded_output")?.asInt ?: 0

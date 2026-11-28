@@ -146,7 +146,7 @@ public class BotBrain {
             Double interest = bot.getPreferences().getActivities().get(BotActivity.GENERAL_PROFIT);
             if (interest != null && Double.isFinite(interest) && interest > 0.0 &&
                     ThreadLocalRandom.current().nextDouble() < 0.25) {
-                BotScript starterProfit = GeneralProfitCoordinator.INSTANCE.starterVials(bot);
+                BotScript starterProfit = GeneralProfitCoordinator.INSTANCE.starterOuting(bot);
                 if (starterProfit != null) {
                     return session(BotActivity.GENERAL_PROFIT, owner -> owner.getScriptStack().push(starterProfit));
                 }
