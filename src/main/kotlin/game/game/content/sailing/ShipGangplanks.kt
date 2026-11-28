@@ -44,13 +44,14 @@ object ShipGangplanks {
      */
     private fun towardsDeck(plank: GameObject): Pair<Int, Int> {
         if (plank.id == DragonSlayerShip.BOARD_PLANK || plank.id == DragonSlayerShip.LEAVE_PLANK) return 0 to 1
-        // A plank's direction points from the deck to the dock.
-        return when (plank.direction) {
+        val (dx, dy) = when (plank.direction) {
             ObjectDirection.WEST -> 1 to 0
             ObjectDirection.EAST -> -1 to 0
             ObjectDirection.NORTH -> 0 to -1
             ObjectDirection.SOUTH -> 0 to 1
         }
+        // The Pest Control ferries store their plank rotations facing the deck.
+        return if (plank.id in 14304..14307) -dx to -dy else dx to dy
     }
 
     /**
