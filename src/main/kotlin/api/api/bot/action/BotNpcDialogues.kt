@@ -10,6 +10,7 @@ import io.luna.game.model.mob.dialogue.DialogueQueue
 import io.luna.game.model.mob.dialogue.NpcDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.dialogue.PlayerDialogue
+import io.luna.game.model.mob.dialogue.TextDialogue
 import io.luna.game.model.mob.overlay.OverlayType
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
@@ -43,8 +44,18 @@ object BotNpcDialogues {
                         allowed: () -> Boolean = { true }, completed: () -> Boolean,
                         playerSpeech: Set<String> = emptySet(), advanceSpeech: Boolean = false, speakerId: Int = npc.id,
                         start: suspend () -> Boolean): Boolean =
+        respond(bot, npc, responses, timeout, allowed, completed, playerSpeech, advanceSpeech, speakerId, emptySet(), start)
+
+    /**
+     * Also recognizes the supplied exact headless confirmation text after the NPC opens the conversation.
+     */
+    suspend fun respond(bot: Bot, npc: Npc, responses: List<String>, timeout: Duration = 30.seconds,
+                        allowed: () -> Boolean = { true }, completed: () -> Boolean,
+                        playerSpeech: Set<String> = emptySet(), advanceSpeech: Boolean = false, speakerId: Int = npc.id,
+                        textPages: Set<String>,
+                        start: suspend () -> Boolean): Boolean =
         respondToSpeaker(bot, speakerId, responses, timeout, { npc.state == EntityState.ACTIVE && allowed() },
-            completed, playerSpeech, advanceSpeech, start)
+            completed, playerSpeech, advanceSpeech, textPages, start)
 
     /**
      * Answers a native remote speaker, such as Brian speaking through the Mystic jewel, without inventing an NPC.
@@ -57,7 +68,7 @@ object BotNpcDialogues {
     suspend fun respondVirtual(bot: Bot, speakerId: Int, responses: List<String>, timeout: Duration = 30.seconds,
                                allowed: () -> Boolean = { true }, completed: () -> Boolean,
                                start: suspend () -> Boolean): Boolean =
-        respondToSpeaker(bot, speakerId, responses, timeout, allowed, completed, emptySet(), false, start)
+        respondToSpeaker(bot, speakerId, responses, timeout, allowed, completed, emptySet(), false, emptySet(), start)
 
     /**
      * Shares exact queue, speaker and page ownership between physical and remote native conversations.
@@ -65,7 +76,7 @@ object BotNpcDialogues {
     private suspend fun respondToSpeaker(bot: Bot, speakerId: Int, responses: List<String>, timeout: Duration,
                                          allowed: () -> Boolean, completed: () -> Boolean,
                                          playerSpeech: Set<String>, advanceSpeech: Boolean,
-                                         start: suspend () -> Boolean): Boolean {
+                                         textPages: Set<String>, start: suspend () -> Boolean): Boolean {
         val previous = bot.dialogues
         var queue: DialogueQueue? = null
         var page: DialogueInterface? = null
@@ -77,6 +88,7 @@ object BotNpcDialogues {
         fun speech(current: DialogueInterface): Boolean = when (current) {
             is NpcDialogue -> current.npcId == speakerId
             is PlayerDialogue -> current.lines.joinToString(" ").let { it == lastResponse || it in playerSpeech }
+            is TextDialogue -> queue != null && current.text.joinToString(" ") in textPages
             else -> false
         }
         fun recognized(current: DialogueInterface): Boolean = when (current) {

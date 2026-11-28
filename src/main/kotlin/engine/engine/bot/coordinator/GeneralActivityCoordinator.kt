@@ -5,6 +5,7 @@ import api.predef.*
 import game.bot.scripts.BuyCannonBotScript
 import game.bot.scripts.BuyInitiateArmourBotScript
 import game.bot.scripts.ChampionsChallengeBotScript
+import game.bot.scripts.CooksAssistantBotScript
 import game.bot.scripts.BlackKnightsFortressBotScript
 import game.bot.scripts.DemonSlayerBotScript
 import game.bot.scripts.DragonSlayerBotScript
@@ -107,6 +108,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         if (DragonSlayerBotScript.eligible(bot)) return DragonSlayerBotScript(bot)
         if (VampireSlayerBotScript.eligible(bot)) return VampireSlayerBotScript(bot)
         if (RomeoJulietBotScript.eligible(bot)) return RomeoJulietBotScript(bot)
+        if (CooksAssistantBotScript.eligible(bot)) return CooksAssistantBotScript(bot)
         if (RuneMysteriesBotScript.eligible(bot)) return RuneMysteriesBotScript(bot)
         if (ErnestTheChickenBotScript.eligible(bot)) return ErnestTheChickenBotScript(bot)
         ChampionsChallengeBotScript.select(bot)?.let { return it }
