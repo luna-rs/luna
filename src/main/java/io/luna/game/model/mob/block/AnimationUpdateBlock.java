@@ -21,7 +21,7 @@ public final class AnimationUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForPlayer(ByteMessage msg, UpdateBlockData data) {
         msg.putShort(data.animation.getId());
-        msg.put(data.animation.getDelay(), ValueType.ADD);
+        msg.put(data.animation.getDelay(), ValueType.SUBTRACT);
     }
 
     @Override

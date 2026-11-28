@@ -46,11 +46,16 @@ object LighthouseBridge {
             val dx = if (obj.id == 4615) 1 else -1
             val failed = !Skills.success(5, 255, minOf(player.agility.level, 99))
             val landing = from.translate(2 * dx, 0)
-            val steps = mutableListOf(AgilityStep(landing, if (failed) 3 else 2,
+            val steps = mutableListOf(AgilityStep(landing, 3,
                 moveStart = if (failed) 30 else 58, moveEnd = if (failed) 49 else 70,
                 begin = { player.animation(Animation(if (failed) 1115 else 769, if (failed) 20 else 30,
                     Animation.AnimationPriority.NORMAL)) }))
-            if (!failed) steps += AgilityStep(from.translate(3 * dx, 0), 1, walkingAnimation = AgilityWalk.NORMAL)
+            if (!failed) {
+                // Sync the landing tile after cycle 70, then let the remaining animation finish
+                // before the next tick queues the walk. A placement and walk on the same tick snap to the exit.
+                steps += AgilityStep(landing, 1, jump = true)
+                steps += AgilityStep(from.translate(3 * dx, 0), 1, walkingAnimation = AgilityWalk.NORMAL)
+            }
             player.submitAction(AgilityAction(player, steps, null, valid = {
                 player.state == EntityState.ACTIVE && player.isAlive
             }).also {
