@@ -674,15 +674,21 @@ object BotProductionPlanner {
                     ProductionStockGoal(id, target.coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
                 }
             } else null
-        val plan = ProductionPlan(chosen.path.stages.first().recipe, training, chosen.quote.operations,
-            chosen.quote.maximumCoins, chosen.caps, deadline,
-            continuationRecipes = chosen.path.stages.drop(1).map { it.recipe }, personalUsePrices = chosen.usePrices,
-            stageRatios = chosen.path.stages.map { it.operations }, saleGuard = chosen.saleGuard,
-            singlePurchaseBatch = singlePurchaseBatch, refillVials = chosen.refillVials,
-            fixedTrainingBatch = chosen.fixedTrainingBatch, barPurchase = chosen.barPurchase, mode = mode,
-            stockGoal = stockGoal, sessionMaximumCoins = if (production) completedPlan?.sessionMaximumCoins ?: budget
-                else chosen.quote.maximumCoins,
-            priorSessionSpent = completedPlan?.let { ProductionEconomics.saturatingAdd(it.priorSessionSpent, it.spentCoins) } ?: 0L)
+        val plan = try {
+            ProductionPlan(chosen.path.stages.first().recipe, training, chosen.quote.operations,
+                chosen.quote.maximumCoins, chosen.caps, deadline,
+                continuationRecipes = chosen.path.stages.drop(1).map { it.recipe }, personalUsePrices = chosen.usePrices,
+                stageRatios = chosen.path.stages.map { it.operations }, saleGuard = chosen.saleGuard,
+                singlePurchaseBatch = singlePurchaseBatch, refillVials = chosen.refillVials,
+                fixedTrainingBatch = chosen.fixedTrainingBatch, barPurchase = chosen.barPurchase, mode = mode,
+                stockGoal = stockGoal, sessionMaximumCoins = if (production) completedPlan?.sessionMaximumCoins ?: budget
+                    else chosen.quote.maximumCoins,
+                priorSessionSpent = completedPlan?.let { ProductionEconomics.saturatingAdd(it.priorSessionSpent, it.spentCoins) } ?: 0L)
+        } catch (failure: IllegalArgumentException) {
+            if (!production) throw failure
+            bot.log("Skipped invalid production plan for ${chosen.path.stages.last().recipe.key} (${failure.message}).")
+            return rejected(Reason.INVALID_REQUEST)
+        }
         chosen.saleGuard?.let { guard ->
             val quantity = chosen.path.economy.valuedProducts.getValue(guard.itemId).toLong() * plan.operations
             if (!NativeOutputDemand.reserve(bot, guard.identity, mapOf(guard.itemId to quantity), deadline,

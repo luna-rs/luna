@@ -98,7 +98,7 @@ class ProductionPlan(
         require(recipes.size <= ProductionChainEconomics.MAX_STAGES && currentStageIndex in recipes.indices)
         require(ratios.size == recipes.size && (ratios.last() == 1 || fixedTrainingBatch))
         require(ratios.all { it in 1..operationLimit / operations })
-        stages = recipes.mapIndexed { index, native -> ProductionStage(native, ratios[index] * operations) }
+        stages = recipes.mapIndexed { index, native -> ProductionStage(native, ratios[index] * operations, mode) }
         require(completedOperations in 0..currentStageOperations)
         require(recipes.all { native -> (native.materials.keys + native.tools).all { it in maximumUnitPrices } })
         require(attemptedMarketItems.size <= 64 && attemptedMarketItems.all { it in maximumUnitPrices })
@@ -155,7 +155,7 @@ class ProductionPlan(
     internal fun useOwnedProductionBatch(owned: (Int) -> Long, coins: Long): Boolean {
         if (mode != ProductionMode.PRODUCTION || currentStageIndex != 0 || completedOperations != 0) return false
         val unit = ProductionChainEconomics.aggregate(recipes.mapIndexed { index, native ->
-            ProductionStage(native, ratios[index])
+            ProductionStage(native, ratios[index], mode)
         }) ?: return false
         if (unit.tools.any { owned(it) < 1L }) return false
         var usable = operations.toLong()

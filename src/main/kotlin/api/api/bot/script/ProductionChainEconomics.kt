@@ -5,9 +5,12 @@ package api.bot.script
  *
  * @author lare96
  */
-data class ProductionStage(val recipe: ProductionRecipe, val operations: Int) {
+data class ProductionStage(val recipe: ProductionRecipe, val operations: Int,
+                           private val mode: ProductionMode? = null) {
     init {
-        require(operations in 1..ProductionEconomics.operationLimit(recipe.skill, training = true))
+        val limit = if (mode == ProductionMode.PRODUCTION) ProductionEconomics.MAX_PRODUCTION_OPERATIONS
+            else ProductionEconomics.operationLimit(recipe.skill, training = true)
+        require(operations in 1..limit)
     }
 }
 
